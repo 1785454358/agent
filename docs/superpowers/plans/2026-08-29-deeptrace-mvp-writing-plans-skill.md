@@ -1,117 +1,117 @@
-# DeepTrace MVP Implementation Plan
+# DeepTrace MVP 实施计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **供执行 Agent 使用**　必须使用 `superpowers:subagent-driven-development`，推荐采用这种方式，或者使用 `superpowers:executing-plans`，逐项实施本计划。步骤使用复选框 `- [ ]` 跟踪进度。
 
-**Goal:** Build a deployable and measurable DeepResearch Agent that plans research, gathers web evidence, verifies claims, iterates on evidence gaps, and writes traceable reports.
+**目标**　构建一个可部署、可评测的 DeepResearch Agent。系统能够规划研究、收集网页证据、验证 Claim、根据证据缺口补充研究，并生成可追溯报告。
 
-**Architecture:** A controlled LangGraph workflow coordinates Intake, Planner, bounded parallel Researchers, Verifier, Gap Controller, and Report Writer. PostgreSQL/pgvector persists the evidence graph and research memory; FastAPI/SSE and a small React UI expose long-running research without allowing raw search snippets or unverified claims into reports.
+**架构**　使用受控 LangGraph 工作流协调 Intake、Planner、有限并行的 Researcher、Verifier、Gap Controller 和 Report Writer。PostgreSQL 与 pgvector 持久化证据图和研究记忆。FastAPI、SSE 与精简 React 界面负责长任务交互，同时阻止搜索摘要和未验证 Claim 进入报告。
 
-**Tech Stack:** Python 3.11+, uv, FastAPI, Pydantic, LangGraph, SQLAlchemy, Alembic, PostgreSQL, pgvector, httpx, Playwright fallback, Trafilatura, OpenTelemetry, pytest, React, TypeScript, Vite, Vitest, Docker Compose.
+**技术栈**　Python 3.11+、uv、FastAPI、Pydantic、LangGraph、SQLAlchemy、Alembic、PostgreSQL、pgvector、httpx、Playwright 降级抓取、Trafilatura、OpenTelemetry、pytest、React、TypeScript、Vite、Vitest 和 Docker Compose。
 
-**Spec:** `docs/superpowers/specs/2026-08-29-deeptrace-mvp-design.md`
+**设计规范**　`docs/superpowers/specs/2026-08-29-deeptrace-mvp-design.md`
 
-**Plan variant:** Generated with the installed `writing-plans` Skill for comparison with the earlier manual plan.
+**计划版本**　使用已安装的 `writing-plans` Skill 生成，用于和早期手工计划对比。
 
-## Global Constraints
+## 全局约束
 
-- Accept Chinese or English research questions and ask at most one clarification question.
-- Planner produces 3–6 tasks with explicit acceptance criteria.
-- Run at most 3 Researchers concurrently and at most 2 research rounds.
-- Read at most 15 distinct web pages; each task generates at most 3 search queries; default run deadline is 480 seconds.
-- MVP guarantees `text/html`; PDF full-text extraction is optional and not an acceptance requirement.
-- Search snippets discover sources but never become Evidence.
-- Every published external fact has a `Claim → ClaimEvidence → Evidence → Source` path.
-- `verified` claims may appear as facts; `disputed` claims only appear with both sides in the uncertainty section; `insufficient` claims are reported only as gaps.
-- Web content is untrusted data. Block private/local/file URLs, do not execute page instructions, and never log secrets or private reasoning.
-- Deterministic tests use Fake providers and make no real model or network calls.
-- Do not copy Open Deep Research or GPT Researcher core graphs, prompts, or stop policies.
+- 接受中文或英文研究问题，最多追问一次。
+- Planner 必须生成 3 到 6 个任务，每个任务都有明确的验收条件。
+- 最多并行运行 3 个 Researcher，研究轮数最多为 2。
+- 一次运行最多读取 15 个不同网页。每个任务最多生成 3 条搜索查询。默认运行时限为 480 秒。
+- MVP 保证处理 `text/html`。PDF 全文抽取属于可选增强，不纳入验收。
+- 搜索摘要只能用于发现来源，不能保存为 Evidence。
+- 每条允许发布的外部事实都必须存在 `Claim → ClaimEvidence → Evidence → Source` 路径。
+- `verified` Claim 可以作为事实发布。`disputed` Claim 只能连同冲突双方证据进入不确定性部分。`insufficient` Claim 只能作为研究缺口呈现。
+- 网页内容一律视为不可信数据。系统必须拦截私有地址、本地地址和文件地址，不执行网页指令，也不记录密钥与模型私有推理。
+- 确定性测试使用 Fake Provider，不调用真实模型和网络。
+- 不复制 Open Deep Research 或 GPT Researcher 的核心执行图、Prompt 与停止策略。
 
 ---
 
-## Scope Decomposition
+## 范围拆分
 
-This plan stays in one file because its three stages are sequential rather than independent:
+三个阶段存在严格依赖，因此保留在同一份计划中。
 
-1. **Core engine:** produces a complete Fake-provider research run and is independently testable from the CLI.
-2. **Product runtime:** adds persistence, recovery, memory, API, SSE, UI, and Docker around the core engine.
-3. **Evaluation release:** adds the 30-question benchmark, deterministic metrics, ablations, CI, and portfolio documentation.
+1. **核心引擎**　使用 Fake Provider 完成一轮完整研究，并能通过 CLI 独立测试。
+2. **产品运行时**　在核心引擎外围增加持久化、恢复、Memory、API、SSE、UI 和 Docker。
+3. **评测与发布**　增加 30 题评测集、确定性指标、消融实验、CI 和作品集文档。
 
-Do not start product UI work before the Fake-provider graph passes. Do not run large real-model evaluations before deterministic metrics and budget enforcement pass.
+Fake Provider 工作流测试通过以后才能开始产品 UI。确定性指标与预算约束通过以后才能运行大规模真实模型评测。
 
-## File Structure and Responsibilities
+## 文件结构与职责
 
 ```text
 backend/
-├── pyproject.toml                         # dependencies, lint, type-check, pytest config
-├── alembic.ini                            # migration entry point
-├── migrations/                            # PostgreSQL schema history
+├── pyproject.toml                         # 依赖、代码检查、类型检查和 pytest 配置
+├── alembic.ini                            # 数据库迁移入口
+├── migrations/                            # PostgreSQL 迁移历史
 ├── src/deeptrace/
-│   ├── config.py                          # environment-backed settings only
-│   ├── main.py                            # FastAPI application factory
+│   ├── config.py                          # 只保存环境配置
+│   ├── main.py                            # FastAPI 应用工厂
 │   ├── domain/
-│   │   ├── enums.py                       # stable state and relation enums
-│   │   ├── models.py                      # pure Pydantic domain records
-│   │   └── errors.py                      # typed domain/provider failures
-│   ├── budget/ledger.py                   # reservation and settlement rules
+│   │   ├── enums.py                       # 稳定的状态与关系枚举
+│   │   ├── models.py                      # 纯 Pydantic 领域记录
+│   │   └── errors.py                      # 类型明确的领域与 Provider 异常
+│   ├── budget/ledger.py                   # 预算预留和结算规则
 │   ├── providers/
-│   │   ├── contracts.py                   # LLM/search/fetch protocols and DTOs
-│   │   ├── fakes.py                       # deterministic fixture-backed providers
-│   │   ├── search_gateway.py              # primary/fallback search and deduplication
-│   │   ├── http_fetcher.py                # bounded text/html retrieval
-│   │   └── browser_fetcher.py             # JavaScript fallback only
+│   │   ├── contracts.py                   # LLM、搜索、抓取协议与 DTO
+│   │   ├── fakes.py                       # 基于 Fixture 的确定性 Provider
+│   │   ├── search_gateway.py              # 主备搜索与去重
+│   │   ├── http_fetcher.py                # 有限制的 text/html 抓取
+│   │   └── browser_fetcher.py             # 仅用于 JavaScript 页面降级抓取
 │   ├── security/
-│   │   ├── url_policy.py                  # SSRF and redirect validation
-│   │   └── content_policy.py              # untrusted-page isolation and sanitization
+│   │   ├── url_policy.py                  # SSRF 与重定向校验
+│   │   └── content_policy.py              # 不可信网页隔离和清理
 │   ├── evidence/
-│   │   ├── extractor.py                   # Source/Evidence extraction
-│   │   ├── verifier.py                    # ClaimEvidence classification
-│   │   ├── publication.py                 # report-safe projection
-│   │   └── repository.py                  # repository protocol and in-memory implementation
+│   │   ├── extractor.py                   # Source 与 Evidence 抽取
+│   │   ├── verifier.py                    # ClaimEvidence 分类
+│   │   ├── publication.py                 # 面向报告的安全投影
+│   │   └── repository.py                  # Repository 协议与内存实现
 │   ├── agent/
-│   │   ├── state.py                       # LangGraph state and dependencies
-│   │   ├── graph.py                       # graph assembly only
-│   │   └── nodes/                         # one file per workflow responsibility
+│   │   ├── state.py                       # LangGraph 状态与依赖
+│   │   ├── graph.py                       # 只负责组装执行图
+│   │   └── nodes/                         # 每项工作流职责使用一个文件
 │   ├── runtime/
-│   │   ├── worker.py                      # lease, execute, cancel, recover runs
-│   │   └── events.py                      # safe persisted event DTOs
-│   ├── memory/service.py                  # recall, refresh, invalidate, compare
-│   ├── db/                                # ORM models, explicit mappers, repositories, checkpoint
-│   ├── api/                               # run/report routes and SSE
-│   └── observability/                     # tracing and metrics
+│   │   ├── worker.py                      # 领取、执行、取消和恢复运行
+│   │   └── events.py                      # 可安全持久化的事件 DTO
+│   ├── memory/service.py                  # 召回、刷新、失效与比较
+│   ├── db/                                # ORM 模型、显式 Mapper、Repository 和 Checkpoint
+│   ├── api/                               # 运行、报告接口与 SSE
+│   └── observability/                     # 链路追踪与指标
 └── tests/
-    ├── unit/                              # pure deterministic behavior
-    ├── workflow/                          # Fake-provider graph scenarios
-    ├── integration/                       # database/API/provider boundaries
-    ├── security/                          # SSRF, prompt injection, XSS fixtures
-    └── e2e/                               # opt-in live web/model checks
+    ├── unit/                              # 纯确定性行为
+    ├── workflow/                          # Fake Provider 工作流场景
+    ├── integration/                       # 数据库、API 和 Provider 边界
+    ├── security/                          # SSRF、Prompt Injection 与 XSS Fixture
+    └── e2e/                               # 手动启用的真实网页与模型检查
 frontend/
-├── src/api/                               # typed API and SSE client
-├── src/pages/                             # new run, progress, report/history
-├── src/components/                        # evidence drawer and status UI
-└── tests/                                 # Vitest user-flow tests
+├── src/api/                               # 带类型的 API 与 SSE 客户端
+├── src/pages/                             # 新建运行、进度、报告与历史
+├── src/components/                        # 证据抽屉和状态界面
+└── tests/                                 # Vitest 用户流程测试
 evals/
-├── datasets/                              # 20 dev + 10 holdout questions
-├── fixtures/                              # reproducible dynamic-source snapshots
-├── configs/                               # baseline and ablation configs
-└── results/                               # versioned experiment outputs
+├── datasets/                              # 20 道开发题和 10 道隐藏题
+├── fixtures/                              # 可复现的动态来源快照
+├── configs/                               # Baseline 与消融配置
+└── results/                               # 带版本的实验输出
 ```
 
-## Stage A — Core Research Engine
+## 阶段 A　核心研究引擎
 
-### Task 1: Bootstrap the Domain Contract
+### 任务 1　建立领域契约
 
-**Files:**
-- Create: `backend/pyproject.toml`
-- Create: `backend/src/deeptrace/domain/enums.py`
-- Create: `backend/src/deeptrace/domain/models.py`
-- Create: `backend/src/deeptrace/domain/errors.py`
-- Create: `backend/tests/unit/domain/test_claim_publication.py`
+**文件**
+- 新建　`backend/pyproject.toml`
+- 新建　`backend/src/deeptrace/domain/enums.py`
+- 新建　`backend/src/deeptrace/domain/models.py`
+- 新建　`backend/src/deeptrace/domain/errors.py`
+- 新建　`backend/tests/unit/domain/test_claim_publication.py`
 
-**Interfaces:**
-- Consumes: none.
-- Produces: `RunStatus`, `TaskStatus`, `ClaimStatus`, `EvidenceRelation`, `SourceGrade`; `ResearchBrief`, `ResearchTaskSpec`, `SourceRecord`, `EvidenceRecord`, `ClaimRecord`, `ClaimEvidenceLink`, and `ReportDraft`.
+**接口**
+- 输入　无。
+- 输出　`RunStatus`、`TaskStatus`、`ClaimStatus`、`EvidenceRelation`、`SourceGrade`、`ResearchBrief`、`ResearchTaskSpec`、`SourceRecord`、`EvidenceRecord`、`ClaimRecord`、`ClaimEvidenceLink` 和 `ReportDraft`。
 
-- [ ] **Step 1: Create the Python package and failing publication-rule test**
+- [ ] **步骤 1　创建 Python 包并编写失败的发布规则测试**
 
 ```python
 # backend/tests/unit/domain/test_claim_publication.py
@@ -124,13 +124,13 @@ def test_claim_publication_modes() -> None:
     assert ClaimRecord(text="unsupported fact", status=ClaimStatus.INSUFFICIENT).publication_mode() == "gap"
 ```
 
-- [ ] **Step 2: Run the test and verify the missing package failure**
+- [ ] **步骤 2　运行测试并确认因包不存在而失败**
 
-Run: `cd backend && uv run pytest tests/unit/domain/test_claim_publication.py -v`
+运行命令　`cd backend && uv run pytest tests/unit/domain/test_claim_publication.py -v`
 
-Expected: FAIL with `ModuleNotFoundError: No module named 'deeptrace'`.
+预期结果　测试失败，并出现 `ModuleNotFoundError: No module named 'deeptrace'`。
 
-- [ ] **Step 3: Implement the stable enums and minimal ClaimRecord**
+- [ ] **步骤 3　实现稳定枚举和最小 ClaimRecord**
 
 ```python
 # backend/src/deeptrace/domain/enums.py
@@ -254,34 +254,34 @@ class ReportDraft(BaseModel):
     latency_seconds: float = Field(ge=0.0)
 ```
 
-- [ ] **Step 4: Run the focused test and type import smoke test**
+- [ ] **步骤 4　运行聚焦测试和类型导入冒烟测试**
 
-Run: `cd backend && uv run pytest tests/unit/domain/test_claim_publication.py -v`
+运行命令　`cd backend && uv run pytest tests/unit/domain/test_claim_publication.py -v`
 
-Expected: PASS.
+预期结果　测试通过。
 
-Run: `cd backend && uv run python -c "from deeptrace.domain.models import ResearchBrief, ResearchTaskSpec, SourceRecord, EvidenceRecord, ClaimEvidenceLink, ReportDraft"`
+运行命令　`cd backend && uv run python -c "from deeptrace.domain.models import ResearchBrief, ResearchTaskSpec, SourceRecord, EvidenceRecord, ClaimEvidenceLink, ReportDraft"`
 
-Expected: exit code 0.
+预期结果　退出码为 0。
 
-- [ ] **Step 5: Commit the domain contract**
+- [ ] **步骤 5　提交领域契约**
 
 ```bash
 git add backend/pyproject.toml backend/src/deeptrace/domain backend/tests/unit/domain
 git commit -m "feat: define DeepTrace domain contract"
 ```
 
-### Task 2: Implement the Budget Ledger
+### 任务 2　实现预算账本
 
-**Files:**
-- Create: `backend/src/deeptrace/budget/ledger.py`
-- Create: `backend/tests/unit/budget/test_ledger.py`
+**文件**
+- 新建　`backend/src/deeptrace/budget/ledger.py`
+- 新建　`backend/tests/unit/budget/test_ledger.py`
 
-**Interfaces:**
-- Consumes: `BudgetExceeded` from `deeptrace.domain.errors`.
-- Produces: `BudgetLimits`, `BudgetUsage`, `BudgetLedger.reserve(call_id, pages=0, queries=0, tokens=0, cost=0.0)`, and `BudgetLedger.settle(call_id, tokens, cost)`.
+**接口**
+- 输入　来自 `deeptrace.domain.errors` 的 `BudgetExceeded`。
+- 输出　`BudgetLimits`、`BudgetUsage`、`BudgetLedger.reserve(call_id, pages=0, queries=0, tokens=0, cost=0.0)` 和 `BudgetLedger.settle(call_id, tokens, cost)`。
 
-- [ ] **Step 1: Write failing tests for defaults, concurrency, and idempotency**
+- [ ] **步骤 1　为默认值、并发和幂等编写失败测试**
 
 ```python
 # backend/tests/unit/budget/test_ledger.py
@@ -303,13 +303,13 @@ def test_duplicate_call_id_is_idempotent() -> None:
     assert ledger.usage.reserved_tokens == 40
 ```
 
-- [ ] **Step 2: Run tests and verify missing ledger failure**
+- [ ] **步骤 2　运行测试并确认因账本不存在而失败**
 
-Run: `cd backend && uv run pytest tests/unit/budget/test_ledger.py -v`
+运行命令　`cd backend && uv run pytest tests/unit/budget/test_ledger.py -v`
 
-Expected: FAIL because `deeptrace.budget.ledger` does not exist.
+预期结果　测试因 `deeptrace.budget.ledger` 不存在而失败。
 
-- [ ] **Step 3: Implement exact default limits and atomic reservations**
+- [ ] **步骤 3　实现准确的默认限制和原子预算预留**
 
 ```python
 # backend/src/deeptrace/budget/ledger.py
@@ -363,33 +363,33 @@ class BudgetLedger:
         self.usage.actual_cost += cost
 ```
 
-- [ ] **Step 4: Run tests and add the deadline/round/query cases**
+- [ ] **步骤 4　运行测试并补充时限、轮数和查询数用例**
 
-Run: `cd backend && uv run pytest tests/unit/budget/test_ledger.py -v`
+运行命令　`cd backend && uv run pytest tests/unit/budget/test_ledger.py -v`
 
-Expected: PASS for page and idempotency cases.
+预期结果　网页预算与幂等用例通过。
 
-Add table-driven tests proving `max_rounds=2`, `max_queries_per_task=3`, `deadline_seconds=480`, and `max_researchers=3` are enforced by explicit ledger methods before committing.
+提交前增加表驱动测试，证明账本通过显式方法强制执行 `max_rounds=2`、`max_queries_per_task=3`、`deadline_seconds=480` 和 `max_researchers=3`。
 
-- [ ] **Step 5: Commit the budget ledger**
+- [ ] **步骤 5　提交预算账本**
 
 ```bash
 git add backend/src/deeptrace/budget backend/tests/unit/budget
 git commit -m "feat: enforce research budgets"
 ```
 
-### Task 3: Define Provider Contracts and Deterministic Fakes
+### 任务 3　定义 Provider 契约和确定性 Fake
 
-**Files:**
-- Create: `backend/src/deeptrace/providers/contracts.py`
-- Create: `backend/src/deeptrace/providers/fakes.py`
-- Create: `backend/tests/unit/providers/test_fakes.py`
+**文件**
+- 新建　`backend/src/deeptrace/providers/contracts.py`
+- 新建　`backend/src/deeptrace/providers/fakes.py`
+- 新建　`backend/tests/unit/providers/test_fakes.py`
 
-**Interfaces:**
-- Consumes: `BudgetLedger`, `ResearchTaskSpec`.
-- Produces: `SearchHit`, `FetchedDocument`, `ModelUsage`, `SearchProvider.search`, `DocumentFetcher.fetch`, `ModelGateway.complete_structured`, `FakeSearchProvider`, `FakeDocumentFetcher`, and `FakeModelGateway`.
+**接口**
+- 输入　`BudgetLedger` 和 `ResearchTaskSpec`。
+- 输出　`SearchHit`、`FetchedDocument`、`ModelUsage`、`SearchProvider.search`、`DocumentFetcher.fetch`、`ModelGateway.complete_structured`、`FakeSearchProvider`、`FakeDocumentFetcher` 和 `FakeModelGateway`。
 
-- [ ] **Step 1: Write a failing test that proves snippets are not documents**
+- [ ] **步骤 1　编写失败测试，证明搜索摘要不等于网页正文**
 
 ```python
 # backend/tests/unit/providers/test_fakes.py
@@ -407,13 +407,13 @@ async def test_search_hit_requires_fetch_before_content_exists() -> None:
     assert document.text == "full official page"
 ```
 
-- [ ] **Step 2: Run the test and verify missing contract failure**
+- [ ] **步骤 2　运行测试并确认因契约不存在而失败**
 
-Run: `cd backend && uv run pytest tests/unit/providers/test_fakes.py -v`
+运行命令　`cd backend && uv run pytest tests/unit/providers/test_fakes.py -v`
 
-Expected: FAIL because provider contracts do not exist.
+预期结果　测试因 Provider 契约不存在而失败。
 
-- [ ] **Step 3: Implement protocols and fixture-backed fakes**
+- [ ] **步骤 3　实现协议和基于 Fixture 的 Fake**
 
 ```python
 # backend/src/deeptrace/providers/contracts.py
@@ -484,34 +484,34 @@ class FakeModelGateway:
         return result, ModelUsage(input_tokens=0, output_tokens=0)
 ```
 
-- [ ] **Step 4: Run provider tests and static type checking**
+- [ ] **步骤 4　运行 Provider 测试和静态类型检查**
 
-Run: `cd backend && uv run pytest tests/unit/providers/test_fakes.py -v`
+运行命令　`cd backend && uv run pytest tests/unit/providers/test_fakes.py -v`
 
-Expected: PASS.
+预期结果　测试通过。
 
-Run: `cd backend && uv run mypy src/deeptrace/providers`
+运行命令　`cd backend && uv run mypy src/deeptrace/providers`
 
-Expected: no errors.
+预期结果　没有错误。
 
-- [ ] **Step 5: Commit provider boundaries**
+- [ ] **步骤 5　提交 Provider 边界**
 
 ```bash
 git add backend/src/deeptrace/providers backend/tests/unit/providers
 git commit -m "feat: define external provider contracts"
 ```
 
-### Task 4: Block Unsafe URLs Before Search and Fetch
+### 任务 4　在搜索与抓取前拦截危险 URL
 
-**Files:**
-- Create: `backend/src/deeptrace/security/url_policy.py`
-- Create: `backend/tests/security/test_url_policy.py`
+**文件**
+- 新建　`backend/src/deeptrace/security/url_policy.py`
+- 新建　`backend/tests/security/test_url_policy.py`
 
-**Interfaces:**
-- Consumes: raw URL strings from `SearchHit` and redirects from `DocumentFetcher`.
-- Produces: `async validate_public_url(url: str, resolver: HostResolver) -> str` and `UnsafeUrlError`.
+**接口**
+- 输入　来自 `SearchHit` 的原始 URL 字符串，以及 `DocumentFetcher` 返回的重定向地址。
+- 输出　`async validate_public_url(url: str, resolver: HostResolver) -> str` 和 `UnsafeUrlError`。
 
-- [ ] **Step 1: Write failing IPv4, IPv6, file-scheme, and redirect tests**
+- [ ] **步骤 1　为 IPv4、IPv6、文件协议和重定向编写失败测试**
 
 ```python
 # backend/tests/security/test_url_policy.py
@@ -544,13 +544,13 @@ async def test_hostname_resolving_private_is_rejected() -> None:
         await validate_public_url("https://evil.example/page", resolver)
 ```
 
-- [ ] **Step 2: Run security tests and verify missing policy failure**
+- [ ] **步骤 2　运行安全测试并确认因策略不存在而失败**
 
-Run: `cd backend && uv run pytest tests/security/test_url_policy.py -v`
+运行命令　`cd backend && uv run pytest tests/security/test_url_policy.py -v`
 
-Expected: FAIL because `deeptrace.security.url_policy` does not exist.
+预期结果　测试因 `deeptrace.security.url_policy` 不存在而失败。
 
-- [ ] **Step 3: Implement scheme, hostname, and resolved-IP checks**
+- [ ] **步骤 3　实现协议、主机名和解析 IP 检查**
 
 ```python
 # backend/src/deeptrace/security/url_policy.py
@@ -582,36 +582,36 @@ def _is_ip(value: str) -> bool:
         return False
 ```
 
-The production fetch adapter calls `validate_public_url` for the initial URL and every redirect target before issuing the next request. Keep `StaticResolver` in this test module only.
+生产抓取 Adapter 在发出请求前，必须对初始 URL 和每一个重定向目标调用 `validate_public_url`。`StaticResolver` 只保留在测试模块中。
 
-- [ ] **Step 4: Run security tests**
+- [ ] **步骤 4　运行安全测试**
 
-Run: `cd backend && uv run pytest tests/security/test_url_policy.py -v`
+运行命令　`cd backend && uv run pytest tests/security/test_url_policy.py -v`
 
-Expected: PASS.
+预期结果　测试通过。
 
-- [ ] **Step 5: Commit URL safety**
+- [ ] **步骤 5　提交 URL 安全策略**
 
 ```bash
 git add backend/src/deeptrace/security backend/tests/security/test_url_policy.py
 git commit -m "security: block unsafe research URLs"
 ```
 
-### Task 5: Build the Search, Fetch, and Evidence Extraction Slice
+### 任务 5　实现搜索、抓取和证据抽取纵向切片
 
-**Files:**
-- Create: `backend/src/deeptrace/providers/search_gateway.py`
-- Create: `backend/src/deeptrace/providers/http_fetcher.py`
-- Create: `backend/src/deeptrace/security/content_policy.py`
-- Create: `backend/src/deeptrace/evidence/extractor.py`
-- Create: `backend/tests/fixtures/web/job.html`
-- Create: `backend/tests/integration/providers/test_web_acquisition.py`
+**文件**
+- 新建　`backend/src/deeptrace/providers/search_gateway.py`
+- 新建　`backend/src/deeptrace/providers/http_fetcher.py`
+- 新建　`backend/src/deeptrace/security/content_policy.py`
+- 新建　`backend/src/deeptrace/evidence/extractor.py`
+- 新建　`backend/tests/fixtures/web/job.html`
+- 新建　`backend/tests/integration/providers/test_web_acquisition.py`
 
-**Interfaces:**
-- Consumes: `SearchProvider`, `DocumentFetcher`, `SearchHit`, `FetchedDocument`, `BudgetLedger`, `ResearchTaskSpec`, and `validate_public_url`.
-- Produces: `SearchGateway.search(query, limit) -> list[SearchHit]`, `HttpDocumentFetcher.fetch(url) -> FetchedDocument`, and `EvidenceExtractor.extract(task, document) -> tuple[SourceRecord, list[EvidenceRecord]]`.
+**接口**
+- 输入　`SearchProvider`、`DocumentFetcher`、`SearchHit`、`FetchedDocument`、`BudgetLedger`、`ResearchTaskSpec` 和 `validate_public_url`。
+- 输出　`SearchGateway.search(query, limit) -> list[SearchHit]`、`HttpDocumentFetcher.fetch(url) -> FetchedDocument` 和 `EvidenceExtractor.extract(task, document) -> tuple[SourceRecord, list[EvidenceRecord]]`。
 
-- [ ] **Step 1: Add a local HTML fixture and failing evidence-origin test**
+- [ ] **步骤 1　添加本地 HTML Fixture 和失败的证据来源测试**
 
 ```html
 <!-- backend/tests/fixtures/web/job.html -->
@@ -643,13 +643,13 @@ async def test_search_snippet_never_becomes_evidence() -> None:
     assert any("planning and tools" in item.quote for item in evidence)
 ```
 
-- [ ] **Step 2: Run the acquisition test and verify missing implementation failure**
+- [ ] **步骤 2　运行采集测试并确认因实现缺失而失败**
 
-Run: `cd backend && uv run pytest tests/integration/providers/test_web_acquisition.py -v`
+运行命令　`cd backend && uv run pytest tests/integration/providers/test_web_acquisition.py -v`
 
-Expected: FAIL because `SearchGateway` and `EvidenceExtractor` are undefined.
+预期结果　测试因 `SearchGateway` 和 `EvidenceExtractor` 尚未定义而失败。
 
-- [ ] **Step 3: Implement provider fallback and URL deduplication**
+- [ ] **步骤 3　实现 Provider 降级和 URL 去重**
 
 ```python
 # backend/src/deeptrace/providers/search_gateway.py
@@ -673,7 +673,7 @@ class SearchGateway:
         return list(unique.values())[:limit]
 ```
 
-- [ ] **Step 4: Implement bounded fetch and text/html extraction**
+- [ ] **步骤 4　实现有限制的抓取和 text/html 抽取**
 
 ```python
 # backend/src/deeptrace/providers/http_fetcher.py
@@ -723,33 +723,33 @@ class EvidenceExtractor:
         return source, evidence
 ```
 
-- [ ] **Step 5: Run acquisition and security tests**
+- [ ] **步骤 5　运行采集与安全测试**
 
-Run: `cd backend && uv run pytest tests/integration/providers/test_web_acquisition.py tests/security/test_url_policy.py -v`
+运行命令　`cd backend && uv run pytest tests/integration/providers/test_web_acquisition.py tests/security/test_url_policy.py -v`
 
-Expected: PASS.
+预期结果　测试通过。
 
-- [ ] **Step 6: Commit the first vertical slice**
+- [ ] **步骤 6　提交第一个纵向切片**
 
 ```bash
 git add backend/src/deeptrace/providers backend/src/deeptrace/security backend/src/deeptrace/evidence/extractor.py backend/tests/fixtures backend/tests/integration/providers
 git commit -m "feat: acquire traceable web evidence"
 ```
 
-### Task 6: Verify Claims and Enforce the Publication Boundary
+### 任务 6　验证 Claim 并落实发布边界
 
-**Files:**
-- Create: `backend/src/deeptrace/evidence/repository.py`
-- Create: `backend/src/deeptrace/evidence/verifier.py`
-- Create: `backend/src/deeptrace/evidence/publication.py`
-- Create: `backend/tests/unit/evidence/test_verifier.py`
-- Create: `backend/tests/unit/evidence/test_publication.py`
+**文件**
+- 新建　`backend/src/deeptrace/evidence/repository.py`
+- 新建　`backend/src/deeptrace/evidence/verifier.py`
+- 新建　`backend/src/deeptrace/evidence/publication.py`
+- 新建　`backend/tests/unit/evidence/test_verifier.py`
+- 新建　`backend/tests/unit/evidence/test_publication.py`
 
-**Interfaces:**
-- Consumes: `ClaimRecord`, `EvidenceRecord`, `ClaimEvidenceLink`, `EvidenceRelation`, `ClaimStatus`, `ModelGateway`.
-- Produces: `EvidenceRepository`, `InMemoryEvidenceRepository`, `ClaimVerifier.verify(claim, evidence) -> ClaimEvidenceLink`, and `PublicationView.for_report(run_id) -> list[PublishableClaim]`.
+**接口**
+- 输入　`ClaimRecord`、`EvidenceRecord`、`ClaimEvidenceLink`、`EvidenceRelation`、`ClaimStatus` 和 `ModelGateway`。
+- 输出　`EvidenceRepository`、`InMemoryEvidenceRepository`、`ClaimVerifier.verify(claim, evidence) -> ClaimEvidenceLink` 和 `PublicationView.for_report(run_id) -> list[PublishableClaim]`。
 
-- [ ] **Step 1: Write failing verification and publication tests**
+- [ ] **步骤 1　编写失败的验证与发布测试**
 
 ```python
 # backend/tests/unit/evidence/test_publication.py
@@ -770,13 +770,13 @@ def test_verified_claim_with_support_path_is_a_fact() -> None:
     assert result[0].mode == "fact"
 ```
 
-- [ ] **Step 2: Run tests and verify missing publication module failure**
+- [ ] **步骤 2　运行测试并确认因发布模块不存在而失败**
 
-Run: `cd backend && uv run pytest tests/unit/evidence -v`
+运行命令　`cd backend && uv run pytest tests/unit/evidence -v`
 
-Expected: FAIL because publication and verifier modules do not exist.
+预期结果　测试因发布与验证模块不存在而失败。
 
-- [ ] **Step 3: Implement the repository protocol and in-memory repository**
+- [ ] **步骤 3　实现 Repository 协议和内存 Repository**
 
 ```python
 # backend/src/deeptrace/evidence/repository.py
@@ -814,7 +814,7 @@ class InMemoryEvidenceRepository:
         return [claim for claim in self.claims.values() if claim.run_id == run_id]
 ```
 
-- [ ] **Step 4: Implement deterministic publication projection**
+- [ ] **步骤 4　实现确定性的发布投影**
 
 ```python
 # backend/src/deeptrace/evidence/publication.py
@@ -839,7 +839,7 @@ def build_publishable_claims(claims: list[ClaimRecord], evidence: list[EvidenceR
     return output
 ```
 
-- [ ] **Step 5: Implement ModelGateway-backed ClaimVerifier with structured output**
+- [ ] **步骤 5　实现由 ModelGateway 驱动的结构化 ClaimVerifier**
 
 ```python
 # backend/src/deeptrace/evidence/verifier.py
@@ -881,33 +881,33 @@ class ClaimVerifier:
         )
 ```
 
-Add tests for `supports`, `refutes`, `context`, and one malformed structured response followed by a valid response.
+添加 `supports`、`refutes`、`context` 三类测试，并增加一次结构化响应错误后返回合法响应的重试测试。
 
-Run: `cd backend && uv run pytest tests/unit/evidence -v`
+运行命令　`cd backend && uv run pytest tests/unit/evidence -v`
 
-Expected: PASS.
+预期结果　测试通过。
 
-- [ ] **Step 6: Commit the evidence boundary**
+- [ ] **步骤 6　提交证据边界**
 
 ```bash
 git add backend/src/deeptrace/evidence backend/tests/unit/evidence
 git commit -m "feat: verify and publish evidence-backed claims"
 ```
 
-### Task 7: Implement Intake, Planner, and Bounded Researchers
+### 任务 7　实现 Intake、Planner 和有限并行 Researcher
 
-**Files:**
-- Create: `backend/src/deeptrace/agent/state.py`
-- Create: `backend/src/deeptrace/agent/nodes/intake.py`
-- Create: `backend/src/deeptrace/agent/nodes/planner.py`
-- Create: `backend/src/deeptrace/agent/nodes/researcher.py`
-- Create: `backend/tests/workflow/test_planning_and_research.py`
+**文件**
+- 新建　`backend/src/deeptrace/agent/state.py`
+- 新建　`backend/src/deeptrace/agent/nodes/intake.py`
+- 新建　`backend/src/deeptrace/agent/nodes/planner.py`
+- 新建　`backend/src/deeptrace/agent/nodes/researcher.py`
+- 新建　`backend/tests/workflow/test_planning_and_research.py`
 
-**Interfaces:**
-- Consumes: domain records, Provider contracts, `BudgetLedger`, `EvidenceRepository`, and `EvidenceExtractor`.
-- Produces: `ResearchState`, `ResearchPlan`, `intake_node`, `planner_node`, and `run_research_tasks(state, deps) -> ResearchState`.
+**接口**
+- 输入　领域记录、Provider 契约、`BudgetLedger`、`EvidenceRepository` 和 `EvidenceExtractor`。
+- 输出　`ResearchState`、`ResearchPlan`、`intake_node`、`planner_node` 和 `run_research_tasks(state, deps) -> ResearchState`。
 
-- [ ] **Step 1: Write failing planner-boundary tests**
+- [ ] **步骤 1　编写失败的 Planner 边界测试**
 
 ```python
 # backend/tests/workflow/test_planning_and_research.py
@@ -928,13 +928,13 @@ def test_planner_accepts_three_to_six_tasks() -> None:
     assert len(validate_plan(ResearchPlan(tasks=make_tasks(3))).tasks) == 3
 ```
 
-- [ ] **Step 2: Run the workflow test and verify missing state failure**
+- [ ] **步骤 2　运行工作流测试并确认因状态模型不存在而失败**
 
-Run: `cd backend && uv run pytest tests/workflow/test_planning_and_research.py -v`
+运行命令　`cd backend && uv run pytest tests/workflow/test_planning_and_research.py -v`
 
-Expected: FAIL because agent state and nodes do not exist.
+预期结果　测试因 Agent 状态和节点不存在而失败。
 
-- [ ] **Step 3: Define graph state and plan schema**
+- [ ] **步骤 3　定义执行图状态与规划 Schema**
 
 ```python
 # backend/src/deeptrace/agent/state.py
@@ -970,13 +970,13 @@ def validate_plan(plan: ResearchPlan) -> ResearchPlan:
     return plan
 ```
 
-- [ ] **Step 4: Implement one-clarification Intake and Planner structured calls**
+- [ ] **步骤 4　实现最多追问一次的 Intake 和 Planner 结构化调用**
 
-`intake_node` returns a complete `ResearchBrief` or one clarification request when `clarification_count == 0`; a second ambiguity uses explicit defaults. `planner_node` calls `ModelGateway.complete_structured(schema=ResearchPlan, ...)`, validates once, retries one malformed response, and raises `PlanningFailed` after the second invalid plan.
+当 `clarification_count == 0` 时，`intake_node` 返回完整的 `ResearchBrief` 或一次澄清请求。再次遇到歧义时使用明确默认值。`planner_node` 调用 `ModelGateway.complete_structured(schema=ResearchPlan, ...)`，校验返回结果，并对格式错误响应重试一次。第二次规划仍不合法时抛出 `PlanningFailed`。
 
-Add FakeModelGateway fixtures for complete, ambiguous, malformed-then-valid, and invalid-twice responses.
+为完整响应、歧义响应、先错误后合法响应和连续两次非法响应添加 FakeModelGateway Fixture。
 
-- [ ] **Step 5: Implement bounded asynchronous Researcher execution**
+- [ ] **步骤 5　实现有并发上限的异步 Researcher 执行**
 
 ```python
 # backend/src/deeptrace/agent/nodes/researcher.py
@@ -1033,37 +1033,37 @@ async def run_research_tasks(state: ResearchState, deps: ResearcherDeps) -> Rese
     return _merge_findings_without_failing_siblings(state, findings)
 ```
 
-Write tests that instrument concurrent entry count and assert it never exceeds 3; make one task raise and assert sibling evidence remains.
+测试需要记录同时进入临界区的任务数，并断言并发数不超过 3。再让一个任务抛出异常，确认其他任务收集的证据仍被保留。
 
-- [ ] **Step 6: Run workflow tests**
+- [ ] **步骤 6　运行工作流测试**
 
-Run: `cd backend && uv run pytest tests/workflow/test_planning_and_research.py -v`
+运行命令　`cd backend && uv run pytest tests/workflow/test_planning_and_research.py -v`
 
-Expected: PASS for task bounds, one clarification, malformed plan retry, concurrency, and failure isolation.
+预期结果　任务数量边界、单次追问、非法规划重试、并发限制和故障隔离用例全部通过。
 
-- [ ] **Step 7: Commit planning and research nodes**
+- [ ] **步骤 7　提交规划与研究节点**
 
 ```bash
 git add backend/src/deeptrace/agent backend/tests/workflow/test_planning_and_research.py
 git commit -m "feat: plan and execute bounded research"
 ```
 
-### Task 8: Close the Adaptive Research Loop and Write the Report
+### 任务 8　闭合自适应研究循环并生成报告
 
-**Files:**
-- Create: `backend/src/deeptrace/agent/nodes/verifier.py`
-- Create: `backend/src/deeptrace/agent/nodes/gap_controller.py`
-- Create: `backend/src/deeptrace/agent/nodes/report_writer.py`
-- Create: `backend/src/deeptrace/agent/graph.py`
-- Create: `backend/src/deeptrace/cli.py`
-- Create: `backend/tests/workflow/test_research_graph.py`
-- Create: `backend/tests/fixtures/scenarios/job_research.json`
+**文件**
+- 新建　`backend/src/deeptrace/agent/nodes/verifier.py`
+- 新建　`backend/src/deeptrace/agent/nodes/gap_controller.py`
+- 新建　`backend/src/deeptrace/agent/nodes/report_writer.py`
+- 新建　`backend/src/deeptrace/agent/graph.py`
+- 新建　`backend/src/deeptrace/cli.py`
+- 新建　`backend/tests/workflow/test_research_graph.py`
+- 新建　`backend/tests/fixtures/scenarios/job_research.json`
 
-**Interfaces:**
-- Consumes: `ResearchState`, `ClaimVerifier`, `PublicationView`, Provider fakes, and `BudgetLedger`.
-- Produces: `CoverageDecision`, `gap_controller_node`, `report_writer_node`, `build_research_graph(deps)`, and `python -m deeptrace.cli --fixture <path>`.
+**接口**
+- 输入　`ResearchState`、`ClaimVerifier`、`PublicationView`、Fake Provider 和 `BudgetLedger`。
+- 输出　`CoverageDecision`、`gap_controller_node`、`report_writer_node`、`build_research_graph(deps)` 和 `python -m deeptrace.cli --fixture <path>`。
 
-- [ ] **Step 1: Write failing first-round-stop and evidence-only-writer tests**
+- [ ] **步骤 1　编写失败的首轮停止和只读证据 Writer 测试**
 
 ```python
 # backend/tests/workflow/test_research_graph.py
@@ -1085,13 +1085,13 @@ async def test_writer_never_receives_search_snippets(fake_graph_deps, initial_st
     assert "FORBIDDEN_SNIPPET" not in result["report"].markdown
 ```
 
-- [ ] **Step 2: Run graph tests and verify missing graph failure**
+- [ ] **步骤 2　运行执行图测试并确认因执行图不存在而失败**
 
-Run: `cd backend && uv run pytest tests/workflow/test_research_graph.py -v`
+运行命令　`cd backend && uv run pytest tests/workflow/test_research_graph.py -v`
 
-Expected: FAIL because the graph is not assembled.
+预期结果　测试因执行图尚未组装而失败。
 
-- [ ] **Step 3: Implement deterministic gap decisions**
+- [ ] **步骤 3　实现确定性的缺口决策**
 
 ```python
 # backend/src/deeptrace/agent/nodes/gap_controller.py
@@ -1112,7 +1112,7 @@ def decide_coverage(*, high_priority_coverage: float, blocking_conflicts: int, n
     return CoverageDecision(continue_research=True, stop_reason="evidence_gap", missing_task_ids=[])
 ```
 
-- [ ] **Step 4: Implement the report-safe writer input**
+- [ ] **步骤 4　实现面向报告的安全 Writer 输入**
 
 ```python
 # backend/src/deeptrace/agent/nodes/report_writer.py
@@ -1152,9 +1152,9 @@ async def report_writer_node(state: ResearchState, deps: WriterDeps) -> Research
     return updated
 ```
 
-The writer input contains only `PublishableClaim` records. Render disputed claims in the uncertainty section and insufficient claims in the gap list; `SearchHit`, snippets, raw page instructions, and the conversation are absent from `WriterDeps`.
+Writer 输入只能包含 `PublishableClaim`。有争议的 Claim 放入不确定性部分，证据不足的 Claim 放入缺口列表。`WriterDeps` 不得包含 `SearchHit`、搜索摘要、网页原始指令或完整对话。
 
-- [ ] **Step 5: Assemble the LangGraph with explicit loop edges**
+- [ ] **步骤 5　用显式循环边组装 LangGraph**
 
 ```python
 # backend/src/deeptrace/agent/graph.py
@@ -1193,51 +1193,51 @@ def build_research_graph(deps: GraphDeps):
     return graph.compile()
 ```
 
-- [ ] **Step 6: Add a fixture CLI smoke run**
+- [ ] **步骤 6　添加基于 Fixture 的 CLI 冒烟运行**
 
-Run: `cd backend && uv run python -m deeptrace.cli --fixture tests/fixtures/scenarios/job_research.json`
+运行命令　`cd backend && uv run python -m deeptrace.cli --fixture tests/fixtures/scenarios/job_research.json`
 
-Expected: exit code 0 and a Markdown report whose citations all resolve to fixture sources.
+预期结果　退出码为 0，生成 Markdown 报告，并且所有引用都能解析到 Fixture 中的来源。
 
-- [ ] **Step 7: Run all Stage A gates**
+- [ ] **步骤 7　运行阶段 A 的全部质量门禁**
 
-Run: `cd backend && uv run pytest tests/unit tests/workflow tests/security -v`
+运行命令　`cd backend && uv run pytest tests/unit tests/workflow tests/security -v`
 
-Expected: PASS with no network access.
+预期结果　测试通过，期间没有网络访问。
 
-Run: `cd backend && uv run ruff check src tests && uv run mypy src/deeptrace`
+运行命令　`cd backend && uv run ruff check src tests && uv run mypy src/deeptrace`
 
-Expected: no errors.
+预期结果　no errors.
 
-- [ ] **Step 8: Commit the complete Fake-provider engine**
+- [ ] **步骤 8　提交完整的 Fake Provider 引擎**
 
 ```bash
 git add backend/src/deeptrace/agent backend/src/deeptrace/cli.py backend/tests/workflow backend/tests/fixtures/scenarios
 git commit -m "feat: complete adaptive research graph"
 ```
 
-**Stage A deliverable:** a deterministic CLI research run proves planning, bounded parallel research, verification, evidence-gap stopping, and evidence-only report writing without PostgreSQL, a browser UI, or paid APIs.
+**阶段 A 交付物**　一个确定性的 CLI 研究任务能够证明规划、有限并行研究、验证、基于证据缺口的停止和只使用证据写报告。这个阶段不依赖 PostgreSQL、浏览器界面或付费 API。
 
-## Stage B — Persistent Product Runtime
+## 阶段 B　可持久化的产品运行时
 
-### Task 9: Persist the Evidence Graph in PostgreSQL
+### 任务 9　把证据图持久化到 PostgreSQL
 
-**Files:**
-- Create: `docker-compose.yml`
-- Create: `backend/alembic.ini`
-- Create: `backend/migrations/env.py`
-- Create: `backend/migrations/versions/0001_evidence_graph.py`
-- Create: `backend/src/deeptrace/db/session.py`
-- Create: `backend/src/deeptrace/db/models.py`
-- Create: `backend/src/deeptrace/db/mappers.py`
-- Create: `backend/src/deeptrace/db/evidence_repository.py`
-- Create: `backend/tests/integration/db/test_evidence_repository.py`
+**文件**
+- 新建　`docker-compose.yml`
+- 新建　`backend/alembic.ini`
+- 新建　`backend/migrations/env.py`
+- 新建　`backend/migrations/versions/0001_evidence_graph.py`
+- 新建　`backend/src/deeptrace/db/session.py`
+- 新建　`backend/src/deeptrace/db/models.py`
+- 新建　`backend/src/deeptrace/db/mappers.py`
+- 新建　`backend/src/deeptrace/db/evidence_repository.py`
+- 新建　`backend/tests/integration/db/test_evidence_repository.py`
 
-**Interfaces:**
-- Consumes: `EvidenceRepository` and all domain record types from Stage A.
-- Produces: `SqlEvidenceRepository`, `async session_scope()`, database uniqueness constraints, and pgvector columns for Evidence and Claim embeddings.
+**接口**
+- 输入　`EvidenceRepository` 和阶段 A 定义的全部领域记录类型。
+- 输出　`SqlEvidenceRepository`、`async session_scope()`、数据库唯一约束，以及用于 Evidence 与 Claim 向量的 pgvector 字段。
 
-- [ ] **Step 1: Write a failing persistence-path test**
+- [ ] **步骤 1　编写失败的持久化路径测试**
 
 ```python
 # backend/tests/integration/db/test_evidence_repository.py
@@ -1258,19 +1258,19 @@ async def test_report_path_survives_repository_reload(db_session, evidence_graph
     assert output[0].evidence[0].source_id == evidence_graph_fixture.source.id
 ```
 
-- [ ] **Step 2: Start PostgreSQL and verify the test fails before migrations**
+- [ ] **步骤 2　启动 PostgreSQL 并确认迁移前测试失败**
 
-Run: `docker compose up -d db`
+运行命令　`docker compose up -d db`
 
-Expected: PostgreSQL health check becomes healthy.
+预期结果　PostgreSQL 健康检查通过。
 
-Run: `cd backend && uv run pytest tests/integration/db/test_evidence_repository.py -v`
+运行命令　`cd backend && uv run pytest tests/integration/db/test_evidence_repository.py -v`
 
-Expected: FAIL because tables and repository do not exist.
+预期结果　测试因数据表和 Repository 不存在而失败。
 
-- [ ] **Step 3: Add exact tables and constraints in migration 0001**
+- [ ] **步骤 3　在 0001 迁移中添加准确的数据表与约束**
 
-Create tables for `research_runs`, `research_tasks`, `sources`, `evidence`, `claims`, `claim_evidence`, `reports`, `run_events`, and `budget_reservations`. Add:
+创建 `research_runs`、`research_tasks`、`sources`、`evidence`、`claims`、`claim_evidence`、`reports`、`run_events` 和 `budget_reservations` 数据表，并添加以下约束。
 
 ```python
 # key constraints inside 0001_evidence_graph.py
@@ -1280,9 +1280,9 @@ op.create_check_constraint("ck_relation", "claim_evidence", "relation IN ('suppo
 op.create_unique_constraint("uq_claim_evidence", "claim_evidence", ["claim_id", "evidence_id", "relation"])
 ```
 
-Enable the `vector` extension and create vector columns using the embedding dimension configured in `Settings`; the migration must use one fixed dimension chosen before first release.
+启用 `vector` 扩展，并按照 `Settings` 配置的向量维度创建字段。第一次发布前确定固定维度，后续迁移不得隐式改变。
 
-- [ ] **Step 4: Implement domain/ORM mapping behind SqlEvidenceRepository**
+- [ ] **步骤 4　实现 SqlEvidenceRepository 背后的领域模型与 ORM 映射**
 
 ```python
 # backend/src/deeptrace/db/evidence_repository.py
@@ -1323,41 +1323,41 @@ class EvidenceRowMapper(Protocol):
     ) -> tuple[list[ClaimRecord], list[EvidenceRecord], list[ClaimEvidenceLink]]: ...
 ```
 
-Implement `SqlAlchemyEvidenceRowMapper` in this file with one explicit constructor mapping per ORM row and three `SELECT ... WHERE run_id = :run_id` queries for publication inputs. The integration fixture constructs `SqlEvidenceRepository(db_session, SqlAlchemyEvidenceRowMapper())`, so no global mapper or implicit session is used.
+在该文件中实现 `SqlAlchemyEvidenceRowMapper`。每种 ORM Row 使用一个显式构造映射，发布输入使用三条 `SELECT ... WHERE run_id = :run_id` 查询。集成测试 Fixture 通过 `SqlEvidenceRepository(db_session, SqlAlchemyEvidenceRowMapper())` 创建 Repository，不使用全局 Mapper 或隐式 Session。
 
-- [ ] **Step 5: Run migration and repository tests**
+- [ ] **步骤 5　运行迁移与 Repository 测试**
 
-Run: `cd backend && uv run alembic upgrade head`
+运行命令　`cd backend && uv run alembic upgrade head`
 
-Expected: all nine tables, constraints, indexes, and vector extension exist.
+预期结果　九张数据表、约束、索引和 vector 扩展全部存在。
 
-Run: `cd backend && uv run pytest tests/integration/db -v`
+运行命令　`cd backend && uv run pytest tests/integration/db -v`
 
-Expected: PASS.
+预期结果　测试通过。
 
-- [ ] **Step 6: Commit persistence**
+- [ ] **步骤 6　提交持久化能力**
 
 ```bash
 git add docker-compose.yml backend/alembic.ini backend/migrations backend/src/deeptrace/db backend/tests/integration/db
 git commit -m "feat: persist the research evidence graph"
 ```
 
-### Task 10: Add Run Events, Checkpoints, Cancellation, and Recovery
+### 任务 10　添加运行事件、Checkpoint、取消与恢复
 
-**Files:**
-- Create: `backend/src/deeptrace/runtime/events.py`
-- Create: `backend/src/deeptrace/runtime/worker.py`
-- Create: `backend/src/deeptrace/db/run_repository.py`
-- Create: `backend/src/deeptrace/db/checkpoint.py`
-- Create: `backend/tests/integration/runtime/conftest.py`
-- Create: `backend/tests/integration/runtime/test_recovery.py`
-- Create: `backend/tests/integration/runtime/test_cancellation.py`
+**文件**
+- 新建　`backend/src/deeptrace/runtime/events.py`
+- 新建　`backend/src/deeptrace/runtime/worker.py`
+- 新建　`backend/src/deeptrace/db/run_repository.py`
+- 新建　`backend/src/deeptrace/db/checkpoint.py`
+- 新建　`backend/tests/integration/runtime/conftest.py`
+- 新建　`backend/tests/integration/runtime/test_recovery.py`
+- 新建　`backend/tests/integration/runtime/test_cancellation.py`
 
-**Interfaces:**
-- Consumes: compiled research graph, `BudgetLedger`, SQL session factory.
-- Produces: `RunEventRecord`, `RunRepository.claim_next(worker_id)`, `RunWorker.run_once()`, `CancellationToken`, and PostgreSQL-backed LangGraph checkpointer.
+**接口**
+- 输入　编译后的研究执行图、`BudgetLedger` 和 SQL Session 工厂。
+- 输出　`RunEventRecord`、`RunRepository.claim_next(worker_id)`、`RunWorker.run_once()`、`CancellationToken` 和基于 PostgreSQL 的 LangGraph Checkpointer。
 
-- [ ] **Step 1: Write a failing no-duplicate recovery test**
+- [ ] **步骤 1　编写失败的无重复恢复测试**
 
 ```python
 # backend/tests/integration/runtime/test_recovery.py
@@ -1378,13 +1378,13 @@ async def test_restart_reuses_checkpoint_and_budget_reservations(runtime_fixture
     assert (await runtime_fixture.repo.get_run(runtime_fixture.run_id)).status == "completed"
 ```
 
-- [ ] **Step 2: Run recovery test and verify missing runtime failure**
+- [ ] **步骤 2　运行恢复测试并确认因运行时不存在而失败**
 
-Run: `cd backend && uv run pytest tests/integration/runtime/test_recovery.py -v`
+运行命令　`cd backend && uv run pytest tests/integration/runtime/test_recovery.py -v`
 
-Expected: FAIL because worker and checkpointer do not exist.
+预期结果　测试因 Worker 和 Checkpointer 不存在而失败。
 
-- [ ] **Step 3: Implement safe event DTOs and persistent event append**
+- [ ] **步骤 3　实现安全事件 DTO 和持久化事件追加**
 
 ```python
 # backend/src/deeptrace/runtime/events.py
@@ -1404,9 +1404,9 @@ class RunEventRecord(BaseModel):
     model_config = {"extra": "forbid"}
 ```
 
-Do not add prompt text, API keys, page bodies, or private reasoning fields to this DTO. `RunRepository.append_event` assigns a per-run monotonic sequence in the database transaction.
+该 DTO 不得加入 Prompt 正文、API Key、网页正文或模型私有推理字段。`RunRepository.append_event` 在数据库事务中为每次运行分配单调递增序列号。
 
-- [ ] **Step 4: Implement database leasing and cancellation boundaries**
+- [ ] **步骤 4　实现数据库租约和取消边界**
 
 ```python
 # backend/src/deeptrace/runtime/worker.py
@@ -1425,9 +1425,9 @@ class RunWorker:
         return True
 ```
 
-`claim_next` uses `SELECT ... FOR UPDATE SKIP LOCKED` plus a lease expiry. Every provider boundary calls `token.raise_if_cancelled()` before starting a new external call.
+`claim_next` 使用 `SELECT ... FOR UPDATE SKIP LOCKED` 和租约过期时间。每个 Provider 边界在发起新的外部调用前执行 `token.raise_if_cancelled()`。
 
-- [ ] **Step 5: Add cancellation and event-sequence tests**
+- [ ] **步骤 5　添加取消与事件序列测试**
 
 ```python
 # backend/tests/integration/runtime/test_cancellation.py
@@ -1439,31 +1439,31 @@ async def test_cancel_stops_new_provider_calls(runtime_fixture) -> None:
     assert (await runtime_fixture.repo.get_run(runtime_fixture.run_id)).status == "cancelled"
 ```
 
-Run: `cd backend && uv run pytest tests/integration/runtime -v`
+运行命令　`cd backend && uv run pytest tests/integration/runtime -v`
 
-Expected: PASS for recovery, unique budget calls, cancellation, and monotonic events.
+预期结果　恢复、预算调用唯一性、取消和事件单调递增用例全部通过。
 
-- [ ] **Step 6: Commit runtime reliability**
+- [ ] **步骤 6　提交运行时可靠性能力**
 
 ```bash
 git add backend/src/deeptrace/runtime backend/src/deeptrace/db/run_repository.py backend/src/deeptrace/db/checkpoint.py backend/tests/integration/runtime
 git commit -m "feat: recover and cancel long research runs"
 ```
 
-### Task 11: Implement Research Memory and Update Runs
+### 任务 11　实现研究 Memory 与更新运行
 
-**Files:**
-- Create: `backend/src/deeptrace/memory/service.py`
-- Create: `backend/src/deeptrace/memory/freshness.py`
-- Create: `backend/tests/integration/memory/conftest.py`
-- Create: `backend/tests/integration/memory/test_recall.py`
-- Create: `backend/tests/integration/memory/test_update_run.py`
+**文件**
+- 新建　`backend/src/deeptrace/memory/service.py`
+- 新建　`backend/src/deeptrace/memory/freshness.py`
+- 新建　`backend/tests/integration/memory/conftest.py`
+- 新建　`backend/tests/integration/memory/test_recall.py`
+- 新建　`backend/tests/integration/memory/test_update_run.py`
 
-**Interfaces:**
-- Consumes: stored ResearchTask, Claim, Evidence, Source vectors and timestamps.
-- Produces: `FreshnessStatus`, `MemoryCandidate`, `ResearchMemory.recall(query, at)`, and `ResearchMemory.create_update_run(parent_run_id, query)`.
+**接口**
+- 输入　已保存的 ResearchTask、Claim、Evidence、Source 向量与时间戳。
+- 输出　`FreshnessStatus`、`MemoryCandidate`、`ResearchMemory.recall(query, at)` 和 `ResearchMemory.create_update_run(parent_run_id, query)`。
 
-- [ ] **Step 1: Write failing stale-evidence and changed-content tests**
+- [ ] **步骤 1　编写失败的过期证据和内容变化测试**
 
 ```python
 # backend/tests/integration/memory/test_update_run.py
@@ -1485,13 +1485,13 @@ async def test_content_hash_change_is_reported_as_changed(memory_fixture) -> Non
     assert update.changes[0].kind == "changed"
 ```
 
-- [ ] **Step 2: Run memory tests and verify missing service failure**
+- [ ] **步骤 2　运行 Memory 测试并确认因服务不存在而失败**
 
-Run: `cd backend && uv run pytest tests/integration/memory -v`
+运行命令　`cd backend && uv run pytest tests/integration/memory -v`
 
-Expected: FAIL because memory service does not exist.
+预期结果　测试因 Memory 服务不存在而失败。
 
-- [ ] **Step 3: Implement explicit freshness states**
+- [ ] **步骤 3　实现明确的时效状态**
 
 ```python
 # backend/src/deeptrace/memory/freshness.py
@@ -1518,40 +1518,40 @@ def classify_freshness(*, time_sensitive: bool, age_seconds: float, content_hash
     return FreshnessStatus.REUSE
 ```
 
-- [ ] **Step 4: Implement pgvector recall and update-run comparison**
+- [ ] **步骤 4　实现 pgvector 召回与更新运行对比**
 
-`ResearchMemory.recall` embeds the query, retrieves a bounded top-k set, runs `classify_freshness`, and sets `publishable=True` only for `REUSE`. `create_update_run` creates a child ResearchRun with `parent_run_id`, revalidates non-reusable sources, then classifies resulting Claim pairs as `added`, `changed`, `removed`, or `unchanged` using stable normalized Claim keys plus Evidence content hashes.
+`ResearchMemory.recall` 对查询生成向量，检索数量受限的 top-k 结果，再执行 `classify_freshness`。只有 `REUSE` 状态才能设置 `publishable=True`。`create_update_run` 创建带 `parent_run_id` 的子 ResearchRun，重新验证不可直接复用的来源，随后依据稳定的 Claim 规范化键和 Evidence 内容哈希，把结果分为 `added`、`changed`、`removed` 或 `unchanged`。
 
-- [ ] **Step 5: Run memory tests**
+- [ ] **步骤 5　运行 Memory 测试**
 
-Run: `cd backend && uv run pytest tests/integration/memory -v`
+运行命令　`cd backend && uv run pytest tests/integration/memory -v`
 
-Expected: PASS; no stale time-sensitive Evidence enters the publication view.
+预期结果　测试通过，过期的时效性 Evidence 无法进入发布视图。
 
-- [ ] **Step 6: Commit research memory**
+- [ ] **步骤 6　提交研究 Memory**
 
 ```bash
 git add backend/src/deeptrace/memory backend/tests/integration/memory
 git commit -m "feat: recall and refresh research memory"
 ```
 
-### Task 12: Expose Run, Report, and SSE APIs
+### 任务 12　提供运行、报告与 SSE API
 
-**Files:**
-- Create: `backend/src/deeptrace/config.py`
-- Create: `backend/src/deeptrace/main.py`
-- Create: `backend/src/deeptrace/api/schemas.py`
-- Create: `backend/src/deeptrace/api/routes/runs.py`
-- Create: `backend/src/deeptrace/api/routes/reports.py`
-- Create: `backend/src/deeptrace/api/sse.py`
-- Create: `backend/tests/integration/api/test_runs.py`
-- Create: `backend/tests/integration/api/test_sse.py`
+**文件**
+- 新建　`backend/src/deeptrace/config.py`
+- 新建　`backend/src/deeptrace/main.py`
+- 新建　`backend/src/deeptrace/api/schemas.py`
+- 新建　`backend/src/deeptrace/api/routes/runs.py`
+- 新建　`backend/src/deeptrace/api/routes/reports.py`
+- 新建　`backend/src/deeptrace/api/sse.py`
+- 新建　`backend/tests/integration/api/test_runs.py`
+- 新建　`backend/tests/integration/api/test_sse.py`
 
-**Interfaces:**
-- Consumes: RunRepository, RunWorker queue/lease state, Report repository, and RunEvent sequence.
-- Produces: `POST /api/runs`, `GET /api/runs/{id}`, `POST /api/runs/{id}/cancel`, `POST /api/runs/{id}/resume`, `POST /api/runs/{id}/update`, `GET /api/runs/{id}/events`, and `GET /api/runs/{id}/report`.
+**接口**
+- 输入　RunRepository、RunWorker 队列与租约状态、Report Repository 和 RunEvent 序列。
+- 输出　`POST /api/runs`、`GET /api/runs/{id}`、`POST /api/runs/{id}/cancel`、`POST /api/runs/{id}/resume`、`POST /api/runs/{id}/update`、`GET /api/runs/{id}/events` 和 `GET /api/runs/{id}/report`。
 
-- [ ] **Step 1: Write failing create/idempotency and SSE-resume tests**
+- [ ] **步骤 1　编写失败的创建幂等与 SSE 续传测试**
 
 ```python
 # backend/tests/integration/api/test_runs.py
@@ -1571,13 +1571,13 @@ def test_sse_reconnect_starts_after_last_event_id(client, seeded_run) -> None:
     assert "id: 1" not in response.text
 ```
 
-- [ ] **Step 2: Run API tests and verify 404 failures**
+- [ ] **步骤 2　运行 API 测试并确认返回 404**
 
-Run: `cd backend && uv run pytest tests/integration/api -v`
+运行命令　`cd backend && uv run pytest tests/integration/api -v`
 
-Expected: FAIL because routes are absent.
+预期结果　测试因路由不存在而返回 404。
 
-- [ ] **Step 3: Define public schemas without secret fields**
+- [ ] **步骤 3　定义不包含敏感字段的公开 Schema**
 
 ```python
 # backend/src/deeptrace/api/schemas.py
@@ -1602,48 +1602,48 @@ class EventResponse(BaseModel):
     cost: float
 ```
 
-- [ ] **Step 4: Implement idempotent routes and cursor-based SSE**
+- [ ] **步骤 4　实现幂等路由和基于游标的 SSE**
 
-`POST /api/runs` stores the request and returns `202`. Cancel/update/resume routes validate state transitions through the domain state machine. SSE chooses its cursor from the `after` query parameter when present, otherwise from `Last-Event-ID`; it reads persisted events with `sequence > cursor`, emits `id`, `event`, and JSON `data`, then waits for new events without holding a database transaction open.
+`POST /api/runs` 保存请求并返回 `202`。取消、更新和恢复路由通过领域状态机校验状态转换。SSE 优先读取 `after` 查询参数，没有该参数时读取 `Last-Event-ID`。它查询 `sequence > cursor` 的持久化事件，输出 `id`、`event` 和 JSON `data`，随后等待新事件，等待期间不占用数据库事务。
 
-- [ ] **Step 5: Run API tests and secret-field scan**
+- [ ] **步骤 5　运行 API 测试和敏感字段扫描**
 
-Run: `cd backend && uv run pytest tests/integration/api -v`
+运行命令　`cd backend && uv run pytest tests/integration/api -v`
 
-Expected: PASS.
+预期结果　测试通过。
 
-Add `test_public_schemas_exclude_sensitive_fields` that recursively serializes every response schema and asserts the keys `api_key`, `system_prompt`, `chain_of_thought`, `raw_html`, and `private_reasoning` are absent.
+添加 `test_public_schemas_exclude_sensitive_fields`。测试递归序列化所有响应 Schema，并断言不存在 `api_key`、`system_prompt`、`chain_of_thought`、`raw_html` 和 `private_reasoning` 字段。
 
-Run: `cd backend && uv run pytest tests/integration/api -v -k "public_schemas_exclude_sensitive_fields"`
+运行命令　`cd backend && uv run pytest tests/integration/api -v -k "public_schemas_exclude_sensitive_fields"`
 
-Expected: PASS.
+预期结果　测试通过。
 
-- [ ] **Step 6: Commit API and SSE**
+- [ ] **步骤 6　提交 API 与 SSE**
 
 ```bash
 git add backend/src/deeptrace/api backend/src/deeptrace/config.py backend/src/deeptrace/main.py backend/tests/integration/api
 git commit -m "feat: expose research run API and SSE"
 ```
 
-### Task 13: Build the Minimal Research UI and Docker Runtime
+### 任务 13　构建最小研究界面和 Docker 运行环境
 
-**Files:**
-- Create: `frontend/package.json`
-- Create: `frontend/src/App.tsx`
-- Create: `frontend/src/api/client.ts`
-- Create: `frontend/src/api/events.ts`
-- Create: `frontend/src/pages/NewResearch.tsx`
-- Create: `frontend/src/pages/ResearchRun.tsx`
-- Create: `frontend/src/pages/Report.tsx`
-- Create: `frontend/src/components/EvidenceDrawer.tsx`
-- Create: `frontend/tests/research-flow.test.tsx`
-- Modify: `docker-compose.yml`
+**文件**
+- 新建　`frontend/package.json`
+- 新建　`frontend/src/App.tsx`
+- 新建　`frontend/src/api/client.ts`
+- 新建　`frontend/src/api/events.ts`
+- 新建　`frontend/src/pages/NewResearch.tsx`
+- 新建　`frontend/src/pages/ResearchRun.tsx`
+- 新建　`frontend/src/pages/Report.tsx`
+- 新建　`frontend/src/components/EvidenceDrawer.tsx`
+- 新建　`frontend/tests/research-flow.test.tsx`
+- 修改　`docker-compose.yml`
 
-**Interfaces:**
-- Consumes: Task 12 HTTP/SSE schemas.
-- Produces: submit/clarify/progress/cancel/report/history experience and clickable Evidence/Source citations.
+**接口**
+- 输入　任务 12 定义的 HTTP 与 SSE Schema。
+- 输出　提交、澄清、进度、取消、报告和历史记录交互，以及可以点击查看的 Evidence 与 Source 引用。
 
-- [ ] **Step 1: Write a failing user-flow test**
+- [ ] **步骤 1　编写失败的用户流程测试**
 
 ```tsx
 // frontend/tests/research-flow.test.tsx
@@ -1661,13 +1661,13 @@ test("submits research and opens cited evidence", async () => {
 });
 ```
 
-- [ ] **Step 2: Run the UI test and verify missing app failure**
+- [ ] **步骤 2　运行 UI 测试并确认因应用不存在而失败**
 
-Run: `cd frontend && npm test -- --run tests/research-flow.test.tsx`
+运行命令　`cd frontend && npm test -- --run tests/research-flow.test.tsx`
 
-Expected: FAIL because App and pages do not exist.
+预期结果　测试因 App 和页面不存在而失败。
 
-- [ ] **Step 3: Implement typed API and resumable event client**
+- [ ] **步骤 3　实现带类型的 API 和可续传事件客户端**
 
 ```ts
 // frontend/src/api/events.ts
@@ -1679,13 +1679,13 @@ export function subscribeToRun(runId: string, afterSequence: number, onEvent: (e
 }
 ```
 
-The UI persists the last displayed sequence, passes it as `afterSequence` after a page reload, and lets native EventSource reconnection send `Last-Event-ID` while the page stays open. Render only `safe_summary`; never render raw prompts or page HTML.
+UI 保存最后显示的序列号。页面刷新后通过 `afterSequence` 恢复，页面保持打开时由原生 EventSource 重连发送 `Last-Event-ID`。界面只能渲染 `safe_summary`，不得渲染原始 Prompt 或网页 HTML。
 
-- [ ] **Step 4: Implement three focused screens**
+- [ ] **步骤 4　实现三个职责集中的页面**
 
-`NewResearch` contains query and optional research constraints. `ResearchRun` shows phase, safe events, sources, failures, token/cost totals, and Cancel. `Report` renders Markdown, an uncertainty section, gaps, and citation buttons that open `EvidenceDrawer` with escaped quote text and an external Source link.
+`NewResearch` 提供查询输入和可选研究约束。`ResearchRun` 展示阶段、安全事件、来源、失败信息、Token 与费用合计和取消按钮。`Report` 渲染 Markdown、不确定性部分、研究缺口和引用按钮。引用按钮打开 `EvidenceDrawer`，其中显示已转义的原文与外部 Source 链接。
 
-- [ ] **Step 5: Add XSS rendering test and pass the UI suite**
+- [ ] **步骤 5　添加 XSS 渲染测试并通过 UI 测试套件**
 
 ```tsx
 test("renders evidence as text rather than HTML", () => {
@@ -1695,42 +1695,42 @@ test("renders evidence as text rather than HTML", () => {
 });
 ```
 
-Run: `cd frontend && npm test -- --run`
+运行命令　`cd frontend && npm test -- --run`
 
-Expected: PASS.
+预期结果　测试通过。
 
-Run: `cd frontend && npm run build`
+运行命令　`cd frontend && npm run build`
 
-Expected: production build succeeds.
+预期结果　生产构建成功。
 
-- [ ] **Step 6: Add API, worker, web, and db services to Docker Compose**
+- [ ] **步骤 6　把 API、Worker、Web 和数据库服务加入 Docker Compose**
 
-Run: `docker compose up --build -d`
+运行命令　`docker compose up --build -d`
 
-Expected: db is healthy; API health endpoint returns 200; worker holds a database lease; web serves the application.
+预期结果　数据库健康，API 健康检查返回 200，Worker 持有数据库租约，Web 可以正常提供页面。
 
-- [ ] **Step 7: Commit product UI and local runtime**
+- [ ] **步骤 7　提交产品界面与本地运行环境**
 
 ```bash
 git add frontend docker-compose.yml
 git commit -m "feat: add the DeepTrace research UI"
 ```
 
-### Task 14: Add Prompt-Injection Tests and Observability
+### 任务 14　添加 Prompt Injection 测试与可观测性
 
-**Files:**
-- Create: `backend/src/deeptrace/security/content_policy.py`
-- Create: `backend/src/deeptrace/observability/tracing.py`
-- Create: `backend/src/deeptrace/observability/metrics.py`
-- Create: `backend/tests/fixtures/security/prompt_injection.html`
-- Create: `backend/tests/security/test_prompt_injection.py`
-- Create: `backend/tests/integration/observability/test_tracing.py`
+**文件**
+- 新建　`backend/src/deeptrace/security/content_policy.py`
+- 新建　`backend/src/deeptrace/observability/tracing.py`
+- 新建　`backend/src/deeptrace/observability/metrics.py`
+- 新建　`backend/tests/fixtures/security/prompt_injection.html`
+- 新建　`backend/tests/security/test_prompt_injection.py`
+- 新建　`backend/tests/integration/observability/test_tracing.py`
 
-**Interfaces:**
-- Consumes: FetchedDocument, RunEventRecord, model/tool calls.
-- Produces: `UntrustedPage`, `sanitize_page_text`, OpenTelemetry spans, and per-run quality/cost counters.
+**接口**
+- 输入　FetchedDocument、RunEventRecord、模型调用和工具调用。
+- 输出　`UntrustedPage`、`sanitize_page_text`、OpenTelemetry Span 和每次运行的质量与成本计数器。
 
-- [ ] **Step 1: Add an adversarial fixture and failing isolation test**
+- [ ] **步骤 1　添加对抗 Fixture 和失败的隔离测试**
 
 ```html
 <!-- backend/tests/fixtures/security/prompt_injection.html -->
@@ -1750,13 +1750,13 @@ async def test_page_instruction_is_data_not_agent_instruction(injection_scenario
     assert "planning and tool use" in result.evidence[0].quote
 ```
 
-- [ ] **Step 2: Run the security test and verify it fails before isolation**
+- [ ] **步骤 2　运行安全测试并确认隔离前失败**
 
-Run: `cd backend && uv run pytest tests/security/test_prompt_injection.py -v`
+运行命令　`cd backend && uv run pytest tests/security/test_prompt_injection.py -v`
 
-Expected: FAIL because page text is not wrapped as untrusted data.
+预期结果　测试因网页文本没有被包装成不可信数据而失败。
 
-- [ ] **Step 3: Implement typed untrusted content and model-message separation**
+- [ ] **步骤 3　实现带类型的不可信内容与模型消息隔离**
 
 ```python
 # backend/src/deeptrace/security/content_policy.py
@@ -1773,9 +1773,9 @@ def as_evidence_message(page: UntrustedPage) -> dict[str, str]:
     }
 ```
 
-The system message states that source data cannot change goals, tools, secrets, or policies. No page string is concatenated into a system/developer message or tool definition.
+系统消息明确规定来源数据不能改变目标、工具、密钥或策略。任何网页字符串都不能拼接进系统消息、开发者消息或工具定义。
 
-- [ ] **Step 4: Instrument spans without content or secrets**
+- [ ] **步骤 4　记录不含正文与密钥的链路 Span**
 
 ```python
 # backend/src/deeptrace/observability/tracing.py
@@ -1791,47 +1791,47 @@ def trace_agent_step(*, run_id: str, phase: str, node: str):
         yield span
 ```
 
-Add a tracing test that exports in memory and asserts attributes include run/phase/token/cost but exclude prompt, API key, raw HTML, and private reasoning.
+添加使用内存导出的链路测试。断言属性包含运行、阶段、Token 和成本，同时不包含 Prompt、API Key、原始 HTML 与模型私有推理。
 
-- [ ] **Step 5: Run Stage B quality gates**
+- [ ] **步骤 5　运行阶段 B 的质量门禁**
 
-Run: `cd backend && uv run pytest tests/unit tests/workflow tests/integration tests/security -v`
+运行命令　`cd backend && uv run pytest tests/unit tests/workflow tests/integration tests/security -v`
 
-Expected: PASS.
+预期结果　测试通过。
 
-Run: `cd frontend && npm test -- --run && npm run build`
+运行命令　`cd frontend && npm test -- --run && npm run build`
 
-Expected: PASS.
+预期结果　测试通过。
 
-- [ ] **Step 6: Commit security and observability**
+- [ ] **步骤 6　提交安全与可观测性能力**
 
 ```bash
 git add backend/src/deeptrace/security backend/src/deeptrace/observability backend/tests/security backend/tests/integration/observability
 git commit -m "security: isolate web content and trace safe metadata"
 ```
 
-**Stage B deliverable:** Docker Compose starts db, API, worker, and web; a user can submit, monitor, cancel, resume, update, and inspect a cited report. Restart and stale-memory tests pass without duplicate calls or unverified publication.
+**阶段 B 交付物**　Docker Compose 能够启动数据库、API、Worker 和 Web。用户可以提交、监控、取消、恢复和更新研究，也能检查带引用的报告。重启恢复与过期 Memory 测试必须通过，不得出现重复调用或未验证内容发布。
 
 ---
 
-## Stage C — Evaluation, Ablations, and Portfolio Delivery
+## 阶段 C　评测、消融与作品集交付
 
-### Task 15: Build the 30-Question Chinese Evaluation Set and Deterministic Metrics
+### 任务 15　构建 30 题中文评测集与确定性指标
 
-**Files:**
-- Create: `evals/datasets/schema.json`
-- Create: `evals/datasets/dev.jsonl`
-- Create: `evals/datasets/holdout.jsonl`
-- Create: `evals/src/deeptrace_evals/dataset.py`
-- Create: `evals/src/deeptrace_evals/metrics.py`
-- Create: `evals/tests/test_dataset.py`
-- Create: `evals/tests/test_metrics.py`
+**文件**
+- 新建　`evals/datasets/schema.json`
+- 新建　`evals/datasets/dev.jsonl`
+- 新建　`evals/datasets/holdout.jsonl`
+- 新建　`evals/src/deeptrace_evals/dataset.py`
+- 新建　`evals/src/deeptrace_evals/metrics.py`
+- 新建　`evals/tests/test_dataset.py`
+- 新建　`evals/tests/test_metrics.py`
 
-**Interfaces:**
-- Consumes: DeepTrace report JSON, Evidence/Claim/Source publication records, and the frozen evaluation files.
-- Produces: dataset validation plus citation validity, citation coverage, unsupported-claim rate, source diversity, latency, token, and cost metrics.
+**接口**
+- 输入　DeepTrace 报告 JSON、Evidence、Claim、Source 发布记录和冻结的评测文件。
+- 输出　数据集校验、引用有效率、引用覆盖率、无证据 Claim 比例、来源多样性、延迟、Token 和成本指标。
 
-- [ ] **Step 1: Write failing dataset-contract tests**
+- [ ] **步骤 1　编写失败的数据集契约测试**
 
 ```python
 # evals/tests/test_dataset.py
@@ -1852,11 +1852,11 @@ def test_frozen_dataset_has_20_dev_and_10_holdout_questions() -> None:
     }
 ```
 
-- [ ] **Step 2: Freeze the exact 30 prompts before tuning**
+- [ ] **步骤 2　在调优前冻结 30 道题目**
 
-Create JSONL records with `id`, `split`, `category`, `query`, `as_of_policy`, `required_source_types`, and `risk_tags`. Use these exact questions:
+创建包含 `id`、`split`、`category`、`query`、`as_of_policy`、`required_source_types` 和 `risk_tags` 的 JSONL 记录。使用下面 30 道固定题目。
 
-| ID | Split | Category | Query |
+| ID | 数据集 | 类别 | 问题 |
 |---|---|---|---|
 | AI01 | dev | ai_news | 截至运行当天，过去 7 天 AI Agent 领域有哪些重要产品或研究发布？按影响排序并给出一手来源。 |
 | AI02 | dev | ai_news | 截至运行当天，过去 30 天 OpenAI、Anthropic、Google 在 Agent 能力上分别发布了什么？ |
@@ -1889,9 +1889,9 @@ Create JSONL records with `id`, `split`, `category`, `query`, `as_of_policy`, `r
 | SEC04 | holdout | security | 调研 Agent 工具调用中的最小权限和人工审批设计，优先使用官方资料。 |
 | SEC05 | holdout | security | 分析研究报告展示外部网页内容时的 XSS 风险及端到端防护方案。 |
 
-For time-relative questions, store the run timestamp and judge only facts available at that timestamp. Never revise the holdout prompts after the first full-system run.
+对于和时间相关的问题，保存运行时间，只评判当时已经公开的事实。第一次运行完整系统以后，不再修改隐藏集题目。
 
-- [ ] **Step 3: Implement strict JSONL loading and schema validation**
+- [ ] **步骤 3　实现严格的 JSONL 加载与 Schema 校验**
 
 ```python
 # evals/src/deeptrace_evals/dataset.py
@@ -1914,7 +1914,7 @@ def load_examples(path: Path) -> list[EvaluationExample]:
     return [EvaluationExample.model_validate_json(line) for line in lines]
 ```
 
-- [ ] **Step 4: Write failing metric tests with a complete synthetic report**
+- [ ] **步骤 4　使用完整合成报告编写失败的指标测试**
 
 ```python
 # evals/tests/test_metrics.py
@@ -1935,7 +1935,7 @@ def test_metrics_count_only_published_claim_evidence_links() -> None:
     assert metrics.source_diversity == 1
 ```
 
-- [ ] **Step 5: Implement deterministic metrics**
+- [ ] **步骤 5　实现确定性指标**
 
 ```python
 # evals/src/deeptrace_evals/metrics.py
@@ -1967,34 +1967,34 @@ def evaluate_report(report: dict) -> ReportMetrics:
     return ReportMetrics(citation_validity=_ratio(len(valid_links), published_link_count), citation_coverage=_ratio(len(cited_claims), substantive_count), unsupported_claim_rate=1.0 - _ratio(len(cited_claims), substantive_count), source_diversity=len(source_domains), latency_seconds=float(report["latency_seconds"]), input_tokens=int(report["input_tokens"]), output_tokens=int(report["output_tokens"]), cost_usd=float(report["cost_usd"]))
 ```
 
-- [ ] **Step 6: Run and commit the frozen evaluation foundation**
+- [ ] **步骤 6　运行并提交冻结的评测基础**
 
-Run: `cd evals && uv run pytest -v`
+运行命令　`cd evals && uv run pytest -v`
 
-Expected: PASS with exactly 20 dev and 10 holdout records.
+预期结果　测试通过，开发集恰好包含 20 条记录，隐藏集恰好包含 10 条记录。
 
 ```bash
 git add evals/datasets evals/src/deeptrace_evals/dataset.py evals/src/deeptrace_evals/metrics.py evals/tests
 git commit -m "test: add frozen DeepTrace evaluation set and metrics"
 ```
 
-### Task 16: Implement Baselines, Ablations, and Reproducible Experiment Runs
+### 任务 16　实现 Baseline、消融和可复现实验运行
 
-**Files:**
-- Create: `evals/configs/experiments.yaml`
-- Create: `evals/src/deeptrace_evals/experiments.py`
-- Create: `evals/src/deeptrace_evals/runner.py`
-- Create: `evals/src/deeptrace_evals/cli.py`
-- Create: `evals/src/deeptrace_evals/adapters/deeptrace.py`
-- Create: `evals/src/deeptrace_evals/adapters/external.py`
-- Create: `evals/tests/test_experiments.py`
-- Create: `evals/tests/test_runner.py`
+**文件**
+- 新建　`evals/configs/experiments.yaml`
+- 新建　`evals/src/deeptrace_evals/experiments.py`
+- 新建　`evals/src/deeptrace_evals/runner.py`
+- 新建　`evals/src/deeptrace_evals/cli.py`
+- 新建　`evals/src/deeptrace_evals/adapters/deeptrace.py`
+- 新建　`evals/src/deeptrace_evals/adapters/external.py`
+- 新建　`evals/tests/test_experiments.py`
+- 新建　`evals/tests/test_runner.py`
 
-**Interfaces:**
-- Consumes: frozen dataset, DeepTrace HTTP API, optional external-project HTTP endpoints, and an immutable experiment config.
-- Produces: one JSON result per example plus aggregate JSON containing config hash, git SHA, model IDs, timestamps, metrics, failures, and costs.
+**接口**
+- 输入　冻结的数据集、DeepTrace HTTP API、可选外部项目 HTTP Endpoint 和不可变实验配置。
+- 输出　每个样本一份 JSON 结果，以及包含配置哈希、Git SHA、模型 ID、时间戳、指标、失败信息和成本的聚合 JSON。
 
-- [ ] **Step 1: Write a failing experiment-matrix test**
+- [ ] **步骤 1　编写失败的实验矩阵测试**
 
 ```python
 # evals/tests/test_experiments.py
@@ -2013,7 +2013,7 @@ def test_required_baselines_and_ablations_are_frozen() -> None:
     assert configs["deeptrace_no_verifier"].verifier_enabled is False
 ```
 
-- [ ] **Step 2: Define the exact experiment contract and matrix**
+- [ ] **步骤 2　定义准确的实验契约与矩阵**
 
 ```python
 # evals/src/deeptrace_evals/experiments.py
@@ -2039,9 +2039,9 @@ def load_experiments(path: str) -> list[ExperimentConfig]:
     return [ExperimentConfig.model_validate(item) for item in payload["experiments"]]
 ```
 
-`experiments.yaml` encodes these exact differences: `direct_answer` uses zero web researchers and no verifier; `single_researcher_no_gap_loop` uses one researcher and one round; `deeptrace_no_verifier` changes only verifier enablement from full; `deeptrace_fixed_two_rounds` changes only gap-loop policy; `deeptrace_full` uses verifier plus evidence-driven stopping; `deeptrace_memory_update` runs a fresh query followed by an update query over the same topic. External adapters are pinned by commit SHA and run on the dev split only.
+`experiments.yaml` 固定以下差异。`direct_answer` 不使用网页 Researcher 和 Verifier。`single_researcher_no_gap_loop` 使用一个 Researcher，只运行一轮。`deeptrace_no_verifier` 仅关闭完整版中的 Verifier。`deeptrace_fixed_two_rounds` 仅改变缺口循环策略。`deeptrace_full` 使用 Verifier 和证据驱动停止。`deeptrace_memory_update` 先运行一次新研究，再对同一主题运行更新研究。外部 Adapter 固定到具体 Commit SHA，只在开发集运行。
 
-- [ ] **Step 3: Write a failing resumable-runner test**
+- [ ] **步骤 3　编写失败的可续跑 Runner 测试**
 
 ```python
 # evals/tests/test_runner.py
@@ -2059,7 +2059,7 @@ async def test_runner_skips_completed_examples_and_records_failures(tmp_path, fa
     assert record.config_hash
 ```
 
-- [ ] **Step 4: Implement atomic result records and config hashing**
+- [ ] **步骤 4　实现原子结果记录与配置哈希**
 
 ```python
 # evals/src/deeptrace_evals/runner.py
@@ -2113,9 +2113,9 @@ class ExperimentRunner:
         return record
 ```
 
-- [ ] **Step 5: Implement pinned adapters without copying upstream orchestration code**
+- [ ] **步骤 5　实现固定版本 Adapter，不复制上游编排代码**
 
-`DeepTraceAdapter.run` creates a run, consumes SSE until a terminal event, then fetches the report and its published evidence graph. `ExternalHttpAdapter.run` posts the same query to a configured local endpoint and normalizes report text, citations, latency, token usage, and errors. If an external endpoint is unavailable, record that state instead of substituting DeepTrace.
+`DeepTraceAdapter.run` 创建运行，消费 SSE 直到收到终止事件，随后获取报告和已发布证据图。`ExternalHttpAdapter.run` 向配置的本地 Endpoint 提交同一个问题，并统一报告正文、引用、延迟、Token 用量和错误格式。外部 Endpoint 不可用时明确记录该状态，不得用 DeepTrace 结果替代。
 
 ```python
 # evals/src/deeptrace_evals/adapters/external.py
@@ -2140,37 +2140,37 @@ class ExternalHttpAdapter:
         return response.json()
 ```
 
-- [ ] **Step 6: Run the dev experiments, preserve raw outputs, and commit configs/code**
+- [ ] **步骤 6　运行开发集实验，保留原始输出并提交配置与代码**
 
-Run: `cd evals && uv run pytest -v`
+运行命令　`cd evals && uv run pytest -v`
 
-Expected: PASS.
+预期结果　测试通过。
 
-Run: `cd evals && uv run python -m deeptrace_evals.cli run --split dev --config configs/experiments.yaml --output .artifacts/runs`
+运行命令　`cd evals && uv run python -m deeptrace_evals.cli run --split dev --config configs/experiments.yaml --output .artifacts/runs`
 
-Expected: 20 records per available experiment; unavailable external systems are explicitly counted.
+预期结果　每个可用实验生成 20 条记录，不可用的外部系统被单独统计。
 
 ```bash
 git add evals/configs evals/src/deeptrace_evals/experiments.py evals/src/deeptrace_evals/runner.py evals/src/deeptrace_evals/adapters evals/tests
 git commit -m "feat: add reproducible DeepTrace baselines and ablations"
 ```
 
-### Task 17: Enforce Acceptance Gates and Package the Project for Review
+### 任务 17　落实验收门禁并整理项目评审材料
 
-**Files:**
-- Create: `evals/src/deeptrace_evals/acceptance.py`
-- Create: `evals/tests/test_acceptance.py`
-- Create: `.github/workflows/ci.yml`
-- Create: `docs/evaluation/2026-08-29-mvp-results.md`
-- Create: `docs/demo/demo-script.md`
-- Create: `docs/resume/deeptrace-project.md`
-- Modify: `README.md`
+**文件**
+- 新建　`evals/src/deeptrace_evals/acceptance.py`
+- 新建　`evals/tests/test_acceptance.py`
+- 新建　`.github/workflows/ci.yml`
+- 新建　`docs/evaluation/2026-08-29-mvp-results.md`
+- 新建　`docs/demo/demo-script.md`
+- 新建　`docs/resume/deeptrace-project.md`
+- 修改　`README.md`
 
-**Interfaces:**
-- Consumes: aggregate evaluation JSON, backend/frontend test commands, architecture documents, and reproducibility metadata.
-- Produces: a machine-enforced acceptance result and a reviewer-ready repository narrative with measured claims only.
+**接口**
+- 输入　聚合评测 JSON、前后端测试命令、架构文档和复现元数据。
+- 输出　机器强制执行的验收结果，以及只使用实测结论的项目评审材料。
 
-- [ ] **Step 1: Write failing acceptance-threshold tests**
+- [ ] **步骤 1　编写失败的验收阈值测试**
 
 ```python
 # evals/tests/test_acceptance.py
@@ -2195,7 +2195,7 @@ def test_rejects_unverified_or_budget_violating_release() -> None:
         })
 ```
 
-- [ ] **Step 2: Implement explicit release thresholds**
+- [ ] **步骤 2　实现明确的发布阈值**
 
 ```python
 # evals/src/deeptrace_evals/acceptance.py
@@ -2217,7 +2217,7 @@ def check_acceptance(metrics: dict[str, float | int]) -> None:
         raise AcceptanceFailure("; ".join(failed))
 ```
 
-- [ ] **Step 3: Add CI with unit, integration, security, UI, and dataset gates**
+- [ ] **步骤 3　添加覆盖单元、集成、安全、UI 与数据集的 CI 门禁**
 
 ```yaml
 # .github/workflows/ci.yml
@@ -2252,55 +2252,55 @@ jobs:
         working-directory: frontend
 ```
 
-- [ ] **Step 4: Generate the results document from immutable artifacts**
+- [ ] **步骤 4　从不可变实验产物生成结果文档**
 
-Run: `cd evals && uv run python -m deeptrace_evals.cli summarize --input .artifacts/runs --output ../docs/evaluation/2026-08-29-mvp-results.md`
+运行命令　`cd evals && uv run python -m deeptrace_evals.cli summarize --input .artifacts/runs --output ../docs/evaluation/2026-08-29-mvp-results.md`
 
-Expected: the report contains dataset version/hash, git SHA, model IDs, per-category tables, confidence intervals, failure taxonomy, baseline/ablation deltas, token/cost/latency, and the acceptance verdict. Any unavailable external baseline appears in limitations, never as a zero score.
+预期结果　报告包含数据集版本与哈希、Git SHA、模型 ID、分类结果表、置信区间、失败分类、Baseline 与消融差值、Token、成本、延迟和验收结论。不可用的外部 Baseline 必须写入限制说明，不能记为零分。
 
-- [ ] **Step 5: Write the reviewer-facing README, demo, and resume entry**
+- [ ] **步骤 5　编写面向评审者的 README、演示脚本与简历项目描述**
 
-`README.md` must include the problem statement, architecture diagram link, five-minute Docker quick start, a cited example report, evidence graph explanation, failure/recovery behavior, evaluation table, security boundaries, limitations, and reproducibility commands. `docs/demo/demo-script.md` demonstrates one fresh news query, one official-job-page query, citation inspection, cancellation/recovery, and an update run. `docs/resume/deeptrace-project.md` contains a 30-second pitch, three interview deep dives, and only metrics copied from the generated results document.
+`README.md` 必须包含问题说明、架构图链接、五分钟 Docker 快速启动、带引用的示例报告、证据图说明、失败与恢复行为、评测表、安全边界、限制和复现命令。`docs/demo/demo-script.md` 演示一次新闻研究、一次官方招聘页研究、引用检查、取消与恢复，以及一次更新研究。`docs/resume/deeptrace-project.md` 包含 30 秒项目介绍、三个面试深挖主题，并且只使用生成结果文档中的实测指标。
 
-- [ ] **Step 6: Run the complete release checklist**
+- [ ] **步骤 6　运行完整发布检查清单**
 
-Run: `cd backend && uv run pytest -v`
+运行命令　`cd backend && uv run pytest -v`
 
-Expected: PASS.
+预期结果　测试通过。
 
-Run: `cd evals && uv run pytest -v`
+运行命令　`cd evals && uv run pytest -v`
 
-Expected: PASS and dataset remains exactly 20 dev/10 holdout.
+预期结果　测试通过，数据集仍保持 20 道开发题和 10 道隐藏题。
 
-Run: `cd frontend && npm test -- --run && npm run build`
+运行命令　`cd frontend && npm test -- --run && npm run build`
 
-Expected: PASS.
+预期结果　测试通过。
 
-Run: `docker compose up --build -d`
+运行命令　`docker compose up --build -d`
 
-Expected: health checks pass and the scripted demo completes without budget or publication violations.
+预期结果　健康检查通过，演示脚本完整运行，没有预算违规或发布边界违规。
 
-- [ ] **Step 7: Commit the acceptance and portfolio package**
+- [ ] **步骤 7　提交验收与作品集材料**
 
 ```bash
 git add .github/workflows/ci.yml README.md docs/evaluation docs/demo docs/resume evals/src/deeptrace_evals/acceptance.py evals/tests/test_acceptance.py
 git commit -m "docs: publish DeepTrace evaluation and portfolio package"
 ```
 
-**Stage C deliverable:** the repository can prove what the system does, where it fails, how much it costs, and which architectural components cause measurable gains. Resume claims are traceable to frozen artifacts rather than manually written numbers.
+**阶段 C 交付物**　仓库能够证明系统完成了什么、在哪里失败、成本是多少，以及哪些架构组件带来了可测量收益。简历中的指标必须能追溯到冻结的实验产物，不能手工编写。
 
 ---
 
-## Final Verification and Definition of Done
+## 最终验证与完成标准
 
-- [ ] Every substantive sentence in a generated report maps to a published Claim with at least one verified Evidence link.
-- [ ] Search snippets, unverified extracts, blocked pages, and stale claims cannot cross the publication boundary.
-- [ ] The global limits remain enforced under concurrency, retries, cancellation, restart, and update runs.
-- [ ] A killed worker resumes from the last durable checkpoint without duplicating charged tool calls.
-- [ ] SSRF, prompt-injection, XSS, secret-leak, and sensitive-trace tests pass.
-- [ ] The UI exposes progress, safe failures, cost, sources, cancellation, recovery, report history, and evidence inspection.
-- [ ] The frozen 30-question set, baselines, ablations, configuration hashes, and raw result artifacts reproduce the published evaluation.
-- [ ] The README quick start succeeds from a clean clone using documented prerequisites.
-- [ ] The final architecture and resume descriptions match the implemented code and measured results.
+- [ ] 生成报告中的每个实质性句子都映射到已发布 Claim，并且至少关联一条已验证 Evidence。
+- [ ] 搜索摘要、未验证摘录、被拦截网页和过期 Claim 无法越过发布边界。
+- [ ] 并发、重试、取消、重启和更新研究期间，全局限制始终有效。
+- [ ] Worker 被终止后能够从最后一个持久化 Checkpoint 恢复，不重复执行计费工具调用。
+- [ ] SSRF、Prompt Injection、XSS、密钥泄漏和敏感链路测试全部通过。
+- [ ] UI 提供进度、安全失败信息、成本、来源、取消、恢复、报告历史和证据检查。
+- [ ] 使用冻结的 30 题数据集、Baseline、消融配置、配置哈希和原始结果产物能够复现已发布评测。
+- [ ] 按 README 记录的前置条件，可以从全新 Clone 成功完成快速启动。
+- [ ] 最终架构说明和简历描述与实际代码及实测结果一致。
 
-The MVP is complete only when all three stage deliverables and every item above are checked. A visually complete UI or a plausible report without recovery, evidence, and evaluation gates is not a completed DeepTrace MVP.
+三个阶段的交付物和以上检查项全部完成后，MVP 才算完成。只有完整界面或看起来合理的报告仍然不够，恢复、证据和评测门禁同样必须通过。
