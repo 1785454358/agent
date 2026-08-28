@@ -1,0 +1,98 @@
+<style>
+  .arch-shell { max-width: 1180px; margin: 0 auto; }
+  .arch-grid { display: grid; grid-template-columns: 190px 1fr; gap: 14px 20px; align-items: stretch; }
+  .lane-label { display: flex; align-items: center; justify-content: flex-end; text-align: right; font-weight: 700; color: #93a4b8; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+  .lane { border: 1px solid rgba(148,163,184,.20); border-radius: 14px; padding: 16px; background: rgba(15,23,42,.42); }
+  .flow { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
+  .node { flex: 1 1 128px; min-width: 128px; padding: 13px 12px; border-radius: 11px; background: linear-gradient(145deg, rgba(30,41,59,.96), rgba(15,23,42,.96)); border: 1px solid rgba(96,165,250,.24); box-shadow: inset 0 1px rgba(255,255,255,.03); }
+  .node strong { display:block; color:#e5eef9; font-size:14px; margin-bottom:5px; }
+  .node span { color:#91a1b6; font-size:12px; line-height:1.45; }
+  .node.accent { border-color:rgba(45,212,191,.45); background:linear-gradient(145deg, rgba(13,63,67,.88), rgba(15,23,42,.96)); }
+  .node.verify { border-color:rgba(251,191,36,.45); background:linear-gradient(145deg, rgba(69,50,16,.78), rgba(15,23,42,.96)); }
+  .node.output { border-color:rgba(167,139,250,.48); background:linear-gradient(145deg, rgba(56,38,92,.82), rgba(15,23,42,.96)); }
+  .arrow { display:flex; align-items:center; color:#52657b; font-size:20px; }
+  .loop { margin-top:12px; padding:9px 12px; border:1px dashed rgba(251,191,36,.35); border-radius:10px; color:#d5b763; font-size:12px; text-align:center; }
+  .infra { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .infra div { padding:11px; border-radius:10px; background:rgba(30,41,59,.68); color:#aebdd0; text-align:center; font-size:12px; }
+  .legend { display:flex; gap:18px; flex-wrap:wrap; margin:18px 0 4px 210px; color:#8fa0b5; font-size:12px; }
+  .dot { display:inline-block; width:9px; height:9px; border-radius:99px; margin-right:6px; }
+  .design-note { margin:20px 0 0 210px; padding:14px 16px; border-left:3px solid #2dd4bf; background:rgba(13,148,136,.08); border-radius:0 10px 10px 0; color:#aebdd0; font-size:13px; line-height:1.6; }
+  @media (max-width: 850px) { .arch-grid { grid-template-columns:1fr; } .lane-label { justify-content:flex-start; text-align:left; } .arrow { display:none; } .infra { grid-template-columns:1fr 1fr; } .legend,.design-note { margin-left:0; } }
+</style>
+
+<div class="arch-shell">
+  <h2>DeepTrace MVP · 系统架构 v1</h2>
+  <p class="subtitle">核心原则：Agent 只负责决策，工具负责获取事实，Evidence Store 是唯一可进入报告的事实来源。</p>
+
+  <div class="arch-grid">
+    <div class="lane-label">交互与 API</div>
+    <div class="lane">
+      <div class="flow">
+        <div class="node"><strong>Web UI</strong><span>提交任务、确认研究范围、查看报告</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><strong>FastAPI + SSE</strong><span>任务 API、实时事件流、报告与历史记录</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><strong>Run Service</strong><span>创建、恢复、取消研究任务；控制预算</span></div>
+      </div>
+    </div>
+
+    <div class="lane-label">Agent 编排层</div>
+    <div class="lane">
+      <div class="flow">
+        <div class="node"><strong>Intake</strong><span>解析问题；必要时只追问一次</span></div>
+        <div class="arrow">→</div>
+        <div class="node accent"><strong>Planner</strong><span>生成 3–6 个子任务与完成标准</span></div>
+        <div class="arrow">→</div>
+        <div class="node accent"><strong>Researcher × 3</strong><span>并行执行搜索、抓取、证据抽取</span></div>
+        <div class="arrow">→</div>
+        <div class="node verify"><strong>Verifier</strong><span>支持性、时效性、冲突与来源质量</span></div>
+        <div class="arrow">→</div>
+        <div class="node verify"><strong>Gap Controller</strong><span>补搜、改写查询或结束研究</span></div>
+        <div class="arrow">→</div>
+        <div class="node output"><strong>Report Writer</strong><span>只读取已验证证据，生成行内引用</span></div>
+      </div>
+      <div class="loop">自适应循环：证据覆盖不足且仍有预算 → Gap Controller 将缺口重新派发给 Researcher（最多 2 轮）</div>
+    </div>
+
+    <div class="lane-label">工具与证据层</div>
+    <div class="lane">
+      <div class="flow">
+        <div class="node"><strong>Search Gateway</strong><span>统一搜索接口、结果去重、域名策略</span></div>
+        <div class="node"><strong>Web Fetcher</strong><span>HTML 获取、动态网页降级、超时重试</span></div>
+        <div class="node"><strong>Content Extractor</strong><span>正文、标题、作者、时间与原文片段</span></div>
+        <div class="node verify"><strong>Evidence Store</strong><span>Claim ↔ Evidence ↔ Source 可追溯关系</span></div>
+      </div>
+    </div>
+
+    <div class="lane-label">状态与基础设施</div>
+    <div class="lane">
+      <div class="infra">
+        <div>PostgreSQL<br>任务、证据、报告</div>
+        <div>pgvector<br>历史证据与研究记忆</div>
+        <div>LangGraph Checkpoint<br>状态恢复与中断</div>
+        <div>Tracing / Metrics<br>耗时、Token、错误与轨迹</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:#2dd4bf"></i>规划与执行</span>
+    <span><i class="dot" style="background:#fbbf24"></i>质量控制</span>
+    <span><i class="dot" style="background:#a78bfa"></i>最终输出</span>
+  </div>
+
+  <div class="design-note">
+    <strong>关键设计判断：</strong> 第一版采用“一个 Planner + 并行 Researcher + 一个 Verifier”的受控多智能体结构。每个 Agent 都有明确输入输出，不让多个角色自由聊天；这样更容易测试、恢复、限制成本，也更符合工程化 Agent 的面试重点。
+  </div>
+
+  <div class="options" style="margin-top:22px">
+    <div class="option" data-choice="approve-architecture" onclick="toggleSelect(this)">
+      <div class="letter">A</div><div class="content"><h3>认可架构 v1</h3><p>继续细化模块职责、核心数据模型与一次完整运行的数据流。</p></div>
+    </div>
+    <div class="option" data-choice="revise-architecture" onclick="toggleSelect(this)">
+      <div class="letter">B</div><div class="content"><h3>需要调整</h3><p>在终端告诉我希望增加、删除或改变的部分。</p></div>
+    </div>
+  </div>
+</div>
+
+
