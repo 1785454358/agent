@@ -147,9 +147,8 @@ backend/
 │       ├── agent.py
 │       └── tools.py
 └── tests/
-    ├── test_agent.py
-    ├── test_tools.py
-    └── test_live_agent.py
+    ├── test_real_agent.py
+    └── test_real_tools.py
 ```
 
 | 文件 | 职责 |
@@ -158,9 +157,8 @@ backend/
 | `cli.py` | 接收终端输入、启动 Agent、显示运行事件和最终答案 |
 | `agent.py` | 实现原生 Tool Calling 循环与终止规则 |
 | `tools.py` | 实现搜索、网页抓取、Tool Schema 和工具分发 |
-| `test_agent.py` | 使用 Fake 模型测试工具循环、错误反馈和终止条件 |
-| `test_tools.py` | 测试搜索格式、网页提取、URL 限制和错误结构 |
-| `test_live_agent.py` | 显式启用时使用真实 LLM 与 Tavily API Key 验证端到端闭环 |
+| `test_real_agent.py` | 使用真实 LLM、Tavily 和公开网页测试完整 Agent 闭环 |
+| `test_real_tools.py` | 使用真实 Tavily 和公开网页测试搜索、抓取、URL 限制与错误结构 |
 
 阶段 1 不创建 `providers/`、`domain/`、`repositories/` 或 `services/`。这些目录在后续阶段出现真实需求时再加入。
 
@@ -327,57 +325,50 @@ uv run python -m deeptrace.cli "今天 AI Agent 领域有哪些热点新闻？"
 
 ## 13. 阶段 1 的测试设计
 
-测试分为默认确定性测试和显式启用的真实集成测试。用户已经具备 LLM 与 Tavily API Key，因此阶段 1 必须提供真实 API 测试入口。
+阶段 1 不使用 Fake Provider、Mock HTTP 或模拟模型。所有测试直接调用真实 LLM、Tavily 和公开网页。
 
-运行普通 `pytest` 时只执行 Fake 测试，不读取真实 API Key，也不调用网络。真实测试使用 `live` Marker，只有明确传入 `-m live` 时执行。
-
-### 13.1 工具测试
-
-- Tavily 响应被转换成稳定的数据结构。
-- 搜索结果数量受到限制。
-- HTML 正文能够被提取并截断。
-- 非 HTML、空正文、超时和 HTTP 错误返回稳定错误码。
-- 未知工具不会执行。
-- localhost 和显式私有 IP 被拒绝。
-
-### 13.2 Agent 测试
-
-- Fake 模型先调用搜索，再调用抓取，最后返回答案。
-- 一轮中出现多个 Tool Call 时全部得到正确 tool message。
-- 工具失败后错误能够回填给模型。
-- 达到最大轮数时安全终止。
-- 最终来源只能来自实际抓取 URL 集合。
-- 普通回答不触发任何工具。
-
-### 13.3 真实 API 集成测试
-
-真实测试从本地环境读取：
+测试从本地环境读取：
 
 - `OPENAI_API_KEY`
 - `OPENAI_BASE_URL`
 - `OPENAI_MODEL`
 - `TAVILY_API_KEY`
 
-推荐命令：
+运行命令：
 
 ```powershell
-uv run pytest -m live -v
+uv run pytest -v
 ```
 
-真实测试至少验证：
+缺少任一必需 API Key 时，测试在开始阶段明确失败并列出缺失变量，不自动跳过，也不切换到模拟实现。
+
+### 13.1 真实工具测试
+
+- 真实 Tavily 查询至少返回一条具有标题和 URL 的结果。
+- `max_results` 真实限制返回数量。
+- 从搜索结果选择一个公开 HTML 页面并实际下载。
+- Trafilatura 从真实页面提取非空正文。
+- 正文长度限制对真实抓取结果生效。
+- `example.invalid` 等真实不可解析地址返回稳定工具错误。
+- localhost 和显式私有 IP 在发起请求前被拒绝。
+
+### 13.2 真实 Agent 测试
 
 - 模型能够返回合法 Tool Call。
 - Tavily 能够返回至少一条搜索结果。
 - Agent 至少成功抓取一个公开 HTML 页面。
+- 一次运行能够发生多次真实 Tool Call。
 - 最终运行在最大步数以内结束。
 - 最终结果包含至少一个本次实际抓取的 URL。
 - 测试输出和异常不包含完整 API Key。
 
-真实新闻和招聘页面会变化，因此测试不能断言固定文章标题、固定招聘数量或完整答案文本。它只断言工具链和关键不变量。
+真实 Agent 测试使用明确要求搜索与抓取的测试问题，避免模型在简单问题上直接回答。测试记录模型名称、工具调用序列、抓取 URL、耗时与 Token 使用量。
 
-真实测试默认不进入普通 CI。只有 CI 配置了受保护 Secret，并且明确启用 `live` Job 时才运行。
+真实新闻、搜索排序和招聘页面会变化，因此测试不能断言固定标题、固定招聘数量、固定 URL 或完整答案文本。测试只断言工具链和关键不变量。
 
-### 13.4 真实问题验收
+CI 只有配置了受保护的 LLM 与 Tavily Secret 后才能运行测试。没有真实 Secret 的 CI 不配置测试 Job，不能用 Fake 或 Mock 替代。
+
+### 13.3 真实问题验收
 
 至少运行两个问题：
 
@@ -389,7 +380,7 @@ uv run pytest -m live -v
 调研当前字节跳动 Agent 开发岗位的招聘要求，并给出来源。
 ```
 
-验收时记录模型名称、运行时间、工具调用顺序、抓取 URL、最终答案和失败页面。真实集成测试通过以后再执行这两项人工验收。
+验收时记录模型名称、运行时间、工具调用顺序、抓取 URL、最终答案和失败页面。真实测试通过以后再执行这两项人工验收。
 
 ## 14. 阶段 1 的完成标准
 
@@ -401,8 +392,8 @@ uv run pytest -m live -v
 4. 最终来源都属于本次实际抓取 URL。
 5. 工具失败不会造成无提示崩溃。
 6. 达到循环上限后能够安全停止。
-7. 默认单元测试不依赖真实网络和 API Key。
-8. `pytest -m live` 能使用真实 LLM 与 Tavily API Key 完成端到端测试。
+7. `pytest` 使用真实 LLM、Tavily 和公开网页完成全部测试。
+8. 测试代码中不存在 Fake Provider、Mock HTTP 或模拟模型。
 9. 两个真实验收问题至少各完成一次可解释运行。
 
 ## 15. 手动搭建文档的写法
@@ -419,7 +410,7 @@ uv run pytest -m live -v
 4. 定义 Tool Schema 与工具分发器。
 5. 实现单 Agent Tool Calling 循环。
 6. 增加运行边界和终端事件。
-7. 完成 Fake 测试、真实 API 集成测试与真实问题验收。
+7. 完成真实工具测试、真实 Agent 测试与真实问题验收。
 
 每个操作步骤都必须包含：
 
@@ -448,8 +439,7 @@ uv run pytest -m live -v
 - `.env.example`
 - Python 包
 - 自动化测试
-- Fixture 和 Fake 模型
-- 使用 `live` Marker 的真实 API 集成测试
+- 真实 LLM、Tavily 和公开网页集成测试
 - `README.md`
 - 运行命令
 
@@ -458,8 +448,9 @@ uv run pytest -m live -v
 - 不导入正式项目代码。
 - 不要求正式项目目录存在。
 - 不和正式项目共享 Python 包或虚拟环境。
-- 普通测试默认不调用网络和真实模型。
-- 只有执行 `pytest -m live` 时才读取真实 LLM 与 Tavily API Key。
+- 所有测试都通过真实 Provider 和真实网络执行。
+- 不实现 Fake Provider、Mock HTTP 或模拟模型。
+- 执行 `pytest` 时读取真实 LLM 与 Tavily API Key。
 - 真实密钥只保存在用户本地 `.env` 或环境变量中，不能写入参考实现和 Git。
 - 文件和步骤能够映射到同阶段搭建文档。
 - 参考实现生成时不创建 `backend/` 或 `frontend/`。
