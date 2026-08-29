@@ -1,4 +1,8 @@
 from dataclasses import replace
+import os
+from pathlib import Path
+import subprocess
+import sys
 
 import httpx
 from openai import OpenAI
@@ -65,3 +69,29 @@ def test_real_agent_respects_one_step_budget() -> None:
     assert result.status == "max_steps_reached"
     assert result.steps == 1
     assert len(result.tool_events) >= 1
+
+
+def test_cli_completes_a_real_research_question_without_leaking_keys() -> None:
+    settings = Settings.from_env()
+    project_root = Path(__file__).resolve().parents[1]
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "deeptrace.cli",
+            "请搜索并抓取一个 Python 官方页面，然后用中文说明 Python 的一个特点。",
+        ],
+        cwd=project_root,
+        env=os.environ.copy(),
+        capture_output=True,
+        text=True,
+        timeout=180,
+        check=False,
+    )
+
+    combined_output = completed.stdout + completed.stderr
+    assert completed.returncode == 0
+    assert "最终答案" in completed.stdout
+    assert "来源" in completed.stdout
+    assert settings.openai_api_key not in combined_output
+    assert settings.tavily_api_key not in combined_output
