@@ -2,7 +2,13 @@ import httpx
 from tavily import TavilyClient
 
 from deeptrace.config import Settings
-from deeptrace.tools import ToolContext, fetch_webpage, search_web
+from deeptrace.tools import (
+    TOOL_SCHEMAS,
+    ToolContext,
+    execute_tool,
+    fetch_webpage,
+    search_web,
+)
 
 
 def test_real_service_settings_are_available() -> None:
@@ -92,3 +98,40 @@ def test_fetch_webpage_returns_a_structured_network_error() -> None:
 
     assert result["ok"] is False
     assert result["error"]["code"] == "fetch_failed"
+
+
+def test_tool_schemas_expose_exactly_two_tools() -> None:
+    names = {item["function"]["name"] for item in TOOL_SCHEMAS}
+    assert names == {"search_web", "fetch_webpage"}
+
+
+def test_execute_tool_dispatches_a_real_search() -> None:
+    settings = Settings.from_env()
+    context = ToolContext(
+        tavily=TavilyClient(api_key=settings.tavily_api_key),
+        http=None,
+        max_page_chars=settings.max_page_chars,
+    )
+
+    result = execute_tool(
+        context,
+        "search_web",
+        {"query": "Tavily search API documentation", "max_results": 2},
+    )
+
+    assert result["ok"] is True
+    assert 1 <= len(result["results"]) <= 2
+
+
+def test_execute_tool_rejects_unknown_tool_without_network_access() -> None:
+    settings = Settings.from_env()
+    context = ToolContext(
+        tavily=TavilyClient(api_key=settings.tavily_api_key),
+        http=None,
+        max_page_chars=settings.max_page_chars,
+    )
+
+    result = execute_tool(context, "delete_files", {})
+
+    assert result["ok"] is False
+    assert result["error"]["code"] == "unknown_tool"
