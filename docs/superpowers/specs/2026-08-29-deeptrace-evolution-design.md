@@ -148,7 +148,8 @@ backend/
 │       └── tools.py
 └── tests/
     ├── test_agent.py
-    └── test_tools.py
+    ├── test_tools.py
+    └── test_live_agent.py
 ```
 
 | 文件 | 职责 |
@@ -159,6 +160,7 @@ backend/
 | `tools.py` | 实现搜索、网页抓取、Tool Schema 和工具分发 |
 | `test_agent.py` | 使用 Fake 模型测试工具循环、错误反馈和终止条件 |
 | `test_tools.py` | 测试搜索格式、网页提取、URL 限制和错误结构 |
+| `test_live_agent.py` | 显式启用时使用真实 LLM 与 Tavily API Key 验证端到端闭环 |
 
 阶段 1 不创建 `providers/`、`domain/`、`repositories/` 或 `services/`。这些目录在后续阶段出现真实需求时再加入。
 
@@ -325,7 +327,9 @@ uv run python -m deeptrace.cli "今天 AI Agent 领域有哪些热点新闻？"
 
 ## 13. 阶段 1 的测试设计
 
-自动化测试不读取真实 API Key，不调用真实模型或网络。
+测试分为默认确定性测试和显式启用的真实集成测试。用户已经具备 LLM 与 Tavily API Key，因此阶段 1 必须提供真实 API 测试入口。
+
+运行普通 `pytest` 时只执行 Fake 测试，不读取真实 API Key，也不调用网络。真实测试使用 `live` Marker，只有明确传入 `-m live` 时执行。
 
 ### 13.1 工具测试
 
@@ -345,7 +349,35 @@ uv run python -m deeptrace.cli "今天 AI Agent 领域有哪些热点新闻？"
 - 最终来源只能来自实际抓取 URL 集合。
 - 普通回答不触发任何工具。
 
-### 13.3 真实验收
+### 13.3 真实 API 集成测试
+
+真实测试从本地环境读取：
+
+- `OPENAI_API_KEY`
+- `OPENAI_BASE_URL`
+- `OPENAI_MODEL`
+- `TAVILY_API_KEY`
+
+推荐命令：
+
+```powershell
+uv run pytest -m live -v
+```
+
+真实测试至少验证：
+
+- 模型能够返回合法 Tool Call。
+- Tavily 能够返回至少一条搜索结果。
+- Agent 至少成功抓取一个公开 HTML 页面。
+- 最终运行在最大步数以内结束。
+- 最终结果包含至少一个本次实际抓取的 URL。
+- 测试输出和异常不包含完整 API Key。
+
+真实新闻和招聘页面会变化，因此测试不能断言固定文章标题、固定招聘数量或完整答案文本。它只断言工具链和关键不变量。
+
+真实测试默认不进入普通 CI。只有 CI 配置了受保护 Secret，并且明确启用 `live` Job 时才运行。
+
+### 13.4 真实问题验收
 
 至少运行两个问题：
 
@@ -357,7 +389,7 @@ uv run python -m deeptrace.cli "今天 AI Agent 领域有哪些热点新闻？"
 调研当前字节跳动 Agent 开发岗位的招聘要求，并给出来源。
 ```
 
-验收时记录模型名称、运行时间、工具调用顺序、抓取 URL、最终答案和失败页面。
+验收时记录模型名称、运行时间、工具调用顺序、抓取 URL、最终答案和失败页面。真实集成测试通过以后再执行这两项人工验收。
 
 ## 14. 阶段 1 的完成标准
 
@@ -369,8 +401,9 @@ uv run python -m deeptrace.cli "今天 AI Agent 领域有哪些热点新闻？"
 4. 最终来源都属于本次实际抓取 URL。
 5. 工具失败不会造成无提示崩溃。
 6. 达到循环上限后能够安全停止。
-7. 单元测试不依赖真实网络和 API Key。
-8. 两个真实验收问题至少各完成一次可解释运行。
+7. 默认单元测试不依赖真实网络和 API Key。
+8. `pytest -m live` 能使用真实 LLM 与 Tavily API Key 完成端到端测试。
+9. 两个真实验收问题至少各完成一次可解释运行。
 
 ## 15. 手动搭建文档的写法
 
@@ -386,7 +419,7 @@ uv run python -m deeptrace.cli "今天 AI Agent 领域有哪些热点新闻？"
 4. 定义 Tool Schema 与工具分发器。
 5. 实现单 Agent Tool Calling 循环。
 6. 增加运行边界和终端事件。
-7. 完成自动化测试与真实问题验收。
+7. 完成 Fake 测试、真实 API 集成测试与真实问题验收。
 
 每个操作步骤都必须包含：
 
@@ -416,6 +449,7 @@ uv run python -m deeptrace.cli "今天 AI Agent 领域有哪些热点新闻？"
 - Python 包
 - 自动化测试
 - Fixture 和 Fake 模型
+- 使用 `live` Marker 的真实 API 集成测试
 - `README.md`
 - 运行命令
 
@@ -424,7 +458,9 @@ uv run python -m deeptrace.cli "今天 AI Agent 领域有哪些热点新闻？"
 - 不导入正式项目代码。
 - 不要求正式项目目录存在。
 - 不和正式项目共享 Python 包或虚拟环境。
-- 测试默认不调用网络和真实模型。
+- 普通测试默认不调用网络和真实模型。
+- 只有执行 `pytest -m live` 时才读取真实 LLM 与 Tavily API Key。
+- 真实密钥只保存在用户本地 `.env` 或环境变量中，不能写入参考实现和 Git。
 - 文件和步骤能够映射到同阶段搭建文档。
 - 参考实现生成时不创建 `backend/` 或 `frontend/`。
 
