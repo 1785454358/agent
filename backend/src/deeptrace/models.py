@@ -119,3 +119,4 @@ class CompressionOutcome(BaseModel):
     note: ResearchNote | None
     error: str | None = None
     order: int = Field(ge=0)
+    usage: TokenUsage = Field(default_factory=TokenUsage)
