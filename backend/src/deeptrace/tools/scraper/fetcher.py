@@ -18,7 +18,7 @@ import tiktoken
 from trafilatura import extract
 
 from deeptrace.models import RawDocument, ScraperUsed
-from deeptrace.urls import (
+from deeptrace.tools.scraper.urls import (
     normalize_url_before_fetch,
     resolve_document_identity,
     validate_public_url,

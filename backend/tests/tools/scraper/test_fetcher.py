@@ -1,11 +1,11 @@
-from deeptrace.fetching import (
+from deeptrace.tools.scraper import (
     ExtractionCandidate,
     is_allowed_dns_resolution,
     is_usable_text,
     select_best_extraction,
 )
 from deeptrace.models import ScraperUsed
-from deeptrace.urls import validate_public_url
+from deeptrace.tools.scraper.urls import validate_public_url
 
 
 def test_text_must_pass_both_quality_minimums() -> None:

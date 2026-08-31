@@ -6,6 +6,9 @@ from deeptrace.config import Settings
 from deeptrace.models import RawDocument, ResearchNote, TokenUsage
 from deeptrace.prompts.compression import build_compression_messages
 from deeptrace.prompts.research import FINAL_REPORT_PROMPT, build_system_prompt
+from deeptrace.tools import TOOL_SCHEMAS, ToolContext
+from deeptrace.tools.scraper import AsyncWebFetcher, normalize_url_before_fetch
+from deeptrace.tools.search import search_web
 
 
 def test_foundation_packages_expose_stable_interfaces() -> None:
@@ -26,3 +29,14 @@ def test_prompts_are_built_in_prompts_package() -> None:
     assert "2026-08-31" in system
     assert "停止调用工具" in FINAL_REPORT_PROMPT
     assert "Agent 岗位要求" in str(messages[1].content)
+
+
+def test_tools_package_exposes_search_and_scraper_interfaces() -> None:
+    assert {item["function"]["name"] for item in TOOL_SCHEMAS} == {
+        "search_web",
+        "fetch_webpage",
+    }
+    assert ToolContext.__name__ == "ToolContext"
+    assert AsyncWebFetcher.__name__ == "AsyncWebFetcher"
+    assert search_web.__name__ == "search_web"
+    assert normalize_url_before_fetch("https://example.com/") == "https://example.com/"

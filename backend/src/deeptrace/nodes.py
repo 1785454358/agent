@@ -21,7 +21,6 @@ from deeptrace.embedding import (
     is_repeated_query,
     select_relevant_chunks,
 )
-from deeptrace.fetching import AsyncWebFetcher, WebFetchError
 from deeptrace.models import (
     ContextAudit,
     DocumentChunk,
@@ -34,7 +33,11 @@ from deeptrace.prompts.research import FINAL_REPORT_PROMPT, build_system_prompt
 from deeptrace.state import GraphState
 from deeptrace.token_metrics import TokenLedger, format_round_metrics
 from deeptrace.tools import ToolContext, search_web
-from deeptrace.urls import normalize_url_before_fetch
+from deeptrace.tools.scraper import (
+    AsyncWebFetcher,
+    WebFetchError,
+    normalize_url_before_fetch,
+)
 
 
 def select_agent_model_mode(

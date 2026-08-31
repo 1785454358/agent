@@ -1,4 +1,4 @@
-"""网页抓取前的 URL 规范化与抓取后的文档身份计算。"""
+"""抓取工具使用的 URL 规范化、安全校验与文档身份计算。"""
 
 from __future__ import annotations
 

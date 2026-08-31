@@ -13,7 +13,7 @@ from tavily import TavilyClient
 from deeptrace.compression import CompressionService
 from deeptrace.config import Settings
 from deeptrace.embedding import CompressionRuntime
-from deeptrace.fetching import AsyncWebFetcher
+from deeptrace.tools.scraper import AsyncWebFetcher
 from deeptrace.graph import build_research_graph
 from deeptrace.models import RoundTokenMetrics
 from deeptrace.nodes import ResearchNodes

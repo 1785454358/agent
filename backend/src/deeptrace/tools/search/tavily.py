@@ -1,4 +1,4 @@
-"""提供给主模型的工具定义，以及 Tavily 搜索实现。"""
+"""Tavily 搜索实现。"""
 
 from __future__ import annotations
 
@@ -9,43 +9,6 @@ from tavily import TavilyClient
 
 
 JsonObject = dict[str, Any]
-
-TOOL_SCHEMAS: list[JsonObject] = [
-    {
-        "type": "function",
-        "function": {
-            "name": "search_web",
-            "description": "搜索公开网页。结果只是候选线索，需抓取后才能作为证据。",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string", "minLength": 1},
-                    "max_results": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 5,
-                        "default": 5,
-                    },
-                },
-                "required": ["query"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "fetch_webpage",
-            "description": "抓取公开 HTML 页面，并返回压缩后的研究笔记。",
-            "parameters": {
-                "type": "object",
-                "properties": {"url": {"type": "string", "minLength": 1}},
-                "required": ["url"],
-                "additionalProperties": False,
-            },
-        },
-    },
-]
 
 
 @dataclass
