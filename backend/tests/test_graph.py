@@ -8,10 +8,10 @@ from deeptrace.graph import build_research_graph, route_after_agent
 from deeptrace.nodes import (
     ToolCallResult,
     build_unverified_finalization,
-    build_system_prompt,
     build_tool_messages,
     select_agent_model_mode,
 )
+from deeptrace.prompts.research import build_system_prompt
 
 
 def test_tool_messages_follow_original_calls_when_results_finish_out_of_order() -> None:

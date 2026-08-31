@@ -1,3 +1,5 @@
+"""环境变量读取、默认值与配置校验。"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -10,11 +10,11 @@ from typing import Any, Sequence
 
 import json_repair
 import numpy as np
-from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field, ValidationError
 
 from deeptrace.embedding import ChunkSelection, CompressionRuntime
 from deeptrace.models import CompressionOutcome, RawDocument, ResearchNote, TokenUsage
+from deeptrace.prompts.compression import build_compression_messages
 
 
 class ResearchNotePayload(BaseModel):
@@ -109,21 +109,14 @@ class CompressionService:
 
     @staticmethod
     def _messages(request: CompressionRequest) -> list[Any]:
-        excerpts = "\n\n".join(
-            f"[片段 {chunk.index}]\n{chunk.text}" for chunk in request.selection.chunks
+        return build_compression_messages(
+            active_query=request.active_query,
+            title=request.document.title,
+            url=request.document.final_url,
+            chunks=[
+                (chunk.index, chunk.text) for chunk in request.selection.chunks
+            ],
         )
-        return [
-            SystemMessage(content=(
-                "你是研究资料压缩器。只依据给定片段输出 JSON，字段为 "
-                "title、key_points、evidence_snippets。证据摘录必须来自原文，"
-                "不要输出 Markdown。"
-            )),
-            HumanMessage(content=(
-                f"当前子问题：{request.active_query}\n"
-                f"页面标题：{request.document.title}\n"
-                f"页面 URL：{request.document.final_url}\n\n{excerpts}"
-            )),
-        ]
 
     @staticmethod
     def _message_text(message: Any) -> str:
