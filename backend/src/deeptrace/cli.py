@@ -8,7 +8,7 @@ from collections.abc import Sequence
 
 from deeptrace import build_real_agent
 from deeptrace.config import Settings
-from deeptrace.token_metrics import format_token_summary
+from deeptrace.observability import format_token_summary
 
 
 def _parser() -> argparse.ArgumentParser:

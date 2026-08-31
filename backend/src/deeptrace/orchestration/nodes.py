@@ -29,7 +29,7 @@ from deeptrace.models import (
 )
 from deeptrace.prompts.research import FINAL_REPORT_PROMPT, build_system_prompt
 from deeptrace.orchestration.state import GraphState
-from deeptrace.token_metrics import TokenLedger, format_round_metrics
+from deeptrace.observability import TokenLedger, format_round_metrics
 from deeptrace.tools import ToolContext, search_web
 from deeptrace.tools.scraper import (
     AsyncWebFetcher,

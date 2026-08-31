@@ -1,7 +1,11 @@
 import pytest
 
 from deeptrace.models import TokenUsage
-from deeptrace.token_metrics import TokenEstimator, TokenLedger, calculate_round_metrics
+from deeptrace.observability import (
+    TokenEstimator,
+    TokenLedger,
+    calculate_round_metrics,
+)
 
 
 def test_token_metrics_compute_net_saving_and_accumulate_raw_baseline() -> None:

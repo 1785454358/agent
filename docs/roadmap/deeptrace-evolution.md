@@ -1,14 +1,16 @@
 # DeepTrace 演进路线图
 
-- 状态　阶段 1 已完成，阶段 2 设计已确认
-- 更新日期　2026-08-30
+- 状态　阶段 1、阶段 2 已完成，阶段 3 待开始
+- 更新日期　2026-08-31
 - 目标　从 CLI 单 Agent 演进为具备上下文压缩、可靠抓取、证据验证、记忆、产品化与系统评测能力的 Deep Research Agent
-- 总体设计　[DeepTrace 从零演进式构建设计](../superpowers/specs/2026-08-29-deeptrace-evolution-design.md)
-- 当前设计　[阶段 2 LangGraph 编排、上下文压缩与可靠抓取](../superpowers/specs/2026-08-30-stage-02-langgraph-context-compression-design.md)
+- 最近完成设计　[阶段 2 LangGraph 编排、上下文压缩与可靠抓取](../superpowers/specs/2026-08-30-stage-02-langgraph-context-compression-design.md)
+- 模块化设计　[DeepTrace 模块化目录重构](../superpowers/specs/2026-08-31-deeptrace-module-layout-design.md)
 
 ## 1. 后续开发方式
 
 阶段 1 已经跑通真实 LLM、Tavily 搜索和网页抓取的单 Agent 闭环。从阶段 2 开始，Codex 直接在 `backend/` 中实现代码，不再生成隔离参考项目，也不再要求学习者手动复制参考代码。
+
+阶段 2 代码已经按业务能力整理为 models、prompts、config、context、tools、observability、orchestration 和 agent 子包。后续模块只在对应阶段实现时创建，不预留空目录。
 
 代码保留必要的中文注释。文档简洁说明每个文件和函数的职责，对 LangGraph 状态流转、上下文压缩、Evidence Store、Verifier 等核心机制展开说明。每阶段只做保证功能可靠所需的测试和真实冒烟验证。固定数据集、消融及开源项目大规模对比统一放到阶段 9。
 
@@ -127,4 +129,4 @@ FastAPI 提供任务创建、查询、取消和结果接口，SSE 推送安全�
 
 ## 13. 当前下一步
 
-确认阶段 2 正式设计后生成实施计划。实施时直接修改 `backend/`，按测试驱动方式完成 LangGraph 迁移、BGE-M3 压缩、抓取降级链和逐轮 Token 统计。
+开始阶段 3，在现有 LangGraph 单 Agent 闭环上拆分 Planner、Researcher 与 Writer。代码继续直接写入 `backend/`；本阶段只验证模块契约、状态流转和真实运行闭环，不提前开展大规模评测。

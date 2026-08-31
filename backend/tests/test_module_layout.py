@@ -11,6 +11,13 @@ from deeptrace.context import (
 )
 from deeptrace.config import Settings
 from deeptrace.models import RawDocument, ResearchNote, TokenUsage
+from deeptrace.observability import (
+    TokenEstimator,
+    TokenLedger,
+    calculate_round_metrics,
+    format_round_metrics,
+    format_token_summary,
+)
 from deeptrace.orchestration import GraphState, ResearchNodes, build_research_graph
 from deeptrace.prompts.compression import build_compression_messages
 from deeptrace.prompts.research import FINAL_REPORT_PROMPT, build_system_prompt
@@ -66,3 +73,11 @@ def test_public_agent_and_orchestration_interfaces() -> None:
     assert GraphState.__name__ == "GraphState"
     assert ResearchNodes.__name__ == "ResearchNodes"
     assert callable(build_research_graph)
+
+
+def test_observability_package_exposes_token_interfaces() -> None:
+    assert TokenEstimator.__name__ == "TokenEstimator"
+    assert TokenLedger.__name__ == "TokenLedger"
+    assert callable(calculate_round_metrics)
+    assert callable(format_round_metrics)
+    assert callable(format_token_summary)

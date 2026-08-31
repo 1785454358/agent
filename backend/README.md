@@ -1,42 +1,81 @@
 # DeepTrace 阶段 2
 
-DeepTrace 是命令行深度研究 Agent。主模型自主调用搜索与网页抓取工具；整页正文先经过本地 BGE-M3 召回和 LLM 压缩，主 Agent 只读取相关研究笔记。
+DeepTrace 是命令行深度研究 Agent。主模型自主调用搜索和网页抓取工具；整页正文先经过本地 BGE-M3 召回与 LLM 压缩，主 Agent 只读取相关 ResearchNote。
 
 ## 运行
 
-复制 .env.example 为 .env，填写真实 OpenAI 兼容接口和 Tavily Key：
+复制 `.env.example` 为 `.env`，填写真实 OpenAI-compatible 接口和 Tavily Key：
 
-    uv sync
-    uv run playwright install chromium
-    uv run deeptrace "今天 AI Agent 领域有哪些热点新闻？"
+```powershell
+uv sync
+uv run playwright install chromium
+uv run deeptrace "今天 AI Agent 领域有哪些热点新闻？"
+```
 
-Chromium 只在 HTTPX 无法提取足够正文时启用。
+Chromium 只在 HTTPX 无法提取足够正文时启用。受控代理或沙箱把公网域名映射到 `198.18.0.0/15` 时，可以显式设置 `DEEPTRACE_ALLOW_BENCHMARK_DNS_PROXY=true`；普通网络环境不要开启。
 
-若程序运行在会把公网域名映射到 198.18.0.0/15 的受控代理或沙箱中，可设置
-DEEPTRACE_ALLOW_BENCHMARK_DNS_PROXY=true。普通网络环境不要开启；该开关只影响
-域名解析结果，URL 直接使用非公网 IP 仍会被拒绝。
+## 目录结构
+
+```text
+src/deeptrace/
+├── agent/             # Agent 门面与真实依赖组装
+├── config/            # 环境变量、默认值和配置校验
+├── context/           # 分块、BGE-M3、召回与压缩
+├── models/            # 文档、研究笔记与指标模型
+├── observability/     # Token 估算、账本和格式化
+├── orchestration/     # LangGraph State、节点与拓扑
+├── prompts/           # 研究与压缩提示词
+├── tools/
+│   ├── scraper/       # HTTPX、BS4、Playwright 与 URL 安全
+│   └── search/        # Tavily 搜索
+├── __init__.py        # 稳定公共 API
+└── cli.py             # 命令行入口
+```
+
+依赖方向固定为：
+
+```text
+models / prompts / config
+          ↓
+context / tools / observability
+          ↓
+orchestration
+          ↓
+agent
+          ↓
+cli
+```
+
+## 核心模块
+
+| 模块 | 主要职责 |
+|---|---|
+| `agent/service.py` | `ResearchAgent`、`AgentResult` 和 `build_real_agent` |
+| `orchestration/` | LangGraph 状态、节点、工具回填和路由 |
+| `context/` | 800/100 分块、BGE-M3 向量注册表、双查询 max 召回、ResearchNote 压缩 |
+| `tools/search/` | Tavily 搜索和候选结果整理 |
+| `tools/scraper/` | URL 安全、HTTPX/Trafilatura/BS4/Playwright 抓取降级链 |
+| `models/` | 可序列化的文档、笔记和 Token 数据模型 |
+| `prompts/` | 统一管理主 Agent 与压缩提示词 |
+| `observability/` | 逐轮上下文基线、毛节省、压缩成本和净节省 |
+| `config/` | Settings 和环境变量验证 |
+
+长提示词只放在 `prompts/`。阶段 3 的 Planner、Researcher、Writer 以及后续 Evidence、Memory、Evaluation 模块，在真正实现时再建立目录，不创建空壳。
 
 ## 核心流程
 
-graph.py 定义 agent → tools → agent 的 LangGraph 闭环。nodes.py 负责构造有界上下文、执行搜索、并发抓取、批量向量化、双查询召回和并发压缩。并发结果按原始 tool_call_id 回填，避免页面错配。
+```text
+Agent → 搜索/抓取 → 网页分块 → BGE-M3 双查询召回
+      → 并发压缩 ResearchNote → 按 tool_call_id 回填 → Agent
+```
 
-同一页面再次用于新子问题时会复用文档、chunks 和内存中的向量，只重新筛选并生成新笔记。软上限为 8 步；存在新证据且查询不重复时可延长一次，硬上限为 12 步。
-
-## 文件功能
-
-- agent.py：ResearchAgent 门面和 build_real_agent 真实依赖组装。
-- nodes.py / graph.py：Agent 编排和节点实现。
-- fetching.py：HTTPX + Trafilatura/BeautifulSoup，必要时降级 Playwright。
-- embedding.py：BGE-M3 分块、向量缓存与双查询 max 召回。
-- compression.py：结构化笔记、JSON 修复、重试和抽取式降级。
-- token_metrics.py：逐轮估算整页基线、压缩后上下文、毛节省和净节省。
-- models.py / state.py：数据模型、Graph State 和 reducer。
-- tools.py / urls.py：Tavily 搜索、工具 schema、URL 安全与文档去重。
-- cli.py：输出进度、答案、来源和 Token 汇总。
+同一页面遇到新子问题时复用正文、chunks 和内存向量，只重新筛选并生成新笔记。软上限为 8 步；存在新证据且查询不重复时可延长一次，硬上限为 12 步。
 
 ## 本地验证
 
-    uv run pytest -m "not real"
-    uv run python -m compileall src
+```powershell
+uv run pytest -m "not real"
+uv run python -m compileall src
+```
 
-普通测试不会调用外部 API。真实端到端验证直接运行 deeptrace 命令。
+普通测试不调用外部 API。真实端到端验证直接运行 `uv run deeptrace "问题"`。

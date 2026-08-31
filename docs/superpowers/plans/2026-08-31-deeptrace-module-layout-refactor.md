@@ -4,6 +4,8 @@
 
 **Goal:** 将阶段 2 的顶层 Python 文件迁移为按业务能力组织的子包，同时保持 CLI、LangGraph、抓取、压缩和 Token 统计行为不变。
 
+**Status:** 已完成（2026-08-31）。
+
 **Architecture:** 迁移按依赖方向从底向上进行。`models`、`prompts` 和 `config` 作为基础层；`context`、`tools` 和 `observability` 提供能力；`orchestration` 组合工作流；`agent` 与 `cli` 作为入口。迁移期间允许旧文件短暂存在，每个任务结束时必须有可运行的新接口，最终删除全部旧内部模块。
 
 **Tech Stack:** Python 3.11、Pydantic、LangChain Core、LangGraph、SentenceTransformers/BGE-M3、Tavily、HTTPX、Trafilatura、BeautifulSoup、Playwright、tiktoken、pytest。

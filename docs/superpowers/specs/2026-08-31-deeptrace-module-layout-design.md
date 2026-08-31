@@ -1,6 +1,6 @@
 # DeepTrace 模块化目录重构设计
 
-- 状态：已确认，待实施
+- 状态：已完成
 - 日期：2026-08-31
 - 实施范围：`backend/src/deeptrace/`、对应测试和 `backend/README.md`
 - 目标：将阶段 2 代码按业务能力拆入子包，为后续 Agent、Evidence、Memory 与评测模块提供清晰边界
