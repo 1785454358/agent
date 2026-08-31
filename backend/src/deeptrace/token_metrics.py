@@ -84,6 +84,10 @@ class TokenLedger:
         self.round_metrics: list[RoundTokenMetrics] = []
         self._pending_compression_usage = TokenUsage()
 
+    def record_initial_context(self, messages: Sequence[Any]) -> None:
+        """登记两个阶段都会携带的系统提示词和用户问题。"""
+        self.baseline_fixed_tokens += self.estimator.count_messages(messages)
+
     def record_assistant(self, message: Any) -> None:
         """累计阶段 1 历史中的 assistant 消息及工具调用元数据。"""
         self.baseline_fixed_tokens += self.estimator.count_messages([message])

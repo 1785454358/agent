@@ -48,3 +48,4 @@ class GraphState(TypedDict):
     recent_new_note_count: int
     unresolved_gaps: list[str]
     final_answer: str
+    termination_reason: str
