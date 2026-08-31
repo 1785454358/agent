@@ -60,13 +60,28 @@ def select_agent_model_mode(
     hard_max_steps: int,
     extension_granted: bool,
     can_extend: bool,
-) -> Literal["agent", "finalize"]:
+    has_notes: bool,
+) -> Literal["agent", "finalize", "refuse"]:
     """在调用模型前决定继续研究或直接汇总，保证每轮只调用一次模型。"""
-    if step >= hard_max_steps:
-        return "finalize"
-    if step >= soft_max_steps and not extension_granted and not can_extend:
-        return "finalize"
+    should_end = step >= hard_max_steps or (
+        step >= soft_max_steps and not extension_granted and not can_extend
+    )
+    if should_end:
+        return "finalize" if has_notes else "refuse"
     return "agent"
+
+
+def build_unverified_finalization(step: int) -> dict[str, Any]:
+    """无验证笔记时返回确定性限制，不让模型依据搜索摘要编造报告。"""
+    return {
+        "step_count": step,
+        "final_answer": (
+            "未在预算内获得成功抓取的研究笔记，不能把搜索摘要当事实。"
+            "请调整查询或抓取来源后重试。"
+        ),
+        "termination_reason": "no_verified_sources",
+        "events": [f"步骤 {step}：无已验证研究笔记，拒绝生成报告"],
+    }
 
 
 @dataclass(frozen=True, slots=True)
@@ -255,10 +270,14 @@ class ResearchNodes:
             hard_max_steps=self.settings.hard_max_steps,
             extension_granted=extension,
             can_extend=can_extend,
+            has_notes=bool(state.get("notes")),
         )
         if can_extend and not extension:
             extension = True
             self.on_event("[预算] 批准一次延长，最多继续到硬上限")
+        if mode == "refuse":
+            self.on_event("[预算] 无已验证研究笔记，拒绝生成最终报告")
+            return build_unverified_finalization(step)
         model_prompt = (
             [*prompt, HumanMessage(content=FINAL_REPORT_PROMPT)]
             if mode == "finalize"

@@ -28,7 +28,7 @@ URL_PATTERN = re.compile(r"https?://[^\s<>\]\[()]+")
 class AgentResult:
     """一次研究任务的最终答案、来源及逐轮 Token 指标。"""
 
-    status: Literal["completed", "max_steps_reached"]
+    status: Literal["completed", "max_steps_reached", "no_verified_sources"]
     answer: str
     sources: list[str]
     steps: int
@@ -90,7 +90,12 @@ class ResearchAgent:
             },
         )
         reason = final.get("termination_reason", "completed")
-        status = "completed" if reason == "completed" else "max_steps_reached"
+        if reason == "completed":
+            status = "completed"
+        elif reason == "no_verified_sources":
+            status = "no_verified_sources"
+        else:
+            status = "max_steps_reached"
         sources = sorted(
             {document.final_url for document in final.get("documents", {}).values()}
         )

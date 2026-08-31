@@ -7,6 +7,7 @@ from langgraph.graph import END
 from deeptrace.graph import build_research_graph, route_after_agent
 from deeptrace.nodes import (
     ToolCallResult,
+    build_unverified_finalization,
     build_system_prompt,
     build_tool_messages,
     select_agent_model_mode,
@@ -56,6 +57,20 @@ def test_budget_selects_final_model_only_when_research_should_end() -> None:
         hard_max_steps=12,
         extension_granted=False,
         can_extend=False,
+        has_notes=False,
+    ) == "refuse"
+    refusal = build_unverified_finalization(step=8)
+    assert refusal["termination_reason"] == "no_verified_sources"
+    assert "未在预算内获得成功抓取的研究笔记" in refusal["final_answer"]
+    assert "不能把搜索摘要当事实" in refusal["final_answer"]
+
+    assert select_agent_model_mode(
+        step=8,
+        soft_max_steps=8,
+        hard_max_steps=12,
+        extension_granted=False,
+        can_extend=False,
+        has_notes=True,
     ) == "finalize"
     assert select_agent_model_mode(
         step=7,
@@ -63,6 +78,7 @@ def test_budget_selects_final_model_only_when_research_should_end() -> None:
         hard_max_steps=12,
         extension_granted=False,
         can_extend=False,
+        has_notes=False,
     ) == "agent"
 
 
