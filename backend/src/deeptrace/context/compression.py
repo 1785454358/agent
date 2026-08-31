@@ -9,10 +9,9 @@ from dataclasses import dataclass
 from typing import Any, Sequence
 
 import json_repair
-import numpy as np
 from pydantic import BaseModel, Field, ValidationError
 
-from deeptrace.embedding import ChunkSelection, CompressionRuntime
+from deeptrace.context.retrieval import ChunkSelection
 from deeptrace.models import CompressionOutcome, RawDocument, ResearchNote, TokenUsage
 from deeptrace.prompts.compression import build_compression_messages
 
@@ -71,31 +70,6 @@ def build_extractive_note(
         compression_status="extractive_fallback",
         error=error,
     )
-
-
-def note_embedding_text(note: ResearchNote) -> str:
-    """笔记检索固定同时嵌入标题、要点和证据细节。"""
-    return "\n".join([note.title, *note.key_points, *note.evidence_snippets])
-
-
-def retrieve_notes(
-    runtime: CompressionRuntime,
-    notes: Sequence[ResearchNote],
-    user_query: str,
-    active_query: str,
-    top_k: int = 8,
-) -> list[ResearchNote]:
-    """笔记层同样使用双查询 max，避免新研究方向被早期笔记压制。"""
-    if not notes:
-        return []
-    if top_k < 1:
-        raise ValueError("top_k 必须大于 0")
-    vectors = runtime.embed([note_embedding_text(note) for note in notes])
-    user_scores = vectors @ runtime.query_vector(user_query)
-    active_scores = vectors @ runtime.query_vector(active_query)
-    fused_scores = np.maximum(user_scores, active_scores)
-    indices = np.argsort(-fused_scores, kind="stable")[:min(top_k, len(notes))]
-    return [notes[int(index)] for index in indices]
 
 
 class CompressionService:

@@ -9,18 +9,16 @@ from typing import Any, Callable, Literal, Sequence
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
 
-from deeptrace.compression import (
+from deeptrace.context import (
+    CompressionRuntime,
     CompressionRequest,
     CompressionService,
-    retrieve_notes,
-)
-from deeptrace.config import Settings
-from deeptrace.embedding import (
-    CompressionRuntime,
     chunk_document,
     is_repeated_query,
+    retrieve_notes,
     select_relevant_chunks,
 )
+from deeptrace.config import Settings
 from deeptrace.models import (
     ContextAudit,
     DocumentChunk,

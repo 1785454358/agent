@@ -2,12 +2,12 @@ from datetime import datetime, timezone
 
 import pytest
 
-from deeptrace.compression import (
+from deeptrace.context import (
+    ChunkSelection,
     ResearchNotePayload,
     build_extractive_note,
     parse_note_json,
 )
-from deeptrace.embedding import ChunkSelection
 from deeptrace.models import DocumentChunk, RawDocument, ScraperUsed
 
 

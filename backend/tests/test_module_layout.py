@@ -2,6 +2,13 @@
 
 from datetime import date
 
+from deeptrace.context import (
+    CompressionRuntime,
+    CompressionService,
+    chunk_document,
+    retrieve_notes,
+    select_relevant_chunks,
+)
 from deeptrace.config import Settings
 from deeptrace.models import RawDocument, ResearchNote, TokenUsage
 from deeptrace.prompts.compression import build_compression_messages
@@ -40,3 +47,11 @@ def test_tools_package_exposes_search_and_scraper_interfaces() -> None:
     assert AsyncWebFetcher.__name__ == "AsyncWebFetcher"
     assert search_web.__name__ == "search_web"
     assert normalize_url_before_fetch("https://example.com/") == "https://example.com/"
+
+
+def test_context_package_exposes_compression_pipeline() -> None:
+    assert CompressionRuntime.__name__ == "CompressionRuntime"
+    assert CompressionService.__name__ == "CompressionService"
+    assert chunk_document.__name__ == "chunk_document"
+    assert retrieve_notes.__name__ == "retrieve_notes"
+    assert select_relevant_chunks.__name__ == "select_relevant_chunks"

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from deeptrace.embedding import (
+from deeptrace.context import (
     CompressionRuntime,
     chunk_document,
     select_relevant_chunks,
