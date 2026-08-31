@@ -1,4 +1,5 @@
 import json
+from datetime import date
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
@@ -6,6 +7,7 @@ from langgraph.graph import END
 from deeptrace.graph import build_research_graph, route_after_agent
 from deeptrace.nodes import (
     ToolCallResult,
+    build_system_prompt,
     build_tool_messages,
     select_agent_model_mode,
 )
@@ -62,3 +64,12 @@ def test_budget_selects_final_model_only_when_research_should_end() -> None:
         extension_granted=False,
         can_extend=False,
     ) == "agent"
+
+
+def test_system_prompt_grounds_relative_time_in_current_date() -> None:
+    prompt = build_system_prompt(date(2026, 8, 31))
+
+    assert "2026-08-31" in prompt
+    assert "今天/最新/今年" in prompt
+    assert "搜索词" in prompt
+    assert "发布日期" in prompt
