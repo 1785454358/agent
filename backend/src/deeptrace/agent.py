@@ -136,6 +136,7 @@ def build_real_agent(
     )
     nodes = ResearchNodes(
         bound_model=bound_model,
+        final_model=model,
         runtime=runtime,
         compressor=CompressionService(
             model, concurrency=settings.compression_concurrency

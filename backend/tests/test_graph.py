@@ -4,7 +4,11 @@ from langchain_core.messages import AIMessage
 from langgraph.graph import END
 
 from deeptrace.graph import build_research_graph, route_after_agent
-from deeptrace.nodes import ToolCallResult, build_tool_messages
+from deeptrace.nodes import (
+    ToolCallResult,
+    build_tool_messages,
+    select_agent_model_mode,
+)
 
 
 def test_tool_messages_follow_original_calls_when_results_finish_out_of_order() -> None:
@@ -41,3 +45,20 @@ def test_graph_compiles_and_router_distinguishes_tools_from_completion() -> None
     )
     assert route_after_agent({"messages": [tool_message], "final_answer": ""}) == "tools"
     assert route_after_agent({"messages": [], "final_answer": "已完成"}) == END
+
+
+def test_budget_selects_final_model_only_when_research_should_end() -> None:
+    assert select_agent_model_mode(
+        step=8,
+        soft_max_steps=8,
+        hard_max_steps=12,
+        extension_granted=False,
+        can_extend=False,
+    ) == "finalize"
+    assert select_agent_model_mode(
+        step=7,
+        soft_max_steps=8,
+        hard_max_steps=12,
+        extension_granted=False,
+        can_extend=False,
+    ) == "agent"
