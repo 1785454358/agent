@@ -8,7 +8,7 @@ from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 
-from deeptrace.state import GraphState
+from deeptrace.orchestration.state import GraphState
 
 
 def _service(config: RunnableConfig) -> Any:

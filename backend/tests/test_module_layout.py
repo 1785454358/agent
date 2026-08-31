@@ -11,11 +11,13 @@ from deeptrace.context import (
 )
 from deeptrace.config import Settings
 from deeptrace.models import RawDocument, ResearchNote, TokenUsage
+from deeptrace.orchestration import GraphState, ResearchNodes, build_research_graph
 from deeptrace.prompts.compression import build_compression_messages
 from deeptrace.prompts.research import FINAL_REPORT_PROMPT, build_system_prompt
 from deeptrace.tools import TOOL_SCHEMAS, ToolContext
 from deeptrace.tools.scraper import AsyncWebFetcher, normalize_url_before_fetch
 from deeptrace.tools.search import search_web
+from deeptrace import AgentResult, ResearchAgent, build_real_agent
 
 
 def test_foundation_packages_expose_stable_interfaces() -> None:
@@ -55,3 +57,12 @@ def test_context_package_exposes_compression_pipeline() -> None:
     assert chunk_document.__name__ == "chunk_document"
     assert retrieve_notes.__name__ == "retrieve_notes"
     assert select_relevant_chunks.__name__ == "select_relevant_chunks"
+
+
+def test_public_agent_and_orchestration_interfaces() -> None:
+    assert AgentResult.__name__ == "AgentResult"
+    assert ResearchAgent.__name__ == "ResearchAgent"
+    assert callable(build_real_agent)
+    assert GraphState.__name__ == "GraphState"
+    assert ResearchNodes.__name__ == "ResearchNodes"
+    assert callable(build_research_graph)

@@ -1,4 +1,4 @@
-"""DeepTrace：带网页搜索、证据压缩与 Token 观测的深度研究 Agent。"""
+"""DeepTrace Agent 对外门面。"""
 
 from deeptrace.agent.service import AgentResult, ResearchAgent, build_real_agent
 

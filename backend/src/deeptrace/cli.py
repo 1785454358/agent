@@ -6,7 +6,7 @@ import argparse
 import asyncio
 from collections.abc import Sequence
 
-from deeptrace.agent import build_real_agent
+from deeptrace import build_real_agent
 from deeptrace.config import Settings
 from deeptrace.token_metrics import format_token_summary
 

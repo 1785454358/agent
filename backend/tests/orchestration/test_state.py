@@ -4,7 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from deeptrace.models import RawDocument, ScraperUsed, TokenUsage
-from deeptrace.state import append_unique, merge_dicts
+from deeptrace.orchestration.state import append_unique, merge_dicts
 
 
 def test_merge_dicts_preserves_old_entries_and_overwrites_same_key() -> None:
