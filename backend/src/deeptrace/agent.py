@@ -132,6 +132,7 @@ def build_real_agent(
         min_chars=settings.min_extracted_chars,
         min_tokens=settings.min_extracted_tokens,
         max_page_chars=settings.max_page_chars,
+        allow_benchmark_dns_proxy=settings.allow_benchmark_dns_proxy,
     )
     nodes = ResearchNodes(
         bound_model=bound_model,

@@ -30,6 +30,7 @@ DEFAULT_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 )
+BENCHMARK_DNS_PROXY_NETWORK = ipaddress.ip_network("198.18.0.0/15")
 
 
 @dataclass(frozen=True)
@@ -69,6 +70,18 @@ def is_usable_text(
     return len(clean) >= min_chars and count_tokens(clean) >= min_tokens
 
 
+def is_allowed_dns_resolution(
+    address_text: str, allow_benchmark_dns_proxy: bool
+) -> bool:
+    """判断域名解析地址是否可访问；基准网络只允许显式沙箱代理模式。"""
+    address = ipaddress.ip_address(address_text)
+    return address.is_global or (
+        allow_benchmark_dns_proxy
+        and address.version == 4
+        and address in BENCHMARK_DNS_PROXY_NETWORK
+    )
+
+
 def select_best_extraction(
     candidates: list[ExtractionCandidate],
 ) -> ExtractionCandidate:
@@ -91,6 +104,7 @@ class AsyncWebFetcher:
         http_timeout: float = 15.0,
         browser_timeout_ms: int = 15_000,
         max_redirects: int = 3,
+        allow_benchmark_dns_proxy: bool = False,
         http: httpx.AsyncClient | None = None,
     ) -> None:
         encoding = tiktoken.get_encoding("cl100k_base")
@@ -103,6 +117,7 @@ class AsyncWebFetcher:
         self._http_timeout = http_timeout
         self._browser_timeout_ms = browser_timeout_ms
         self._max_redirects = max_redirects
+        self._allow_benchmark_dns_proxy = allow_benchmark_dns_proxy
         self._owns_http = http is None
         self._http = http or httpx.AsyncClient(
             timeout=httpx.Timeout(http_timeout),
@@ -299,7 +314,10 @@ class AsyncWebFetcher:
         except socket.gaierror as exc:
             raise WebFetchError("dns_failed", "域名解析失败", url=url) from exc
         is_public = bool(records) and all(
-            ipaddress.ip_address(record[4][0]).is_global for record in records
+            is_allowed_dns_resolution(
+                record[4][0], self._allow_benchmark_dns_proxy
+            )
+            for record in records
         )
         self._dns_cache[hostname] = is_public
         if not is_public:

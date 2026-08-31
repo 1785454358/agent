@@ -38,6 +38,16 @@ def _bounded_float(name: str, default: float, minimum: float, maximum: float) ->
         raise RuntimeError(f"{name} must be between {minimum} and {maximum}")
     return value
 
+
+def _boolean(name: str, default: bool = False) -> bool:
+    """读取明确的布尔开关，避免任意非空字符串被误判为 True。"""
+    raw = os.getenv(name, str(default)).strip().lower()
+    if raw in {"1", "true", "yes", "on"}:
+        return True
+    if raw in {"0", "false", "no", "off"}:
+        return False
+    raise RuntimeError(f"{name} must be a boolean")
+
 @dataclass(frozen=True)
 class Settings:
     """应用配置类，存储所有必要的配置参数"""
@@ -57,6 +67,7 @@ class Settings:
     hard_max_steps: int = 12
     query_loop_threshold: float = 0.85
     token_encoding: str = "cl100k_base"
+    allow_benchmark_dns_proxy: bool = False
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -113,4 +124,7 @@ class Settings:
                 "DEEPTRACE_QUERY_LOOP_THRESHOLD", 0.85, 0.0, 1.0
             ),
             token_encoding=token_encoding,
+            allow_benchmark_dns_proxy=_boolean(
+                "DEEPTRACE_ALLOW_BENCHMARK_DNS_PROXY", False
+            ),
         )

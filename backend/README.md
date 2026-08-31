@@ -12,6 +12,10 @@ DeepTrace 是命令行深度研究 Agent。主模型自主调用搜索与网页�
 
 Chromium 只在 HTTPX 无法提取足够正文时启用。
 
+若程序运行在会把公网域名映射到 198.18.0.0/15 的受控代理或沙箱中，可设置
+DEEPTRACE_ALLOW_BENCHMARK_DNS_PROXY=true。普通网络环境不要开启；该开关只影响
+域名解析结果，URL 直接使用非公网 IP 仍会被拒绝。
+
 ## 核心流程
 
 graph.py 定义 agent → tools → agent 的 LangGraph 闭环。nodes.py 负责构造有界上下文、执行搜索、并发抓取、批量向量化、双查询召回和并发压缩。并发结果按原始 tool_call_id 回填，避免页面错配。
