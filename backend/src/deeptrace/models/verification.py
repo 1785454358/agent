@@ -55,9 +55,11 @@ class VerificationGap(BaseModel):
 
     gap_id: str = Field(min_length=1)
     task_id: str = Field(min_length=1)
-    claim_id: str = Field(min_length=1)
-    query: str = Field(min_length=1)
-    reason: str = Field(min_length=1)
+    section_id: str = Field(min_length=1)
+    claim_id: str | None = None
+    reason_code: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    suggested_query: str = Field(min_length=1)
     priority: GapPriority = "medium"
     preferred_source_kinds: list[SourceKind] = Field(default_factory=list)
 
@@ -70,4 +72,6 @@ class TaskVerificationSummary(BaseModel):
     partial_claim_ids: list[str] = Field(default_factory=list)
     unsupported_claim_ids: list[str] = Field(default_factory=list)
     conflicted_claim_ids: list[str] = Field(default_factory=list)
+    out_of_range_claim_ids: list[str] = Field(default_factory=list)
+    unresolved_gap_ids: list[str] = Field(default_factory=list)
     supplement_rounds: int = Field(default=0, ge=0)

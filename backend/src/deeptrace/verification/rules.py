@@ -6,7 +6,6 @@ from collections.abc import Mapping, Sequence
 
 from pydantic import BaseModel, Field
 
-from deeptrace.context import normalize_temporal_relation
 from deeptrace.models import (
     Claim,
     Evidence,
@@ -15,7 +14,6 @@ from deeptrace.models import (
     VerificationIssue,
     VerificationVerdict,
 )
-from deeptrace.orchestration.quality import source_identity
 
 
 QUALIFIED_SOURCE_KINDS = {"official", "academic", "reputable_secondary"}
@@ -58,6 +56,9 @@ def source_identities(
     sources: Mapping[str, Source],
 ) -> list[str]:
     """将子域名折叠为注册域，并保持首次引用顺序。"""
+    # 延迟导入，避免 prompts 加载期间触发整个 orchestration 包。
+    from deeptrace.orchestration.quality import source_identity
+
     identities: list[str] = []
     seen: set[str] = set()
     for item in items:
@@ -88,6 +89,9 @@ def check_claim_rules(
 ) -> RuleCheckResult:
     """执行 Evidence、时间、来源质量与数值完整性门槛。"""
     if claim.event_start and claim.event_end and time_range:
+        # 延迟导入，避免 prompts -> verification -> context -> prompts 的加载环。
+        from deeptrace.context.temporal import normalize_temporal_relation
+
         relation = normalize_temporal_relation(
             time_range, None, claim.event_start, claim.event_end
         )
