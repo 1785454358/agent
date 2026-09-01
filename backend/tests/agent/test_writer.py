@@ -1,0 +1,32 @@
+from deeptrace.agent.writer import render_fallback_report
+from deeptrace.prompts.writer import build_writer_messages
+
+
+def test_writer_messages_do_not_contain_raw_document(
+    research_plan, section_result, research_note
+) -> None:
+    messages = build_writer_messages(
+        plan=research_plan,
+        sections=[section_result],
+        notes=[research_note],
+        termination_reason="completed",
+    )
+    text = "\n".join(str(message.content) for message in messages)
+
+    assert research_note.key_points[0] in text
+    assert "整页正文唯一标记" not in text
+
+
+def test_fallback_report_discloses_partial_sections(
+    research_plan, partial_section, research_note
+) -> None:
+    output = render_fallback_report(
+        research_plan,
+        [partial_section],
+        [research_note],
+        "token_budget",
+    )
+
+    assert "部分完成" in output.markdown
+    assert "token_budget" in output.markdown
+    assert output.used_note_ids == [research_note.note_id]
