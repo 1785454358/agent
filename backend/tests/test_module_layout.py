@@ -25,6 +25,7 @@ from deeptrace.prompts.research import FINAL_REPORT_PROMPT, build_system_prompt
 from deeptrace.tools import EXTERNAL_TOOL_SCHEMAS, RESEARCHER_TOOL_SCHEMAS, ToolContext
 from deeptrace.tools.scraper import AsyncWebFetcher, normalize_url_before_fetch
 from deeptrace.tools.search import search_web
+from deeptrace.verification import check_claim_rules
 from deeptrace import AgentResult, ResearchAgent, build_real_agent
 
 
@@ -36,6 +37,7 @@ def test_foundation_packages_expose_stable_interfaces() -> None:
     assert TokenUsage.__name__ == "TokenUsage"
     assert EvidenceStore.__name__ == "EvidenceStore"
     assert callable(ingest_notes)
+    assert callable(check_claim_rules)
 
 
 def test_prompts_are_built_in_prompts_package() -> None:

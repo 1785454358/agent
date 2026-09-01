@@ -8,8 +8,15 @@ from pydantic import BaseModel, Field
 from deeptrace.models.quality import SourceKind
 
 
-VerificationVerdict = Literal["verified", "partial", "unsupported", "conflicted"]
-EvidenceRelation = Literal["supports", "refutes", "context", "irrelevant"]
+VerificationVerdict = Literal[
+    "verified",
+    "partially_supported",
+    "unsupported",
+    "conflicted",
+    "out_of_range",
+]
+EvidenceRelation = Literal["supports", "refutes", "unrelated"]
+IssueSeverity = Literal["warning", "blocking"]
 GapPriority = Literal["high", "medium", "low"]
 
 
@@ -25,6 +32,7 @@ class VerificationIssue(BaseModel):
     """核验过程中发现的问题。"""
 
     code: str = Field(min_length=1)
+    severity: IssueSeverity = "warning"
     message: str = Field(min_length=1)
 
 
