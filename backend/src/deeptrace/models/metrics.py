@@ -22,15 +22,24 @@ def add_token_usages(*items: TokenUsage) -> TokenUsage:
 
 
 class UsageBreakdown(BaseModel):
-    """阶段 3 各角色的真实 Provider usage。"""
+    """各模型角色的真实 Provider usage。"""
     planner: TokenUsage = Field(default_factory=TokenUsage)
     researcher: TokenUsage = Field(default_factory=TokenUsage)
     compression: TokenUsage = Field(default_factory=TokenUsage)
     writer: TokenUsage = Field(default_factory=TokenUsage)
+    claim_extractor: TokenUsage = Field(default_factory=TokenUsage)
+    verifier: TokenUsage = Field(default_factory=TokenUsage)
 
     @property
     def total(self) -> TokenUsage:
-        return add_token_usages(self.planner, self.researcher, self.compression, self.writer)
+        return add_token_usages(
+            self.planner,
+            self.researcher,
+            self.compression,
+            self.writer,
+            self.claim_extractor,
+            self.verifier,
+        )
 
 
 class ContextAudit(BaseModel):

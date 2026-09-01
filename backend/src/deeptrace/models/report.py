@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from deeptrace.models.verification import TaskVerificationSummary
+
 TaskStatus = Literal["pending", "running", "sufficient", "partial", "failed"]
 
 
@@ -50,6 +52,8 @@ class SectionResult(BaseModel):
     note_ids: list[str] = Field(default_factory=list)
     source_urls: list[str] = Field(default_factory=list)
     coverage: TaskCoverage
+    claim_ids: list[str] = Field(default_factory=list)
+    verification: TaskVerificationSummary | None = None
     errors: list[str] = Field(default_factory=list)
 
 

@@ -6,6 +6,16 @@ from deeptrace.models.document import (
     RawDocument,
     ScraperUsed,
 )
+from deeptrace.models.evidence import (
+    Claim,
+    ClaimImportance,
+    ClaimKind,
+    Evidence,
+    EvidenceLocationStatus,
+    NumericDetail,
+    Source,
+    SourceChannel,
+)
 from deeptrace.models.metrics import (
     ContextAudit,
     PageCompressionMetrics,
@@ -24,11 +34,30 @@ from deeptrace.models.report import (
     TaskStatus,
 )
 from deeptrace.models.research import CompressionOutcome, ResearchNote
+from deeptrace.models.verification import (
+    EvidenceAssessment,
+    EvidenceRelation,
+    GapPriority,
+    TaskVerificationSummary,
+    VerificationGap,
+    VerificationIssue,
+    VerificationResult,
+    VerificationVerdict,
+)
 
 __all__ = [
+    "Claim",
+    "ClaimImportance",
+    "ClaimKind",
     "CompressionOutcome",
     "ContextAudit",
     "DocumentChunk",
+    "Evidence",
+    "EvidenceAssessment",
+    "EvidenceLocationStatus",
+    "EvidenceRelation",
+    "GapPriority",
+    "NumericDetail",
     "PageCompressionMetrics",
     "PendingFetch",
     "RawDocument",
@@ -42,10 +71,17 @@ __all__ = [
     "RunEvent",
     "ScraperUsed",
     "SectionResult",
+    "Source",
+    "SourceChannel",
     "TaskCompletion",
     "TaskCoverage",
     "TaskStatus",
+    "TaskVerificationSummary",
     "TokenUsage",
     "UsageBreakdown",
+    "VerificationGap",
+    "VerificationIssue",
+    "VerificationResult",
+    "VerificationVerdict",
     "add_token_usages",
 ]
