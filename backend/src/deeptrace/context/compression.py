@@ -31,6 +31,8 @@ class CompressionRequest:
     document: RawDocument
     selection: ChunkSelection
     active_query: str
+    task_id: str
+    section_id: str
 
 
 def parse_note_json(raw: str) -> ResearchNotePayload:
@@ -45,8 +47,10 @@ def parse_note_json(raw: str) -> ResearchNotePayload:
             raise ValueError("无法解析 ResearchNote JSON") from exc
 
 
-def _note_id(doc_id: str, active_query: str) -> str:
-    digest = hashlib.sha256(f"{doc_id}\0{active_query}".encode("utf-8")).hexdigest()
+def _note_id(doc_id: str, active_query: str, task_id: str) -> str:
+    digest = hashlib.sha256(
+        f"{doc_id}\0{active_query}\0{task_id}".encode("utf-8")
+    ).hexdigest()
     return f"note-{digest[:20]}"
 
 
@@ -54,13 +58,17 @@ def build_extractive_note(
     document: RawDocument,
     selection: ChunkSelection,
     active_query: str,
+    task_id: str,
+    section_id: str,
     error: str,
 ) -> ResearchNote:
     """压缩最终失败时直接保留全部入选块，保证已抓信息不丢失。"""
     snippets = [chunk.text for chunk in selection.chunks if chunk.text.strip()]
     return ResearchNote(
-        note_id=_note_id(document.doc_id, active_query),
+        note_id=_note_id(document.doc_id, active_query, task_id),
         doc_id=document.doc_id,
+        task_id=task_id,
+        section_id=section_id,
         active_query=active_query,
         title=document.title or document.final_url,
         key_points=snippets[:3] or ["未提取到相关正文"],
@@ -117,8 +125,12 @@ class CompressionService:
     @staticmethod
     def _irrelevant_outcome(request: CompressionRequest) -> CompressionOutcome:
         note = ResearchNote(
-            note_id=_note_id(request.document.doc_id, request.active_query),
+            note_id=_note_id(
+                request.document.doc_id, request.active_query, request.task_id
+            ),
             doc_id=request.document.doc_id,
+            task_id=request.task_id,
+            section_id=request.section_id,
             active_query=request.active_query,
             title=request.document.title or request.document.final_url,
             key_points=[],
@@ -150,8 +162,14 @@ class CompressionService:
                     )
                     payload = parse_note_json(self._message_text(response))
                     note = ResearchNote(
-                        note_id=_note_id(request.document.doc_id, request.active_query),
+                        note_id=_note_id(
+                            request.document.doc_id,
+                            request.active_query,
+                            request.task_id,
+                        ),
                         doc_id=request.document.doc_id,
+                        task_id=request.task_id,
+                        section_id=request.section_id,
                         active_query=request.active_query,
                         title=payload.title,
                         key_points=payload.key_points,
@@ -171,7 +189,12 @@ class CompressionService:
         return CompressionOutcome(
             tool_call_id=request.tool_call_id,
             note=build_extractive_note(
-                request.document, request.selection, request.active_query, last_error
+                request.document,
+                request.selection,
+                request.active_query,
+                request.task_id,
+                request.section_id,
+                last_error,
             ),
             error=last_error,
             order=request.order,
@@ -193,7 +216,12 @@ class CompressionService:
                 result = CompressionOutcome(
                     tool_call_id=request.tool_call_id,
                     note=build_extractive_note(
-                        request.document, request.selection, request.active_query, error
+                        request.document,
+                        request.selection,
+                        request.active_query,
+                        request.task_id,
+                        request.section_id,
+                        error,
                     ),
                     error=error,
                     order=request.order,

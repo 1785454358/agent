@@ -15,6 +15,8 @@ class PendingFetch(BaseModel):
     tool_call_id: str
     url: str
     active_query: str
+    task_id: str
+    section_id: str
     order: int = Field(ge=0)
 
 

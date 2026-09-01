@@ -58,8 +58,34 @@ def test_note_json_is_repaired_and_invalid_output_has_extractive_fallback() -> N
             top1_fused_score=0.82,
         ),
         active_query="Agent 框架要求",
+        task_id="task-01",
+        section_id="section-01",
         error="invalid_json",
     )
+    assert note.task_id == "task-01"
+    assert note.section_id == "section-01"
     assert note.compression_status == "extractive_fallback"
     assert note.evidence_snippets == [text]
     assert note.error == "invalid_json"
+
+
+def test_extractive_note_preserves_task_identity(raw_document) -> None:
+    selection = ChunkSelection(
+        chunks=[],
+        is_relevant=False,
+        top1_user_score=0.1,
+        top1_active_score=0.2,
+        top1_fused_score=0.2,
+    )
+
+    note = build_extractive_note(
+        raw_document,
+        selection,
+        "当前查询",
+        "task-01",
+        "section-01",
+        "失败",
+    )
+
+    assert note.task_id == "task-01"
+    assert note.section_id == "section-01"

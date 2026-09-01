@@ -410,7 +410,8 @@ class ResearchNodes:
                 else:
                     pending.append(PendingFetch(
                         tool_call_id=str(call["id"]), url=url,
-                        active_query=active_query, order=order,
+                        active_query=active_query, task_id="task-01",
+                        section_id="section-01", order=order,
                     ))
             elif name != "search_web":
                 results.append(ToolCallResult(
@@ -485,6 +486,8 @@ class ResearchNodes:
                 document=document,
                 selection=selection,
                 active_query=item.active_query,
+                task_id=item.task_id,
+                section_id=item.section_id,
             ))
 
         outcomes = await self.compressor.compress_many(compression_requests)
