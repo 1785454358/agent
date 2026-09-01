@@ -540,3 +540,373 @@ class ResearchNodes:
             "recent_new_note_count": new_note_count,
             "events": [f"执行 {len(calls)} 个工具调用，新增 {new_note_count} 条笔记"],
         }
+
+
+# 阶段 3 节点只协调角色服务与领域服务；旧 ResearchNodes 保留到 Task 7 完成组装迁移。
+from datetime import UTC, datetime
+
+from deeptrace.agent._shared import add_usage
+from deeptrace.agent.planner import PlannerAgent
+from deeptrace.agent.researcher import ResearcherAgent, parse_task_completion
+from deeptrace.agent.writer import WriterAgent
+from deeptrace.context import retrieve_notes
+from deeptrace.models import (
+    ResearchPlan,
+    RunEvent,
+    SectionResult,
+    TaskCompletion,
+    TaskCoverage,
+)
+from deeptrace.orchestration.budget import get_budget_reason
+from deeptrace.orchestration.coverage import complete_coverage, forced_coverage
+from deeptrace.orchestration.tool_executor import (
+    ResearchToolExecutor,
+    keep_recent_tool_turns as keep_stage3_tool_turns,
+)
+
+
+class ResearchWorkflowNodes:
+    """阶段 3 的轻量 LangGraph 节点集合。"""
+
+    def __init__(
+        self,
+        *,
+        planner: PlannerAgent,
+        researcher: ResearcherAgent,
+        writer: WriterAgent,
+        executor: ResearchToolExecutor,
+        settings: Settings,
+        runtime: CompressionRuntime,
+        on_event: Callable[[RunEvent], None] | None = None,
+    ) -> None:
+        self.planner = planner
+        self.researcher = researcher
+        self.writer = writer
+        self.executor = executor
+        self.settings = settings
+        self.runtime = runtime
+        self.on_event = on_event or (lambda _event: None)
+
+    def _event(
+        self, event_type: str, message: str, task_id: str | None = None
+    ) -> RunEvent:
+        event = RunEvent(event_type=event_type, message=message, task_id=task_id)
+        self.on_event(event)
+        return event
+
+    @staticmethod
+    def _usage_update(usage: TokenUsage) -> dict[str, Any]:
+        return {"api_token_count": usage.total_tokens, "provider_usage": usage}
+
+    @staticmethod
+    def _current(state: GraphState) -> tuple[ResearchPlan, Any, TaskCoverage]:
+        plan = state.get("research_plan")
+        if plan is None:
+            raise RuntimeError("研究计划缺失")
+        index = state.get("current_task_index", 0)
+        if index >= len(plan.tasks):
+            raise RuntimeError("当前任务索引越界")
+        task = plan.tasks[index]
+        coverage = state.get("task_coverages", {}).get(task.task_id)
+        if coverage is None:
+            raise RuntimeError(f"任务覆盖状态缺失：{task.task_id}")
+        return plan, task, coverage
+
+    async def plan_node(self, state: GraphState) -> dict[str, Any]:
+        plan, usage, used_fallback = await self.planner.aplan(state["user_query"])
+        coverages = {
+            task.task_id: TaskCoverage(task_id=task.task_id)
+            for task in plan.tasks
+        }
+        events = [
+            self._event("planning.completed", f"研究计划已生成：{len(plan.tasks)} 个任务")
+        ]
+        if used_fallback:
+            events.append(
+                self._event("planning.fallback", "结构化规划失败，使用单任务降级计划")
+            )
+        return {
+            "research_plan": plan,
+            "task_coverages": coverages,
+            "current_task_index": 0,
+            "step_count": state.get("step_count", 0) + 1,
+            "events": events,
+            **self._usage_update(usage),
+        }
+
+    async def start_task_node(self, state: GraphState) -> dict[str, Any]:
+        _plan, task, coverage = self._current(state)
+        running = coverage.model_copy(
+            update={"status": "running", "failure_reason": None}
+        )
+        return {
+            "active_query": task.question,
+            "messages": [],
+            "pending_task_completion": None,
+            "task_coverages": {task.task_id: running},
+            "events": [
+                self._event(
+                    "task.started", f"开始研究：{task.title}", task.task_id
+                )
+            ],
+        }
+
+    async def research_node(self, state: GraphState) -> dict[str, Any]:
+        _plan, task, coverage = self._current(state)
+        reason = get_budget_reason(state, self.settings, datetime.now(UTC))
+        force_finalize = reason is not None
+        if reason is None and coverage.rounds >= getattr(
+            self.settings, "max_task_rounds", 3
+        ):
+            reason = "task_round_budget"
+        if reason is None and coverage.consecutive_empty_rounds >= 2:
+            reason = "consecutive_empty_rounds"
+        if reason is not None:
+            pending = TaskCompletion(
+                task_id=task.task_id,
+                summary=reason,
+                covered_topics=coverage.covered_topics,
+                unresolved_topics=coverage.missing_topics or task.expected_topics,
+            )
+            return {
+                "pending_task_completion": pending,
+                "force_finalize": force_finalize,
+                "termination_reason": reason if force_finalize else state.get("termination_reason", ""),
+                "task_coverages": {
+                    task.task_id: coverage.model_copy(
+                        update={"failure_reason": reason}
+                    )
+                },
+                "events": [
+                    self._event(
+                        "budget.reached", f"任务停止：{reason}", task.task_id
+                    )
+                ],
+            }
+
+        task_notes = [
+            note
+            for note in state.get("notes", {}).values()
+            if note.task_id == task.task_id
+        ]
+        selected = await asyncio.to_thread(
+            retrieve_notes,
+            self.runtime,
+            task_notes,
+            state["user_query"],
+            task.question,
+            8,
+        ) if task_notes else []
+        recent = keep_stage3_tool_turns(state.get("messages", []), max_turns=3)
+        response, usage = await self.researcher.adecide(
+            user_query=state["user_query"],
+            task=task,
+            coverage=coverage,
+            notes=selected,
+            recent_messages=recent,
+            budget_summary=(
+                f"当前第 {coverage.rounds + 1} 轮，"
+                f"最多 {getattr(self.settings, 'max_task_rounds', 3)} 轮"
+            ),
+        )
+        total_usage = usage
+        if not response.tool_calls:
+            correction = HumanMessage(
+                content=(
+                    "你既未调用外部工具也未完成任务。"
+                    "请立即调用所需工具，或调用 complete_research_task。"
+                )
+            )
+            response, retry_usage = await self.researcher.adecide(
+                user_query=state["user_query"], task=task,
+                coverage=coverage, notes=selected,
+                recent_messages=[*recent, response, correction],
+                budget_summary="这是本轮唯一纠正机会",
+            )
+            total_usage = add_usage(total_usage, retry_usage)
+
+        pending: TaskCompletion | None = None
+        for call in response.tool_calls:
+            if call.get("name") == "complete_research_task":
+                try:
+                    pending = parse_task_completion(call, task.task_id)
+                except (ValueError, TypeError) as exc:
+                    pending = TaskCompletion(
+                        task_id=task.task_id,
+                        summary="invalid_task_completion",
+                        unresolved_topics=task.expected_topics,
+                    )
+                break
+        if not response.tool_calls:
+            pending = TaskCompletion(
+                task_id=task.task_id,
+                summary="researcher_no_action",
+                unresolved_topics=task.expected_topics,
+            )
+        updated = coverage.model_copy(update={"rounds": coverage.rounds + 1})
+        return {
+            "messages": [*recent, response],
+            "pending_task_completion": pending,
+            "task_coverages": {task.task_id: updated},
+            "step_count": state.get("step_count", 0) + 1,
+            **self._usage_update(total_usage),
+        }
+
+    async def tools_node(self, state: GraphState) -> dict[str, Any]:
+        _plan, task, coverage = self._current(state)
+        last = state.get("messages", [])[-1]
+        if not isinstance(last, AIMessage):
+            raise RuntimeError("tools 节点缺少 AIMessage")
+        calls = [
+            call
+            for call in last.tool_calls
+            if call.get("name") in {"search_web", "fetch_webpage"}
+        ]
+        result = await self.executor.aexecute(state, calls)
+        useful = [
+            note
+            for note in result.notes.values()
+            if note.compression_status != "irrelevant"
+        ]
+        sources = list(
+            dict.fromkeys(
+                [*coverage.successful_source_urls, *(note.source_url for note in useful)]
+            )
+        )
+        note_ids = list(
+            dict.fromkeys(
+                [*coverage.relevant_note_ids, *(note.note_id for note in useful)]
+            )
+        )
+        next_coverage = coverage.model_copy(
+            update={
+                "attempted_queries": list(
+                    dict.fromkeys(
+                        [*coverage.attempted_queries, *result.attempted_queries]
+                    )
+                ),
+                "successful_source_urls": sources,
+                "relevant_note_ids": note_ids,
+                "consecutive_empty_rounds": (
+                    0
+                    if result.new_note_count
+                    else coverage.consecutive_empty_rounds + 1
+                ),
+                "failure_reason": result.errors[0] if result.errors else None,
+            }
+        )
+        update = result.as_state_update()
+        update.update(
+            {
+                "messages": keep_stage3_tool_turns(
+                    [*state.get("messages", []), *result.messages], max_turns=3
+                ),
+                "task_coverages": {task.task_id: next_coverage},
+                "events": [
+                    self._event(
+                        "tools.completed",
+                        f"执行 {len(calls)} 个工具调用，新增 {result.new_note_count} 条笔记",
+                        task.task_id,
+                    )
+                ],
+            }
+        )
+        return update
+
+    async def complete_task_node(self, state: GraphState) -> dict[str, Any]:
+        _plan, task, coverage = self._current(state)
+        completion = state.get("pending_task_completion")
+        if completion is None:
+            messages = state.get("messages", [])
+            last = messages[-1] if messages else None
+            if isinstance(last, AIMessage):
+                call = next(
+                    (
+                        item
+                        for item in last.tool_calls
+                        if item.get("name") == "complete_research_task"
+                    ),
+                    None,
+                )
+                if call is not None:
+                    completion = parse_task_completion(call, task.task_id)
+        notes = [
+            note
+            for note in state.get("notes", {}).values()
+            if note.task_id == task.task_id
+        ]
+        forced_reason = coverage.failure_reason
+        if completion is None:
+            forced_reason = forced_reason or "missing_task_completion"
+        if forced_reason and (
+            completion is None or completion.summary == forced_reason
+        ):
+            final_coverage = forced_coverage(
+                task, coverage, notes, forced_reason
+            )
+            summary = completion.summary if completion else forced_reason
+        else:
+            assert completion is not None
+            final_coverage = complete_coverage(
+                task,
+                coverage,
+                completion,
+                notes,
+                [coverage.failure_reason] if coverage.failure_reason else [],
+            )
+            summary = completion.summary
+        section = SectionResult(
+            task_id=task.task_id,
+            section_id=task.section_id,
+            title=task.title,
+            summary=summary,
+            note_ids=final_coverage.relevant_note_ids,
+            source_urls=final_coverage.successful_source_urls,
+            coverage=final_coverage,
+            errors=[forced_reason] if forced_reason else [],
+        )
+        return {
+            "task_coverages": {task.task_id: final_coverage},
+            "section_results": {task.task_id: section},
+            "current_task_index": state.get("current_task_index", 0) + 1,
+            "pending_task_completion": None,
+            "messages": [],
+            "events": [
+                self._event(
+                    "task.completed",
+                    f"研究任务结束：{task.title}（{final_coverage.status}）",
+                    task.task_id,
+                )
+            ],
+        }
+
+    async def writer_node(self, state: GraphState) -> dict[str, Any]:
+        plan = state.get("research_plan")
+        if plan is None:
+            raise RuntimeError("Writer 缺少研究计划")
+        by_task = state.get("section_results", {})
+        sections = [by_task[task.task_id] for task in plan.tasks if task.task_id in by_task]
+        wanted = {note_id for section in sections for note_id in section.note_ids}
+        notes = [
+            note
+            for note_id, note in state.get("notes", {}).items()
+            if note_id in wanted
+        ]
+        reason = state.get("termination_reason") or "completed"
+        output, usage, used_fallback = await self.writer.awrite(
+            plan=plan,
+            sections=sections,
+            notes=notes,
+            termination_reason=reason,
+        )
+        events = [self._event("writing.completed", "研究报告已生成")]
+        if used_fallback:
+            events.append(self._event("writing.fallback", "Writer 失败，使用确定性降级报告"))
+        events.append(self._event("run.completed", "研究任务完成"))
+        return {
+            "final_answer": output.markdown,
+            "used_note_ids": output.used_note_ids,
+            "termination_reason": reason,
+            "events": events,
+            **self._usage_update(usage),
+        }
