@@ -607,6 +607,31 @@ class ResearchWorkflowNodes:
             "estimated_cost_usd": float(cost or 0),
         }
 
+    def _research_error_update(
+        self, task: Any, coverage: TaskCoverage, exc: Exception
+    ) -> dict[str, Any]:
+        reason = f"researcher_error:{type(exc).__name__}"
+        return {
+            "pending_task_completion": TaskCompletion(
+                task_id=task.task_id,
+                summary="researcher_error",
+                covered_topics=coverage.covered_topics,
+                unresolved_topics=coverage.missing_topics or task.expected_topics,
+            ),
+            "task_coverages": {
+                task.task_id: coverage.model_copy(
+                    update={"failure_reason": reason}
+                )
+            },
+            "events": [
+                self._event(
+                    "task.failed",
+                    f"研究模型调用失败：{type(exc).__name__}",
+                    task.task_id,
+                )
+            ],
+        }
+
     @staticmethod
     def _current(state: GraphState) -> tuple[ResearchPlan, Any, TaskCoverage]:
         plan = state.get("research_plan")
@@ -714,17 +739,20 @@ class ResearchWorkflowNodes:
             8,
         ) if task_notes else []
         recent = keep_stage3_tool_turns(state.get("messages", []), max_turns=3)
-        response, usage = await self.researcher.adecide(
-            user_query=state["user_query"],
-            task=task,
-            coverage=coverage,
-            notes=selected,
-            recent_messages=recent,
-            budget_summary=(
-                f"当前第 {coverage.rounds + 1} 轮，"
-                f"最多 {getattr(self.settings, 'max_task_rounds', 3)} 轮"
-            ),
-        )
+        try:
+            response, usage = await self.researcher.adecide(
+                user_query=state["user_query"],
+                task=task,
+                coverage=coverage,
+                notes=selected,
+                recent_messages=recent,
+                budget_summary=(
+                    f"当前第 {coverage.rounds + 1} 轮，"
+                    f"最多 {getattr(self.settings, 'max_task_rounds', 3)} 轮"
+                ),
+            )
+        except Exception as exc:
+            return self._research_error_update(task, coverage, exc)
         total_usage = usage
         if not response.tool_calls:
             correction = HumanMessage(
@@ -733,12 +761,15 @@ class ResearchWorkflowNodes:
                     "请立即调用所需工具，或调用 complete_research_task。"
                 )
             )
-            response, retry_usage = await self.researcher.adecide(
-                user_query=state["user_query"], task=task,
-                coverage=coverage, notes=selected,
-                recent_messages=[*recent, response, correction],
-                budget_summary="这是本轮唯一纠正机会",
-            )
+            try:
+                response, retry_usage = await self.researcher.adecide(
+                    user_query=state["user_query"], task=task,
+                    coverage=coverage, notes=selected,
+                    recent_messages=[*recent, response, correction],
+                    budget_summary="这是本轮唯一纠正机会",
+                )
+            except Exception as exc:
+                return self._research_error_update(task, coverage, exc)
             total_usage = add_usage(total_usage, retry_usage)
 
         pending: TaskCompletion | None = None
