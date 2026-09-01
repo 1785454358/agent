@@ -70,6 +70,36 @@ def build_tool_messages(
     return messages
 
 
+def select_fetch_tool_calls(
+    tool_calls: Sequence[dict[str, Any]],
+    *,
+    max_fetches: int,
+) -> tuple[list[tuple[int, dict[str, Any]]], list[ToolCallResult]]:
+    """有界选择抓取调用，并为被拒绝调用生成可回填结果。"""
+    accepted: list[tuple[int, dict[str, Any]]] = []
+    rejected: list[ToolCallResult] = []
+    for order, call in enumerate(tool_calls):
+        if call.get("name") != "fetch_webpage":
+            continue
+        if len(accepted) < max_fetches:
+            accepted.append((order, call))
+            continue
+        rejected.append(
+            ToolCallResult(
+                str(call.get("id", "")),
+                order,
+                {
+                    "ok": False,
+                    "error": {
+                        "code": "deferred_batch_limit",
+                        "message": f"本轮最多抓取 {max_fetches} 个页面",
+                    },
+                },
+            )
+        )
+    return accepted, rejected
+
+
 def keep_recent_tool_turns(
     messages: Sequence[BaseMessage], max_turns: int = 3
 ) -> list[BaseMessage]:
@@ -274,19 +304,31 @@ class ResearchToolExecutor:
             state.get("active_query") or state["user_query"]
         )
         pending: list[PendingFetch] = []
+        fetch_limit = (
+            getattr(self.settings, "max_verification_fetches_per_task", 3)
+            if state.get("verification_mode") == "supplement"
+            else 3
+        )
+        accepted_fetches, rejected_fetches = select_fetch_tool_calls(
+            tool_calls, max_fetches=fetch_limit
+        )
+        accepted_fetch_ids = {
+            str(call.get("id", "")) for _order, call in accepted_fetches
+        }
+        results.extend(rejected_fetches)
+        errors.extend("deferred_batch_limit" for _item in rejected_fetches)
         for order, call in enumerate(tool_calls):
             name = call.get("name")
             if name == "fetch_webpage":
+                if str(call.get("id", "")) not in accepted_fetch_ids:
+                    continue
                 url = str(call.get("args", {}).get("url", "")).strip()
-                if url and len(pending) < 3:
+                if url:
                     pending.append(PendingFetch(
                         tool_call_id=str(call.get("id", "")), url=url,
                         active_query=active_query, task_id=task_id,
                         section_id=section_id, order=order,
                     ))
-                elif url:
-                    results.append(ToolCallResult(str(call.get("id", "")), order, {"ok": False, "error": {"code": "deferred_batch_limit", "message": "本轮最多抓取三个页面"}}))
-                    errors.append("deferred_batch_limit")
                 else:
                     results.append(ToolCallResult(str(call.get("id", "")), order, {"ok": False, "error": {"code": "invalid_arguments", "message": "url 不能为空"}}))
             elif name not in {"search_web", "complete_research_task"}:

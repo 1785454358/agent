@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Sequence
+from typing import Any, Literal, Sequence
 
 from langchain_core.messages import AIMessage, BaseMessage
 
@@ -13,6 +13,7 @@ from deeptrace.models import (
     TaskCompletion,
     TaskCoverage,
     TokenUsage,
+    VerificationGap,
 )
 from deeptrace.prompts.researcher import build_researcher_messages
 from deeptrace.tools import RESEARCHER_TOOL_SCHEMAS
@@ -47,6 +48,9 @@ class ResearcherAgent:
         notes: Sequence[ResearchNote],
         recent_messages: Sequence[BaseMessage],
         budget_summary: str,
+        verification_gaps: Sequence[VerificationGap] = (),
+        existing_source_identities: Sequence[str] = (),
+        research_mode: Literal["regular", "supplement"] = "regular",
     ) -> tuple[AIMessage, TokenUsage]:
         messages = build_researcher_messages(
             user_query=user_query,
@@ -55,6 +59,9 @@ class ResearcherAgent:
             notes=notes,
             recent_messages=recent_messages,
             budget_summary=budget_summary,
+            verification_gaps=verification_gaps,
+            existing_source_identities=existing_source_identities,
+            research_mode=research_mode,
         )
         response = await self._model.ainvoke(messages)
         if not isinstance(response, AIMessage):

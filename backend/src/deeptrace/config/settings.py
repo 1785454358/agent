@@ -91,6 +91,11 @@ class Settings:
     max_runtime_seconds: int = 600
     max_api_tokens: int = 120_000
     writer_token_reserve_ratio: float = 0.15
+    verification_token_reserve_ratio: float = 0.20
+    research_runtime_ratio: float = 0.70
+    max_verification_gaps_per_task: int = 2
+    max_verification_fetches_per_task: int = 3
+    max_verification_rounds_per_task: int = 1
     input_cost_per_million: Decimal | None = None
     output_cost_per_million: Decimal | None = None
     max_cost_usd: Decimal | None = None
@@ -124,6 +129,18 @@ class Settings:
         max_cost = _optional_decimal("DEEPTRACE_MAX_COST_USD")
         if max_cost is not None and (input_cost is None or output_cost is None):
             raise RuntimeError("设置费用上限前必须同时配置模型单价")
+
+        writer_reserve_ratio = _bounded_float(
+            "DEEPTRACE_WRITER_TOKEN_RESERVE_RATIO", 0.15, 0.05, 0.40
+        )
+        verification_reserve_ratio = _bounded_float(
+            "DEEPTRACE_VERIFICATION_TOKEN_RESERVE_RATIO",
+            0.20,
+            0.05,
+            0.40,
+        )
+        if writer_reserve_ratio + verification_reserve_ratio >= 0.80:
+            raise RuntimeError("Writer 与 Verification Token 预留之和必须小于 0.80")
 
         return cls(
             openai_api_key=_required("OPENAI_API_KEY"),
@@ -177,8 +194,19 @@ class Settings:
             max_api_tokens=_bounded_int(
                 "DEEPTRACE_MAX_API_TOKENS", 120_000, 1, 100_000_000
             ),
-            writer_token_reserve_ratio=_bounded_float(
-                "DEEPTRACE_WRITER_TOKEN_RESERVE_RATIO", 0.15, 0.05, 0.40
+            writer_token_reserve_ratio=writer_reserve_ratio,
+            verification_token_reserve_ratio=verification_reserve_ratio,
+            research_runtime_ratio=_bounded_float(
+                "DEEPTRACE_RESEARCH_RUNTIME_RATIO", 0.70, 0.50, 0.90
+            ),
+            max_verification_gaps_per_task=_bounded_int(
+                "DEEPTRACE_MAX_VERIFICATION_GAPS_PER_TASK", 2, 1, 10
+            ),
+            max_verification_fetches_per_task=_bounded_int(
+                "DEEPTRACE_MAX_VERIFICATION_FETCHES_PER_TASK", 3, 1, 10
+            ),
+            max_verification_rounds_per_task=_bounded_int(
+                "DEEPTRACE_MAX_VERIFICATION_ROUNDS_PER_TASK", 1, 1, 10
             ),
             input_cost_per_million=input_cost,
             output_cost_per_million=output_cost,

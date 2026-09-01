@@ -18,6 +18,13 @@ def writer_token_reserve(settings: Settings) -> int:
     )
 
 
+def verification_token_reserve(settings: Settings) -> int:
+    return int(
+        settings.max_api_tokens
+        * getattr(settings, "verification_token_reserve_ratio", 0.20)
+    )
+
+
 def task_token_allowance(state: GraphState, settings: Settings) -> int:
     plan = state.get("research_plan")
     if plan is None:
@@ -27,6 +34,7 @@ def task_token_allowance(state: GraphState, settings: Settings) -> int:
         0,
         settings.max_api_tokens
         - writer_token_reserve(settings)
+        - verification_token_reserve(settings)
         - state.get("api_token_count", 0),
     )
     return pool // remaining
@@ -43,6 +51,16 @@ def elapsed_seconds(started_at: str, now: datetime) -> float:
     if started.tzinfo is None and now.tzinfo is not None:
         started = started.replace(tzinfo=now.tzinfo)
     return max(0.0, (now - started).total_seconds())
+
+
+def regular_research_deadline_reached(
+    state: GraphState, settings: Settings, now: datetime
+) -> bool:
+    """为后续核验与写作预留运行时间，仅限制普通研究阶段。"""
+    return elapsed_seconds(state["started_at"], now) >= (
+        settings.max_runtime_seconds
+        * getattr(settings, "research_runtime_ratio", 0.70)
+    )
 
 
 def get_budget_reason(
