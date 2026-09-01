@@ -1,4 +1,8 @@
-from deeptrace.agent.planner import build_fallback_plan, normalize_question
+from deeptrace.agent.planner import (
+    build_fallback_plan,
+    normalize_question,
+    parse_planner_draft,
+)
 
 
 def test_normalize_question_collapses_whitespace() -> None:
@@ -13,3 +17,22 @@ def test_fallback_plan_is_single_task_and_preserves_question() -> None:
     assert len(plan.tasks) == 1
     assert plan.tasks[0].question == plan.normalized_query
     assert plan.tasks[0].min_sources == 2
+
+
+def test_planner_parses_fenced_json_without_provider_specific_parameters() -> None:
+    draft = parse_planner_draft(
+        """```json
+        {
+          "objective": "总结进展",
+          "language": "zh-CN",
+          "tasks": [
+            {"title": "技术", "question": "技术进展？", "planned_queries": ["技术进展"], "expected_topics": ["技术"]},
+            {"title": "应用", "question": "应用进展？", "planned_queries": ["应用进展"], "expected_topics": ["应用"]}
+          ],
+          "report_outline": ["技术", "应用"]
+        }
+        ```"""
+    )
+
+    assert len(draft.tasks) == 2
+    assert draft.tasks[0].title == "技术"

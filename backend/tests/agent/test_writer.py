@@ -1,4 +1,4 @@
-from deeptrace.agent.writer import render_fallback_report
+from deeptrace.agent.writer import parse_writer_output, render_fallback_report
 from deeptrace.prompts.writer import build_writer_messages
 
 
@@ -30,3 +30,14 @@ def test_fallback_report_discloses_partial_sections(
     assert "部分完成" in output.markdown
     assert "token_budget" in output.markdown
     assert output.used_note_ids == [research_note.note_id]
+
+
+def test_writer_parses_fenced_json_without_provider_specific_parameters() -> None:
+    output = parse_writer_output(
+        """```json
+        {"markdown": "# 报告\\n\\n内容", "used_note_ids": ["note-01"]}
+        ```"""
+    )
+
+    assert output.markdown.startswith("# 报告")
+    assert output.used_note_ids == ["note-01"]

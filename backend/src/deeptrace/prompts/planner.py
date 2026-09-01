@@ -26,6 +26,10 @@ def build_planner_messages(
                 "不能猜测用户没有表达的绝对日期。"
                 "每个任务给出研究问题和预期主题，供基础覆盖判断。"
                 "不得生成或猜测任何来源 URL。"
+                "只返回一个 JSON 对象，不要 Markdown、解释或代码围栏。"
+                "JSON 字段必须是 objective、language、time_range、tasks、report_outline；"
+                "time_range 可为 null，否则含 start_date、end_date、description，日期使用 YYYY-MM-DD；"
+                "每个 task 含 title、question、planned_queries、expected_topics。"
             )
         ),
         HumanMessage(content=question),

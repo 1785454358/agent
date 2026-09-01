@@ -9,8 +9,9 @@ import re
 from typing import Any
 
 from pydantic import BaseModel, Field
+import json_repair
 
-from deeptrace.agent._shared import add_usage, message_usage
+from deeptrace.agent._shared import add_usage, message_text, message_usage
 from deeptrace.models import (
     ResearchPlan,
     ResearchTask,
@@ -39,6 +40,19 @@ class PlannerDraft(BaseModel):
     time_range: ResearchTimeRange | None = None
     tasks: list[PlannerTaskDraft] = Field(min_length=2, max_length=5)
     report_outline: list[str] = Field(min_length=1)
+
+
+def parse_planner_draft(raw: str) -> PlannerDraft:
+    """从普通 Provider 文本中提取、修复并严格校验 Planner JSON。"""
+    start = raw.find("{")
+    end = raw.rfind("}")
+    if start < 0 or end < start:
+        raise ValueError("Planner 未返回 JSON 对象")
+    try:
+        payload = json_repair.loads(raw[start : end + 1])
+        return PlannerDraft.model_validate(payload)
+    except Exception as exc:
+        raise ValueError("Planner JSON 无法校验") from exc
 
 
 def normalize_question(question: str) -> str:
@@ -136,9 +150,7 @@ class PlannerAgent:
         queries_per_task: int,
         min_sources: int,
     ) -> None:
-        self._structured_model = model.with_structured_output(
-            PlannerDraft, include_raw=True
-        )
+        self._model = model
         self._max_tasks = max_tasks
         self._queries_per_task = queries_per_task
         self._min_sources = min_sources
@@ -153,20 +165,19 @@ class PlannerAgent:
         )
         for _attempt in range(2):
             try:
-                result = await self._structured_model.ainvoke(messages)
-                total = add_usage(total, message_usage(result.get("raw")))
-                parsed = result.get("parsed")
-                if isinstance(parsed, PlannerDraft):
-                    return (
-                        materialize_plan(
-                            question,
-                            parsed,
-                            self._max_tasks,
-                            self._min_sources,
-                        ),
-                        total,
-                        False,
-                    )
+                response = await self._model.ainvoke(messages)
+                total = add_usage(total, message_usage(response))
+                parsed = parse_planner_draft(message_text(response))
+                return (
+                    materialize_plan(
+                        question,
+                        parsed,
+                        self._max_tasks,
+                        self._min_sources,
+                    ),
+                    total,
+                    False,
+                )
             except Exception:
                 continue
         return build_fallback_plan(question, self._min_sources), total, True

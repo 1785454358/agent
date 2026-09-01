@@ -56,6 +56,8 @@ def build_writer_messages(
                 "必须明确标记部分完成、执行失败和资料不足的章节。"
                 "阶段 3 尚未实现 Claim 级验证，不得宣称事实已经过该级验证。"
                 "used_note_ids 只列出报告实际使用且输入中存在的笔记 ID。"
+                "只返回一个 JSON 对象，不要代码围栏或额外解释。"
+                "JSON 必须包含 markdown 字符串和 used_note_ids 字符串数组。"
             )
         ),
         HumanMessage(
