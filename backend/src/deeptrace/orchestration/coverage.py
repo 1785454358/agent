@@ -10,6 +10,7 @@ from deeptrace.models import (
     TaskCompletion,
     TaskCoverage,
 )
+from deeptrace.orchestration.quality import summarize_note_quality
 
 
 def _task_notes(
@@ -39,9 +40,11 @@ def complete_coverage(
     note_ids = list(
         dict.fromkeys([*previous.relevant_note_ids, *(note.note_id for note in relevant)])
     )
+    quality = summarize_note_quality(relevant)
     sufficient = (
-        len(sources) >= task.min_sources
-        and bool(note_ids)
+        len(quality.qualified_urls) >= task.min_sources
+        and len(quality.source_identities) >= 2
+        and quality.has_qualified_kind
         and not completion.unresolved_topics
     )
     status = "sufficient" if sufficient else ("partial" if note_ids else "failed")
@@ -56,6 +59,11 @@ def complete_coverage(
             "covered_topics": list(dict.fromkeys(completion.covered_topics)),
             "missing_topics": list(dict.fromkeys(completion.unresolved_topics)),
             "failure_reason": failure_reason,
+            "valid_note_ids": quality.valid_ids,
+            "retrospective_note_ids": quality.retrospective_ids,
+            "unknown_time_note_ids": quality.unknown_ids,
+            "out_of_range_note_ids": quality.out_of_range_ids,
+            "qualified_source_urls": quality.qualified_urls,
         }
     )
 
@@ -76,14 +84,20 @@ def forced_coverage(
     note_ids = list(
         dict.fromkeys([*previous.relevant_note_ids, *(note.note_id for note in relevant)])
     )
+    quality = summarize_note_quality(relevant)
     covered = set(previous.covered_topics)
     missing = [topic for topic in task.expected_topics if topic not in covered]
     return previous.model_copy(
         update={
-            "status": "partial" if note_ids else "failed",
+            "status": "partial" if quality.valid_ids else "failed",
             "successful_source_urls": sources,
             "relevant_note_ids": note_ids,
             "missing_topics": missing,
             "failure_reason": reason,
+            "valid_note_ids": quality.valid_ids,
+            "retrospective_note_ids": quality.retrospective_ids,
+            "unknown_time_note_ids": quality.unknown_ids,
+            "out_of_range_note_ids": quality.out_of_range_ids,
+            "qualified_source_urls": quality.qualified_urls,
         }
     )

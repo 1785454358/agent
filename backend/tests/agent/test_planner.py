@@ -1,8 +1,14 @@
 from deeptrace.agent.planner import (
     build_fallback_plan,
+    detect_query_language,
     normalize_question,
     parse_planner_draft,
 )
+
+
+def test_query_language_is_deterministic() -> None:
+    assert detect_query_language("2024年 AI Agent 有哪些进展？") == "zh-CN"
+    assert detect_query_language("What changed in AI agents in 2024?") == "en"
 
 
 def test_normalize_question_collapses_whitespace() -> None:

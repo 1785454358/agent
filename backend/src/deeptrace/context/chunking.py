@@ -24,6 +24,7 @@ def chunk_document(
         add_special_tokens=False,
         return_offsets_mapping=True,
         truncation=False,
+        verbose=False,
     )
     token_ids = encoded["input_ids"]
     offsets = encoded.get("offset_mapping")

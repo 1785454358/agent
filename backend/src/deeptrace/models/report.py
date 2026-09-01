@@ -31,6 +31,13 @@ class TaskCoverage(BaseModel):
     rounds: int = Field(default=0, ge=0)
     consecutive_empty_rounds: int = Field(default=0, ge=0)
     failure_reason: str | None = None
+    valid_note_ids: list[str] = Field(default_factory=list)
+    retrospective_note_ids: list[str] = Field(default_factory=list)
+    unknown_time_note_ids: list[str] = Field(default_factory=list)
+    out_of_range_note_ids: list[str] = Field(default_factory=list)
+    qualified_source_urls: list[str] = Field(default_factory=list)
+    api_tokens_used: int = Field(default=0, ge=0)
+    api_token_budget: int = Field(default=0, ge=0)
 
 
 class SectionResult(BaseModel):

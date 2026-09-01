@@ -13,6 +13,26 @@ class TokenUsage(BaseModel):
     total_tokens: int = Field(default=0, ge=0)
 
 
+def add_token_usages(*items: TokenUsage) -> TokenUsage:
+    return TokenUsage(
+        input_tokens=sum(item.input_tokens for item in items),
+        output_tokens=sum(item.output_tokens for item in items),
+        total_tokens=sum(item.total_tokens for item in items),
+    )
+
+
+class UsageBreakdown(BaseModel):
+    """阶段 3 各角色的真实 Provider usage。"""
+    planner: TokenUsage = Field(default_factory=TokenUsage)
+    researcher: TokenUsage = Field(default_factory=TokenUsage)
+    compression: TokenUsage = Field(default_factory=TokenUsage)
+    writer: TokenUsage = Field(default_factory=TokenUsage)
+
+    @property
+    def total(self) -> TokenUsage:
+        return add_token_usages(self.planner, self.researcher, self.compression, self.writer)
+
+
 class ContextAudit(BaseModel):
     """记录主 Agent 上下文是否意外包含整页原文。"""
 

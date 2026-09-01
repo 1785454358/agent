@@ -8,7 +8,7 @@ from typing import Any, Sequence
 
 import tiktoken
 
-from deeptrace.models import PageCompressionMetrics, RoundTokenMetrics, TokenUsage
+from deeptrace.models import PageCompressionMetrics, RoundTokenMetrics, TokenUsage, UsageBreakdown
 
 
 def estimate_usage_cost(
@@ -194,6 +194,16 @@ def format_token_summary(metrics: Sequence[RoundTokenMetrics]) -> str:
     )
     return (
         "Token 汇总（上下文为估算值）\n"
-        f"累计毛节省≈{gross:,} | 压缩调用={compression:,} | 累计净节省≈{net:,}\n"
-        f"主 Agent Provider usage: input={provider_input:,}, output={provider_output:,}"
+        f"累计毛节省≈{gross:,} | 压缩调用={compression:,} | 累计净节省≈{net:,}"
+    )
+
+
+def format_role_usage(usage: UsageBreakdown) -> str:
+    return (
+        "Provider Token（按角色）\n"
+        f"Planner: {usage.planner.total_tokens:,}\n"
+        f"Researcher: {usage.researcher.total_tokens:,}\n"
+        f"Compression: {usage.compression.total_tokens:,}\n"
+        f"Writer: {usage.writer.total_tokens:,}\n"
+        f"Total: {usage.total.total_tokens:,}"
     )

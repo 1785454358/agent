@@ -8,6 +8,34 @@ from typing import Any
 
 from deeptrace.config import Settings
 from deeptrace.orchestration.state import GraphState
+from deeptrace.models import TaskCoverage
+
+
+def writer_token_reserve(settings: Settings) -> int:
+    return int(
+        settings.max_api_tokens
+        * getattr(settings, "writer_token_reserve_ratio", 0.15)
+    )
+
+
+def task_token_allowance(state: GraphState, settings: Settings) -> int:
+    plan = state.get("research_plan")
+    if plan is None:
+        return 0
+    remaining = max(1, len(plan.tasks) - state.get("current_task_index", 0))
+    pool = max(
+        0,
+        settings.max_api_tokens
+        - writer_token_reserve(settings)
+        - state.get("api_token_count", 0),
+    )
+    return pool // remaining
+
+
+def task_budget_reason(coverage: TaskCoverage) -> str | None:
+    if coverage.api_token_budget and coverage.api_tokens_used >= coverage.api_token_budget:
+        return "task_token_budget"
+    return None
 
 
 def elapsed_seconds(started_at: str, now: datetime) -> float:

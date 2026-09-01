@@ -21,7 +21,7 @@ SEARCH_TOOL_SCHEMA: JsonObject = {
                     "max_results": {
                         "type": "integer",
                         "minimum": 1,
-                        "maximum": 5,
+                        "maximum": 8,
                         "default": 5,
                     },
                 },

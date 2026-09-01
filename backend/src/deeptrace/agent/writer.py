@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any, Sequence
 
 import json_repair
 from pydantic import BaseModel, Field
+from langchain_core.messages import HumanMessage
 
 from deeptrace.agent._shared import add_usage, message_text, message_usage
 from deeptrace.models import ResearchNote, ResearchPlan, SectionResult, TokenUsage
@@ -28,6 +30,29 @@ def parse_writer_output(raw: str) -> WriterOutput:
         return WriterOutput.model_validate(payload)
     except Exception as exc:
         raise ValueError("Writer JSON 无法校验") from exc
+
+
+def is_language_consistent(markdown: str, language: str) -> bool:
+    cjk = len(re.findall(r"[\u3400-\u9fff]", markdown))
+    latin = len(re.findall(r"[A-Za-z]", markdown))
+    return cjk >= max(8, latin // 5) if language == "zh-CN" else latin >= max(8, cjk)
+
+
+_TIME_QUALIFIERS = ("后续", "回顾", "截至", "后来", "不属于", "retrospective", "subsequent", "as of", "outside the period")
+
+
+def find_unqualified_year_mentions(markdown: str, start_year: int, end_year: int) -> list[int]:
+    body = markdown.split("## 来源", 1)[0]
+    found: set[int] = set()
+    for sentence in re.split(r"[。！？\n]", body):
+        lower = sentence.lower()
+        if any(term in lower for term in _TIME_QUALIFIERS):
+            continue
+        for value in re.findall(r"\b20\d{2}\b", sentence):
+            year = int(value)
+            if year < start_year or year > end_year:
+                found.add(year)
+    return sorted(found)
 
 
 def render_fallback_report(
@@ -104,6 +129,8 @@ class WriterAgent:
         notes: Sequence[ResearchNote],
         termination_reason: str,
     ) -> tuple[WriterOutput, TokenUsage, bool]:
+        if not notes:
+            return render_fallback_report(plan, sections, notes, termination_reason), TokenUsage(), True
         messages = build_writer_messages(
             plan=plan,
             sections=sections,
@@ -112,9 +139,10 @@ class WriterAgent:
         )
         total = TokenUsage()
         allowed_ids = {note.note_id for note in notes}
-        for _attempt in range(2):
+        current_messages = list(messages)
+        for attempt in range(2):
             try:
-                response = await self._model.ainvoke(messages)
+                response = await self._model.ainvoke(current_messages)
                 total = add_usage(total, message_usage(response))
                 parsed = parse_writer_output(message_text(response))
                 clean = parsed.model_copy(
@@ -126,6 +154,18 @@ class WriterAgent:
                         ]
                     }
                 )
+                violations: list[str] = []
+                if not is_language_consistent(clean.markdown, plan.language):
+                    violations.append(f"报告语言必须为 {plan.language}")
+                if plan.time_range and plan.time_range.start_date and plan.time_range.end_date:
+                    years = find_unqualified_year_mentions(clean.markdown, plan.time_range.start_date.year, plan.time_range.end_date.year)
+                    if years:
+                        violations.append("范围外年份缺少回顾说明：" + ",".join(map(str, years)))
+                if violations:
+                    if attempt == 0:
+                        current_messages = [*messages, response, HumanMessage(content="请纠正以下问题后重新输出 JSON：" + "；".join(violations))]
+                        continue
+                    raise ValueError("Writer 质量校验失败")
                 return clean, total, False
             except Exception:
                 continue

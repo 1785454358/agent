@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
 from deeptrace.models.metrics import TokenUsage
+from deeptrace.models.quality import SourceKind, TemporalRelation
 
 
 class ResearchNote(BaseModel):
@@ -24,6 +26,12 @@ class ResearchNote(BaseModel):
     relevance_score: float = Field(ge=-1.0, le=1.0)
     compression_status: Literal["compressed", "extractive_fallback", "irrelevant"]
     error: str | None = None
+    source_published_at: datetime | None = None
+    event_start_date: date | None = None
+    event_end_date: date | None = None
+    source_kind: SourceKind = "unknown"
+    temporal_relation: TemporalRelation = "not_applicable"
+    temporal_scope: str = ""
 
 
 class CompressionOutcome(BaseModel):

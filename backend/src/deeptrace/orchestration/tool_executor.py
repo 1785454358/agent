@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
+from collections import Counter
 import json
 from typing import Any, Sequence
 
@@ -24,6 +25,7 @@ from deeptrace.models import (
     RawDocument,
     ResearchNote,
     TokenUsage,
+    UsageBreakdown,
 )
 from deeptrace.observability import TokenLedger, estimate_usage_cost
 from deeptrace.orchestration.state import GraphState
@@ -111,6 +113,11 @@ class ToolExecutionUpdate:
     errors: list[str] = field(default_factory=list)
     usage: TokenUsage = field(default_factory=TokenUsage)
     estimated_cost_delta: float = 0.0
+    search_candidate_count: int = 0
+    fetch_success_count: int = 0
+    fetch_failure_count: int = 0
+    skipped_count: int = 0
+    error_counts: dict[str, int] = field(default_factory=dict)
 
     def as_state_update(self) -> dict[str, Any]:
         return {
@@ -122,6 +129,7 @@ class ToolExecutionUpdate:
             "recent_new_note_count": self.new_note_count,
             "api_token_count": self.usage.total_tokens,
             "provider_usage": self.usage,
+            "role_usage": UsageBreakdown(compression=self.usage),
             "estimated_cost_usd": self.estimated_cost_delta,
             "tool_outputs": {
                 str(message.tool_call_id): str(message.content)
@@ -216,6 +224,7 @@ class ResearchToolExecutor:
         results: list[ToolCallResult] = []
         accepted_queries: list[str] = []
         errors: list[str] = []
+        candidate_count = 0
 
         for order, call in enumerate(tool_calls):
             if call.get("name") != "search_web":
@@ -243,9 +252,17 @@ class ResearchToolExecutor:
                     accepted_queries.append(query)
                     attempted_history.append(query)
                     payload = await asyncio.to_thread(
-                        search_web, self.tools, query, max_results
+                        search_web,
+                        self.tools,
+                        query,
+                        max_results,
+                        ({year for year in range(
+                            state["research_plan"].time_range.start_date.year,
+                            state["research_plan"].time_range.end_date.year + 1,
+                        )} if state.get("research_plan") and state["research_plan"].time_range and state["research_plan"].time_range.start_date and state["research_plan"].time_range.end_date else set()),
                     )
                     if payload.get("ok"):
+                        candidate_count += len(payload.get("results", []))
                         self.ledger.record_search_tool(
                             json.dumps(payload, ensure_ascii=False)
                         )
@@ -261,12 +278,15 @@ class ResearchToolExecutor:
             name = call.get("name")
             if name == "fetch_webpage":
                 url = str(call.get("args", {}).get("url", "")).strip()
-                if url:
+                if url and len(pending) < 3:
                     pending.append(PendingFetch(
                         tool_call_id=str(call.get("id", "")), url=url,
                         active_query=active_query, task_id=task_id,
                         section_id=section_id, order=order,
                     ))
+                elif url:
+                    results.append(ToolCallResult(str(call.get("id", "")), order, {"ok": False, "error": {"code": "deferred_batch_limit", "message": "本轮最多抓取三个页面"}}))
+                    errors.append("deferred_batch_limit")
                 else:
                     results.append(ToolCallResult(str(call.get("id", "")), order, {"ok": False, "error": {"code": "invalid_arguments", "message": "url 不能为空"}}))
             elif name not in {"search_web", "complete_research_task"}:
@@ -319,6 +339,7 @@ class ResearchToolExecutor:
                 document=document, selection=selection,
                 active_query=item.active_query, task_id=task_id,
                 section_id=section_id,
+                time_range=(state["research_plan"].time_range if state.get("research_plan") else None),
             ))
 
         outcomes = await self.compressor.compress_many(requests)
@@ -343,7 +364,8 @@ class ResearchToolExecutor:
                 self.ledger.record_compression_usage(outcome.usage)
                 if note is not None:
                     notes[note.note_id] = note
-                    new_note_count += 1
+                    if note.compression_status != "irrelevant" and note.temporal_relation != "out_of_range":
+                        new_note_count += 1
             if note is None:
                 results.append(ToolCallResult(item.tool_call_id, item.order, {"ok": False, "error": {"code": "compression_failed", "message": "压缩结果缺失"}}))
                 errors.append("compression_failed")
@@ -367,4 +389,9 @@ class ResearchToolExecutor:
             errors=errors,
             usage=total_usage,
             estimated_cost_delta=float(estimated_cost or 0),
+            search_candidate_count=candidate_count,
+            fetch_success_count=len(pairs),
+            fetch_failure_count=sum(1 for error in errors if error not in {"deferred_batch_limit", "deferred_token_budget"}),
+            skipped_count=sum(1 for error in errors if error in {"deferred_batch_limit", "deferred_token_budget"}),
+            error_counts=dict(Counter(errors)),
         )

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+from datetime import date
 from dataclasses import dataclass
 from typing import Any, Sequence
 
@@ -12,7 +13,8 @@ import json_repair
 from pydantic import BaseModel, Field, ValidationError
 
 from deeptrace.context.retrieval import ChunkSelection
-from deeptrace.models import CompressionOutcome, RawDocument, ResearchNote, TokenUsage
+from deeptrace.models import CompressionOutcome, RawDocument, ResearchNote, ResearchTimeRange, SourceKind, TokenUsage
+from deeptrace.context.temporal import normalize_temporal_relation
 from deeptrace.prompts.compression import build_compression_messages
 
 
@@ -21,6 +23,10 @@ class ResearchNotePayload(BaseModel):
     title: str = Field(min_length=1)
     key_points: list[str] = Field(min_length=1)
     evidence_snippets: list[str] = Field(min_length=1)
+    event_start_date: date | None = None
+    event_end_date: date | None = None
+    source_kind: SourceKind = "unknown"
+    temporal_scope: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,6 +39,7 @@ class CompressionRequest:
     active_query: str
     task_id: str
     section_id: str
+    time_range: ResearchTimeRange | None = None
 
 
 def parse_note_json(raw: str) -> ResearchNotePayload:
@@ -61,6 +68,7 @@ def build_extractive_note(
     task_id: str,
     section_id: str,
     error: str,
+    time_range: ResearchTimeRange | None = None,
 ) -> ResearchNote:
     """压缩最终失败时直接保留全部入选块，保证已抓信息不丢失。"""
     snippets = [chunk.text for chunk in selection.chunks if chunk.text.strip()]
@@ -77,17 +85,29 @@ def build_extractive_note(
         relevance_score=selection.top1_fused_score,
         compression_status="extractive_fallback",
         error=error,
+        source_published_at=document.source_published_at,
+        source_kind="unknown",
+        temporal_relation="unknown" if time_range else "not_applicable",
+        temporal_scope="抽取式降级无法可靠确定事件时间" if time_range else "",
     )
 
 
 class CompressionService:
     """有界并发调用 LLM；单页失败不会取消同批其他页面。"""
 
-    def __init__(self, model: Any, concurrency: int = 3) -> None:
+    def __init__(
+        self,
+        model: Any,
+        concurrency: int = 3,
+        timeout_seconds: float = 60.0,
+    ) -> None:
         if concurrency < 1:
             raise ValueError("concurrency 必须大于 0")
+        if timeout_seconds <= 0:
+            raise ValueError("timeout_seconds 必须大于 0")
         self._model = model
         self._semaphore = asyncio.Semaphore(concurrency)
+        self._timeout_seconds = timeout_seconds
 
     @staticmethod
     def _messages(request: CompressionRequest) -> list[Any]:
@@ -98,6 +118,9 @@ class CompressionService:
             chunks=[
                 (chunk.index, chunk.text) for chunk in request.selection.chunks
             ],
+            time_range=request.time_range,
+            source_published_at=request.document.source_published_at,
+            publisher=request.document.publisher,
         )
 
     @staticmethod
@@ -138,6 +161,8 @@ class CompressionService:
             source_url=request.document.final_url,
             relevance_score=request.selection.top1_fused_score,
             compression_status="irrelevant",
+            source_published_at=request.document.source_published_at,
+            temporal_relation="unknown" if request.time_range else "not_applicable",
         )
         return CompressionOutcome(
             tool_call_id=request.tool_call_id, note=note, order=request.order
@@ -153,7 +178,10 @@ class CompressionService:
         async with self._semaphore:
             for _attempt in range(2):
                 try:
-                    response = await self._model.ainvoke(messages)
+                    response = await asyncio.wait_for(
+                        self._model.ainvoke(messages),
+                        timeout=self._timeout_seconds,
+                    )
                     usage = self._usage(response)
                     total_usage = TokenUsage(
                         input_tokens=total_usage.input_tokens + usage.input_tokens,
@@ -161,6 +189,12 @@ class CompressionService:
                         total_tokens=total_usage.total_tokens + usage.total_tokens,
                     )
                     payload = parse_note_json(self._message_text(response))
+                    relation = normalize_temporal_relation(
+                        request.time_range,
+                        request.document.source_published_at,
+                        payload.event_start_date,
+                        payload.event_end_date,
+                    )
                     note = ResearchNote(
                         note_id=_note_id(
                             request.document.doc_id,
@@ -177,6 +211,12 @@ class CompressionService:
                         source_url=request.document.final_url,
                         relevance_score=request.selection.top1_fused_score,
                         compression_status="compressed",
+                        source_published_at=request.document.source_published_at,
+                        event_start_date=payload.event_start_date,
+                        event_end_date=payload.event_end_date,
+                        source_kind=payload.source_kind,
+                        temporal_relation=relation,
+                        temporal_scope=payload.temporal_scope,
                     )
                     return CompressionOutcome(
                         tool_call_id=request.tool_call_id,
@@ -195,6 +235,7 @@ class CompressionService:
                 request.task_id,
                 request.section_id,
                 last_error,
+                request.time_range,
             ),
             error=last_error,
             order=request.order,
@@ -222,6 +263,7 @@ class CompressionService:
                         request.task_id,
                         request.section_id,
                         error,
+                        request.time_range,
                     ),
                     error=error,
                     order=request.order,

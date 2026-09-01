@@ -1,5 +1,21 @@
-from deeptrace.agent.writer import parse_writer_output, render_fallback_report
+from deeptrace.agent.writer import (
+    find_unqualified_year_mentions,
+    is_language_consistent,
+    parse_writer_output,
+    render_fallback_report,
+)
 from deeptrace.prompts.writer import build_writer_messages
+
+
+def test_writer_quality_validators() -> None:
+    assert not is_language_consistent("Only English text about agents.", "zh-CN")
+    assert is_language_consistent("这是关于智能体领域的重要进展报告。", "zh-CN")
+    assert find_unqualified_year_mentions(
+        "OpenAI Presence 于 2026 年发布。", 2024, 2024
+    ) == [2026]
+    assert find_unqualified_year_mentions(
+        "后续回顾：Presence 于 2026 年发布，不属于 2024 年进展。", 2024, 2024
+    ) == []
 
 
 def test_writer_messages_do_not_contain_raw_document(

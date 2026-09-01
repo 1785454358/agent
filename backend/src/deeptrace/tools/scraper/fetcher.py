@@ -23,6 +23,7 @@ from deeptrace.tools.scraper.urls import (
     resolve_document_identity,
     validate_public_url,
 )
+from deeptrace.tools.scraper.metadata import extract_source_metadata
 
 
 MAX_RESPONSE_BYTES = 2_000_000
@@ -42,6 +43,9 @@ class ExtractionCandidate:
     scraper_used: ScraperUsed
     source_url: str
     canonical_url: str | None = None
+    source_published_at: datetime | None = None
+    source_modified_at: datetime | None = None
+    publisher: str | None = None
 
 
 class WebFetchError(RuntimeError):
@@ -182,6 +186,9 @@ class AsyncWebFetcher:
             fetched_at=datetime.now(timezone.utc),
             scraper_used=best.scraper_used,
             status="success",
+            source_published_at=best.source_published_at,
+            source_modified_at=best.source_modified_at,
+            publisher=best.publisher,
         )
 
     async def _fetch_httpx(self, url: str) -> tuple[str, str]:
@@ -327,6 +334,7 @@ class AsyncWebFetcher:
         self, html: str, source_url: str, *, browser: bool
     ) -> list[ExtractionCandidate]:
         title, canonical = self._metadata(html)
+        source_metadata = extract_source_metadata(html)
         trafilatura_text = extract(
             html,
             url=source_url,
@@ -347,6 +355,9 @@ class AsyncWebFetcher:
                 scraper_used=trafilatura_used,
                 source_url=source_url,
                 canonical_url=canonical,
+                source_published_at=source_metadata.published_at,
+                source_modified_at=source_metadata.modified_at,
+                publisher=source_metadata.publisher,
             ),
             ExtractionCandidate(
                 text=self._extract_bs4(html),
@@ -354,6 +365,9 @@ class AsyncWebFetcher:
                 scraper_used=bs4_used,
                 source_url=source_url,
                 canonical_url=canonical,
+                source_published_at=source_metadata.published_at,
+                source_modified_at=source_metadata.modified_at,
+                publisher=source_metadata.publisher,
             ),
         ]
 

@@ -556,9 +556,11 @@ from deeptrace.models import (
     SectionResult,
     TaskCompletion,
     TaskCoverage,
+    UsageBreakdown,
 )
-from deeptrace.orchestration.budget import get_budget_reason
+from deeptrace.orchestration.budget import get_budget_reason, task_budget_reason, task_token_allowance
 from deeptrace.orchestration.coverage import complete_coverage, forced_coverage
+from deeptrace.orchestration.quality import note_is_valid, summarize_note_quality
 from deeptrace.orchestration.tool_executor import (
     ResearchToolExecutor,
     keep_recent_tool_turns as keep_stage3_tool_turns,
@@ -595,7 +597,7 @@ class ResearchWorkflowNodes:
         self.on_event(event)
         return event
 
-    def _usage_update(self, usage: TokenUsage) -> dict[str, Any]:
+    def _usage_update(self, role: str, usage: TokenUsage) -> dict[str, Any]:
         cost = estimate_usage_cost(
             usage,
             self.settings.input_cost_per_million,
@@ -604,6 +606,7 @@ class ResearchWorkflowNodes:
         return {
             "api_token_count": usage.total_tokens,
             "provider_usage": usage,
+            "role_usage": UsageBreakdown(**{role: usage}),
             "estimated_cost_usd": float(cost or 0),
         }
 
@@ -672,13 +675,13 @@ class ResearchWorkflowNodes:
             "current_task_index": 0,
             "step_count": state.get("step_count", 0) + 1,
             "events": events,
-            **self._usage_update(usage),
+            **self._usage_update("planner", usage),
         }
 
     async def start_task_node(self, state: GraphState) -> dict[str, Any]:
         _plan, task, coverage = self._current(state)
         running = coverage.model_copy(
-            update={"status": "running", "failure_reason": None}
+            update={"status": "running", "failure_reason": None, "api_token_budget": task_token_allowance(state, self.settings)}
         )
         return {
             "active_query": task.question,
@@ -694,8 +697,11 @@ class ResearchWorkflowNodes:
 
     async def research_node(self, state: GraphState) -> dict[str, Any]:
         _plan, task, coverage = self._current(state)
-        reason = get_budget_reason(state, self.settings, datetime.now(UTC))
-        force_finalize = reason is not None
+        global_reason = get_budget_reason(state, self.settings, datetime.now(UTC))
+        local_reason = task_budget_reason(coverage)
+        reason = global_reason or local_reason
+        # 任务额度只结束当前任务；仅全局预算耗尽才跳过后续任务进入 Writer。
+        force_finalize = global_reason is not None
         if reason is None and coverage.rounds >= getattr(
             self.settings, "max_task_rounds", 3
         ):
@@ -790,13 +796,13 @@ class ResearchWorkflowNodes:
                 summary="researcher_no_action",
                 unresolved_topics=task.expected_topics,
             )
-        updated = coverage.model_copy(update={"rounds": coverage.rounds + 1})
+        updated = coverage.model_copy(update={"rounds": coverage.rounds + 1, "api_tokens_used": coverage.api_tokens_used + total_usage.total_tokens})
         return {
             "messages": [*recent, response],
             "pending_task_completion": pending,
             "task_coverages": {task.task_id: updated},
             "step_count": state.get("step_count", 0) + 1,
-            **self._usage_update(total_usage),
+            **self._usage_update("researcher", total_usage),
         }
 
     async def tools_node(self, state: GraphState) -> dict[str, Any]:
@@ -815,9 +821,11 @@ class ResearchWorkflowNodes:
             for note in result.notes.values()
             if note.compression_status != "irrelevant"
         ]
+        valid = [note for note in useful if note_is_valid(note)]
+        quality = summarize_note_quality(useful)
         sources = list(
             dict.fromkeys(
-                [*coverage.successful_source_urls, *(note.source_url for note in useful)]
+                [*coverage.successful_source_urls, *(note.source_url for note in valid)]
             )
         )
         note_ids = list(
@@ -840,6 +848,7 @@ class ResearchWorkflowNodes:
                     else coverage.consecutive_empty_rounds + 1
                 ),
                 "failure_reason": result.errors[0] if result.errors else None,
+                "api_tokens_used": coverage.api_tokens_used + result.usage.total_tokens,
             }
         )
         update = result.as_state_update()
@@ -852,7 +861,13 @@ class ResearchWorkflowNodes:
                 "events": [
                     self._event(
                         "tools.completed",
-                        f"执行 {len(calls)} 个工具调用，新增 {result.new_note_count} 条笔记",
+                        (
+                            f"搜索候选 {result.search_candidate_count}；抓取成功 {result.fetch_success_count}，"
+                            f"失败 {result.fetch_failure_count}，跳过 {result.skipped_count}；有效笔记 {len(valid)}；"
+                            f"后发回顾 {len(quality.retrospective_ids)}，"
+                            f"时间未知 {len(quality.unknown_ids)}，"
+                            f"超出范围 {len(quality.out_of_range_ids)}；失败码 {result.error_counts or '无'}"
+                        ),
                         task.task_id,
                     )
                 ],
@@ -907,8 +922,8 @@ class ResearchWorkflowNodes:
             section_id=task.section_id,
             title=task.title,
             summary=summary,
-            note_ids=final_coverage.relevant_note_ids,
-            source_urls=final_coverage.successful_source_urls,
+            note_ids=final_coverage.valid_note_ids,
+            source_urls=final_coverage.qualified_source_urls,
             coverage=final_coverage,
             errors=[forced_reason] if forced_reason else [],
         )
@@ -955,5 +970,5 @@ class ResearchWorkflowNodes:
             "used_note_ids": output.used_note_ids,
             "termination_reason": reason,
             "events": events,
-            **self._usage_update(usage),
+            **self._usage_update("writer", usage),
         }

@@ -20,6 +20,8 @@ from deeptrace.models import (
     TaskCompletion,
     TaskCoverage,
     TokenUsage,
+    UsageBreakdown,
+    add_token_usages,
 )
 
 
@@ -39,6 +41,15 @@ def merge_token_usage(left: TokenUsage, right: TokenUsage) -> TokenUsage:
         input_tokens=left.input_tokens + right.input_tokens,
         output_tokens=left.output_tokens + right.output_tokens,
         total_tokens=left.total_tokens + right.total_tokens,
+    )
+
+
+def merge_usage_breakdown(left: UsageBreakdown, right: UsageBreakdown) -> UsageBreakdown:
+    return UsageBreakdown(
+        planner=add_token_usages(left.planner, right.planner),
+        researcher=add_token_usages(left.researcher, right.researcher),
+        compression=add_token_usages(left.compression, right.compression),
+        writer=add_token_usages(left.writer, right.writer),
     )
 
 
@@ -67,6 +78,7 @@ class GraphState(TypedDict):
     api_token_count: Annotated[int, operator.add]
     estimated_cost_usd: Annotated[float, operator.add]
     provider_usage: Annotated[TokenUsage, merge_token_usage]
+    role_usage: Annotated[UsageBreakdown, merge_usage_breakdown]
     used_note_ids: list[str]
     token_metrics: Annotated[list[RoundTokenMetrics], operator.add]
     context_audits: Annotated[list[ContextAudit], operator.add]

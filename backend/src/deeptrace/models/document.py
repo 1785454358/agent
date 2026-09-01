@@ -43,6 +43,9 @@ class RawDocument(BaseModel):
     scraper_used: ScraperUsed
     status: Literal["success", "irrelevant", "failed"]
     error: str | None = None
+    source_published_at: datetime | None = None
+    source_modified_at: datetime | None = None
+    publisher: str | None = None
 
 
 class DocumentChunk(BaseModel):

@@ -16,6 +16,7 @@ from deeptrace.orchestration.nodes import (
     select_agent_model_mode,
 )
 from deeptrace.orchestration.state import GraphState, append_unique, merge_dicts
+from deeptrace.orchestration.quality import note_is_valid, source_identity, summarize_note_quality
 
 __all__ = [
     "GraphState",
@@ -32,4 +33,7 @@ __all__ = [
     "route_after_research",
     "route_after_task",
     "select_agent_model_mode",
+    "note_is_valid",
+    "source_identity",
+    "summarize_note_quality",
 ]

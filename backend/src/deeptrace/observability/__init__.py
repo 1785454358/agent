@@ -7,6 +7,7 @@ from deeptrace.observability.token_metrics import (
     estimate_usage_cost,
     format_round_metrics,
     format_token_summary,
+    format_role_usage,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "estimate_usage_cost",
     "format_round_metrics",
     "format_token_summary",
+    "format_role_usage",
 ]

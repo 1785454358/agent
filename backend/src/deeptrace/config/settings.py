@@ -90,6 +90,7 @@ class Settings:
     max_fetched_pages: int = 20
     max_runtime_seconds: int = 600
     max_api_tokens: int = 120_000
+    writer_token_reserve_ratio: float = 0.15
     input_cost_per_million: Decimal | None = None
     output_cost_per_million: Decimal | None = None
     max_cost_usd: Decimal | None = None
@@ -175,6 +176,9 @@ class Settings:
             ),
             max_api_tokens=_bounded_int(
                 "DEEPTRACE_MAX_API_TOKENS", 120_000, 1, 100_000_000
+            ),
+            writer_token_reserve_ratio=_bounded_float(
+                "DEEPTRACE_WRITER_TOKEN_RESERVE_RATIO", 0.15, 0.05, 0.40
             ),
             input_cost_per_million=input_cost,
             output_cost_per_million=output_cost,

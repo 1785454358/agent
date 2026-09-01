@@ -13,6 +13,7 @@ from deeptrace.tools.scraper.urls import (
     resolve_document_identity,
     validate_public_url,
 )
+from deeptrace.tools.scraper.metadata import SourceMetadata, extract_source_metadata
 
 __all__ = [
     "AsyncWebFetcher",
@@ -23,5 +24,7 @@ __all__ = [
     "normalize_url_before_fetch",
     "resolve_document_identity",
     "select_best_extraction",
+    "SourceMetadata",
+    "extract_source_metadata",
     "validate_public_url",
 ]

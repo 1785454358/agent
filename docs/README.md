@@ -14,7 +14,9 @@
 2. [总体目标架构](architecture/deeptrace-target-architecture.md)
 3. [阶段 3 规划式 Deep Research 设计](superpowers/specs/2026-09-01-stage-03-planned-deep-research-design.md)
 4. [阶段 3 实施计划](superpowers/plans/2026-09-01-stage-03-planned-deep-research.md)
-5. [后端运行说明](../backend/README.md)
+5. [阶段 3 研究质量加固设计](superpowers/specs/2026-09-01-stage-03-research-quality-hardening-design.md)
+6. [阶段 3 研究质量加固计划](superpowers/plans/2026-09-01-stage-03-research-quality-hardening.md)
+7. [后端运行说明](../backend/README.md)
 
 阶段 3 设计与实施计划现作为已完成实现的事实来源。下一阶段是 Evidence Store 与 Verifier；在阶段 4 设计和计划明确前，不提前实现 Memory、API、Web UI 或规模化评测。
 
@@ -39,6 +41,8 @@
 - [模块化目录重构计划](superpowers/plans/2026-08-31-deeptrace-module-layout-refactor.md)
 - [阶段 3 规划式 Deep Research 设计](superpowers/specs/2026-09-01-stage-03-planned-deep-research-design.md)
 - [阶段 3 实施计划](superpowers/plans/2026-09-01-stage-03-planned-deep-research.md)
+- [阶段 3 研究质量加固设计](superpowers/specs/2026-09-01-stage-03-research-quality-hardening-design.md)
+- [阶段 3 研究质量加固计划](superpowers/plans/2026-09-01-stage-03-research-quality-hardening.md)
 
 ## 维护规则
 

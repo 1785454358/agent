@@ -11,8 +11,11 @@ from deeptrace.models.metrics import (
     PageCompressionMetrics,
     RoundTokenMetrics,
     TokenUsage,
+    UsageBreakdown,
+    add_token_usages,
 )
 from deeptrace.models.plan import ResearchPlan, ResearchTask, ResearchTimeRange
+from deeptrace.models.quality import SourceKind, TemporalRelation
 from deeptrace.models.report import (
     RunEvent,
     SectionResult,
@@ -33,6 +36,8 @@ __all__ = [
     "ResearchPlan",
     "ResearchTask",
     "ResearchTimeRange",
+    "SourceKind",
+    "TemporalRelation",
     "RoundTokenMetrics",
     "RunEvent",
     "ScraperUsed",
@@ -41,4 +46,6 @@ __all__ = [
     "TaskCoverage",
     "TaskStatus",
     "TokenUsage",
+    "UsageBreakdown",
+    "add_token_usages",
 ]

@@ -61,6 +61,15 @@ def normalize_question(question: str) -> str:
     return re.sub(rf"(?<=[{_CJK}])\s+(?=[{_CJK}])", "", normalized)
 
 
+def detect_query_language(question: str) -> str:
+    """用原始问题确定主要输出语言，避免 Provider 随机切换语言。"""
+    if re.search(rf"[{_CJK}]", question):
+        return "zh-CN"
+    if re.search(r"[A-Za-z]", question):
+        return "en"
+    return "zh-CN"
+
+
 def _unique_nonempty(values: list[str]) -> list[str]:
     normalized = [normalize_question(value) for value in values]
     return list(dict.fromkeys(value for value in normalized if value))
@@ -109,7 +118,7 @@ def materialize_plan(
         original_query=question,
         normalized_query=normalized_query,
         objective=normalize_question(draft.objective),
-        language=draft.language.strip() or "zh-CN",
+        language=detect_query_language(question),
         time_range=draft.time_range,
         tasks=tasks,
         report_outline=outline,
@@ -133,7 +142,7 @@ def build_fallback_plan(question: str, min_sources: int) -> ResearchPlan:
         original_query=question,
         normalized_query=normalized_query,
         objective=normalized_query,
-        language="zh-CN",
+        language=detect_query_language(question),
         tasks=[task],
         report_outline=[task.title],
     )

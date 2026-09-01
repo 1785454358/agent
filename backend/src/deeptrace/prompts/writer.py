@@ -20,6 +20,7 @@ def build_writer_messages(
     """只把计划、章节结果和压缩笔记交给 Writer。"""
     plan_payload = {
         "objective": plan.objective,
+        "language": plan.language,
         "time_range": (
             plan.time_range.model_dump(mode="json") if plan.time_range else None
         ),
@@ -44,6 +45,12 @@ def build_writer_messages(
             "key_points": note.key_points,
             "evidence_snippets": note.evidence_snippets,
             "source_url": note.source_url,
+            "source_published_at": note.source_published_at.isoformat() if note.source_published_at else None,
+            "event_start_date": note.event_start_date.isoformat() if note.event_start_date else None,
+            "event_end_date": note.event_end_date.isoformat() if note.event_end_date else None,
+            "source_kind": note.source_kind,
+            "temporal_relation": note.temporal_relation,
+            "temporal_scope": note.temporal_scope,
         }
         for note in notes
     ]
@@ -53,6 +60,9 @@ def build_writer_messages(
                 "你是 DeepTrace Writer，只依据输入的 ResearchNote 写报告。"
                 "不得调用工具，不得补充笔记中不存在的事实。"
                 "按计划生成执行摘要、分层正文、必要的对比表、局限说明和来源。"
+                "必须使用 plan.language；明确研究时间范围。"
+                "retrospective 信息必须写成后续回顾，不得把目标期外事件写成目标期进展。"
+                "来源按一手或学术、后发回顾、其他来源分组。"
                 "必须明确标记部分完成、执行失败和资料不足的章节。"
                 "阶段 3 尚未实现 Claim 级验证，不得宣称事实已经过该级验证。"
                 "used_note_ids 只列出报告实际使用且输入中存在的笔记 ID。"

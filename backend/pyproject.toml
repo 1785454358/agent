@@ -16,6 +16,7 @@ dependencies = [
     "sentence-transformers>=5.0",
     "tavily-python>=0.8.0",
     "tiktoken>=0.11",
+    "tld>=0.13",
     "trafilatura>=2.2.0",
 ]
 

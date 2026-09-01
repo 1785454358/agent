@@ -1,9 +1,11 @@
 # 阶段 3 研究质量加固设计
 
-- 状态：待实施
+- 状态：已完成
 - 日期：2026-09-01
 - 基线：[阶段 3 规划式 Deep Research 设计](2026-09-01-stage-03-planned-deep-research-design.md)
 - 后续阶段：阶段 4 Evidence Store 与 Verifier
+
+实现验收于 2026-09-01 完成：非真实测试 63 项通过，Python 编译检查通过；真实 CLI 使用真实 LLM、Tavily、网页抓取和本地 `D:\Dev\Models\bge-m3` 跑通到 Writer。真实运行中两个任务取得时间有效笔记，后续任务因 600 秒全局时间预算停止并诚实返回 `partial`，CLI 正确输出抓取/时间分类和按角色 Provider Token。阶段 4 范围未提前实现。
 
 ## 1. 背景
 

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from tavily import TavilyClient
+from deeptrace.tools.search.ranking import rank_search_results
 
 
 JsonObject = dict[str, Any]
@@ -29,12 +30,13 @@ def search_web(
     context: ToolContext,
     query: str,
     max_results: int = 5,
+    target_years: set[int] | None = None,
 ) -> JsonObject:
     """调用 Tavily 并仅回填标题、URL 和短摘要。"""
     clean_query = query.strip()
     if not clean_query:
         return _tool_error("invalid_query", "查询词不能为空")
-    bounded = max(1, min(int(max_results), 5))
+    bounded = max(1, min(int(max_results), 8))
     try:
         response = context.tavily.search(
             query=clean_query,
@@ -60,6 +62,7 @@ def search_web(
                 "score": item.get("score"),
             }
         )
+    results = rank_search_results(results, clean_query, target_years or set())
     return {
         "ok": True,
         "query": clean_query,

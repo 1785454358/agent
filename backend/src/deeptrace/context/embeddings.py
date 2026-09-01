@@ -28,7 +28,17 @@ class CompressionRuntime:
 
     def count_tokens(self, text: str) -> int:
         """按 BGE-M3 自身 tokenizer 统计本地语义处理量。"""
-        return len(self.tokenizer.encode(text, add_special_tokens=False))
+        encoded = self.tokenizer(
+            text,
+            add_special_tokens=False,
+            truncation=False,
+            return_attention_mask=False,
+            return_token_type_ids=False,
+            return_length=True,
+            verbose=False,
+        )
+        length = encoded.get("length", 0)
+        return int(length[0] if isinstance(length, list) else length)
 
     def embed(self, texts: Sequence[str]) -> np.ndarray:
         """批量生成已归一化向量，使点积等价于余弦相似度。"""

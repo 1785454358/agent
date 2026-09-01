@@ -173,6 +173,7 @@ from deeptrace.models import (
     RunEvent,
     SectionResult,
     TokenUsage,
+    UsageBreakdown,
 )
 from deeptrace.observability import estimate_usage_cost
 from deeptrace.orchestration import ResearchWorkflowNodes
@@ -206,6 +207,7 @@ class AgentResult:
     sections: list[SectionResult]
     used_note_ids: list[str]
     provider_usage: TokenUsage
+    role_usage: UsageBreakdown
     estimated_cost_usd: Decimal | None
 
 
@@ -252,6 +254,7 @@ class ResearchAgent:
             "api_token_count": 0,
             "estimated_cost_usd": 0.0,
             "provider_usage": TokenUsage(),
+            "role_usage": UsageBreakdown(),
             "used_note_ids": [],
             "token_metrics": [],
             "context_audits": [],
@@ -287,6 +290,7 @@ class ResearchAgent:
         notes = final.get("notes", {})
         used_note_ids = list(final.get("used_note_ids", []))
         usage = final.get("provider_usage", TokenUsage())
+        role_usage = final.get("role_usage", UsageBreakdown())
         return AgentResult(
             status=status,
             answer=answer,
@@ -299,6 +303,7 @@ class ResearchAgent:
             sections=sections,
             used_note_ids=used_note_ids,
             provider_usage=usage,
+            role_usage=role_usage,
             estimated_cost_usd=estimate_usage_cost(
                 usage,
                 self._settings.input_cost_per_million,

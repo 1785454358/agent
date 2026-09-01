@@ -16,6 +16,7 @@ from deeptrace.context.retrieval import (
     retrieve_notes,
     select_relevant_chunks,
 )
+from deeptrace.context.temporal import normalize_temporal_relation
 
 __all__ = [
     "ChunkSelection",
@@ -30,4 +31,5 @@ __all__ = [
     "parse_note_json",
     "retrieve_notes",
     "select_relevant_chunks",
+    "normalize_temporal_relation",
 ]
