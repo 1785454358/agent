@@ -9,6 +9,7 @@ from deeptrace.context import (
     retrieve_notes,
     select_relevant_chunks,
 )
+from deeptrace.evidence import EvidenceStore, ingest_notes
 from deeptrace.config import Settings
 from deeptrace.models import RawDocument, ResearchNote, ResearchPlan, TokenUsage
 from deeptrace.observability import (
@@ -33,6 +34,8 @@ def test_foundation_packages_expose_stable_interfaces() -> None:
     assert ResearchNote.__name__ == "ResearchNote"
     assert ResearchPlan.__name__ == "ResearchPlan"
     assert TokenUsage.__name__ == "TokenUsage"
+    assert EvidenceStore.__name__ == "EvidenceStore"
+    assert callable(ingest_notes)
 
 
 def test_prompts_are_built_in_prompts_package() -> None:
