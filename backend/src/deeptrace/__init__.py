@@ -1,4 +1,4 @@
-"""DeepTrace：带网页搜索、证据压缩与 Token 观测的深度研究 Agent。"""
+"""DeepTrace：规划、分项研究与统一写作的深度研究 Agent。"""
 
 from deeptrace.agent.service import AgentResult, ResearchAgent, build_real_agent
 

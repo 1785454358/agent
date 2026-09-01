@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
 import os
 from pathlib import Path
 
@@ -50,6 +51,19 @@ def _boolean(name: str, default: bool = False) -> bool:
         return False
     raise RuntimeError(f"{name} must be a boolean")
 
+
+def _optional_decimal(name: str) -> Decimal | None:
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return None
+    try:
+        value = Decimal(raw)
+    except InvalidOperation as exc:
+        raise RuntimeError(f"{name} must be a decimal") from exc
+    if value < 0:
+        raise RuntimeError(f"{name} 不能为负数")
+    return value
+
 @dataclass(frozen=True)
 class Settings:
     """应用配置类，存储所有必要的配置参数"""
@@ -70,6 +84,15 @@ class Settings:
     query_loop_threshold: float = 0.85
     token_encoding: str = "cl100k_base"
     allow_benchmark_dns_proxy: bool = False
+    max_research_tasks: int = 4
+    max_task_rounds: int = 3
+    min_sources_per_task: int = 2
+    max_fetched_pages: int = 20
+    max_runtime_seconds: int = 600
+    max_api_tokens: int = 120_000
+    input_cost_per_million: Decimal | None = None
+    output_cost_per_million: Decimal | None = None
+    max_cost_usd: Decimal | None = None
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -94,6 +117,12 @@ class Settings:
         token_encoding = os.getenv("DEEPTRACE_TOKEN_ENCODING", "cl100k_base").strip()
         if not token_encoding:
             raise RuntimeError("DEEPTRACE_TOKEN_ENCODING 不能为空")
+
+        input_cost = _optional_decimal("DEEPTRACE_INPUT_COST_PER_MILLION")
+        output_cost = _optional_decimal("DEEPTRACE_OUTPUT_COST_PER_MILLION")
+        max_cost = _optional_decimal("DEEPTRACE_MAX_COST_USD")
+        if max_cost is not None and (input_cost is None or output_cost is None):
+            raise RuntimeError("设置费用上限前必须同时配置模型单价")
 
         return cls(
             openai_api_key=_required("OPENAI_API_KEY"),
@@ -129,4 +158,25 @@ class Settings:
             allow_benchmark_dns_proxy=_boolean(
                 "DEEPTRACE_ALLOW_BENCHMARK_DNS_PROXY", False
             ),
+            max_research_tasks=_bounded_int(
+                "DEEPTRACE_MAX_RESEARCH_TASKS", 4, 1, 5
+            ),
+            max_task_rounds=_bounded_int(
+                "DEEPTRACE_MAX_TASK_ROUNDS", 3, 1, 20
+            ),
+            min_sources_per_task=_bounded_int(
+                "DEEPTRACE_MIN_SOURCES_PER_TASK", 2, 1, 5
+            ),
+            max_fetched_pages=_bounded_int(
+                "DEEPTRACE_MAX_FETCHED_PAGES", 20, 1, 1_000
+            ),
+            max_runtime_seconds=_bounded_int(
+                "DEEPTRACE_MAX_RUNTIME_SECONDS", 600, 1, 86_400
+            ),
+            max_api_tokens=_bounded_int(
+                "DEEPTRACE_MAX_API_TOKENS", 120_000, 1, 100_000_000
+            ),
+            input_cost_per_million=input_cost,
+            output_cost_per_million=output_cost,
+            max_cost_usd=max_cost,
         )

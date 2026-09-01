@@ -563,6 +563,7 @@ from deeptrace.orchestration.tool_executor import (
     ResearchToolExecutor,
     keep_recent_tool_turns as keep_stage3_tool_turns,
 )
+from deeptrace.observability import estimate_usage_cost
 
 
 class ResearchWorkflowNodes:
@@ -594,9 +595,17 @@ class ResearchWorkflowNodes:
         self.on_event(event)
         return event
 
-    @staticmethod
-    def _usage_update(usage: TokenUsage) -> dict[str, Any]:
-        return {"api_token_count": usage.total_tokens, "provider_usage": usage}
+    def _usage_update(self, usage: TokenUsage) -> dict[str, Any]:
+        cost = estimate_usage_cost(
+            usage,
+            self.settings.input_cost_per_million,
+            self.settings.output_cost_per_million,
+        )
+        return {
+            "api_token_count": usage.total_tokens,
+            "provider_usage": usage,
+            "estimated_cost_usd": float(cost or 0),
+        }
 
     @staticmethod
     def _current(state: GraphState) -> tuple[ResearchPlan, Any, TaskCoverage]:
@@ -619,7 +628,14 @@ class ResearchWorkflowNodes:
             for task in plan.tasks
         }
         events = [
-            self._event("planning.completed", f"研究计划已生成：{len(plan.tasks)} 个任务")
+            self._event(
+                "planning.completed",
+                "研究计划已生成："
+                + "；".join(
+                    f"{index}. {task.title}"
+                    for index, task in enumerate(plan.tasks, start=1)
+                ),
+            )
         ]
         if used_fallback:
             events.append(

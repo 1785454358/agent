@@ -18,8 +18,14 @@ from deeptrace.context import (
     select_relevant_chunks,
 )
 from deeptrace.config import Settings
-from deeptrace.models import DocumentChunk, PendingFetch, RawDocument, ResearchNote
-from deeptrace.observability import TokenLedger
+from deeptrace.models import (
+    DocumentChunk,
+    PendingFetch,
+    RawDocument,
+    ResearchNote,
+    TokenUsage,
+)
+from deeptrace.observability import TokenLedger, estimate_usage_cost
 from deeptrace.orchestration.state import GraphState
 from deeptrace.tools import ToolContext, search_web
 from deeptrace.tools.scraper import (
@@ -103,6 +109,8 @@ class ToolExecutionUpdate:
     new_note_count: int = 0
     fetched_page_delta: int = 0
     errors: list[str] = field(default_factory=list)
+    usage: TokenUsage = field(default_factory=TokenUsage)
+    estimated_cost_delta: float = 0.0
 
     def as_state_update(self) -> dict[str, Any]:
         return {
@@ -112,6 +120,9 @@ class ToolExecutionUpdate:
             "active_query": self.active_query,
             "fetched_page_count": self.fetched_page_delta,
             "recent_new_note_count": self.new_note_count,
+            "api_token_count": self.usage.total_tokens,
+            "provider_usage": self.usage,
+            "estimated_cost_usd": self.estimated_cost_delta,
             "tool_outputs": {
                 str(message.tool_call_id): str(message.content)
                 for message in self.messages
@@ -312,6 +323,16 @@ class ResearchToolExecutor:
 
         outcomes = await self.compressor.compress_many(requests)
         by_id = {outcome.tool_call_id: outcome for outcome in outcomes}
+        total_usage = TokenUsage(
+            input_tokens=sum(item.usage.input_tokens for item in outcomes),
+            output_tokens=sum(item.usage.output_tokens for item in outcomes),
+            total_tokens=sum(item.usage.total_tokens for item in outcomes),
+        )
+        estimated_cost = estimate_usage_cost(
+            total_usage,
+            self.settings.input_cost_per_million,
+            self.settings.output_cost_per_million,
+        )
         notes: dict[str, ResearchNote] = {}
         new_note_count = 0
         for item, document in pairs:
@@ -344,4 +365,6 @@ class ResearchToolExecutor:
             new_note_count=new_note_count,
             fetched_page_delta=fetched_delta,
             errors=errors,
+            usage=total_usage,
+            estimated_cost_delta=float(estimated_cost or 0),
         )

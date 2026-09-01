@@ -10,7 +10,7 @@ from deeptrace.context import (
     select_relevant_chunks,
 )
 from deeptrace.config import Settings
-from deeptrace.models import RawDocument, ResearchNote, TokenUsage
+from deeptrace.models import RawDocument, ResearchNote, ResearchPlan, TokenUsage
 from deeptrace.observability import (
     TokenEstimator,
     TokenLedger,
@@ -18,10 +18,10 @@ from deeptrace.observability import (
     format_round_metrics,
     format_token_summary,
 )
-from deeptrace.orchestration import GraphState, ResearchNodes, build_research_graph
+from deeptrace.orchestration import GraphState, ResearchWorkflowNodes, build_research_graph
 from deeptrace.prompts.compression import build_compression_messages
 from deeptrace.prompts.research import FINAL_REPORT_PROMPT, build_system_prompt
-from deeptrace.tools import TOOL_SCHEMAS, ToolContext
+from deeptrace.tools import EXTERNAL_TOOL_SCHEMAS, RESEARCHER_TOOL_SCHEMAS, ToolContext
 from deeptrace.tools.scraper import AsyncWebFetcher, normalize_url_before_fetch
 from deeptrace.tools.search import search_web
 from deeptrace import AgentResult, ResearchAgent, build_real_agent
@@ -31,6 +31,7 @@ def test_foundation_packages_expose_stable_interfaces() -> None:
     assert Settings.__name__ == "Settings"
     assert RawDocument.__name__ == "RawDocument"
     assert ResearchNote.__name__ == "ResearchNote"
+    assert ResearchPlan.__name__ == "ResearchPlan"
     assert TokenUsage.__name__ == "TokenUsage"
 
 
@@ -48,9 +49,14 @@ def test_prompts_are_built_in_prompts_package() -> None:
 
 
 def test_tools_package_exposes_search_and_scraper_interfaces() -> None:
-    assert {item["function"]["name"] for item in TOOL_SCHEMAS} == {
+    assert {item["function"]["name"] for item in EXTERNAL_TOOL_SCHEMAS} == {
         "search_web",
         "fetch_webpage",
+    }
+    assert {item["function"]["name"] for item in RESEARCHER_TOOL_SCHEMAS} == {
+        "search_web",
+        "fetch_webpage",
+        "complete_research_task",
     }
     assert ToolContext.__name__ == "ToolContext"
     assert AsyncWebFetcher.__name__ == "AsyncWebFetcher"
@@ -71,7 +77,7 @@ def test_public_agent_and_orchestration_interfaces() -> None:
     assert ResearchAgent.__name__ == "ResearchAgent"
     assert callable(build_real_agent)
     assert GraphState.__name__ == "GraphState"
-    assert ResearchNodes.__name__ == "ResearchNodes"
+    assert ResearchWorkflowNodes.__name__ == "ResearchWorkflowNodes"
     assert callable(build_research_graph)
 
 

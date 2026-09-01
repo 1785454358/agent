@@ -16,7 +16,7 @@ from deeptrace.tools.scraper import AsyncWebFetcher
 from deeptrace.models import RoundTokenMetrics
 from deeptrace.orchestration import ResearchNodes, build_research_graph
 from deeptrace.observability import TokenEstimator, TokenLedger
-from deeptrace.tools import TOOL_SCHEMAS, ToolContext
+from deeptrace.tools import EXTERNAL_TOOL_SCHEMAS, ToolContext
 
 
 URL_PATTERN = re.compile(r"https?://[^\s<>\]\[()]+")
@@ -125,7 +125,7 @@ def build_real_agent(
         model=settings.openai_model,
         temperature=0,
     )
-    bound_model = model.bind_tools(TOOL_SCHEMAS)
+    bound_model = model.bind_tools(EXTERNAL_TOOL_SCHEMAS)
     runtime = CompressionRuntime(
         settings.embedding_model_path,
         batch_size=settings.embedding_batch_size,
@@ -150,6 +150,215 @@ def build_real_agent(
         ),
         ledger=TokenLedger(TokenEstimator(settings.token_encoding)),
         settings=settings,
+        on_event=on_event,
+    )
+    return ResearchAgent(
+        graph=build_research_graph(),
+        nodes=nodes,
+        fetcher=fetcher,
+        settings=settings,
+    )
+
+
+# 阶段 3 应用门面；保留上方阶段 2 定义仅用于历史提交可读性，公共名称在此迁移。
+from datetime import UTC, datetime
+from decimal import Decimal
+
+from deeptrace.agent.planner import PlannerAgent
+from deeptrace.agent.researcher import ResearcherAgent
+from deeptrace.agent.writer import WriterAgent
+from deeptrace.models import (
+    ResearchNote,
+    ResearchPlan,
+    RunEvent,
+    SectionResult,
+    TokenUsage,
+)
+from deeptrace.observability import estimate_usage_cost
+from deeptrace.orchestration import ResearchWorkflowNodes
+from deeptrace.orchestration.tool_executor import ResearchToolExecutor
+
+
+def _sources_from_used_notes(
+    notes: dict[str, ResearchNote], used_note_ids: list[str]
+) -> list[str]:
+    """按 Writer 使用顺序生成去重来源，不泄漏未使用抓取页。"""
+    sources: list[str] = []
+    for note_id in used_note_ids:
+        note = notes.get(note_id)
+        if note is not None and note.source_url not in sources:
+            sources.append(note.source_url)
+    return sources
+
+
+@dataclass(frozen=True)
+class AgentResult:
+    """阶段 3 的计划、章节、报告、来源与用量结果。"""
+
+    status: Literal["completed", "partial", "failed"]
+    answer: str
+    sources: list[str]
+    steps: int
+    events: list[RunEvent]
+    token_metrics: list[RoundTokenMetrics]
+    termination_reason: str
+    plan: ResearchPlan | None
+    sections: list[SectionResult]
+    used_note_ids: list[str]
+    provider_usage: TokenUsage
+    estimated_cost_usd: Decimal | None
+
+
+class ResearchAgent:
+    """阶段 3 LangGraph 门面，CLI 不接触内部节点。"""
+
+    def __init__(
+        self,
+        *,
+        graph: Any,
+        nodes: ResearchWorkflowNodes,
+        fetcher: AsyncWebFetcher,
+        settings: Settings,
+    ) -> None:
+        self._graph = graph
+        self._nodes = nodes
+        self._fetcher = fetcher
+        self._settings = settings
+
+    async def arun(self, question: str) -> AgentResult:
+        clean_question = question.strip()
+        if not clean_question:
+            raise ValueError("问题不能为空")
+        initial = {
+            "user_query": clean_question,
+            "active_query": clean_question,
+            "messages": [],
+            "documents": {},
+            "chunks": {},
+            "notes": {},
+            "queries": [],
+            "pending_fetches": [],
+            "pending_tool_order": [],
+            "tool_outputs": {},
+            "research_plan": None,
+            "current_task_index": 0,
+            "task_coverages": {},
+            "section_results": {},
+            "pending_task_completion": None,
+            "force_finalize": False,
+            "events": [],
+            "started_at": datetime.now(UTC).isoformat(),
+            "fetched_page_count": 0,
+            "api_token_count": 0,
+            "estimated_cost_usd": 0.0,
+            "provider_usage": TokenUsage(),
+            "used_note_ids": [],
+            "token_metrics": [],
+            "context_audits": [],
+            "step_count": 0,
+            "extension_granted": False,
+            "recent_new_note_count": 0,
+            "unresolved_gaps": [],
+            "final_answer": "",
+            "termination_reason": "",
+        }
+        final = await self._graph.ainvoke(
+            initial,
+            config={
+                "configurable": {"service": self._nodes},
+                "recursion_limit": self._settings.hard_max_steps * 4 + 20,
+            },
+        )
+        plan = final.get("research_plan")
+        by_task = final.get("section_results", {})
+        sections = (
+            [by_task[task.task_id] for task in plan.tasks if task.task_id in by_task]
+            if plan
+            else []
+        )
+        reason = final.get("termination_reason") or "completed"
+        answer = final.get("final_answer", "")
+        if sections and all(item.coverage.status == "sufficient" for item in sections) and reason == "completed":
+            status: Literal["completed", "partial", "failed"] = "completed"
+        elif answer:
+            status = "partial"
+        else:
+            status = "failed"
+        notes = final.get("notes", {})
+        used_note_ids = list(final.get("used_note_ids", []))
+        usage = final.get("provider_usage", TokenUsage())
+        return AgentResult(
+            status=status,
+            answer=answer,
+            sources=_sources_from_used_notes(notes, used_note_ids),
+            steps=final.get("step_count", 0),
+            events=list(final.get("events", [])),
+            token_metrics=list(final.get("token_metrics", [])),
+            termination_reason=reason,
+            plan=plan,
+            sections=sections,
+            used_note_ids=used_note_ids,
+            provider_usage=usage,
+            estimated_cost_usd=estimate_usage_cost(
+                usage,
+                self._settings.input_cost_per_million,
+                self._settings.output_cost_per_million,
+            ),
+        )
+
+    def run(self, question: str) -> AgentResult:
+        return asyncio.run(self.arun(question))
+
+    async def aclose(self) -> None:
+        await self._fetcher.aclose()
+
+
+def build_real_agent(
+    settings: Settings,
+    on_event: Callable[[RunEvent], None] | None = None,
+) -> ResearchAgent:
+    """组装真实 Planner、Researcher、Writer、工具执行器和 LangGraph。"""
+    model = ChatOpenAI(
+        api_key=settings.openai_api_key,
+        base_url=settings.openai_base_url,
+        model=settings.openai_model,
+        temperature=0,
+    )
+    runtime = CompressionRuntime(
+        settings.embedding_model_path,
+        batch_size=settings.embedding_batch_size,
+    )
+    fetcher = AsyncWebFetcher(
+        count_tokens=runtime.count_tokens,
+        min_chars=settings.min_extracted_chars,
+        min_tokens=settings.min_extracted_tokens,
+        max_page_chars=settings.max_page_chars,
+        allow_benchmark_dns_proxy=settings.allow_benchmark_dns_proxy,
+    )
+    compressor = CompressionService(
+        model, concurrency=settings.compression_concurrency
+    )
+    ledger = TokenLedger(TokenEstimator(settings.token_encoding))
+    executor = ResearchToolExecutor(
+        runtime=runtime,
+        compressor=compressor,
+        fetcher=fetcher,
+        tools=ToolContext(tavily=TavilyClient(api_key=settings.tavily_api_key)),
+        ledger=ledger,
+        settings=settings,
+    )
+    nodes = ResearchWorkflowNodes(
+        planner=PlannerAgent(
+            model,
+            max_tasks=settings.max_research_tasks,
+            queries_per_task=3,
+            min_sources=settings.min_sources_per_task,
+        ),
+        researcher=ResearcherAgent(model),
+        writer=WriterAgent(model),
+        executor=executor,
+        settings=settings,
+        runtime=runtime,
         on_event=on_event,
     )
     return ResearchAgent(

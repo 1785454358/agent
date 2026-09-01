@@ -3,11 +3,27 @@
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 from typing import Any, Sequence
 
 import tiktoken
 
 from deeptrace.models import PageCompressionMetrics, RoundTokenMetrics, TokenUsage
+
+
+def estimate_usage_cost(
+    usage: TokenUsage,
+    input_price: Decimal | None,
+    output_price: Decimal | None,
+) -> Decimal | None:
+    """仅用用户显式提供的单价估算模型费用。"""
+    if input_price is None or output_price is None:
+        return None
+    million = Decimal(1_000_000)
+    return (
+        Decimal(usage.input_tokens) * input_price
+        + Decimal(usage.output_tokens) * output_price
+    ) / million
 
 
 class TokenEstimator:

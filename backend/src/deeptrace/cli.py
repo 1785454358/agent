@@ -8,20 +8,29 @@ from collections.abc import Sequence
 
 from deeptrace import build_real_agent
 from deeptrace.config import Settings
+from deeptrace.models import RunEvent
 from deeptrace.observability import format_token_summary
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="deeptrace",
-        description="运行 DeepTrace 阶段 2 深度研究 Agent",
+        description="运行 DeepTrace 规划式深度研究 Agent",
     )
     parser.add_argument("question", help="研究问题")
     return parser
 
 
+def _print_event(event: RunEvent) -> None:
+    print(event.message)
+
+
+def _exit_code(status: str) -> int:
+    return 0 if status == "completed" else 2
+
+
 async def _run(question: str) -> int:
-    agent = build_real_agent(Settings.from_env(), on_event=print)
+    agent = build_real_agent(Settings.from_env(), on_event=_print_event)
     try:
         result = await agent.arun(question)
     finally:
@@ -36,7 +45,19 @@ async def _run(question: str) -> int:
         print("无成功抓取来源")
     print(f"\n状态：{result.status}；模型调用步数：{result.steps}")
     print("\n" + format_token_summary(result.token_metrics))
-    return 0 if result.status == "completed" else 2
+    print(
+        "Provider Token："
+        f"input={result.provider_usage.input_tokens:,}, "
+        f"output={result.provider_usage.output_tokens:,}, "
+        f"total={result.provider_usage.total_tokens:,}"
+    )
+    cost = (
+        f"${result.estimated_cost_usd}"
+        if result.estimated_cost_usd is not None
+        else "unavailable"
+    )
+    print(f"估算模型费用：{cost}")
+    return _exit_code(result.status)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
