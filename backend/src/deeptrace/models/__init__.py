@@ -12,6 +12,14 @@ from deeptrace.models.metrics import (
     RoundTokenMetrics,
     TokenUsage,
 )
+from deeptrace.models.plan import ResearchPlan, ResearchTask, ResearchTimeRange
+from deeptrace.models.report import (
+    RunEvent,
+    SectionResult,
+    TaskCompletion,
+    TaskCoverage,
+    TaskStatus,
+)
 from deeptrace.models.research import CompressionOutcome, ResearchNote
 
 __all__ = [
@@ -22,7 +30,15 @@ __all__ = [
     "PendingFetch",
     "RawDocument",
     "ResearchNote",
+    "ResearchPlan",
+    "ResearchTask",
+    "ResearchTimeRange",
     "RoundTokenMetrics",
+    "RunEvent",
     "ScraperUsed",
+    "SectionResult",
+    "TaskCompletion",
+    "TaskCoverage",
+    "TaskStatus",
     "TokenUsage",
 ]

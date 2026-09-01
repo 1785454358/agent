@@ -13,7 +13,13 @@ from deeptrace.models import (
     PendingFetch,
     RawDocument,
     ResearchNote,
+    ResearchPlan,
     RoundTokenMetrics,
+    RunEvent,
+    SectionResult,
+    TaskCompletion,
+    TaskCoverage,
+    TokenUsage,
 )
 
 
@@ -25,6 +31,15 @@ def merge_dicts(left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any]:
 def append_unique(left: list[str], right: list[str]) -> list[str]:
     """按首次出现顺序追加并去重，适用于历史查询。"""
     return list(dict.fromkeys([*left, *right]))
+
+
+def merge_token_usage(left: TokenUsage, right: TokenUsage) -> TokenUsage:
+    """累加独立模型调用的用量，并保持 reducer 输入不可变。"""
+    return TokenUsage(
+        input_tokens=left.input_tokens + right.input_tokens,
+        output_tokens=left.output_tokens + right.output_tokens,
+        total_tokens=left.total_tokens + right.total_tokens,
+    )
 
 
 class GraphState(TypedDict):
@@ -40,7 +55,19 @@ class GraphState(TypedDict):
     pending_fetches: list[PendingFetch]
     pending_tool_order: list[str]
     tool_outputs: Annotated[dict[str, str], merge_dicts]
-    events: Annotated[list[str], operator.add]
+    research_plan: ResearchPlan | None
+    current_task_index: int
+    task_coverages: Annotated[dict[str, TaskCoverage], merge_dicts]
+    section_results: Annotated[dict[str, SectionResult], merge_dicts]
+    pending_task_completion: TaskCompletion | None
+    force_finalize: bool
+    events: Annotated[list[RunEvent], operator.add]
+    started_at: str
+    fetched_page_count: Annotated[int, operator.add]
+    api_token_count: Annotated[int, operator.add]
+    estimated_cost_usd: Annotated[float, operator.add]
+    provider_usage: Annotated[TokenUsage, merge_token_usage]
+    used_note_ids: list[str]
     token_metrics: Annotated[list[RoundTokenMetrics], operator.add]
     context_audits: Annotated[list[ContextAudit], operator.add]
     step_count: int

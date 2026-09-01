@@ -14,6 +14,8 @@ class ResearchNote(BaseModel):
 
     note_id: str
     doc_id: str
+    task_id: str
+    section_id: str
     active_query: str
     title: str
     key_points: list[str]

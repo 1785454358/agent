@@ -4,7 +4,11 @@ import pytest
 from pydantic import ValidationError
 
 from deeptrace.models import RawDocument, ScraperUsed, TokenUsage
-from deeptrace.orchestration.state import append_unique, merge_dicts
+from deeptrace.orchestration.state import (
+    append_unique,
+    merge_dicts,
+    merge_token_usage,
+)
 
 
 def test_merge_dicts_preserves_old_entries_and_overwrites_same_key() -> None:
@@ -27,6 +31,17 @@ def test_merge_dicts_does_not_mutate_input() -> None:
 
 def test_append_unique_keeps_first_seen_order() -> None:
     assert append_unique(["q1", "q2"], ["q2", "q3"]) == ["q1", "q2", "q3"]
+
+
+def test_merge_token_usage_sums_each_counter_without_mutating_inputs() -> None:
+    left = TokenUsage(input_tokens=10, output_tokens=4, total_tokens=14)
+    right = TokenUsage(input_tokens=7, output_tokens=3, total_tokens=10)
+
+    result = merge_token_usage(left, right)
+
+    assert result == TokenUsage(input_tokens=17, output_tokens=7, total_tokens=24)
+    assert left == TokenUsage(input_tokens=10, output_tokens=4, total_tokens=14)
+    assert right == TokenUsage(input_tokens=7, output_tokens=3, total_tokens=10)
 
 
 def test_raw_document_rejects_unknown_status() -> None:
