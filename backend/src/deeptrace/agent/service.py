@@ -165,6 +165,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from deeptrace.agent.planner import PlannerAgent
+from deeptrace.agent.claim_extractor import ClaimExtractorAgent
 from deeptrace.agent.researcher import ResearcherAgent
 from deeptrace.agent.writer import WriterAgent
 from deeptrace.models import (
@@ -178,6 +179,7 @@ from deeptrace.models import (
 from deeptrace.observability import estimate_usage_cost
 from deeptrace.orchestration import ResearchWorkflowNodes
 from deeptrace.orchestration.tool_executor import ResearchToolExecutor
+from deeptrace.verification import VerifierAgent
 
 
 def _sources_from_used_notes(
@@ -190,6 +192,54 @@ def _sources_from_used_notes(
         if note is not None and note.source_url not in sources:
             sources.append(note.source_url)
     return sources
+
+
+def _initial_stage_four_state(question: str) -> dict[str, Any]:
+    """集中初始化完整 State，避免新增节点读取缺失键。"""
+    return {
+        "user_query": question,
+        "active_query": question,
+        "messages": [],
+        "documents": {},
+        "chunks": {},
+        "notes": {},
+        "sources": {},
+        "evidence": {},
+        "claims": {},
+        "verification_results": {},
+        "verification_gaps": {},
+        "task_verification": {},
+        "queries": [],
+        "pending_fetches": [],
+        "pending_tool_order": [],
+        "tool_outputs": {},
+        "research_plan": None,
+        "current_task_index": 0,
+        "task_coverages": {},
+        "section_results": {},
+        "pending_task_completion": None,
+        "verification_task_id": None,
+        "verification_mode": "done",
+        "verification_tool_rounds": 0,
+        "force_finalize": False,
+        "events": [],
+        "started_at": datetime.now(UTC).isoformat(),
+        "fetched_page_count": 0,
+        "api_token_count": 0,
+        "estimated_cost_usd": 0.0,
+        "provider_usage": TokenUsage(),
+        "role_usage": UsageBreakdown(),
+        "used_note_ids": [],
+        "used_claim_ids": [],
+        "token_metrics": [],
+        "context_audits": [],
+        "step_count": 0,
+        "extension_granted": False,
+        "recent_new_note_count": 0,
+        "unresolved_gaps": [],
+        "final_answer": "",
+        "termination_reason": "",
+    }
 
 
 @dataclass(frozen=True)
@@ -231,45 +281,20 @@ class ResearchAgent:
         clean_question = question.strip()
         if not clean_question:
             raise ValueError("问题不能为空")
-        initial = {
-            "user_query": clean_question,
-            "active_query": clean_question,
-            "messages": [],
-            "documents": {},
-            "chunks": {},
-            "notes": {},
-            "queries": [],
-            "pending_fetches": [],
-            "pending_tool_order": [],
-            "tool_outputs": {},
-            "research_plan": None,
-            "current_task_index": 0,
-            "task_coverages": {},
-            "section_results": {},
-            "pending_task_completion": None,
-            "force_finalize": False,
-            "events": [],
-            "started_at": datetime.now(UTC).isoformat(),
-            "fetched_page_count": 0,
-            "api_token_count": 0,
-            "estimated_cost_usd": 0.0,
-            "provider_usage": TokenUsage(),
-            "role_usage": UsageBreakdown(),
-            "used_note_ids": [],
-            "token_metrics": [],
-            "context_audits": [],
-            "step_count": 0,
-            "extension_granted": False,
-            "recent_new_note_count": 0,
-            "unresolved_gaps": [],
-            "final_answer": "",
-            "termination_reason": "",
-        }
+        initial = _initial_stage_four_state(clean_question)
         final = await self._graph.ainvoke(
             initial,
             config={
                 "configurable": {"service": self._nodes},
-                "recursion_limit": self._settings.hard_max_steps * 4 + 20,
+                "recursion_limit": (
+                    self._settings.hard_max_steps * 4
+                    + 20
+                    + self._settings.max_research_tasks
+                    * (
+                        4
+                        + self._settings.max_verification_rounds_per_task * 3
+                    )
+                ),
             },
         )
         plan = final.get("research_plan")
@@ -360,6 +385,8 @@ def build_real_agent(
             min_sources=settings.min_sources_per_task,
         ),
         researcher=ResearcherAgent(model),
+        claim_extractor=ClaimExtractorAgent(model),
+        verifier=VerifierAgent(model),
         writer=WriterAgent(model),
         executor=executor,
         settings=settings,

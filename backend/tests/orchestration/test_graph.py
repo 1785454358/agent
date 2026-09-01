@@ -1,5 +1,6 @@
 import json
 from datetime import date
+from types import SimpleNamespace
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
@@ -10,6 +11,9 @@ from deeptrace.orchestration import (
     route_after_agent,
     route_after_research,
     route_after_task,
+    route_after_task_completion,
+    route_after_tools,
+    route_after_verification,
     ToolCallResult,
     build_unverified_finalization,
     build_tool_messages,
@@ -43,6 +47,12 @@ def test_graph_compiles_and_router_distinguishes_tools_from_completion() -> None
         "research",
         "tools",
         "complete_task",
+        "evidence_ingest",
+        "claim_extract",
+        "verify",
+        "start_verification_research",
+        "verification_research",
+        "finalize_task",
         "writer",
     }.issubset(graph.get_graph().nodes)
 
@@ -86,6 +96,29 @@ def test_graph_compiles_and_router_distinguishes_tools_from_completion() -> None
     assert route_after_task(
         {"research_plan": None, "current_task_index": 0}
     ) == "writer"
+
+
+def test_task_completion_and_verification_routes_are_bounded() -> None:
+    assert route_after_task_completion({}) == "evidence_ingest"
+    assert route_after_verification(
+        {
+            "verification_mode": "initial",
+            "verification_gaps": {
+                "gap-01": SimpleNamespace(priority="high")
+            },
+        }
+    ) == "start_verification_research"
+    assert route_after_verification(
+        {
+            "verification_mode": "supplement",
+            "verification_gaps": {
+                "gap-01": SimpleNamespace(priority="high")
+            },
+        }
+    ) == "finalize_task"
+    assert route_after_tools(
+        {"verification_mode": "supplement"}
+    ) == "verification_research"
 
 
 def test_budget_selects_final_model_only_when_research_should_end() -> None:

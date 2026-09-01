@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from deeptrace.agent.service import _sources_from_used_notes
+from deeptrace.agent.service import _initial_stage_four_state, _sources_from_used_notes
 from deeptrace.models import TokenUsage
 from deeptrace.observability import estimate_usage_cost
 
@@ -26,3 +26,18 @@ def test_usage_cost_uses_decimal_prices() -> None:
     )
 
     assert cost == Decimal("4.00")
+
+
+def test_stage_four_state_is_fully_initialized() -> None:
+    state = _initial_stage_four_state("研究问题")
+
+    assert state["sources"] == {}
+    assert state["evidence"] == {}
+    assert state["claims"] == {}
+    assert state["verification_results"] == {}
+    assert state["verification_gaps"] == {}
+    assert state["task_verification"] == {}
+    assert state["verification_task_id"] is None
+    assert state["verification_mode"] == "done"
+    assert state["verification_tool_rounds"] == 0
+    assert state["used_claim_ids"] == []

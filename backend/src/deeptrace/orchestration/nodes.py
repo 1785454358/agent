@@ -549,16 +549,26 @@ from deeptrace.agent._shared import add_usage
 from deeptrace.agent.planner import PlannerAgent
 from deeptrace.agent.researcher import ResearcherAgent, parse_task_completion
 from deeptrace.agent.writer import WriterAgent
+from deeptrace.agent.claim_extractor import ClaimExtractorAgent
+from deeptrace.evidence import ingest_notes
 from deeptrace.context import retrieve_notes
 from deeptrace.models import (
+    Claim,
+    Evidence,
     ResearchPlan,
     RunEvent,
     SectionResult,
     TaskCompletion,
     TaskCoverage,
+    TaskVerificationSummary,
     UsageBreakdown,
 )
-from deeptrace.orchestration.budget import get_budget_reason, task_budget_reason, task_token_allowance
+from deeptrace.orchestration.budget import (
+    get_budget_reason,
+    regular_research_deadline_reached,
+    task_budget_reason,
+    task_token_allowance,
+)
 from deeptrace.orchestration.coverage import complete_coverage, forced_coverage
 from deeptrace.orchestration.quality import note_is_valid, summarize_note_quality
 from deeptrace.orchestration.tool_executor import (
@@ -566,6 +576,7 @@ from deeptrace.orchestration.tool_executor import (
     keep_recent_tool_turns as keep_stage3_tool_turns,
 )
 from deeptrace.observability import estimate_usage_cost
+from deeptrace.verification import VerifierAgent, build_verification_gaps
 
 
 class ResearchWorkflowNodes:
@@ -580,6 +591,8 @@ class ResearchWorkflowNodes:
         executor: ResearchToolExecutor,
         settings: Settings,
         runtime: CompressionRuntime,
+        claim_extractor: ClaimExtractorAgent | None = None,
+        verifier: VerifierAgent | None = None,
         on_event: Callable[[RunEvent], None] | None = None,
     ) -> None:
         self.planner = planner
@@ -588,6 +601,8 @@ class ResearchWorkflowNodes:
         self.executor = executor
         self.settings = settings
         self.runtime = runtime
+        self.claim_extractor = claim_extractor
+        self.verifier = verifier
         self.on_event = on_event or (lambda _event: None)
 
     def _event(
@@ -700,6 +715,13 @@ class ResearchWorkflowNodes:
         global_reason = get_budget_reason(state, self.settings, datetime.now(UTC))
         local_reason = task_budget_reason(coverage)
         reason = global_reason or local_reason
+        if (
+            reason is None
+            and regular_research_deadline_reached(
+                state, self.settings, datetime.now(UTC)
+            )
+        ):
+            reason = "research_runtime_reserve"
         # 任务额度只结束当前任务；仅全局预算耗尽才跳过后续任务进入 Writer。
         force_finalize = global_reason is not None
         if reason is None and coverage.rounds >= getattr(
@@ -930,13 +952,333 @@ class ResearchWorkflowNodes:
         return {
             "task_coverages": {task.task_id: final_coverage},
             "section_results": {task.task_id: section},
+            "pending_task_completion": None,
+            "verification_task_id": task.task_id,
+            "verification_mode": "initial",
+            "verification_tool_rounds": 0,
+            "events": [
+                self._event(
+                    "task.research_completed",
+                    f"研究阶段结束，开始证据核验：{task.title}",
+                    task.task_id,
+                )
+            ],
+        }
+
+    async def evidence_ingest_node(
+        self, state: GraphState
+    ) -> dict[str, Any]:
+        """把当前任务的有效笔记入库为可追溯 Evidence。"""
+        _plan, task, _coverage = self._current(state)
+        notes = [
+            note
+            for note in state.get("notes", {}).values()
+            if note.task_id == task.task_id and note_is_valid(note)
+        ]
+        result = ingest_notes(
+            state.get("documents", {}),
+            notes,
+            existing_sources=state.get("sources", {}),
+        )
+        exact_count = sum(
+            item.location_status == "exact"
+            for item in result.evidence.values()
+        )
+        return {
+            "sources": result.sources,
+            "evidence": result.evidence,
+            "events": [
+                self._event(
+                    "evidence.ingested",
+                    (
+                        f"入库来源 {len(result.sources)}；Evidence "
+                        f"{len(result.evidence)}（exact {exact_count}，"
+                        f"unlocated {len(result.evidence) - exact_count}）"
+                    ),
+                    task.task_id,
+                )
+            ],
+        }
+
+    async def claim_extract_node(
+        self, state: GraphState
+    ) -> dict[str, Any]:
+        """调用 Claim Extractor，并只协调当前任务材料。"""
+        plan, task, _coverage = self._current(state)
+        if self.claim_extractor is None:
+            raise RuntimeError("Claim Extractor 未配置")
+        notes = [
+            note
+            for note in state.get("notes", {}).values()
+            if note.task_id == task.task_id and note_is_valid(note)
+        ]
+        evidence = [
+            item
+            for item in state.get("evidence", {}).values()
+            if item.task_id == task.task_id
+        ]
+        claims, usage, used_fallback = await self.claim_extractor.aextract(
+            task, notes, evidence, plan.time_range
+        )
+        events = [
+            self._event(
+                "claims.extracted",
+                (
+                    f"抽取 Claim {len(claims)}；"
+                    f"数字型 {sum(item.kind == 'numeric' for item in claims)}"
+                ),
+                task.task_id,
+            )
+        ]
+        if used_fallback:
+            events.append(
+                self._event(
+                    "claims.fallback",
+                    "Claim Extractor 失败，使用 supporting 降级主张",
+                    task.task_id,
+                )
+            )
+        return {
+            "claims": {item.claim_id: item for item in claims},
+            "events": events,
+            **self._usage_update("claim_extractor", usage),
+        }
+
+    async def verify_node(self, state: GraphState) -> dict[str, Any]:
+        """执行本地规则和一次批量 LLM 语义核验。"""
+        plan, task, _coverage = self._current(state)
+        if self.verifier is None:
+            raise RuntimeError("Verifier 未配置")
+        claims = [
+            item
+            for item in state.get("claims", {}).values()
+            if item.task_id == task.task_id
+        ]
+        results, usage = await self.verifier.averify(
+            claims,
+            state.get("evidence", {}),
+            state.get("sources", {}),
+            plan.time_range,
+        )
+        gaps = build_verification_gaps(
+            claims,
+            results,
+            max_gaps=getattr(
+                self.settings, "max_verification_gaps_per_task", 2
+            ),
+        )
+        previous = state.get("task_verification", {}).get(task.task_id)
+        summary = TaskVerificationSummary(
+            task_id=task.task_id,
+            verified_claim_ids=[
+                key
+                for key, result in results.items()
+                if result.verdict == "verified"
+            ],
+            partial_claim_ids=[
+                key
+                for key, result in results.items()
+                if result.verdict == "partially_supported"
+            ],
+            unsupported_claim_ids=[
+                key
+                for key, result in results.items()
+                if result.verdict == "unsupported"
+            ],
+            conflicted_claim_ids=[
+                key
+                for key, result in results.items()
+                if result.verdict == "conflicted"
+            ],
+            out_of_range_claim_ids=[
+                key
+                for key, result in results.items()
+                if result.verdict == "out_of_range"
+            ],
+            unresolved_gap_ids=[item.gap_id for item in gaps],
+            supplement_rounds=previous.supplement_rounds if previous else 0,
+        )
+        counts: dict[str, int] = {}
+        for result in results.values():
+            counts[result.verdict] = counts.get(result.verdict, 0) + 1
+        return {
+            "verification_results": results,
+            "verification_gaps": {item.gap_id: item for item in gaps},
+            "task_verification": {task.task_id: summary},
+            "events": [
+                self._event(
+                    "verification.completed",
+                    f"核验结果 {counts}；Gap {len(gaps)}",
+                    task.task_id,
+                )
+            ],
+            **self._usage_update("verifier", usage),
+        }
+
+    async def start_verification_research_node(
+        self, state: GraphState
+    ) -> dict[str, Any]:
+        """开启当前任务唯一一次证据补搜循环。"""
+        _plan, task, _coverage = self._current(state)
+        current = state.get("task_verification", {}).get(task.task_id)
+        summary = (
+            current.model_copy(
+                update={"supplement_rounds": current.supplement_rounds + 1}
+            )
+            if current
+            else TaskVerificationSummary(
+                task_id=task.task_id, supplement_rounds=1
+            )
+        )
+        return {
+            "task_verification": {task.task_id: summary},
+            "verification_mode": "supplement",
+            "verification_tool_rounds": 0,
+            "recent_new_note_count": 0,
+            "messages": [],
+            "events": [
+                self._event(
+                    "verification.supplement_started",
+                    "开始一次有界证据补搜",
+                    task.task_id,
+                )
+            ],
+        }
+
+    async def verification_research_node(
+        self, state: GraphState
+    ) -> dict[str, Any]:
+        """Researcher 仅围绕当前高优先级 Gap 决定补搜工具。"""
+        _plan, task, coverage = self._current(state)
+        gaps = sorted(
+            (
+                gap
+                for gap in state.get("verification_gaps", {}).values()
+                if gap is not None
+                and gap.task_id == task.task_id
+                and gap.priority == "high"
+            ),
+            key=lambda item: item.gap_id,
+        )[: getattr(self.settings, "max_verification_gaps_per_task", 2)]
+        if (
+            not gaps
+            or state.get("verification_tool_rounds", 0) >= 2
+            or state.get("recent_new_note_count", 0) > 0
+        ):
+            return {"messages": []}
+        notes = [
+            note
+            for note in state.get("notes", {}).values()
+            if note.task_id == task.task_id
+        ]
+        selected = (
+            await asyncio.to_thread(
+                retrieve_notes,
+                self.runtime,
+                notes,
+                state["user_query"],
+                gaps[0].suggested_query,
+                8,
+            )
+            if notes
+            else []
+        )
+        identities = list(
+            dict.fromkeys(
+                identity
+                for result in state.get("verification_results", {}).values()
+                if result.claim_id in {
+                    claim_id
+                    for gap in gaps
+                    for claim_id in ([gap.claim_id] if gap.claim_id else [])
+                }
+                for identity in result.source_identities
+            )
+        )
+        try:
+            response, usage = await self.researcher.adecide(
+                user_query=state["user_query"],
+                task=task,
+                coverage=coverage,
+                notes=selected,
+                recent_messages=keep_stage3_tool_turns(
+                    state.get("messages", []), max_turns=1
+                ),
+                budget_summary="核验证据补搜最多一次，单轮最多抓取三个页面",
+                verification_gaps=gaps,
+                existing_source_identities=identities,
+                research_mode="supplement",
+            )
+        except Exception as exc:
+            return {
+                "messages": [],
+                "verification_tool_rounds": 2,
+                "events": [
+                    self._event(
+                        "verification.supplement_failed",
+                        f"补搜模型失败：{type(exc).__name__}",
+                        task.task_id,
+                    )
+                ],
+            }
+        external_calls = [
+            call
+            for call in response.tool_calls
+            if call.get("name") in {"search_web", "fetch_webpage"}
+        ]
+        if external_calls:
+            response = response.model_copy(update={"tool_calls": external_calls})
+        else:
+            response = response.model_copy(update={"tool_calls": []})
+        return {
+            "messages": [response] if external_calls else [],
+            "verification_tool_rounds": (
+                state.get("verification_tool_rounds", 0) + 1
+            ),
+            "step_count": state.get("step_count", 0) + 1,
+            **self._usage_update("researcher", usage),
+        }
+
+    async def finalize_task_node(
+        self, state: GraphState
+    ) -> dict[str, Any]:
+        """核验结束后推进任务索引一次，并冻结章节核验摘要。"""
+        _plan, task, _coverage = self._current(state)
+        section = state.get("section_results", {}).get(task.task_id)
+        if section is None:
+            raise RuntimeError("待核验章节缺失")
+        claims = [
+            item
+            for item in state.get("claims", {}).values()
+            if item.task_id == task.task_id
+        ]
+        summary = state.get("task_verification", {}).get(task.task_id)
+        if summary is None:
+            summary = TaskVerificationSummary(task_id=task.task_id)
+        final_section = section.model_copy(
+            update={
+                "claim_ids": [item.claim_id for item in claims],
+                "verification": summary,
+            }
+        )
+        remaining_gaps = {
+            gap_id: gap
+            for gap_id, gap in state.get("verification_gaps", {}).items()
+            if gap is not None and gap.task_id != task.task_id
+        }
+        return {
+            "section_results": {task.task_id: final_section},
             "current_task_index": state.get("current_task_index", 0) + 1,
+            "verification_gaps": remaining_gaps,
+            "verification_task_id": None,
+            "verification_mode": "done",
+            "verification_tool_rounds": 0,
             "pending_task_completion": None,
             "messages": [],
             "events": [
                 self._event(
                     "task.completed",
-                    f"研究任务结束：{task.title}（{final_coverage.status}）",
+                    f"研究任务结束：{task.title}（核验完成）",
                     task.task_id,
                 )
             ],
