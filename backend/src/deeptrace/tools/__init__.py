@@ -9,8 +9,7 @@ from deeptrace.tools.search import ToolContext, search_web
 
 JsonObject = dict[str, Any]
 
-TOOL_SCHEMAS: list[JsonObject] = [
-    {
+SEARCH_TOOL_SCHEMA: JsonObject = {
         "type": "function",
         "function": {
             "name": "search_web",
@@ -30,8 +29,9 @@ TOOL_SCHEMAS: list[JsonObject] = [
                 "additionalProperties": False,
             },
         },
-    },
-    {
+    }
+
+FETCH_TOOL_SCHEMA: JsonObject = {
         "type": "function",
         "function": {
             "name": "fetch_webpage",
@@ -43,7 +43,49 @@ TOOL_SCHEMAS: list[JsonObject] = [
                 "additionalProperties": False,
             },
         },
-    },
-]
+    }
 
-__all__ = ["TOOL_SCHEMAS", "ToolContext", "search_web"]
+EXTERNAL_TOOL_SCHEMAS: list[JsonObject] = [SEARCH_TOOL_SCHEMA, FETCH_TOOL_SCHEMA]
+
+COMPLETE_TASK_TOOL_SCHEMA: JsonObject = {
+    "type": "function",
+    "function": {
+        "name": "complete_research_task",
+        "description": "结束当前研究任务并报告覆盖与缺口，不执行外部操作。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "task_id": {"type": "string", "minLength": 1},
+                "summary": {"type": "string", "minLength": 1},
+                "covered_topics": {"type": "array", "items": {"type": "string"}},
+                "unresolved_topics": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+            },
+            "required": [
+                "task_id",
+                "summary",
+                "covered_topics",
+                "unresolved_topics",
+            ],
+            "additionalProperties": False,
+        },
+    },
+}
+
+RESEARCHER_TOOL_SCHEMAS = [*EXTERNAL_TOOL_SCHEMAS, COMPLETE_TASK_TOOL_SCHEMA]
+
+# 阶段 2 service 会在 Task 7 被新依赖组装替换；此前保持提交可导入。
+TOOL_SCHEMAS = EXTERNAL_TOOL_SCHEMAS
+
+__all__ = [
+    "COMPLETE_TASK_TOOL_SCHEMA",
+    "EXTERNAL_TOOL_SCHEMAS",
+    "FETCH_TOOL_SCHEMA",
+    "RESEARCHER_TOOL_SCHEMAS",
+    "SEARCH_TOOL_SCHEMA",
+    "TOOL_SCHEMAS",
+    "ToolContext",
+    "search_web",
+]
