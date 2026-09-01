@@ -1,6 +1,6 @@
-# DeepTrace 阶段 2
+# DeepTrace 阶段 3
 
-DeepTrace 是命令行深度研究 Agent。主模型自主调用搜索和网页抓取工具；整页正文先经过本地 BGE-M3 召回与 LLM 压缩，主 Agent 只读取相关 ResearchNote。
+DeepTrace 是命令行规划式深度研究 Agent。Planner 先把宽泛问题拆成结构化子任务，Researcher 逐任务调用搜索和网页抓取，整页正文经过本地 BGE-M3 召回与 LLM 压缩后形成 ResearchNote，Writer 最后只基于计划、笔记和章节覆盖状态统一写作。
 
 ## 运行
 
@@ -14,17 +14,30 @@ uv run deeptrace "今天 AI Agent 领域有哪些热点新闻？"
 
 Chromium 只在 HTTPX 无法提取足够正文时启用。受控代理或沙箱把公网域名映射到 `198.18.0.0/15` 时，可以显式设置 `DEEPTRACE_ALLOW_BENCHMARK_DNS_PROXY=true`；普通网络环境不要开启。
 
+阶段 3 的主要预算环境变量及默认值如下：
+
+```text
+DEEPTRACE_MAX_RESEARCH_TASKS=4
+DEEPTRACE_MAX_TASK_ROUNDS=3
+DEEPTRACE_MIN_SOURCES_PER_TASK=2
+DEEPTRACE_MAX_FETCHED_PAGES=20
+DEEPTRACE_MAX_RUNTIME_SECONDS=600
+DEEPTRACE_MAX_API_TOKENS=120000
+```
+
+可选的 `DEEPTRACE_INPUT_COST_PER_MILLION`、`DEEPTRACE_OUTPUT_COST_PER_MILLION` 和 `DEEPTRACE_MAX_COST_USD` 用于费用估算及上限；设置费用上限时必须同时提供输入、输出单价。
+
 ## 目录结构
 
 ```text
 src/deeptrace/
-├── agent/             # Agent 门面与真实依赖组装
+├── agent/             # Planner、Researcher、Writer、Agent 门面与真实依赖组装
 ├── config/            # 环境变量、默认值和配置校验
 ├── context/           # 分块、BGE-M3、召回与压缩
-├── models/            # 文档、研究笔记与指标模型
+├── models/            # 计划、覆盖状态、章节、研究笔记与指标模型
 ├── observability/     # Token 估算、账本和格式化
-├── orchestration/     # LangGraph State、节点与拓扑
-├── prompts/           # 研究与压缩提示词
+├── orchestration/     # LangGraph State、任务调度、预算、工具执行与拓扑
+├── prompts/           # 规划、研究、写作与压缩提示词
 ├── tools/
 │   ├── scraper/       # HTTPX、BS4、Playwright 与 URL 安全
 │   └── search/        # Tavily 搜索
@@ -50,32 +63,39 @@ cli
 
 | 模块 | 主要职责 |
 |---|---|
-| `agent/service.py` | `ResearchAgent`、`AgentResult` 和 `build_real_agent` |
-| `orchestration/` | LangGraph 状态、节点、工具回填和路由 |
+| `agent/planner.py` | 生成结构化研究计划；解析失败重试一次后降级为单任务计划 |
+| `agent/researcher.py` | 在当前子任务边界内选择搜索、抓取或显式完成任务 |
+| `agent/writer.py` | 只消费计划、章节状态和 ResearchNote，输出最终报告及使用的笔记 ID |
+| `agent/service.py` | `ResearchAgent`、`AgentResult`、真实依赖组装和 LangGraph 门面 |
+| `orchestration/` | 六节点研究图、串行任务调度、覆盖计算、全局预算和工具结果回填 |
 | `context/` | 800/100 分块、BGE-M3 向量注册表、双查询 max 召回、ResearchNote 压缩 |
 | `tools/search/` | Tavily 搜索和候选结果整理 |
 | `tools/scraper/` | URL 安全、HTTPX/Trafilatura/BS4/Playwright 抓取降级链 |
-| `models/` | 可序列化的文档、笔记和 Token 数据模型 |
-| `prompts/` | 统一管理主 Agent 与压缩提示词 |
+| `models/` | 可序列化的计划、任务、覆盖状态、章节、事件、文档、笔记和 Token 模型 |
+| `prompts/` | 统一管理 Planner、Researcher、Writer 与压缩提示词 |
 | `observability/` | 逐轮上下文基线、毛节省、压缩成本和净节省 |
 | `config/` | Settings 和环境变量验证 |
 
-长提示词只放在 `prompts/`。阶段 3 的 Planner、Researcher、Writer 以及后续 Evidence、Memory、Evaluation 模块，在真正实现时再建立目录，不创建空壳。
+长提示词只放在 `prompts/`。Planner 和 Writer 使用提示词约束 JSON，再由本地修复与 Pydantic 严格校验，以兼容不支持 `response_format` 或工具式结构化输出的 OpenAI-compatible Provider。阶段 4 的 Evidence Store、Verifier 及后续模块尚未实现。
 
 ## 核心流程
 
 ```text
-Agent → 搜索/抓取 → 网页分块 → BGE-M3 双查询召回
-      → 并发压缩 ResearchNote → 按 tool_call_id 回填 → Agent
+Planner → Researcher → 搜索/抓取 → 网页分块 → BGE-M3 双查询召回
+                    → 并发压缩 ResearchNote → 覆盖判断 → 下一任务
+                                                       ↓
+                         Writer ← 计划 + 章节状态 + ResearchNote
 ```
 
-同一页面遇到新子问题时复用正文、chunks 和内存向量，只重新筛选并生成新笔记。软上限为 8 步；存在新证据且查询不重复时可延长一次，硬上限为 12 步。
+子任务串行执行；同一轮网页抓取和压缩保持有界并发。同一页面遇到新子问题时复用正文、chunks 和内存向量，只重新筛选并生成带 `task_id`、`section_id` 的新笔记。系统按任务轮数、连续空轮、来源覆盖、网页数、步骤、运行时间、Provider Token 和可选费用预算确定性停止。
+
+阶段 3 的 `sufficient` 只表示满足基础来源和主题覆盖条件，不代表 Claim 级事实验证。最终报告会显式披露部分完成、失败章节和未做 Claim 级验证的限制。
 
 ## 本地验证
 
 ```powershell
 uv run pytest -m "not real"
-uv run python -m compileall src
+uv run python -m compileall src tests
 ```
 
-普通测试不调用外部 API。真实端到端验证直接运行 `uv run deeptrace "问题"`。
+普通测试不调用外部 API。真实端到端验证直接运行 `uv run deeptrace "问题"`，必须使用真实 LLM、Tavily、网页抓取和本地 BGE-M3；`partial` 或 `failed` 状态会返回非零退出码。

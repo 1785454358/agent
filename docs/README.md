@@ -4,10 +4,11 @@
 
 - 阶段 1：已完成
 - 阶段 2：已完成
-- 阶段 3：设计与实施计划已完成，待新对话执行
+- 阶段 3：已完成（真实 LLM、Tavily、网页抓取和本地 BGE-M3 冒烟通过）
+- 阶段 4：待开始
 - 当前代码目录：`backend/`
 
-## 新对话阅读顺序
+## 当前阅读顺序
 
 1. [六阶段演进路线图](roadmap/deeptrace-evolution.md)
 2. [总体目标架构](architecture/deeptrace-target-architecture.md)
@@ -15,7 +16,7 @@
 4. [阶段 3 实施计划](superpowers/plans/2026-09-01-stage-03-planned-deep-research.md)
 5. [后端运行说明](../backend/README.md)
 
-新对话读完上述文档后，直接按阶段 3 实施计划执行，不重新设计阶段范围，不提前实现 Evidence Store、Verifier、Memory、API、Web UI 或规模化评测。
+阶段 3 设计与实施计划现作为已完成实现的事实来源。下一阶段是 Evidence Store 与 Verifier；在阶段 4 设计和计划明确前，不提前实现 Memory、API、Web UI 或规模化评测。
 
 ## 文档职责
 
@@ -36,6 +37,8 @@
 - [阶段 2 实施计划](superpowers/plans/2026-08-30-stage-02-langgraph-context-compression.md)
 - [模块化目录设计](superpowers/specs/2026-08-31-deeptrace-module-layout-design.md)
 - [模块化目录重构计划](superpowers/plans/2026-08-31-deeptrace-module-layout-refactor.md)
+- [阶段 3 规划式 Deep Research 设计](superpowers/specs/2026-09-01-stage-03-planned-deep-research-design.md)
+- [阶段 3 实施计划](superpowers/plans/2026-09-01-stage-03-planned-deep-research.md)
 
 ## 维护规则
 

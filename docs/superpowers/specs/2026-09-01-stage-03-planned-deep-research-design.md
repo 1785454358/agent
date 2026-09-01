@@ -1,6 +1,6 @@
 # 阶段 3 规划式 Deep Research 设计
 
-- 状态：待实施
+- 状态：已完成
 - 日期：2026-09-01
 - 前置阶段：阶段 2 已完成
 - 路线图：[DeepTrace 演进路线图](../../roadmap/deeptrace-evolution.md)
@@ -179,6 +179,8 @@ class RunEvent(BaseModel):
 - 生成报告章节顺序。
 
 Planner 使用模型结构化输出。解析失败时重试一次；仍失败则创建只包含原问题的单任务降级计划，并记录 `planning.fallback`，保证系统仍可工作。
+
+实现兼容说明：部分 OpenAI-compatible Provider 不支持 `response_format` 或工具式结构化输出。阶段 3 因此通过提示词要求单个 JSON 对象，再在本地提取、修复并用 Pydantic 严格校验；Writer 使用同一策略。该方式不改变角色输出模型、一次重试和确定性降级边界。
 
 ### Researcher
 

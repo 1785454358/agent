@@ -1,9 +1,9 @@
 # DeepTrace 演进路线图
 
-- 状态　阶段 1、阶段 2 已完成，阶段 3 待开始
+- 状态　阶段 1、2、3 已完成，阶段 4 待开始
 - 更新日期　2026-09-01
 - 目标　从 CLI 单 Agent 演进为具备上下文压缩、可靠抓取、证据验证、记忆、产品化与系统评测能力的 Deep Research Agent
-- 最近完成设计　[阶段 2 LangGraph 编排、上下文压缩与可靠抓取](../superpowers/specs/2026-08-30-stage-02-langgraph-context-compression-design.md)
+- 最近完成设计　[阶段 3 规划式 Deep Research](../superpowers/specs/2026-09-01-stage-03-planned-deep-research-design.md)
 - 模块化设计　[DeepTrace 模块化目录重构](../superpowers/specs/2026-08-31-deeptrace-module-layout-design.md)
 
 ## 1. 后续开发方式
@@ -175,4 +175,4 @@
 
 ## 10. 当前下一步
 
-开始阶段 3，在现有 LangGraph 闭环上实现 Planner、Researcher、Writer、子任务调度、查询扩展、批量抓取、基础覆盖和预算停止。代码继续直接写入 `backend/`，不提前实现 Evidence Store、Verifier、Memory、API、Web UI 或规模化评测。
+开始阶段 4，在阶段 3 的计划、章节和 ResearchNote 数据主线上设计并实现 Evidence Store、Claim 抽取与 Verifier。代码继续直接写入 `backend/`；在阶段 4 设计和实施计划明确前，不提前实现 Memory、API、Web UI 或规模化评测。
