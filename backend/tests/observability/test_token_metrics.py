@@ -5,6 +5,7 @@ from deeptrace.observability import (
     TokenEstimator,
     TokenLedger,
     calculate_round_metrics,
+    format_role_usage,
 )
 
 
@@ -41,3 +42,17 @@ def test_token_metrics_compute_net_saving_and_accumulate_raw_baseline() -> None:
     assert round_metrics.compression_output_tokens == 5
     assert round_metrics.provider_usage is not None
     assert round_metrics.provider_usage.total_tokens == 14
+
+
+def test_role_usage_includes_claim_extractor_and_verifier() -> None:
+    from deeptrace.models import UsageBreakdown
+
+    rendered = format_role_usage(
+        UsageBreakdown(
+            claim_extractor=TokenUsage(total_tokens=7),
+            verifier=TokenUsage(total_tokens=11),
+        )
+    )
+
+    assert "Claim Extractor: 7" in rendered
+    assert "Verifier: 11" in rendered

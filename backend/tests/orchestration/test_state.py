@@ -54,6 +54,13 @@ def test_merge_dicts_does_not_mutate_input() -> None:
     assert right == {"b": 2}
 
 
+def test_merge_dicts_removes_explicit_tombstones() -> None:
+    assert merge_dicts(
+        {"resolved-gap": "old", "other-gap": "keep"},
+        {"resolved-gap": None},
+    ) == {"other-gap": "keep"}
+
+
 def test_append_unique_keeps_first_seen_order() -> None:
     assert append_unique(["q1", "q2"], ["q2", "q3"]) == ["q1", "q2", "q3"]
 

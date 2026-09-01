@@ -168,6 +168,7 @@ from deeptrace.agent.planner import PlannerAgent
 from deeptrace.agent.claim_extractor import ClaimExtractorAgent
 from deeptrace.agent.researcher import ResearcherAgent
 from deeptrace.agent.writer import WriterAgent
+from deeptrace.agent.writer import sources_from_used_claims
 from deeptrace.models import (
     ResearchNote,
     ResearchPlan,
@@ -175,6 +176,7 @@ from deeptrace.models import (
     SectionResult,
     TokenUsage,
     UsageBreakdown,
+    VerificationResult,
 )
 from deeptrace.observability import estimate_usage_cost
 from deeptrace.orchestration import ResearchWorkflowNodes
@@ -256,6 +258,12 @@ class AgentResult:
     plan: ResearchPlan | None
     sections: list[SectionResult]
     used_note_ids: list[str]
+    used_claim_ids: list[str]
+    verification_results: list[VerificationResult]
+    evidence_location_counts: dict[str, int]
+    verdict_counts: dict[str, int]
+    verification_gap_count: int
+    supplement_rounds: int
     provider_usage: TokenUsage
     role_usage: UsageBreakdown
     estimated_cost_usd: Decimal | None
@@ -306,7 +314,25 @@ class ResearchAgent:
         )
         reason = final.get("termination_reason") or "completed"
         answer = final.get("final_answer", "")
-        if sections and all(item.coverage.status == "sufficient" for item in sections) and reason == "completed":
+        claims_by_id = final.get("claims", {})
+        all_results = final.get("verification_results", {})
+        all_gaps = [
+            gap
+            for gap in final.get("verification_gaps", {}).values()
+            if gap is not None
+        ]
+        each_task_has_verified_key = bool(sections) and all(
+            any(
+                claim_id in claims_by_id
+                and claims_by_id[claim_id].importance == "key"
+                and claim_id in all_results
+                and all_results[claim_id].verdict == "verified"
+                for claim_id in section.claim_ids
+            )
+            for section in sections
+        )
+        no_high_gap = not any(gap.priority == "high" for gap in all_gaps)
+        if each_task_has_verified_key and no_high_gap and reason == "completed":
             status: Literal["completed", "partial", "failed"] = "completed"
         elif answer:
             status = "partial"
@@ -314,12 +340,35 @@ class ResearchAgent:
             status = "failed"
         notes = final.get("notes", {})
         used_note_ids = list(final.get("used_note_ids", []))
+        used_claim_ids = list(final.get("used_claim_ids", []))
         usage = final.get("provider_usage", TokenUsage())
         role_usage = final.get("role_usage", UsageBreakdown())
+        evidence_by_id = final.get("evidence", {})
+        sources_by_id = final.get("sources", {})
+        evidence_location_counts = {
+            "exact": sum(
+                item.location_status == "exact"
+                for item in evidence_by_id.values()
+            ),
+            "unlocated": sum(
+                item.location_status == "unlocated"
+                for item in evidence_by_id.values()
+            ),
+        }
+        verdict_counts: dict[str, int] = {}
+        for result in all_results.values():
+            verdict_counts[result.verdict] = (
+                verdict_counts.get(result.verdict, 0) + 1
+            )
         return AgentResult(
             status=status,
             answer=answer,
-            sources=_sources_from_used_notes(notes, used_note_ids),
+            sources=sources_from_used_claims(
+                used_claim_ids,
+                claims_by_id,
+                evidence_by_id,
+                sources_by_id,
+            ),
             steps=final.get("step_count", 0),
             events=list(final.get("events", [])),
             token_metrics=list(final.get("token_metrics", [])),
@@ -327,6 +376,21 @@ class ResearchAgent:
             plan=plan,
             sections=sections,
             used_note_ids=used_note_ids,
+            used_claim_ids=used_claim_ids,
+            verification_results=[
+                all_results[claim_id]
+                for claim_id in used_claim_ids
+                if claim_id in all_results
+            ],
+            evidence_location_counts=evidence_location_counts,
+            verdict_counts=verdict_counts,
+            verification_gap_count=len(all_gaps),
+            supplement_rounds=sum(
+                summary.supplement_rounds
+                for summary in final.get(
+                    "task_verification", {}
+                ).values()
+            ),
             provider_usage=usage,
             role_usage=role_usage,
             estimated_cost_usd=estimate_usage_cost(

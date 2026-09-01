@@ -204,6 +204,8 @@ def format_role_usage(usage: UsageBreakdown) -> str:
         f"Planner: {usage.planner.total_tokens:,}\n"
         f"Researcher: {usage.researcher.total_tokens:,}\n"
         f"Compression: {usage.compression.total_tokens:,}\n"
+        f"Claim Extractor: {usage.claim_extractor.total_tokens:,}\n"
+        f"Verifier: {usage.verifier.total_tokens:,}\n"
         f"Writer: {usage.writer.total_tokens:,}\n"
         f"Total: {usage.total.total_tokens:,}"
     )

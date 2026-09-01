@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from deeptrace.agent.service import _initial_stage_four_state, _sources_from_used_notes
+from deeptrace.agent.writer import sources_from_used_claims
 from deeptrace.models import TokenUsage
 from deeptrace.observability import estimate_usage_cost
 

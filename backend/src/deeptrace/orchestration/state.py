@@ -32,8 +32,14 @@ from deeptrace.models import (
 
 
 def merge_dicts(left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any]:
-    """合并节点增量，键冲突时采用最新值且不修改输入。"""
-    return {**left, **right}
+    """合并节点增量；None 是显式删除标记，且不修改输入。"""
+    merged = dict(left)
+    for key, value in right.items():
+        if value is None:
+            merged.pop(key, None)
+        else:
+            merged[key] = value
+    return merged
 
 
 def append_unique(left: list[str], right: list[str]) -> list[str]:

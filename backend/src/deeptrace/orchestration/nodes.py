@@ -548,7 +548,7 @@ from datetime import UTC, datetime
 from deeptrace.agent._shared import add_usage
 from deeptrace.agent.planner import PlannerAgent
 from deeptrace.agent.researcher import ResearcherAgent, parse_task_completion
-from deeptrace.agent.writer import WriterAgent
+from deeptrace.agent.writer import WriterAgent, render_verified_output
 from deeptrace.agent.claim_extractor import ClaimExtractorAgent
 from deeptrace.evidence import ingest_notes
 from deeptrace.context import retrieve_notes
@@ -1067,6 +1067,12 @@ class ResearchWorkflowNodes:
                 self.settings, "max_verification_gaps_per_task", 2
             ),
         )
+        gap_updates: dict[str, Any] = {
+            gap_id: None
+            for gap_id, gap in state.get("verification_gaps", {}).items()
+            if gap is not None and gap.task_id == task.task_id
+        }
+        gap_updates.update({item.gap_id: item for item in gaps})
         previous = state.get("task_verification", {}).get(task.task_id)
         summary = TaskVerificationSummary(
             task_id=task.task_id,
@@ -1103,7 +1109,7 @@ class ResearchWorkflowNodes:
             counts[result.verdict] = counts.get(result.verdict, 0) + 1
         return {
             "verification_results": results,
-            "verification_gaps": {item.gap_id: item for item in gaps},
+            "verification_gaps": gap_updates,
             "task_verification": {task.task_id: summary},
             "events": [
                 self._event(
@@ -1290,26 +1296,63 @@ class ResearchWorkflowNodes:
             raise RuntimeError("Writer 缺少研究计划")
         by_task = state.get("section_results", {})
         sections = [by_task[task.task_id] for task in plan.tasks if task.task_id in by_task]
-        wanted = {note_id for section in sections for note_id in section.note_ids}
-        notes = [
-            note
-            for note_id, note in state.get("notes", {}).items()
-            if note_id in wanted
+        wanted_claims = {
+            claim_id for section in sections for claim_id in section.claim_ids
+        }
+        claims = [
+            claim
+            for claim_id, claim in state.get("claims", {}).items()
+            if claim_id in wanted_claims
+        ]
+        results = {
+            claim_id: result
+            for claim_id, result in state.get(
+                "verification_results", {}
+            ).items()
+            if claim_id in wanted_claims
+        }
+        gaps = [
+            gap
+            for gap in state.get("verification_gaps", {}).values()
+            if gap is not None
         ]
         reason = state.get("termination_reason") or "completed"
         output, usage, used_fallback = await self.writer.awrite(
             plan=plan,
             sections=sections,
-            notes=notes,
+            claims=claims,
+            verification_results=results,
+            evidence=state.get("evidence", {}),
+            sources=state.get("sources", {}),
+            gaps=gaps,
             termination_reason=reason,
+        )
+        markdown = render_verified_output(
+            output,
+            state.get("claims", {}),
+            state.get("verification_results", {}),
+            state.get("evidence", {}),
+            state.get("sources", {}),
+        )
+        used_note_ids = list(
+            dict.fromkeys(
+                evidence.note_id
+                for claim_id in output.used_claim_ids
+                for evidence_id in state.get("claims", {})[
+                    claim_id
+                ].evidence_ids
+                if (evidence := state.get("evidence", {}).get(evidence_id))
+                is not None
+            )
         )
         events = [self._event("writing.completed", "研究报告已生成")]
         if used_fallback:
             events.append(self._event("writing.fallback", "Writer 失败，使用确定性降级报告"))
         events.append(self._event("run.completed", "研究任务完成"))
         return {
-            "final_answer": output.markdown,
-            "used_note_ids": output.used_note_ids,
+            "final_answer": markdown,
+            "used_note_ids": used_note_ids,
+            "used_claim_ids": output.used_claim_ids,
             "termination_reason": reason,
             "events": events,
             **self._usage_update("writer", usage),

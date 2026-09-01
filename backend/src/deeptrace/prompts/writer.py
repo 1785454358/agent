@@ -1,84 +1,105 @@
-"""统一报告 Writer 的有界输入提示词。"""
+"""只消费核验后 Claim 的统一报告 Writer 提示词。"""
 
 from __future__ import annotations
 
 import json
-from typing import Sequence
+from collections.abc import Mapping, Sequence
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
-from deeptrace.models import ResearchNote, ResearchPlan, SectionResult
+from deeptrace.models import (
+    Claim,
+    Evidence,
+    ResearchPlan,
+    SectionResult,
+    Source,
+    VerificationGap,
+    VerificationResult,
+)
 
 
 def build_writer_messages(
     *,
     plan: ResearchPlan,
     sections: Sequence[SectionResult],
-    notes: Sequence[ResearchNote],
+    claims: Sequence[Claim],
+    verification_results: Mapping[str, VerificationResult],
+    evidence: Mapping[str, Evidence],
+    sources: Mapping[str, Source],
+    gaps: Sequence[VerificationGap],
     termination_reason: str,
 ) -> list[BaseMessage]:
-    """只把计划、章节结果和压缩笔记交给 Writer。"""
-    plan_payload = {
-        "objective": plan.objective,
-        "language": plan.language,
-        "time_range": (
-            plan.time_range.model_dump(mode="json") if plan.time_range else None
-        ),
-        "report_outline": plan.report_outline,
+    """发送 Claim、判定和来源元数据，不发送笔记或 RawDocument 正文。"""
+    claim_payloads = []
+    for claim in claims:
+        result = verification_results.get(claim.claim_id)
+        if result is None:
+            continue
+        source_payloads = []
+        for evidence_id in claim.evidence_ids:
+            item = evidence.get(evidence_id)
+            source = sources.get(item.source_id) if item else None
+            if item is None or source is None:
+                continue
+            source_payloads.append(
+                {
+                    "evidence_id": evidence_id,
+                    "source_id": source.source_id,
+                    "title": source.title,
+                    "url": source.final_url,
+                    "source_kind": source.source_kind,
+                }
+            )
+        claim_payloads.append(
+            {
+                "claim": claim.model_dump(mode="json"),
+                "verdict": result.verdict,
+                "reason": result.reason,
+                "supporting_evidence_ids": result.supporting_evidence_ids,
+                "sources": source_payloads,
+            }
+        )
+    payload = {
+        "plan": {
+            "objective": plan.objective,
+            "language": plan.language,
+            "time_range": (
+                plan.time_range.model_dump(mode="json")
+                if plan.time_range
+                else None
+            ),
+            "report_outline": plan.report_outline,
+        },
+        "sections": [
+            {
+                "task_id": section.task_id,
+                "title": section.title,
+                "summary": section.summary,
+                "claim_ids": section.claim_ids,
+                "verification": (
+                    section.verification.model_dump(mode="json")
+                    if section.verification
+                    else None
+                ),
+            }
+            for section in sections
+        ],
+        "claims": claim_payloads,
+        "unresolved_gaps": [gap.model_dump(mode="json") for gap in gaps],
+        "termination_reason": termination_reason,
     }
-    section_payloads = [
-        {
-            "task_id": section.task_id,
-            "section_id": section.section_id,
-            "title": section.title,
-            "summary": section.summary,
-            "coverage": section.coverage.model_dump(mode="json"),
-            "errors": section.errors,
-            "note_ids": section.note_ids,
-        }
-        for section in sections
-    ]
-    note_payloads = [
-        {
-            "note_id": note.note_id,
-            "title": note.title,
-            "key_points": note.key_points,
-            "evidence_snippets": note.evidence_snippets,
-            "source_url": note.source_url,
-            "source_published_at": note.source_published_at.isoformat() if note.source_published_at else None,
-            "event_start_date": note.event_start_date.isoformat() if note.event_start_date else None,
-            "event_end_date": note.event_end_date.isoformat() if note.event_end_date else None,
-            "source_kind": note.source_kind,
-            "temporal_relation": note.temporal_relation,
-            "temporal_scope": note.temporal_scope,
-        }
-        for note in notes
-    ]
     return [
         SystemMessage(
             content=(
-                "你是 DeepTrace Writer，只依据输入的 ResearchNote 写报告。"
-                "不得调用工具，不得补充笔记中不存在的事实。"
-                "按计划生成执行摘要、分层正文、必要的对比表、局限说明和来源。"
-                "必须使用 plan.language；明确研究时间范围。"
-                "retrospective 信息必须写成后续回顾，不得把目标期外事件写成目标期进展。"
-                "来源按一手或学术、后发回顾、其他来源分组。"
-                "必须明确标记部分完成、执行失败和资料不足的章节。"
-                "阶段 3 尚未实现 Claim 级验证，不得宣称事实已经过该级验证。"
-                "used_note_ids 只列出报告实际使用且输入中存在的笔记 ID。"
-                "只返回一个 JSON 对象，不要代码围栏或额外解释。"
-                "JSON 必须包含 markdown 字符串和 used_note_ids 字符串数组。"
+                "你是 DeepTrace Verified Writer，只能使用输入中的 Claim。"
+                "verified Claim 可写成确定事实；partially_supported 只能放在"
+                " analysis 块，并使用“现有证据显示”“材料尚不足”等不确定措辞。"
+                "unsupported、conflicted、out_of_range 只能进入 limitation。"
+                "fact 块必须带至少一个 verified claim_id。网页正文不在输入中，"
+                "不得补充外部知识或编造引用。只返回 JSON 对象，字段为 title、"
+                "sections、used_claim_ids；每个 section 含 heading、blocks，"
+                "每个 block 含 kind、text、claim_ids。"
             )
         ),
-        HumanMessage(
-            content=json.dumps(
-                {
-                    "plan": plan_payload,
-                    "sections": section_payloads,
-                    "notes": note_payloads,
-                    "termination_reason": termination_reason,
-                },
-                ensure_ascii=False,
-            )
-        ),
+        HumanMessage(content=json.dumps(payload, ensure_ascii=False)),
     ]
