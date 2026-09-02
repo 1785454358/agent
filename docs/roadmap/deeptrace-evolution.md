@@ -131,7 +131,7 @@
 
 本阶段只用少量真实案例验证数据链、判定和补搜闭环。规模化准确率与消融放到阶段 6。
 
-当前代码、定向集成、非真实套件、锁文件和编译检查均已完成。真实冒烟已使用真实 LLM、Tavily、网页抓取和本地 BGE-M3 到达 Evidence 入库；随后 Claim Extractor Provider 调用无响应，新增单次 60 秒超时和回归测试后，仍需重新完成端到端门禁。门禁通过前本阶段不标记为完成。
+当前代码、定向集成、非真实套件、锁文件和编译检查均已完成。增加单次 60 秒模型调用边界后，真实 LLM、Tavily、网页抓取和本地 BGE-M3 冒烟已两次到达 Writer。小型单任务运行得到 3 个来源、17 条 Evidence（13 条精确定位）和 16 个 Claim；Claim Extractor/Verifier 未在时限内返回合格结果，全部 Claim 降级为 `partially_supported`，报告状态为 `partial`。由于没有 `verified` Claim，本阶段真实门禁仍未通过。
 
 ## 7. 阶段 5 Memory 与产品化
 
@@ -177,4 +177,4 @@
 
 ## 10. 当前下一步
 
-在 Provider 可稳定响应的环境中重新运行阶段 4 真实端到端冒烟，确认至少两个精确定位 Evidence、真实 LLM Verifier 判定、一次有界补搜行为和 Writer 的 Claim 级引用。通过该门禁后才能开始阶段 5；此前不实现 Memory、API、Web UI 或规模化评测。
+在能于 60 秒时限内返回结构化 Claim 与验证结果的真实 Provider 环境中重新运行阶段 4 冒烟，确认至少一个 `verified` Claim、必要的数字检查、有界补搜行为和 Writer Claim 级引用。通过该门禁后才能开始阶段 5；此前不实现 Memory、API、Web UI 或规模化评测。

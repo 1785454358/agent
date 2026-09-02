@@ -430,8 +430,10 @@ CLI 增加以下事件摘要：
 - 阶段 4 定向集成测试：53 个通过。
 - 非真实测试套件：109 个通过。
 - `uv lock --check` 与 `python -m compileall src tests`：通过。
-- 真实冒烟使用了真实 LLM、Tavily、网页抓取和本地 BGE-M3，运行到首个任务 Evidence 入库，共得到 1 个 Source、5 个 Evidence，其中 1 个精确定位。
-- 随后的 Claim Extractor Provider 调用超过 600 秒仍未返回，运行被人工中止。现已增加单次 60 秒超时及回归测试（5 个 Claim Extractor 测试通过），但尚未再次获得满足本节验收要求的完整运行。
+- 首次真实冒烟使用真实 LLM、Tavily、网页抓取和本地 BGE-M3 到达 Evidence 入库；Claim Extractor Provider 调用超过 600 秒未返回，运行被人工中止。随后增加了单次 60 秒超时及回归测试（5 个 Claim Extractor 测试通过）。
+- 修复后的宽题冒烟完整到达 Writer，累计 4 条精确定位 Evidence；7 个 Claim 为 `unsupported`，6 个为 `partially_supported`，报告诚实返回 `partial`。
+- 进一步使用单任务小型问题运行，得到 3 个真实来源、17 条 Evidence（13 条精确定位）和 16 个 Claim，并完整到达 Writer。Claim Extractor 与 Verifier 均未记录 Provider Token，所有 Claim 降级为 `partially_supported`，最终状态仍为 `partial`。
+- 两次完整运行均未出现未处理异常，也没有使用 Fake 外部结果；但没有产生 `verified` Claim，仍不满足本节验收要求。
 
 因此阶段 4 的实现任务已完成，但真实端到端门禁仍为未通过；不得据此开始阶段 5。
 
