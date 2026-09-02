@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping, Sequence
 from datetime import date
 from typing import Any
@@ -137,8 +138,11 @@ def fallback_claims(
 class ClaimExtractorAgent:
     """最多调用模型两次，之后确定性降级。"""
 
-    def __init__(self, model: Any) -> None:
+    def __init__(
+        self, model: Any, *, timeout_seconds: float = 60.0
+    ) -> None:
         self._model = model
+        self._timeout_seconds = timeout_seconds
 
     async def aextract(
         self,
@@ -165,7 +169,10 @@ class ClaimExtractorAgent:
                     )
                 )
             try:
-                response = await self._model.ainvoke(attempt_messages)
+                response = await asyncio.wait_for(
+                    self._model.ainvoke(attempt_messages),
+                    timeout=self._timeout_seconds,
+                )
                 total = add_usage(total, message_usage(response))
                 parsed = parse_claim_output(message_text(response))
                 return (
@@ -178,4 +185,3 @@ class ClaimExtractorAgent:
             except Exception as exc:
                 validation_error = str(exc)
         return fallback_claims(notes, evidence), total, True
-

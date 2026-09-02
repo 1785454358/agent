@@ -1,3 +1,4 @@
+import asyncio
 from datetime import date
 from types import SimpleNamespace
 
@@ -110,3 +111,28 @@ async def test_two_malformed_responses_use_deterministic_fallback(
     assert claims[0].importance == "supporting"
     assert usage.total_tokens == 6
 
+
+@pytest.mark.anyio
+async def test_provider_timeout_is_bounded_and_falls_back(
+    research_task, research_note
+) -> None:
+    class HangingModel:
+        calls = 0
+
+        async def ainvoke(self, _messages):
+            self.calls += 1
+            await asyncio.Event().wait()
+
+    model = HangingModel()
+    agent = ClaimExtractorAgent(model, timeout_seconds=0.01)
+    claims, usage, used_fallback = await agent.aextract(
+        research_task,
+        [research_note],
+        [_evidence('ev-exact')],
+        None,
+    )
+
+    assert model.calls == 2
+    assert used_fallback is True
+    assert claims
+    assert usage.total_tokens == 0
