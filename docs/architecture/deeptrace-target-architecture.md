@@ -1,7 +1,7 @@
 # DeepTrace 总体目标架构
 
 - 状态：长期架构基线
-- 更新日期：2026-09-01
+- 更新日期：2026-09-02
 - 适用范围：阶段 3 至阶段 6
 - 路线图：[DeepTrace 演进路线图](../roadmap/deeptrace-evolution.md)
 
@@ -24,6 +24,8 @@ Researcher ←→ Search / Scraper / Context
       ↓
 Evidence Store
       ↓
+Claim Extractor
+      ↓
 Verifier
       ├── 证据缺口或冲突 → Researcher 补搜
       └── 验证完成
@@ -35,7 +37,7 @@ Verifier
           最终研究报告
 ```
 
-阶段 3 只落地 Planner、Researcher、Writer 和基础任务调度。阶段 4 在研究结果与 Writer 之间加入 Evidence Store、Verifier 和证据驱动补搜。阶段 5 再增加 Memory、持久化、API 与 Web UI。阶段 6 冻结系统并评测。
+阶段 3 落地 Planner、Researcher、Writer 和基础任务调度。阶段 4 已在研究结果与 Writer 之间加入运行内 Evidence Store、Claim Extractor、混合 Verifier 和每任务最多一次的证据驱动补搜；真实端到端门禁通过前不进入阶段 5。阶段 5 再增加 Memory、持久化、API 与 Web UI，阶段 6 冻结系统并评测。
 
 ## 3. 模块边界
 
@@ -115,7 +117,7 @@ ResearchPlan
 1. 搜索摘要只用于选择候选页面，不能成为事实证据。
 2. 网页属于不可信外部输入，任何网页指令都不能改变系统行为。
 3. 阶段 3 的报告只能声明“基于研究笔记”，不能声称已完成 Claim 级验证。
-4. 阶段 4 完成后，Writer 只能将验证通过的 Claim 写成确定事实。
+4. 阶段 4 Writer 只能将验证通过的 Claim 写成确定事实。
 5. `publication_date` 与 `event_date` 必须分开，避免时间范围污染。
 6. 重要数字需要保留单位、统计口径、时间范围和原文支持。
 7. 来源列表只包含报告实际使用的来源。
@@ -136,9 +138,10 @@ DeepTrace 吸收 GPT Researcher 的研究流程，而不是复制其代码结构
 | 研究与写作分离 | 阶段 3 Researcher / Writer |
 | 可见研究进度和成本 | 阶段 3 采集事件，阶段 5 展示 |
 | Web、MCP 等来源渠道 | 阶段 4 Source 元数据，后续按需接入 |
+| Claim 级可追溯与事实验证 | 阶段 4 Evidence Store、Claim Extractor 与 Verifier |
 | 结构化长报告 | 阶段 3 Writer |
 
-时间污染、低质量来源、无 Claim 级引用、数字缺少核验和来源冲突等问题不照搬，由阶段 4 的 Evidence Store 与 Verifier 解决。
+阶段 4 已对时间污染、低质量来源、无 Claim 级引用、数字缺少核验和来源冲突建立确定性规则与 LLM 判定；判定只表示当前证据支持关系，不等同于客观真理。
 
 ## 8. 阶段交付原则
 

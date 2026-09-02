@@ -1,9 +1,9 @@
 # DeepTrace 演进路线图
 
-- 状态　阶段 1、2、3 已完成，阶段 4 待开始
-- 更新日期　2026-09-01
+- 状态　阶段 1、2、3 已完成；阶段 4 实现与自动化验证完成，真实端到端门禁待通过
+- 更新日期　2026-09-02
 - 目标　从 CLI 单 Agent 演进为具备上下文压缩、可靠抓取、证据验证、记忆、产品化与系统评测能力的 Deep Research Agent
-- 最近完成设计　[阶段 3 规划式 Deep Research](../superpowers/specs/2026-09-01-stage-03-planned-deep-research-design.md)
+- 当前阶段设计　[阶段 4 Evidence Store 与 Verifier](../superpowers/specs/2026-09-01-stage-04-evidence-verification-design.md)
 - 模块化设计　[DeepTrace 模块化目录重构](../superpowers/specs/2026-08-31-deeptrace-module-layout-design.md)
 
 ## 1. 后续开发方式
@@ -131,6 +131,8 @@
 
 本阶段只用少量真实案例验证数据链、判定和补搜闭环。规模化准确率与消融放到阶段 6。
 
+当前代码、定向集成、非真实套件、锁文件和编译检查均已完成。真实冒烟已使用真实 LLM、Tavily、网页抓取和本地 BGE-M3 到达 Evidence 入库；随后 Claim Extractor Provider 调用无响应，新增单次 60 秒超时和回归测试后，仍需重新完成端到端门禁。门禁通过前本阶段不标记为完成。
+
 ## 7. 阶段 5 Memory 与产品化
 
 这一阶段共用任务身份、持久化和生命周期设计，分三个任务组实施。
@@ -175,4 +177,4 @@
 
 ## 10. 当前下一步
 
-开始阶段 4，在阶段 3 的计划、章节和 ResearchNote 数据主线上设计并实现 Evidence Store、Claim 抽取与 Verifier。代码继续直接写入 `backend/`；在阶段 4 设计和实施计划明确前，不提前实现 Memory、API、Web UI 或规模化评测。
+在 Provider 可稳定响应的环境中重新运行阶段 4 真实端到端冒烟，确认至少两个精确定位 Evidence、真实 LLM Verifier 判定、一次有界补搜行为和 Writer 的 Claim 级引用。通过该门禁后才能开始阶段 5；此前不实现 Memory、API、Web UI 或规模化评测。

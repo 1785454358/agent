@@ -1,6 +1,6 @@
 # 阶段 4 Evidence Store 与 Verifier 设计
 
-- 状态：设计已确认，待实施
+- 状态：实现与自动化验证完成，真实端到端验收待通过
 - 日期：2026-09-01
 - 基线：[DeepTrace 总体目标架构](../../architecture/deeptrace-target-architecture.md)
 - 前置阶段：[阶段 3 研究质量加固](2026-09-01-stage-03-research-quality-hardening-design.md)
@@ -256,7 +256,7 @@ Evidence Store 不读取搜索摘要，不把 Tavily snippet 当成证据，也�
 4. 规范化事件时间；明显越界的 Claim 仍保留，但由确定性 Verifier 直接标记为 `out_of_range`，不发送给 LLM。
 5. 生成稳定 Claim ID 并按 ID upsert。
 
-结构化抽取失败时，将每个 ResearchNote `key_point` 作为一个 `supporting` Claim 草稿，并关联同一笔记的已定位 Evidence。该降级只保证数据不丢失，仍必须经过 Verifier，不能直接标为验证通过。
+结构化抽取失败时，将每个 ResearchNote `key_point` 作为一个 `supporting` Claim 草稿，并关联同一笔记的已定位 Evidence。该降级只保证数据不丢失，仍必须经过 Verifier，不能直接标为验证通过。模型最多调用两次，每次硬超时 60 秒；超时与其他 Provider 错误统一进入该确定性降级，避免单个节点越过全局运行预算。
 
 ## 8. 混合 Verifier
 
@@ -424,6 +424,16 @@ CLI 增加以下事件摘要：
 - 无未处理异常，CLI 输出验证统计和各角色 Provider Token。
 
 真实运行得到 `partial` 可以接受，但必须是覆盖、验证缺口或预算导致的诚实状态，不能把未验证内容写成确定事实。
+
+### 14.1 当前验收记录
+
+- 阶段 4 定向集成测试：53 个通过。
+- 非真实测试套件：109 个通过。
+- `uv lock --check` 与 `python -m compileall src tests`：通过。
+- 真实冒烟使用了真实 LLM、Tavily、网页抓取和本地 BGE-M3，运行到首个任务 Evidence 入库，共得到 1 个 Source、5 个 Evidence，其中 1 个精确定位。
+- 随后的 Claim Extractor Provider 调用超过 600 秒仍未返回，运行被人工中止。现已增加单次 60 秒超时及回归测试（5 个 Claim Extractor 测试通过），但尚未再次获得满足本节验收要求的完整运行。
+
+因此阶段 4 的实现任务已完成，但真实端到端门禁仍为未通过；不得据此开始阶段 5。
 
 ## 15. 阶段边界
 
