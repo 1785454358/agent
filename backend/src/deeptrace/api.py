@@ -35,6 +35,7 @@ class RunRecord(BaseModel):
     id: str
     question: str
     status: str = "pending"
+    termination_reason: str = ""
     created_at: str
     finished_at: str | None = None
     answer: str = ""
@@ -89,6 +90,7 @@ def create_app(
 
     def _apply_result(record: RunRecord, result: AgentResult) -> None:
         record.status = result.status
+        record.termination_reason = result.termination_reason
         record.finished_at = datetime.now(UTC).isoformat()
         record.answer = result.answer
         record.sources = result.sources

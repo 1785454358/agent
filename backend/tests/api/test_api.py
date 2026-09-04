@@ -1,4 +1,5 @@
 import asyncio
+import json
 from datetime import UTC, datetime
 from types import SimpleNamespace
 
@@ -60,6 +61,7 @@ def test_api_creates_and_completes_research(tmp_path, monkeypatch) -> None:
         asyncio.run(asyncio.sleep(0.05))
 
     assert data["status"] == "completed"
+    assert data["termination_reason"] == "completed"
     assert data["answer"].startswith("# 报告")
     assert data["usage"]["total_tokens"] == 42
     assert any(
@@ -67,10 +69,11 @@ def test_api_creates_and_completes_research(tmp_path, monkeypatch) -> None:
         for event in data["events"]
     )
     # 结果已持久化
-    persisted = (tmp_path / "runs" / f"{run_id}.json").read_text(
-        encoding="utf-8"
+    persisted = json.loads(
+        (tmp_path / "runs" / f"{run_id}.json").read_text(encoding="utf-8")
     )
-    assert "2024 年 AI Agent 热点新闻？" in persisted
+    assert persisted["question"] == "2024 年 AI Agent 热点新闻？"
+    assert persisted["termination_reason"] == "completed"
 
 
 def test_api_list_and_missing_run(tmp_path, monkeypatch) -> None:
