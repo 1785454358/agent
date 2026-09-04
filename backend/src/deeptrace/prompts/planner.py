@@ -7,6 +7,30 @@ from typing import Any, Mapping, Sequence
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
+_MAX_INITIAL_RESULTS = 5
+_MAX_TITLE_CHARS = 300
+_MAX_URL_CHARS = 2048
+_MAX_SNIPPET_CHARS = 1000
+
+
+def _bounded_text(value: Any, limit: int) -> str:
+    if not isinstance(value, str):
+        return ""
+    return value.strip()[:limit]
+
+
+def _project_initial_results(
+    initial_results: Sequence[Mapping[str, Any]],
+) -> list[dict[str, str]]:
+    return [
+        {
+            "title": _bounded_text(item.get("title"), _MAX_TITLE_CHARS),
+            "url": _bounded_text(item.get("url"), _MAX_URL_CHARS),
+            "snippet": _bounded_text(item.get("snippet"), _MAX_SNIPPET_CHARS),
+        }
+        for item in initial_results[:_MAX_INITIAL_RESULTS]
+    ]
+
 
 def build_planner_messages(
     question: str,
@@ -17,7 +41,7 @@ def build_planner_messages(
     """构造一条系统指令和一条 JSON 用户输入。"""
     payload = {
         "question": question,
-        "initial_results": list(initial_results),
+        "initial_results": _project_initial_results(initial_results),
         "query_count": query_count,
     }
     return [
@@ -30,5 +54,5 @@ def build_planner_messages(
                 "不要 Markdown、解释或代码围栏。"
             )
         ),
-        HumanMessage(content=json.dumps(payload, ensure_ascii=False, default=str)),
+        HumanMessage(content=json.dumps(payload, ensure_ascii=False)),
     ]
