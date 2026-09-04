@@ -1,22 +1,21 @@
 # DeepTrace 文档入口
 
-## 当前状态
+## 当前状态（2026-09-03 更新）
 
-- 阶段 1：已完成
-- 阶段 2：已完成
-- 阶段 3：已完成（真实 LLM、Tavily、网页抓取和本地 BGE-M3 冒烟通过）
-- 阶段 4：代码与自动化测试已完成，真实端到端验收待通过
+- 阶段 1、2、3：已完成
+- 阶段 4（Evidence/Claim/Verifier）：经项目所有者决策于 2026-09-03 移除。原因：Claim 抽取与核验使同一内容被 LLM 重复读取 3 遍（占 token 约 40%），且在真实 Provider 时限内从未产出 `verified` 结论；Writer 改为直接基于带编号来源的原文片段写作，引用由系统机械拼接。
+- 性能优化（2026-09-03）：搜索+抓取融合（搜索轮内自动抓取 top 候选并压缩出笔记）、子任务并行（预算网关 + 有界并发）。端到端从 ~640-950s 降至 ~210-450s。
+- 阶段 5（Memory 与产品化）：已实现——FastAPI 任务管理、SSE 事件流、运行持久化（runs/<id>.json）、Web 仪表盘、研究记忆（DEEPTRACE_USE_MEMORY）。
+- 阶段 6（系统评测与开源对比）：未开始
 - 当前代码目录：`backend/`
 
 ## 当前阅读顺序
 
-1. [六阶段演进路线图](roadmap/deeptrace-evolution.md)
+1. [演进路线图](roadmap/deeptrace-evolution.md)
 2. [总体目标架构](architecture/deeptrace-target-architecture.md)
-3. [阶段 4 Evidence Store 与 Verifier 设计](superpowers/specs/2026-09-01-stage-04-evidence-verification-design.md)
-4. [阶段 4 实施计划](superpowers/plans/2026-09-01-stage-04-evidence-verification.md)
-5. [后端运行说明](../backend/README.md)
+3. [后端运行说明](../backend/README.md)
 
-阶段 4 的 Source → Evidence → Claim、混合验证、一次有界补搜和验证后写作已经落地。自动化套件通过；增加 60 秒模型调用边界后的真实运行已两次到达 Writer，其中小型单任务冒烟得到 13 条精确定位 Evidence 和 3 个真实来源。当前 Provider 未在时限内返回 Claim Extractor/Verifier 的合格结果，16 个 Claim 均诚实降级为 `partially_supported`，尚无 `verified` Claim，因此真实端到端门禁仍未通过。门禁通过前不开始阶段 5，也不提前实现 Memory、API、Web UI 或规模化评测。
+阶段 4（Evidence/Claim/Verifier）已于 2026-09-03 移除（原因见上方"当前状态"），相关设计文档只作为废弃历史保留。
 
 ## 文档职责
 
@@ -41,6 +40,13 @@
 - [阶段 3 实施计划](superpowers/plans/2026-09-01-stage-03-planned-deep-research.md)
 - [阶段 3 研究质量加固设计](superpowers/specs/2026-09-01-stage-03-research-quality-hardening-design.md)
 - [阶段 3 研究质量加固计划](superpowers/plans/2026-09-01-stage-03-research-quality-hardening.md)
+
+## 已移除阶段资料（废弃历史）
+
+阶段 4（Evidence/Claim/Verifier）于 2026-09-03 经项目所有者决策移除，源码与测试已删除。以下文档仅为决策记录保留，**不反映当前架构**，当前能力是"阶段 1-3 规划式研究 + 阶段 5 的 Memory/API/Web UI"。
+
+- [阶段 4 Evidence Store 与 Verifier 设计](superpowers/specs/2026-09-01-stage-04-evidence-verification-design.md)
+- [阶段 4 实施计划](superpowers/plans/2026-09-01-stage-04-evidence-verification.md)
 
 ## 维护规则
 

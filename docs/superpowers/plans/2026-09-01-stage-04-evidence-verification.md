@@ -1,5 +1,7 @@
 # Stage 4 Evidence Store and Verifier Implementation Plan
 
+> **Status: DEPRECATED (2026-09-03).** Stage 4 was removed by owner decision; source and tests deleted. Kept only as a decision record, NOT representative of the current architecture.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 在阶段 3 逐任务研究图中加入运行内 Source→Evidence→Claim→VerificationResult 数据链、混合 Verifier、一次有界证据补搜和 Claim 级引用 Writer。

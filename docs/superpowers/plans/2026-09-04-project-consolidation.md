@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-04-project-consolidation-design.md`
 
+**执行状态：** 已完成。首次真实回归暴露 Writer Provider 调用无超时的问题；完成测试驱动修复后进行了唯一一次复测，结果记录在 `docs/q.md`。
+
 ## Global Constraints
 
 - 不恢复 Evidence Store、Claim Extractor、Verifier 或相关状态、提示词与测试。

@@ -1,6 +1,8 @@
 # 阶段 4 Evidence Store 与 Verifier 设计
 
-- 状态：实现与自动化验证完成，真实端到端验收待通过
+> **状态：已废弃（2026-09-03）。** 阶段 4 经项目所有者决策移除，源码与测试已删除。本文仅作决策记录保留，不反映当前架构；当前写作链路直接基于带编号来源的原句片段。
+
+- 状态：实现与自动化验证完成，真实端到端验收待通过（阶段 4 已整体移除）
 - 日期：2026-09-01
 - 基线：[DeepTrace 总体目标架构](../../architecture/deeptrace-target-architecture.md)
 - 前置阶段：[阶段 3 研究质量加固](2026-09-01-stage-03-research-quality-hardening-design.md)

@@ -1,7 +1,7 @@
 # DeepTrace 项目收口设计
 
 - 日期：2026-09-04
-- 状态：已确认，待实施
+- 状态：已完成
 - 当前分支：`main`
 
 ## 1. 目标
@@ -64,7 +64,7 @@
 4. `uv run deeptrace --help`
 5. `git diff --check`
 
-真实回归只执行一次：启动 FastAPI，通过 `POST /researches` 创建真实研究任务，轮询到终态，并检查任务事件、最终报告、来源、分角色 Token 和 `runs/<id>.json` 持久化结果。该运行使用现有真实 LLM API、Tavily、网页抓取和本地 BGE-M3。
+真实回归原则上只执行一次：启动 FastAPI，通过 `POST /researches` 创建真实研究任务，轮询到终态，并检查任务事件、最终报告、来源、分角色 Token 和 `runs/<id>.json` 持久化结果。若真实回归暴露阻塞性缺陷，则按系统化调试流程修复后允许复测。该运行使用现有真实 LLM API、Tavily、网页抓取和本地 BGE-M3。
 
 CLI 的完整输出契约由自动化测试覆盖，不再额外执行第二次真实研究。真实运行可以得到 `completed` 或诚实的 `partial`；`failed`、进程崩溃、空报告、无持久化记录或未到达 Writer 均视为回归失败。
 

@@ -4,6 +4,8 @@
 
 **Goal:** 把阶段 1 的 CLI 单 Agent 迁移到 LangGraph，并加入 BGE-M3 上下文压缩、可靠抓取降级链和逐轮 Token 节省统计。
 
+**Status:** 已完成（2026-08-31），本文仅作为阶段 2 的实施记录保留。
+
 **Architecture:** LangGraph 负责显式状态和节点路由，主 Agent 每轮只接收相关 ResearchNote 与最近一组合法工具消息。原始网页保存在 State 文档区，向量和 Token 基线账本保存在单次运行的进程内 runtime，避免把 numpy 数组和重复正文写入 checkpoint。
 
 **Tech Stack:** Python 3.11、LangGraph、LangChain Core、ChatOpenAI、Tavily、HTTPX、Trafilatura、BeautifulSoup、Playwright、SentenceTransformers/BGE-M3、Pydantic、json-repair、tiktoken、pytest。

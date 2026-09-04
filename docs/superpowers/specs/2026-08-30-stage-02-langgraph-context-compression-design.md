@@ -1,7 +1,7 @@
 # DeepTrace 阶段 2 设计　LangGraph 编排、上下文压缩与可靠抓取
 
-- 状态　待确认后实施
-- 日期　2026-08-30
+- 状态　已完成
+- 日期　2026-08-31
 - 实施位置　`backend/`
 - 本地 Embedding 模型　`D:\Dev\Models\bge-m3`
 
