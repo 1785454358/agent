@@ -50,7 +50,7 @@ def _append_references(markdown: str, sources: Sequence[str]) -> str:
     body = markdown.rstrip()
     if not sources:
         return body
-    references = "\n".join(f"- {source}" for source in sources)
+    references = "\n".join(f"- [{source}]({source})" for source in sources)
     return f"{body}\n\n## References\n\n{references}"
 
 
@@ -66,6 +66,8 @@ class WriterAgent:
     ) -> None:
         if call_timeout_seconds <= 0:
             raise ValueError("Writer 调用超时必须大于 0 秒")
+        if context_limit_chars <= 0:
+            raise ValueError("Writer 上下文字符上限必须大于 0")
         self._model = model
         self._call_timeout_seconds = call_timeout_seconds
         self._context_limit_chars = context_limit_chars

@@ -68,7 +68,8 @@ def test_writer_receives_source_title_content_context() -> None:
     assert "研究问题" in model.messages[-1][-1].content
     assert CONTEXT.strip() in model.messages[-1][-1].content
     assert outcome.markdown.endswith(
-        "## References\n\n- https://example.com/a"
+        "## References\n\n"
+        "- [https://example.com/a](https://example.com/a)"
     )
     assert outcome.sources == ["https://example.com/a"]
     assert outcome.usage.total_tokens == 5
@@ -115,8 +116,8 @@ def test_writer_appends_unique_references_in_input_order() -> None:
     ]
     assert outcome.markdown.endswith(
         "## References\n\n"
-        "- https://example.com/b\n"
-        "- https://example.com/a"
+        "- [https://example.com/b](https://example.com/b)\n"
+        "- [https://example.com/a](https://example.com/a)"
     )
 
 
@@ -181,5 +182,15 @@ def test_writer_fallback_includes_bounded_context_and_references() -> None:
     assert "ABCDEFGHIJKL" in outcome.markdown
     assert "MUST-BE-TRUNCATED" not in outcome.markdown
     assert outcome.markdown.endswith(
-        "## References\n\n- https://example.com/a"
+        "## References\n\n"
+        "- [https://example.com/a](https://example.com/a)"
     )
+
+
+def test_writer_rejects_non_positive_context_limit() -> None:
+    try:
+        WriterAgent(FailingIfCalledModel(), context_limit_chars=0)
+    except ValueError as exc:
+        assert "上下文" in str(exc)
+    else:
+        raise AssertionError("non-positive context limit must be rejected")
