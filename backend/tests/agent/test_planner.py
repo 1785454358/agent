@@ -1,44 +1,57 @@
-from deeptrace.agent.planner import (
-    build_fallback_plan,
-    detect_query_language,
-    normalize_question,
-    parse_planner_draft,
-)
+import asyncio
+from collections import deque
+
+from langchain_core.messages import AIMessage
+
+from deeptrace.agent import planner as planner_module
 
 
-def test_query_language_is_deterministic() -> None:
-    assert detect_query_language("2024年 AI Agent 有哪些进展？") == "zh-CN"
-    assert detect_query_language("What changed in AI agents in 2024?") == "en"
+class ScriptedModel:
+    def __init__(self, responses: list[AIMessage | Exception]) -> None:
+        self._responses = deque(responses)
+
+    async def ainvoke(self, _messages: object) -> AIMessage:
+        response = self._responses.popleft()
+        if isinstance(response, Exception):
+            raise response
+        return response
 
 
-def test_normalize_question_collapses_whitespace() -> None:
-    assert normalize_question("  2024年AI Agent领域有哪 些进展？  ") == (
-        "2024年AI Agent领域有哪些进展？"
+def test_parse_search_queries_accepts_repaired_json() -> None:
+    assert planner_module.parse_search_queries(
+        '{"queries":["技术进展","商业动态"]}'
+    ) == [
+        "技术进展",
+        "商业动态",
+    ]
+
+
+def test_planner_appends_original_query_once() -> None:
+    model = ScriptedModel([AIMessage(content='["技术进展", "年度进展"]')])
+    queries, _usage, fallback, error = asyncio.run(
+        planner_module.PlannerAgent(model, query_count=3).aplan(
+            "年度进展",
+            [{"title": "背景", "url": "https://example.com", "snippet": "摘要"}],
+        )
     )
 
-
-def test_fallback_plan_is_single_task_and_preserves_question() -> None:
-    plan = build_fallback_plan("2024 年 Agent 进展", min_sources=2)
-
-    assert len(plan.tasks) == 1
-    assert plan.tasks[0].question == plan.normalized_query
-    assert plan.tasks[0].min_sources == 2
+    assert queries == ["技术进展", "年度进展"]
+    assert fallback is False
+    assert error == ""
 
 
-def test_planner_parses_fenced_json_without_provider_specific_parameters() -> None:
-    draft = parse_planner_draft(
-        """```json
-        {
-          "objective": "总结进展",
-          "language": "zh-CN",
-          "tasks": [
-            {"title": "技术", "question": "技术进展？", "planned_queries": ["技术进展"], "expected_topics": ["技术"]},
-            {"title": "应用", "question": "应用进展？", "planned_queries": ["应用进展"], "expected_topics": ["应用"]}
-          ],
-          "report_outline": ["技术", "应用"]
-        }
-        ```"""
+def test_planner_failure_falls_back_to_original_query() -> None:
+    model = ScriptedModel(
+        [RuntimeError("provider down"), RuntimeError("provider down")]
+    )
+    queries, _usage, fallback, error = asyncio.run(
+        planner_module.PlannerAgent(
+            model, query_count=3, call_timeout_seconds=0.1
+        ).aplan(
+            "原始问题", []
+        )
     )
 
-    assert len(draft.tasks) == 2
-    assert draft.tasks[0].title == "技术"
+    assert queries == ["原始问题"]
+    assert fallback is True
+    assert "provider down" in error
