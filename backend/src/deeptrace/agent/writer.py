@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from deeptrace.agent._shared import add_usage, message_text, message_usage
+from deeptrace.agent.report_renderer import render_report
 from deeptrace.models import TokenUsage
 from deeptrace.prompts.writer import build_writer_messages
 
@@ -46,14 +47,6 @@ def _unique_sources(sources: Sequence[str]) -> list[str]:
     return unique
 
 
-def _append_references(markdown: str, sources: Sequence[str]) -> str:
-    body = markdown.rstrip()
-    if not sources:
-        return body
-    references = "\n".join(f"- [{source}]({source})" for source in sources)
-    return f"{body}\n\n## References\n\n{references}"
-
-
 class WriterAgent:
     """Use one bounded Provider call, with one retry, to write a report."""
 
@@ -85,16 +78,16 @@ class WriterAgent:
         normalized_sources = _unique_sources(sources)
         normalized_context = context.strip()
         if normalized_context:
-            markdown = self._fallback_markdown(
+            body = self._fallback_markdown(
                 question=question,
                 context=normalized_context[: self._context_limit_chars],
                 language=language,
                 termination_reason=termination_reason,
             )
         else:
-            markdown = self._empty_context_markdown(question, language)
+            body = self._empty_context_markdown(question, language)
         return WriterOutcome(
-            markdown=_append_references(markdown, normalized_sources),
+            markdown=render_report(body, normalized_sources, language),
             sources=normalized_sources,
             used_fallback=True,
         )
@@ -103,15 +96,17 @@ class WriterAgent:
     def _empty_context_markdown(question: str, language: str) -> str:
         if language.lower().startswith("zh"):
             return (
-                "# 研究结果\n\n"
+                "研究结果\n\n"
                 f"研究问题：{question}\n\n"
-                "局限：未获得有效资料，无法生成可靠的研究报告。"
+                "1 局限\n\n"
+                "未获得有效资料，无法生成可靠的研究报告。"
             )
         return (
-            "# Research Result\n\n"
+            "Research Result\n\n"
             f"Research question: {question}\n\n"
-            "Limitation: No valid research material was obtained, so a reliable "
-            "report cannot be generated."
+            "1 Limitation\n\n"
+            "No valid research material was obtained, so a reliable report "
+            "cannot be generated."
         )
 
     @staticmethod
@@ -124,21 +119,22 @@ class WriterAgent:
     ) -> str:
         if language.lower().startswith("zh"):
             return (
-                "# 研究结果\n\n"
+                "研究结果\n\n"
                 f"研究问题：{question}\n\n"
-                "## 局限\n\n"
+                "1 局限\n\n"
                 "Writer 未能生成完整报告。以下仅展示运行截止前取得的材料，"
                 f"终止原因：{termination_reason}。\n\n"
-                "## 可用研究材料\n\n"
+                "2 可用研究材料\n\n"
                 f"{context}"
             )
         return (
-            "# Research Result\n\n"
+            "Research Result\n\n"
             f"Research question: {question}\n\n"
-            "## Limitation\n\n"
-            "The Writer could not generate a complete report. The material below "
-            f"is limited to what was collected before termination: {termination_reason}.\n\n"
-            "## Available Research Context\n\n"
+            "1 Limitation\n\n"
+            "The Writer could not generate a complete report. The material "
+            "below is limited to what was collected before termination: "
+            f"{termination_reason}.\n\n"
+            "2 Available Research Context\n\n"
             f"{context}"
         )
 
@@ -166,6 +162,7 @@ class WriterAgent:
         messages = build_writer_messages(
             question=question,
             context=bounded_context,
+            sources=normalized_sources,
             language=language,
             termination_reason=termination_reason,
         )
@@ -186,7 +183,7 @@ class WriterAgent:
                 if not body:
                     raise ValueError("Writer 返回了空报告")
                 return WriterOutcome(
-                    markdown=_append_references(body, normalized_sources),
+                    markdown=render_report(body, normalized_sources, language),
                     sources=normalized_sources,
                     usage=total,
                     used_fallback=False,

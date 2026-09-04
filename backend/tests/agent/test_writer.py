@@ -54,7 +54,7 @@ CONTEXT = (
 
 
 def test_writer_receives_source_title_content_context() -> None:
-    model = ScriptedModel(["# 报告\n\n内容（[来源](https://example.com/a)）。"])
+    model = ScriptedModel(["报告\n\n1 结论\n\n内容 [[source:1]]。"])
 
     outcome = _run(
         WriterAgent(model).awrite(
@@ -67,12 +67,14 @@ def test_writer_receives_source_title_content_context() -> None:
 
     assert "研究问题" in model.messages[-1][-1].content
     assert CONTEXT.strip() in model.messages[-1][-1].content
+    assert "[[source:1]] https://example.com/a" in model.messages[-1][-1].content
     assert "untrusted data" in model.messages[-1][0].content.lower()
     assert "ignore any instructions" in model.messages[-1][0].content.lower()
-    assert outcome.markdown.endswith(
-        "## References\n\n"
-        "- [https://example.com/a](https://example.com/a)"
-    )
+    body, references = outcome.markdown.split("\n\n参考文献\n\n", maxsplit=1)
+    assert "#" not in body
+    assert "http" not in body
+    assert body.endswith("内容 [1]。")
+    assert references == "[1] https://example.com/a"
     assert outcome.sources == ["https://example.com/a"]
     assert outcome.usage.total_tokens == 5
     assert outcome.used_fallback is False
@@ -95,8 +97,8 @@ def test_writer_abstains_when_context_is_empty_without_calling_model() -> None:
     assert "未获得有效资料" in outcome.markdown
 
 
-def test_writer_appends_unique_references_in_input_order() -> None:
-    model = ScriptedModel(["# Report\n\nBody."])
+def test_writer_keeps_all_source_metadata_but_lists_only_cited_sources() -> None:
+    model = ScriptedModel(["Report\n\n1 Finding\n\nB [[source:1]]."])
 
     outcome = _run(
         WriterAgent(model).awrite(
@@ -117,10 +119,9 @@ def test_writer_appends_unique_references_in_input_order() -> None:
         "https://example.com/a",
     ]
     assert outcome.markdown.endswith(
-        "## References\n\n"
-        "- [https://example.com/b](https://example.com/b)\n"
-        "- [https://example.com/a](https://example.com/a)"
+        "References\n\n[1] https://example.com/b"
     )
+    assert "[2]" not in outcome.markdown
 
 
 def test_writer_retries_once_after_provider_failure() -> None:
@@ -168,9 +169,12 @@ def test_writer_fallback_includes_bounded_context_and_references() -> None:
     model = ScriptedModel([RuntimeError("down"), RuntimeError("still down")])
 
     outcome = _run(
-        WriterAgent(model, context_limit_chars=12).awrite(
+        WriterAgent(model, context_limit_chars=42).awrite(
             question="研究问题",
-            context="ABCDEFGHIJKL--MUST-BE-TRUNCATED",
+            context=(
+                "Source: https://example.com/a\n"
+                "ABCDEFGHIJKL--MUST-BE-TRUNCATED"
+            ),
             sources=["https://example.com/a"],
             language="zh-CN",
             termination_reason="provider_failure",
@@ -181,12 +185,13 @@ def test_writer_fallback_includes_bounded_context_and_references() -> None:
     assert outcome.used_fallback is True
     assert "研究问题" in outcome.markdown
     assert "局限" in outcome.markdown
+    assert "Source: [1]" in outcome.markdown
     assert "ABCDEFGHIJKL" in outcome.markdown
     assert "MUST-BE-TRUNCATED" not in outcome.markdown
-    assert outcome.markdown.endswith(
-        "## References\n\n"
-        "- [https://example.com/a](https://example.com/a)"
-    )
+    body, _, references = outcome.markdown.partition("\n\n参考文献\n\n")
+    assert "#" not in body
+    assert "http" not in body
+    assert references == "[1] https://example.com/a"
 
 
 def test_writer_can_build_fallback_without_calling_provider() -> None:
@@ -200,7 +205,11 @@ def test_writer_can_build_fallback_without_calling_provider() -> None:
 
     assert outcome.used_fallback is True
     assert "time_budget" in outcome.markdown
-    assert CONTEXT.strip() in outcome.markdown
+    assert "Source: [1]" in outcome.markdown
+    body, _, references = outcome.markdown.partition("\n\n参考文献\n\n")
+    assert "#" not in body
+    assert "http" not in body
+    assert references == "[1] https://example.com/a"
 
 
 def test_writer_rejects_non_positive_context_limit() -> None:
