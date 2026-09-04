@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,11 @@ from deeptrace.config import Settings
 def _set_required_environment(
     monkeypatch: pytest.MonkeyPatch, model_path: Path
 ) -> None:
+    monkeypatch.setattr(
+        "deeptrace.config.settings.load_dotenv", lambda *args, **kwargs: False
+    )
+    for name in [key for key in os.environ if key.startswith("DEEPTRACE_")]:
+        monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("OPENAI_API_KEY", "real-value-not-used")
     monkeypatch.setenv("OPENAI_BASE_URL", "https://example.com/v1")
     monkeypatch.setenv("OPENAI_MODEL", "model")

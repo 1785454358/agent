@@ -64,3 +64,17 @@ def test_renderer_discards_model_reference_section_and_uncited_sources() -> None
         "References\n\n[1] https://example.com/a"
     )
     assert "example.com/b" not in report
+
+
+def test_renderer_strips_bare_heading_marker_line() -> None:
+    report = render_report(
+        "1 Finding\n\nClaim [[source:1]].\n\n###\n\n2 Next\n\nMore [[source:2]]。",
+        SOURCES,
+        "zh-CN",
+    )
+
+    body, _references = report.split("\n\n参考文献\n\n", maxsplit=1)
+
+    assert "#" not in body
+    assert "1 Finding" in body
+    assert "2 Next" in body

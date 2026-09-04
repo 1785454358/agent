@@ -6,7 +6,7 @@ from collections.abc import Sequence
 import re
 
 
-_ATX_HEADING = re.compile(r"(?m)^[ \t]{0,3}#{1,6}[ \t]+")
+_ATX_HEADING = re.compile(r"(?m)^[ \t]{0,3}#{1,6}(?:[ \t]+|[ \t]*$)")
 _REFERENCE_SECTION = re.compile(
     r"(?ims)^\s*#{0,6}\s*(?:参考文献|references)\s*$.*\Z"
 )
