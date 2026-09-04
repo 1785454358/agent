@@ -58,27 +58,39 @@ def test_small_context_skips_embedding(raw_document) -> None:
     )
 
 
-def test_small_context_respects_result_limit_in_document_order(raw_document) -> None:
-    second = raw_document.model_copy(
+def test_small_documents_over_limit_use_embeddings_so_later_source_can_win(
+    raw_document,
+) -> None:
+    documents = [
+        raw_document.model_copy(
+            update={
+                "doc_id": f"doc-{index:02d}",
+                "final_url": f"https://example.com/{index}",
+                "title": f"来源 {index}",
+                "content": "普通内容",
+            }
+        )
+        for index in range(10)
+    ]
+    relevant = raw_document.model_copy(
         update={
-            "doc_id": "doc-02",
-            "final_url": "https://example.com/b",
-            "title": "第二来源",
-            "content": "第二页正文",
+            "doc_id": "doc-10",
+            "final_url": "https://example.com/relevant",
+            "title": "相关来源",
+            "content": "相关标记",
         }
     )
+    documents.append(relevant)
     compressor = context_module.ContextCompressor(
-        SpyEmbeddingRuntime(), direct_threshold_chars=8000
+        DeterministicEmbeddingRuntime(), direct_threshold_chars=8000
     )
 
-    context = asyncio.run(
-        compressor.aget_context("问题", [raw_document, second], max_results=1)
-    )
+    context = asyncio.run(compressor.aget_context("相关", documents, max_results=10))
 
     assert context == (
-        "Source: https://example.com/a\n"
-        "Title: 来源标题\n"
-        "Content: 整页正文唯一标记\n"
+        "Source: https://example.com/relevant\n"
+        "Title: 相关来源\n"
+        "Content: 相关标记\n"
     )
 
 

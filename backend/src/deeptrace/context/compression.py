@@ -3,20 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from typing import Sequence
 
 from deeptrace.context.embeddings import CompressionRuntime
 from deeptrace.models import RawDocument
 
 _MAX_CONTEXT_RESULTS = 10
-
-
-@dataclass(frozen=True, slots=True)
-class _ContextChunk:
-    document: RawDocument
-    text: str
-    order: int
 
 
 def format_document_context(document: RawDocument, content: str) -> str:
@@ -80,35 +72,33 @@ class ContextCompressor:
         documents: Sequence[RawDocument],
         limit: int,
     ) -> str:
-        candidates: list[_ContextChunk] = []
+        candidates: list[tuple[RawDocument, str, int]] = []
         for document in documents:
             for text in _split_text(
                 document.content.strip(),
                 size=self._chunk_size,
                 overlap=self._chunk_overlap,
             ):
-                candidates.append(
-                    _ContextChunk(document=document, text=text, order=len(candidates))
-                )
+                candidates.append((document, text, len(candidates)))
         if not candidates:
             return ""
 
-        vectors = self._runtime.embed([candidate.text for candidate in candidates])
+        vectors = self._runtime.embed([text for _document, text, _order in candidates])
         scores = vectors @ self._runtime.query_vector(query)
-        ranked = sorted(
+        ranked_indices = sorted(
             (
-                (float(scores[index]), candidate)
-                for index, candidate in enumerate(candidates)
+                index
+                for index in range(len(candidates))
                 if float(scores[index]) >= self._similarity_threshold
             ),
-            key=lambda item: (-item[0], item[1].order),
+            key=lambda index: (-float(scores[index]), candidates[index][2]),
         )[:limit]
         selected = sorted(
-            (candidate for _score, candidate in ranked), key=lambda item: item.order
+            (candidates[index] for index in ranked_indices), key=lambda item: item[2]
         )
         return "\n".join(
-            format_document_context(candidate.document, candidate.text)
-            for candidate in selected
+            format_document_context(document, text)
+            for document, text, _order in selected
         )
 
     async def aget_context(
@@ -128,7 +118,10 @@ class ContextCompressor:
 
         limit = min(max_results, _MAX_CONTEXT_RESULTS)
         total_chars = sum(len(document.content.strip()) for document in valid_documents)
-        if total_chars < self._direct_threshold_chars:
+        if (
+            total_chars < self._direct_threshold_chars
+            and len(valid_documents) <= max_results
+        ):
             return "\n".join(
                 format_document_context(document, document.content)
                 for document in valid_documents[:limit]
