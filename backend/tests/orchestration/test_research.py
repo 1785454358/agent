@@ -1,0 +1,293 @@
+from __future__ import annotations
+
+import asyncio
+from datetime import UTC, datetime
+from pathlib import Path
+import sys
+import threading
+import time
+from types import ModuleType, SimpleNamespace
+from typing import Any
+
+
+# Task 3 intentionally deletes modules still imported by the legacy package facade.
+# Load the new module through namespace packages until Tasks 5-6 replace that facade.
+SRC_ROOT = Path(__file__).resolve().parents[2] / "src" / "deeptrace"
+if "deeptrace" not in sys.modules:
+    deeptrace_package = ModuleType("deeptrace")
+    deeptrace_package.__path__ = [str(SRC_ROOT)]
+    sys.modules["deeptrace"] = deeptrace_package
+if "deeptrace.orchestration" not in sys.modules:
+    orchestration_package = ModuleType("deeptrace.orchestration")
+    orchestration_package.__path__ = [str(SRC_ROOT / "orchestration")]
+    sys.modules["deeptrace.orchestration"] = orchestration_package
+
+from deeptrace.context import ContextCompressor
+from deeptrace.models import RawDocument, ScraperUsed
+from deeptrace.orchestration.budget import GlobalBudget
+from deeptrace.orchestration.research import ParallelResearchService
+
+
+class DirectOnlyRuntime:
+    def embed(self, texts: list[str]) -> Any:
+        raise AssertionError("small test documents must skip embeddings")
+
+    def query_vector(self, query: str) -> Any:
+        raise AssertionError("small test documents must skip embeddings")
+
+
+class SearchStub:
+    def __init__(
+        self,
+        results_by_query: dict[str, list[str] | BaseException],
+        *,
+        delay: float = 0,
+    ) -> None:
+        self._results_by_query = results_by_query
+        self._delay = delay
+        self.calls: list[str] = []
+        self._active = 0
+        self.max_active = 0
+        self._lock = threading.Lock()
+
+    def __call__(
+        self,
+        _tools: object,
+        query: str,
+        max_results: int = 5,
+        target_years: set[int] | None = None,
+    ) -> dict[str, Any]:
+        del target_years
+        with self._lock:
+            self.calls.append(query)
+            self._active += 1
+            self.max_active = max(self.max_active, self._active)
+        try:
+            if self._delay:
+                time.sleep(self._delay)
+            value = self._results_by_query[query]
+            if isinstance(value, BaseException):
+                raise value
+            return {
+                "ok": True,
+                "query": query,
+                "results": [
+                    {"title": f"title-{index}", "url": url, "snippet": ""}
+                    for index, url in enumerate(value[:max_results])
+                ],
+            }
+        finally:
+            with self._lock:
+                self._active -= 1
+
+
+class CountingFetcher:
+    def __init__(self, *, failures: set[str] | None = None, delay: float = 0) -> None:
+        self.calls: list[str] = []
+        self.failures = failures or set()
+        self.delay = delay
+        self.active = 0
+        self.max_active = 0
+
+    async def fetch(self, url: str) -> RawDocument:
+        self.calls.append(url)
+        self.active += 1
+        self.max_active = max(self.max_active, self.active)
+        try:
+            if self.delay:
+                await asyncio.sleep(self.delay)
+            if url in self.failures:
+                raise RuntimeError("fetch exploded")
+            slug = url.rsplit("/", 1)[-1]
+            return make_document(url, slug)
+        finally:
+            self.active -= 1
+
+
+def make_document(url: str, marker: str) -> RawDocument:
+    return RawDocument(
+        doc_id=f"doc-{marker}",
+        requested_url=url,
+        final_url=url,
+        canonical_url=url,
+        title=f"Title {marker}",
+        content=f"Content {marker}",
+        content_hash=f"hash-{marker}",
+        fetched_at=datetime.now(UTC),
+        scraper_used=ScraperUsed.HTTPX_TRAFILATURA,
+        status="success",
+    )
+
+
+def make_settings(**overrides: Any) -> SimpleNamespace:
+    values = {
+        "max_search_results_per_query": 5,
+        "scraper_concurrency": 15,
+        "context_max_results": 10,
+        "max_fetched_pages": 20,
+        "max_runtime_seconds": 300,
+        "max_total_tokens": 0,
+        "max_cost_usd": None,
+    }
+    values.update(overrides)
+    return SimpleNamespace(**values)
+
+
+def make_service(
+    results_by_query: dict[str, list[str] | BaseException],
+    *,
+    search_delay: float = 0,
+    fetch_delay: float = 0,
+    failures: set[str] | None = None,
+    settings: SimpleNamespace | None = None,
+    budget: GlobalBudget | None = None,
+) -> tuple[ParallelResearchService, SearchStub, CountingFetcher]:
+    search = SearchStub(results_by_query, delay=search_delay)
+    fetcher = CountingFetcher(failures=failures, delay=fetch_delay)
+    service = ParallelResearchService(
+        tools=object(),
+        fetcher=fetcher,
+        compressor=ContextCompressor(DirectOnlyRuntime()),
+        settings=settings or make_settings(),
+        budget=budget,
+        search=search,
+    )
+    return service, search, fetcher
+
+
+def test_collect_runs_all_query_searches_concurrently() -> None:
+    service, search, _fetcher = make_service(
+        {"a": ["https://e.test/a"], "b": ["https://e.test/b"]},
+        search_delay=0.05,
+    )
+
+    started = time.perf_counter()
+    _context, _documents, sources, results = asyncio.run(
+        service.acollect("root", ["a", "b"], None)
+    )
+
+    assert time.perf_counter() - started < 0.09
+    assert search.max_active == 2
+    assert [item.query for item in results] == ["a", "b"]
+    assert sources == ["https://e.test/a", "https://e.test/b"]
+
+
+def test_collect_claims_duplicate_urls_once_after_search() -> None:
+    service, _search, fetcher = make_service(
+        {
+            "a": ["https://e.test/shared?utm_source=a"],
+            "b": ["https://e.test/shared?utm_source=b"],
+        }
+    )
+
+    _context, _documents, _sources, results = asyncio.run(
+        service.acollect("root", ["a", "b"], None)
+    )
+
+    assert fetcher.calls == ["https://e.test/shared"]
+    assert [[doc.final_url for doc in item.documents] for item in results] == [
+        ["https://e.test/shared"],
+        ["https://e.test/shared"],
+    ]
+
+
+def test_collect_reuses_initial_search_for_original_question() -> None:
+    service, search, fetcher = make_service(
+        {"generated": ["https://e.test/generated"]}
+    )
+    initial = {
+        "ok": True,
+        "query": "root",
+        "results": [
+            {"title": "root", "url": "https://e.test/root", "snippet": ""}
+        ],
+    }
+
+    _context, _documents, sources, results = asyncio.run(
+        service.acollect("root", ["generated", "root"], initial)
+    )
+
+    assert search.calls == ["generated"]
+    assert fetcher.calls == ["https://e.test/generated", "https://e.test/root"]
+    assert sources == ["https://e.test/generated", "https://e.test/root"]
+    assert [item.candidate_count for item in results] == [1, 1]
+
+
+def test_collect_uses_one_shared_fetch_semaphore() -> None:
+    settings = make_settings(scraper_concurrency=2)
+    service, _search, fetcher = make_service(
+        {"a": [f"https://e.test/{index}" for index in range(5)]},
+        fetch_delay=0.01,
+        settings=settings,
+    )
+
+    asyncio.run(service.acollect("root", ["a"], None))
+
+    assert fetcher.max_active == 2
+
+
+def test_cached_pages_do_not_consume_network_page_budget() -> None:
+    settings = make_settings(max_fetched_pages=1)
+    budget = GlobalBudget(settings, datetime.now(UTC))
+    service, _search, fetcher = make_service(
+        {
+            "a": [
+                "https://e.test/cached",
+                "https://e.test/network",
+                "https://e.test/skipped",
+            ]
+        },
+        settings=settings,
+        budget=budget,
+    )
+    service.cache_documents([make_document("https://e.test/cached", "cached")])
+
+    _context, documents, sources, results = asyncio.run(
+        service.acollect("root", ["a"], None)
+    )
+
+    assert fetcher.calls == ["https://e.test/network"]
+    assert budget.pages_used == 1
+    assert set(documents) == {"doc-cached", "doc-network"}
+    assert sources == ["https://e.test/cached", "https://e.test/network"]
+    assert results[0].fetch_success_count == 2
+    assert results[0].fetch_failure_count == 1
+    assert results[0].errors == ["page_budget"]
+
+
+def test_collect_preserves_successful_queries_when_siblings_fail() -> None:
+    service, _search, _fetcher = make_service(
+        {
+            "search-fails": RuntimeError("search exploded"),
+            "partial": ["https://e.test/good", "https://e.test/bad"],
+        },
+        failures={"https://e.test/bad"},
+    )
+
+    context, documents, sources, results = asyncio.run(
+        service.acollect("root", ["search-fails", "partial"], None)
+    )
+
+    assert "Content good" in context
+    assert set(documents) == {"doc-good"}
+    assert sources == ["https://e.test/good"]
+    assert results[0].errors == ["search_failed"]
+    assert results[1].fetch_success_count == 1
+    assert results[1].fetch_failure_count == 1
+    assert results[1].errors == ["fetch_failed"]
+
+
+def test_initial_search_uses_the_configured_result_limit() -> None:
+    service, search, _fetcher = make_service(
+        {"root": [f"https://e.test/{index}" for index in range(8)]},
+        settings=make_settings(max_search_results_per_query=3),
+    )
+
+    payload = asyncio.run(service.asearch_initial("root"))
+
+    assert search.calls == ["root"]
+    assert [item["url"] for item in payload["results"]] == [
+        "https://e.test/0",
+        "https://e.test/1",
+        "https://e.test/2",
+    ]
