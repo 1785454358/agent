@@ -3,11 +3,9 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 
 from deeptrace.models import (
-    Claim,
     SectionResult,
     TaskCompletion,
     TaskCoverage,
-    TaskVerificationSummary,
 )
 from deeptrace.orchestration.nodes import ResearchWorkflowNodes
 
@@ -22,7 +20,6 @@ def test_researcher_provider_error_becomes_task_failure(research_plan) -> None:
     settings = SimpleNamespace(
         hard_max_steps=12,
         max_fetched_pages=20,
-        max_api_tokens=120_000,
         max_cost_usd=None,
         max_runtime_seconds=600,
         max_task_rounds=3,
@@ -64,61 +61,11 @@ def test_researcher_provider_error_becomes_task_failure(research_plan) -> None:
     assert update["events"][0].event_type == "task.failed"
 
 
-def test_task_token_budget_does_not_force_global_finalize(research_plan) -> None:
+def test_task_index_advances_on_finalize(research_plan) -> None:
     task = research_plan.tasks[0]
     settings = SimpleNamespace(
         hard_max_steps=12,
         max_fetched_pages=20,
-        max_api_tokens=120_000,
-        max_cost_usd=None,
-        max_runtime_seconds=600,
-        max_task_rounds=3,
-        input_cost_per_million=None,
-        output_cost_per_million=None,
-    )
-    nodes = ResearchWorkflowNodes(
-        planner=None,
-        researcher=None,
-        writer=None,
-        executor=None,
-        settings=settings,
-        runtime=None,
-    )
-    coverage = TaskCoverage(
-        task_id=task.task_id,
-        status="running",
-        api_token_budget=100,
-        api_tokens_used=100,
-    )
-    state = {
-        "user_query": research_plan.original_query,
-        "research_plan": research_plan,
-        "current_task_index": 0,
-        "task_coverages": {task.task_id: coverage},
-        "messages": [],
-        "notes": {},
-        "force_finalize": False,
-        "step_count": 1,
-        "fetched_page_count": 0,
-        "api_token_count": 100,
-        "estimated_cost_usd": 0.0,
-        "started_at": datetime.now(UTC).isoformat(),
-        "termination_reason": "",
-    }
-
-    update = asyncio.run(nodes.research_node(state))
-
-    assert update["pending_task_completion"].summary == "task_token_budget"
-    assert update["force_finalize"] is False
-    assert update["termination_reason"] == ""
-
-
-def test_task_index_advances_only_after_verification(research_plan) -> None:
-    task = research_plan.tasks[0]
-    settings = SimpleNamespace(
-        hard_max_steps=12,
-        max_fetched_pages=20,
-        max_api_tokens=120_000,
         max_cost_usd=None,
         max_runtime_seconds=600,
         max_task_rounds=3,
@@ -150,34 +97,15 @@ def test_task_index_advances_only_after_verification(research_plan) -> None:
     provisional = asyncio.run(nodes.complete_task_node(state))
 
     assert "current_task_index" not in provisional
-    assert provisional["verification_task_id"] == task.task_id
     section = provisional["section_results"][task.task_id]
-    claim = Claim(
-        claim_id="claim-01",
-        task_id=task.task_id,
-        section_id=task.section_id,
-        text="关键事实",
-        kind="factual",
-        importance="key",
-        evidence_ids=["ev-01"],
-    )
-    summary = TaskVerificationSummary(
-        task_id=task.task_id,
-        verified_claim_ids=[claim.claim_id],
-    )
-    final_state = {
-        **state,
-        "section_results": {task.task_id: section},
-        "claims": {claim.claim_id: claim},
-        "task_verification": {task.task_id: summary},
-        "verification_gaps": {},
-        "verification_task_id": task.task_id,
-        "verification_mode": "initial",
-    }
 
-    finalized = asyncio.run(nodes.finalize_task_node(final_state))
+    finalized = asyncio.run(
+        nodes.finalize_task_node(
+            {**state, "section_results": {task.task_id: section}}
+        )
+    )
 
     assert finalized["current_task_index"] == 1
-    assert finalized["section_results"][task.task_id].claim_ids == [
-        claim.claim_id
-    ]
+    assert (
+        finalized["section_results"][task.task_id].task_id == task.task_id
+    )

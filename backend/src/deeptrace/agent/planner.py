@@ -10,6 +10,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 import json_repair
+from langchain_core.messages import HumanMessage
 
 from deeptrace.agent._shared import add_usage, message_text, message_usage
 from deeptrace.models import (
@@ -44,6 +45,12 @@ class PlannerDraft(BaseModel):
 
 def parse_planner_draft(raw: str) -> PlannerDraft:
     """从普通 Provider 文本中提取、修复并严格校验 Planner JSON。"""
+    stripped = raw.strip()
+    if stripped.startswith("```"):
+        stripped = chr(10).join(stripped.splitlines()[1:])
+        if stripped.rstrip().endswith("```"):
+            stripped = stripped.rstrip()[:-3]
+        raw = stripped
     start = raw.find("{")
     end = raw.rfind("}")
     if start < 0 or end < start:
@@ -164,7 +171,9 @@ class PlannerAgent:
         self._queries_per_task = queries_per_task
         self._min_sources = min_sources
 
-    async def aplan(self, question: str) -> tuple[ResearchPlan, TokenUsage, bool]:
+    async def aplan(
+        self, question: str
+    ) -> tuple[ResearchPlan, TokenUsage, bool, str]:
         total = TokenUsage()
         messages = build_planner_messages(
             question,
@@ -172,9 +181,20 @@ class PlannerAgent:
             max_tasks=self._max_tasks,
             queries_per_task=self._queries_per_task,
         )
-        for _attempt in range(2):
+        validation_error = ""
+        for _attempt in range(3):
+            attempt_messages = list(messages)
+            if _attempt and validation_error:
+                attempt_messages.append(
+                    HumanMessage(
+                        content=(
+                            "上次输出校验失败，请只返回修正后的 JSON。"
+                            f"校验错误：{validation_error}"
+                        )
+                    )
+                )
             try:
-                response = await self._model.ainvoke(messages)
+                response = await self._model.ainvoke(attempt_messages)
                 total = add_usage(total, message_usage(response))
                 parsed = parse_planner_draft(message_text(response))
                 return (
@@ -186,7 +206,14 @@ class PlannerAgent:
                     ),
                     total,
                     False,
+                    "",
                 )
-            except Exception:
+            except Exception as exc:
+                validation_error = str(exc)
                 continue
-        return build_fallback_plan(question, self._min_sources), total, True
+        return (
+            build_fallback_plan(question, self._min_sources),
+            total,
+            True,
+            validation_error,
+        )

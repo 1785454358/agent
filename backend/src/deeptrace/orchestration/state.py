@@ -8,10 +8,8 @@ from typing import Annotated, Any, Literal, TypedDict
 from langchain_core.messages import BaseMessage
 
 from deeptrace.models import (
-    Claim,
     ContextAudit,
     DocumentChunk,
-    Evidence,
     PendingFetch,
     RawDocument,
     ResearchNote,
@@ -19,14 +17,10 @@ from deeptrace.models import (
     RoundTokenMetrics,
     RunEvent,
     SectionResult,
-    Source,
     TaskCompletion,
     TaskCoverage,
-    TaskVerificationSummary,
     TokenUsage,
     UsageBreakdown,
-    VerificationGap,
-    VerificationResult,
     add_token_usages,
 )
 
@@ -62,11 +56,17 @@ def merge_usage_breakdown(left: UsageBreakdown, right: UsageBreakdown) -> UsageB
         researcher=add_token_usages(left.researcher, right.researcher),
         compression=add_token_usages(left.compression, right.compression),
         writer=add_token_usages(left.writer, right.writer),
-        claim_extractor=add_token_usages(
-            left.claim_extractor, right.claim_extractor
-        ),
-        verifier=add_token_usages(left.verifier, right.verifier),
     )
+
+
+def merge_stage_seconds(
+    left: dict[str, float], right: dict[str, float]
+) -> dict[str, float]:
+    """按环节累加各节点报告的耗时秒数，保持 reducer 输入不可变。"""
+    merged = dict(left)
+    for stage, seconds in right.items():
+        merged[stage] = merged.get(stage, 0.0) + seconds
+    return merged
 
 
 class GraphState(TypedDict):
@@ -78,16 +78,6 @@ class GraphState(TypedDict):
     documents: Annotated[dict[str, RawDocument], merge_dicts]
     chunks: Annotated[dict[str, DocumentChunk], merge_dicts]
     notes: Annotated[dict[str, ResearchNote], merge_dicts]
-    sources: Annotated[dict[str, Source], merge_dicts]
-    evidence: Annotated[dict[str, Evidence], merge_dicts]
-    claims: Annotated[dict[str, Claim], merge_dicts]
-    verification_results: Annotated[
-        dict[str, VerificationResult], merge_dicts
-    ]
-    verification_gaps: Annotated[dict[str, VerificationGap], merge_dicts]
-    task_verification: Annotated[
-        dict[str, TaskVerificationSummary], merge_dicts
-    ]
     queries: Annotated[list[str], append_unique]
     pending_fetches: list[PendingFetch]
     pending_tool_order: list[str]
@@ -97,9 +87,6 @@ class GraphState(TypedDict):
     task_coverages: Annotated[dict[str, TaskCoverage], merge_dicts]
     section_results: Annotated[dict[str, SectionResult], merge_dicts]
     pending_task_completion: TaskCompletion | None
-    verification_task_id: str | None
-    verification_mode: Literal["initial", "supplement", "done"]
-    verification_tool_rounds: int
     force_finalize: bool
     events: Annotated[list[RunEvent], operator.add]
     started_at: str
@@ -108,8 +95,8 @@ class GraphState(TypedDict):
     estimated_cost_usd: Annotated[float, operator.add]
     provider_usage: Annotated[TokenUsage, merge_token_usage]
     role_usage: Annotated[UsageBreakdown, merge_usage_breakdown]
+    stage_seconds: Annotated[dict[str, float], merge_stage_seconds]
     used_note_ids: list[str]
-    used_claim_ids: list[str]
     token_metrics: Annotated[list[RoundTokenMetrics], operator.add]
     context_audits: Annotated[list[ContextAudit], operator.add]
     step_count: int
@@ -118,3 +105,4 @@ class GraphState(TypedDict):
     unresolved_gaps: list[str]
     final_answer: str
     termination_reason: str
+    final_sources: list[str]

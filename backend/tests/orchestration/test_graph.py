@@ -5,15 +5,9 @@ from types import SimpleNamespace
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
 
-from deeptrace.models import TaskCompletion
 from deeptrace.orchestration import (
     build_research_graph,
     route_after_agent,
-    route_after_research,
-    route_after_task,
-    route_after_task_completion,
-    route_after_tools,
-    route_after_verification,
     ToolCallResult,
     build_unverified_finalization,
     build_tool_messages,
@@ -39,86 +33,11 @@ def test_tool_messages_follow_original_calls_when_results_finish_out_of_order() 
     assert [json.loads(message.content)["title"] for message in messages] == ["A", "B"]
 
 
-def test_graph_compiles_and_router_distinguishes_tools_from_completion() -> None:
+def test_graph_compiles_with_parallel_pipeline() -> None:
     graph = build_research_graph()
-    assert {
-        "plan",
-        "start_task",
-        "research",
-        "tools",
-        "complete_task",
-        "evidence_ingest",
-        "claim_extract",
-        "verify",
-        "start_verification_research",
-        "verification_research",
-        "finalize_task",
-        "writer",
-    }.issubset(graph.get_graph().nodes)
-
-    tool_message = AIMessage(
-        content="",
-        tool_calls=[
-            {
-                "id": "call-search",
-                "name": "search_web",
-                "args": {"query": "Agent 新闻"},
-                "type": "tool_call",
-            }
-        ],
+    assert {"plan", "research_all", "writer"}.issubset(
+        graph.get_graph().nodes
     )
-    assert route_after_research(
-        {"messages": [tool_message], "pending_task_completion": None}
-    ) == "tools"
-    completion = AIMessage(
-        content="",
-        tool_calls=[{
-            "id": "done-1",
-            "name": "complete_research_task",
-            "args": {
-                "task_id": "task-01",
-                "summary": "完成",
-                "covered_topics": [],
-                "unresolved_topics": [],
-            },
-            "type": "tool_call",
-        }],
-    )
-    assert route_after_research(
-        {"messages": [completion], "pending_task_completion": None}
-    ) == "complete_task"
-    assert route_after_research({
-        "messages": [],
-        "pending_task_completion": TaskCompletion(
-            task_id="task-01", summary="预算结束"
-        ),
-    }) == "complete_task"
-    assert route_after_task(
-        {"research_plan": None, "current_task_index": 0}
-    ) == "writer"
-
-
-def test_task_completion_and_verification_routes_are_bounded() -> None:
-    assert route_after_task_completion({}) == "evidence_ingest"
-    assert route_after_verification(
-        {
-            "verification_mode": "initial",
-            "verification_gaps": {
-                "gap-01": SimpleNamespace(priority="high")
-            },
-        }
-    ) == "start_verification_research"
-    assert route_after_verification(
-        {
-            "verification_mode": "supplement",
-            "verification_gaps": {
-                "gap-01": SimpleNamespace(priority="high")
-            },
-        }
-    ) == "finalize_task"
-    assert route_after_tools(
-        {"verification_mode": "supplement"}
-    ) == "verification_research"
 
 
 def test_budget_selects_final_model_only_when_research_should_end() -> None:

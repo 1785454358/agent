@@ -1,21 +1,56 @@
-import json
-from datetime import UTC, datetime
+import asyncio
 from types import SimpleNamespace
 
-import pytest
-
 from deeptrace.agent.writer import (
-    ReportBlock,
-    VerifiedReportSection,
-    VerifiedWriterOutput,
     WriterAgent,
+    citation_numbers,
     find_unqualified_year_mentions,
     is_language_consistent,
-    render_verified_output,
-    sources_from_used_claims,
-    validate_writer_output,
 )
-from deeptrace.models import Claim, Evidence, Source, VerificationResult
+
+
+def _run(awaitable):
+    return asyncio.run(awaitable)
+
+
+def _note(**updates):
+    from deeptrace.models import ResearchNote
+
+    note = ResearchNote(
+        note_id="note-01",
+        doc_id="doc-01",
+        task_id="task-01",
+        section_id="section-01",
+        active_query="AI Agent 技术进展",
+        title="来源标题",
+        key_points=["关键进展"],
+        evidence_snippets=["原文摘录。"],
+        source_url="https://example.com/a",
+        relevance_score=0.8,
+        compression_status="compressed",
+    )
+    return note.model_copy(update=updates)
+
+
+class ScriptedModel:
+    """按脚本返回 Markdown 正文，并记录收到的消息。"""
+
+    def __init__(self, bodies: list[str]) -> None:
+        self._bodies = bodies
+        self.calls = 0
+        self.messages: list[list] = []
+
+    async def ainvoke(self, messages):
+        self.calls += 1
+        self.messages.append(messages)
+        body = self._bodies[min(self.calls, len(self._bodies)) - 1]
+        return SimpleNamespace(
+            content=body,
+            usage_metadata={"input_tokens": 1, "output_tokens": 1, "total_tokens": 2},
+        )
+
+
+GOOD_BODY = "# 2024 年智能体进展\n\n## 技术进展\n\n- 关键进展[^1]。"
 
 
 def test_writer_quality_validators() -> None:
@@ -31,187 +66,115 @@ def test_writer_quality_validators() -> None:
     ) == []
 
 
-def _lineage(verdict: str = "verified"):
-    claim = Claim(
-        claim_id="claim-01",
-        task_id="task-01",
-        section_id="section-01",
-        text="产品在 2024 年发布",
-        kind="temporal",
-        importance="key",
-        evidence_ids=["ev-01"],
-    )
-    evidence = Evidence(
-        evidence_id="ev-01",
-        source_id="source-01",
-        doc_id="doc-01",
-        note_id="note-01",
-        task_id="task-01",
-        section_id="section-01",
-        quote="产品于 2024 年正式发布。",
-        quote_hash="hash",
-        char_start=0,
-        char_end=13,
-        location_status="exact",
-        temporal_relation="in_range",
-    )
-    source = Source(
-        source_id="source-01",
-        doc_id="doc-01",
-        requested_url="https://example.com/release",
-        final_url="https://example.com/release",
-        canonical_url=None,
-        title="正式公告",
-        source_kind="official",
-        fetched_at=datetime.now(UTC),
-        scraper_used="httpx_trafilatura",
-        content_hash="hash",
-    )
-    result = VerificationResult(
-        claim_id=claim.claim_id,
-        verdict=verdict,
-        reason="核验完成",
-        supporting_evidence_ids=[evidence.evidence_id],
-        verified_at=datetime.now(UTC),
-    )
-    return claim, evidence, source, result
+def test_citation_numbers_extracted_from_body_only() -> None:
+    body = "- 一[^1]；二[^2][^3]。"
+    assert citation_numbers(body) == {1, 2, 3}
+    assert citation_numbers("没有引用") == set()
 
 
-def _output(claim_id: str) -> VerifiedWriterOutput:
-    return VerifiedWriterOutput(
-        title="报告",
-        sections=[
-            VerifiedReportSection(
-                heading="进展",
-                blocks=[
-                    ReportBlock(
-                        kind="fact",
-                        text="产品发布",
-                        claim_ids=[claim_id],
-                    )
-                ],
-            )
-        ],
-        used_claim_ids=[claim_id],
+def test_awrite_returns_mechanical_source_section(research_plan, section_result) -> None:
+    model = ScriptedModel([GOOD_BODY])
+    agent = WriterAgent(model)
+
+    outcome = _run(
+        agent.awrite(
+            plan=research_plan,
+            sections=[section_result],
+            notes_by_section={"task-01": [_note()]},
+            termination_reason="completed",
+        )
     )
 
-
-def test_writer_rejects_unsupported_claim_id() -> None:
-    claim, _evidence, _source, result = _lineage("unsupported")
-
-    violations = validate_writer_output(
-        _output(claim.claim_id), {claim.claim_id: result}
-    )
-
-    assert "claim_not_writable" in violations
+    assert model.calls == 1
+    assert outcome.used_fallback is False
+    assert outcome.sources == ["https://example.com/a"]
+    assert outcome.used_note_ids == ["note-01"]
+    assert outcome.usage.total_tokens == 2
+    assert "[^1]: [来源标题](https://example.com/a)" in outcome.markdown
+    assert "## 来源" in outcome.markdown
 
 
-def test_renderer_resolves_claim_to_exact_source() -> None:
-    claim, evidence, source, result = _lineage()
-
-    markdown = render_verified_output(
-        _output(claim.claim_id),
-        {claim.claim_id: claim},
-        {claim.claim_id: result},
-        {evidence.evidence_id: evidence},
-        {source.source_id: source},
-    )
-
-    assert "[[claim:" not in markdown
-    assert source.final_url in markdown
-    assert evidence.quote in markdown
-
-
-def test_sources_only_include_used_claims() -> None:
-    claim, evidence, source, _result = _lineage()
-
-    assert sources_from_used_claims(
-        [claim.claim_id],
-        {claim.claim_id: claim},
-        {evidence.evidence_id: evidence},
-        {source.source_id: source},
-    ) == [source.final_url]
-
-
-@pytest.mark.anyio
-async def test_writer_retries_unsupported_then_accepts_verified(
+def test_awrite_retries_invalid_citation_then_succeeds(
     research_plan, section_result
 ) -> None:
-    claim, evidence, source, verified = _lineage()
-    unsupported = verified.model_copy(
-        update={"claim_id": "claim-bad", "verdict": "unsupported"}
-    )
-
-    class Model:
-        calls = 0
-
-        async def ainvoke(self, _messages):
-            self.calls += 1
-            claim_id = "claim-bad" if self.calls == 1 else claim.claim_id
-            return SimpleNamespace(
-                content=json.dumps(
-                    {
-                        "title": "报告",
-                        "sections": [
-                            {
-                                "heading": "进展",
-                                "blocks": [
-                                    {
-                                        "kind": "fact",
-                                        "text": "产品发布",
-                                        "claim_ids": [claim_id],
-                                    }
-                                ],
-                            }
-                        ],
-                        "used_claim_ids": [claim_id],
-                    },
-                    ensure_ascii=False,
-                ),
-                usage_metadata={"total_tokens": 2},
-            )
-
-    model = Model()
+    model = ScriptedModel(["- 无效引用[^9]。", GOOD_BODY])
     agent = WriterAgent(model)
-    output, usage, fallback = await agent.awrite(
-        plan=research_plan,
-        sections=[section_result],
-        claims=[claim],
-        verification_results={
-            claim.claim_id: verified,
-            "claim-bad": unsupported,
-        },
-        evidence={evidence.evidence_id: evidence},
-        sources={source.source_id: source},
-        gaps=[],
-        termination_reason="completed",
+
+    outcome = _run(
+        agent.awrite(
+            plan=research_plan,
+            sections=[section_result],
+            notes_by_section={"task-01": [_note()]},
+            termination_reason="completed",
+        )
     )
 
     assert model.calls == 2
-    assert output.used_claim_ids == [claim.claim_id]
-    assert usage.total_tokens == 4
-    assert fallback is False
+    assert outcome.used_fallback is False
+    assert outcome.usage.total_tokens == 4
 
 
-@pytest.mark.anyio
-async def test_writer_falls_back_without_verified_claims(
+def test_awrite_falls_back_after_second_invalid_output(
     research_plan, section_result
 ) -> None:
-    claim, evidence, source, result = _lineage("unsupported")
-    agent = WriterAgent(SimpleNamespace())
+    model = ScriptedModel(["- 无效引用[^9]。", "- 仍然无效[^8]。"])
+    agent = WriterAgent(model)
 
-    output, usage, fallback = await agent.awrite(
-        plan=research_plan,
-        sections=[section_result],
-        claims=[claim],
-        verification_results={claim.claim_id: result},
-        evidence={evidence.evidence_id: evidence},
-        sources={source.source_id: source},
-        gaps=[],
-        termination_reason="completed",
+    outcome = _run(
+        agent.awrite(
+            plan=research_plan,
+            sections=[section_result],
+            notes_by_section={"task-01": [_note()]},
+            termination_reason="completed",
+        )
     )
 
-    assert fallback is True
-    assert output.used_claim_ids == []
-    assert usage.total_tokens == 0
-    assert output.sections[0].blocks[0].kind == "limitation"
+    assert model.calls == 2
+    assert outcome.used_fallback is True
+    assert "关键进展[^1]" in outcome.markdown
+    assert "[^1]: [来源标题](https://example.com/a)" in outcome.markdown
+
+
+def test_awrite_without_material_skips_model(research_plan, section_result) -> None:
+    model = ScriptedModel([GOOD_BODY])
+    agent = WriterAgent(model)
+
+    outcome = _run(
+        agent.awrite(
+            plan=research_plan,
+            sections=[section_result],
+            notes_by_section={"task-01": []},
+            termination_reason="time_budget",
+        )
+    )
+
+    assert model.calls == 0
+    assert outcome.used_fallback is True
+    assert outcome.sources == []
+    assert "局限" in outcome.markdown
+
+
+
+def test_duplicate_urls_share_one_source_number(research_plan) -> None:
+    from deeptrace.models import SectionResult, TaskCoverage
+
+    note_a = _note()
+    note_b = _note(note_id="note-02", doc_id="doc-02")
+    second_section = SectionResult(
+        task_id="task-02",
+        section_id="section-02",
+        title="应用进展",
+        summary="完成应用研究",
+        coverage=TaskCoverage(task_id="task-02"),
+        note_ids=[note_b.note_id],
+        source_urls=[note_b.source_url],
+    )
+    agent = WriterAgent(ScriptedModel([GOOD_BODY]))
+
+    sources, numbers = agent._numbered_sources(
+        [research_plan.tasks[0], research_plan.tasks[1]],
+        {"task-01": [note_a], "task-02": [note_b]},
+    )
+
+    assert len(sources) == 1
+    assert numbers[note_a.source_url] == 1

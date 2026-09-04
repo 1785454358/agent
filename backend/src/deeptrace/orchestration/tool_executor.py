@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from collections import Counter
+from datetime import UTC, datetime
 import json
+import time
 from typing import Any, Sequence
 
 from langchain_core.messages import BaseMessage, ToolMessage
@@ -143,6 +145,7 @@ class ToolExecutionUpdate:
     errors: list[str] = field(default_factory=list)
     usage: TokenUsage = field(default_factory=TokenUsage)
     estimated_cost_delta: float = 0.0
+    compression_seconds: float = 0.0
     search_candidate_count: int = 0
     fetch_success_count: int = 0
     fetch_failure_count: int = 0
@@ -161,6 +164,7 @@ class ToolExecutionUpdate:
             "provider_usage": self.usage,
             "role_usage": UsageBreakdown(compression=self.usage),
             "estimated_cost_usd": self.estimated_cost_delta,
+            "stage_seconds": {"compression": self.compression_seconds},
             "tool_outputs": {
                 str(message.tool_call_id): str(message.content)
                 for message in self.messages
@@ -201,6 +205,8 @@ class ResearchToolExecutor:
         self.tools = tools
         self.ledger = ledger
         self.settings = settings
+        self.budget = None
+        self._document_cache: dict[str, RawDocument] = {}
 
     @staticmethod
     def _task_identity(state: GraphState) -> tuple[str, str, list[str]]:
@@ -213,14 +219,16 @@ class ResearchToolExecutor:
         attempted = coverage.attempted_queries if coverage else []
         return task.task_id, task.section_id, list(attempted)
 
-    @staticmethod
     def _existing_document(
-        url: str, documents: Sequence[RawDocument]
+        self, url: str, documents: Sequence[RawDocument]
     ) -> RawDocument | None:
         try:
             normalized = normalize_url_before_fetch(url)
         except ValueError:
             return None
+        cached = self._document_cache.get(normalized)
+        if cached is not None:
+            return cached
         for document in documents:
             if normalized in {
                 document.requested_url,
@@ -255,6 +263,8 @@ class ResearchToolExecutor:
         accepted_queries: list[str] = []
         errors: list[str] = []
         candidate_count = 0
+        search_hits: list[tuple[str, int, list[str]]] = []
+        search_result_by_id: dict[str, ToolCallResult] = {}
 
         for order, call in enumerate(tool_calls):
             if call.get("name") != "search_web":
@@ -298,17 +308,26 @@ class ResearchToolExecutor:
                         )
             if not payload.get("ok"):
                 errors.append(str(payload.get("error", {}).get("code", "search_failed")))
-            results.append(ToolCallResult(str(call.get("id", "")), order, payload))
+            search_result = ToolCallResult(str(call.get("id", "")), order, payload)
+            results.append(search_result)
+            if payload.get("ok"):
+                search_result_by_id[search_result.tool_call_id] = search_result
+                search_hits.append(
+                    (
+                        search_result.tool_call_id,
+                        order,
+                        [
+                            str(item.get("url", ""))
+                            for item in payload.get("results", [])
+                        ],
+                    )
+                )
 
         active_query = accepted_queries[-1] if accepted_queries else (
             state.get("active_query") or state["user_query"]
         )
         pending: list[PendingFetch] = []
-        fetch_limit = (
-            getattr(self.settings, "max_verification_fetches_per_task", 3)
-            if state.get("verification_mode") == "supplement"
-            else 3
-        )
+        fetch_limit = 3
         accepted_fetches, rejected_fetches = select_fetch_tool_calls(
             tool_calls, max_fetches=fetch_limit
         )
@@ -336,6 +355,64 @@ class ResearchToolExecutor:
             elif name == "complete_research_task":
                 results.append(ToolCallResult(str(call.get("id", "")), order, {"ok": False, "error": {"code": "completion_not_external", "message": "完成工具必须由路由处理"}}))
 
+        # 搜索+抓取融合：把本轮剩余抓取配额自动分配给排名最靠前的搜索候选，
+        # 让搜索轮直接产出研究笔记，省掉“只搜不抓”的往返。
+        auto_ids: set[str] = set()
+        auto_slots = max(0, fetch_limit - len(pending))
+        if self.budget is not None:
+            page_budget_left = self.settings.max_fetched_pages - self.budget.pages_used
+        else:
+            page_budget_left = self.settings.max_fetched_pages - state.get(
+                "fetched_page_count", 0
+            )
+        auto_slots = max(0, min(auto_slots, page_budget_left))
+        taken_urls: list[str] = []
+        for item in pending:
+            try:
+                taken_urls.append(normalize_url_before_fetch(item.url))
+            except ValueError:
+                continue
+        for search_id, search_order, candidate_urls in search_hits:
+            for index, url in enumerate(candidate_urls):
+                if auto_slots <= 0:
+                    break
+                try:
+                    normalized = normalize_url_before_fetch(url)
+                except ValueError:
+                    continue
+                if normalized in taken_urls:
+                    continue
+                taken_urls.append(normalized)
+                if normalized not in self._document_cache:
+                    auto_slots -= 1
+                auto_id = f"{search_id}#auto{index}"
+                auto_ids.add(auto_id)
+                pending.append(PendingFetch(
+                    tool_call_id=auto_id, url=url,
+                    active_query=active_query, task_id=task_id,
+                    section_id=section_id, order=search_order,
+                ))
+
+        cached_items = [
+            item
+            for item in pending
+            if self._existing_document(item.url, []) is not None
+        ]
+        network_items = [
+            item for item in pending if item not in cached_items
+        ]
+        if self.budget is not None and network_items:
+            allowed = await self.budget.acquire_pages(
+                len(network_items), datetime.now(UTC)
+            )
+        else:
+            allowed = len(network_items)
+        for item in network_items[allowed:]:
+            if item.tool_call_id not in auto_ids:
+                results.append(ToolCallResult(item.tool_call_id, item.order, {"ok": False, "error": {"code": "page_budget", "message": "页面预算耗尽"}}))
+            errors.append("page_budget")
+        pending = [*cached_items, *network_items[:allowed]]
+
         current_documents = list(state.get("documents", {}).values())
         fetched = await asyncio.gather(
             *(self._fetch_one(item, current_documents) for item in pending)
@@ -346,12 +423,20 @@ class ResearchToolExecutor:
         for item, (value, is_new) in zip(pending, fetched, strict=True):
             if isinstance(value, WebFetchError):
                 payload = value.to_dict()
-                results.append(ToolCallResult(item.tool_call_id, item.order, payload))
+                if item.tool_call_id not in auto_ids:
+                    results.append(ToolCallResult(item.tool_call_id, item.order, payload))
                 errors.append(str(payload.get("error", {}).get("code", "fetch_failed")))
                 continue
             if is_new:
                 fetched_delta += 1
                 documents[value.doc_id] = value
+                for key in {
+                    value.requested_url,
+                    value.final_url,
+                    value.canonical_url,
+                }:
+                    if key:
+                        self._document_cache[key] = value
             pairs.append((item, value))
 
         chunks: dict[str, DocumentChunk] = {}
@@ -379,12 +464,15 @@ class ResearchToolExecutor:
             requests.append(CompressionRequest(
                 tool_call_id=item.tool_call_id, order=item.order,
                 document=document, selection=selection,
+                user_query=state["user_query"],
                 active_query=item.active_query, task_id=task_id,
                 section_id=section_id,
                 time_range=(state["research_plan"].time_range if state.get("research_plan") else None),
             ))
 
+        compress_started = time.perf_counter()
         outcomes = await self.compressor.compress_many(requests)
+        compression_seconds = time.perf_counter() - compress_started
         by_id = {outcome.tool_call_id: outcome for outcome in outcomes}
         total_usage = TokenUsage(
             input_tokens=sum(item.usage.input_tokens for item in outcomes),
@@ -409,7 +497,8 @@ class ResearchToolExecutor:
                     if note.compression_status != "irrelevant" and note.temporal_relation != "out_of_range":
                         new_note_count += 1
             if note is None:
-                results.append(ToolCallResult(item.tool_call_id, item.order, {"ok": False, "error": {"code": "compression_failed", "message": "压缩结果缺失"}}))
+                if item.tool_call_id not in auto_ids:
+                    results.append(ToolCallResult(item.tool_call_id, item.order, {"ok": False, "error": {"code": "compression_failed", "message": "压缩结果缺失"}}))
                 errors.append("compression_failed")
                 continue
             payload = _note_payload(note)
@@ -417,6 +506,13 @@ class ResearchToolExecutor:
                 json.dumps({"url": document.final_url, "content": document.content}, ensure_ascii=False),
                 json.dumps(payload, ensure_ascii=False),
             )
+            if item.tool_call_id in auto_ids:
+                search_result = search_result_by_id.get(
+                    item.tool_call_id.split("#", 1)[0]
+                )
+                if search_result is not None:
+                    search_result.payload.setdefault("auto_notes", []).append(payload)
+                continue
             results.append(ToolCallResult(item.tool_call_id, item.order, payload))
 
         return ToolExecutionUpdate(
@@ -431,6 +527,7 @@ class ResearchToolExecutor:
             errors=errors,
             usage=total_usage,
             estimated_cost_delta=float(estimated_cost or 0),
+            compression_seconds=compression_seconds,
             search_candidate_count=candidate_count,
             fetch_success_count=len(pairs),
             fetch_failure_count=sum(1 for error in errors if error not in {"deferred_batch_limit", "deferred_token_budget"}),

@@ -1,57 +1,154 @@
-"""相关块压缩为 ResearchNote，并提供可恢复的失败路径。"""
+"""入选块按向量相似度确定性压缩为 ResearchNote，全程零 LLM 调用。
+
+与 GPT-Researcher 的 compression 同思路：拆句、本地 embedding、按与双查询的
+相似度过滤，只保留最相关的原句作为 key_points 与 evidence_snippets。压缩
+不消耗任何 Provider token；事件时间改由入选句子中的日期规则提取。
+"""
 
 from __future__ import annotations
 
 import asyncio
+import calendar
 import hashlib
-import json
-from datetime import date
+import re
 from dataclasses import dataclass
+from datetime import date
 from typing import Any, Sequence
 
-import json_repair
-from pydantic import BaseModel, Field, ValidationError
+import numpy as np
 
+from deeptrace.context.embeddings import CompressionRuntime
 from deeptrace.context.retrieval import ChunkSelection
-from deeptrace.models import CompressionOutcome, RawDocument, ResearchNote, ResearchTimeRange, SourceKind, TokenUsage
 from deeptrace.context.temporal import normalize_temporal_relation
-from deeptrace.prompts.compression import build_compression_messages
+from deeptrace.models import (
+    CompressionOutcome,
+    RawDocument,
+    ResearchNote,
+    ResearchTimeRange,
+    TokenUsage,
+)
 
+_MAX_SENTENCE_CHARS = 220
+_MIN_SENTENCE_CHARS = 12
 
-class ResearchNotePayload(BaseModel):
-    """压缩模型必须返回的最小结构，不接受空笔记。"""
-    title: str = Field(min_length=1)
-    key_points: list[str] = Field(min_length=1)
-    evidence_snippets: list[str] = Field(min_length=1)
-    event_start_date: date | None = None
-    event_end_date: date | None = None
-    source_kind: SourceKind = "unknown"
-    temporal_scope: str = ""
+# 主切分：句末标点或换行；长句再按逗号级切分，保证片段仍是原文连续文本。
+_SENTENCE_PATTERN = re.compile(r"[^。！？!?；;\n\r]+[。！？!?；;]?")
+_CLAUSE_PATTERN = re.compile(r"[^，,、]+[，,、]?")
+
+# 中文与 ISO 风格日期：2024年10月23日 / 2024 年10月 / 2024年 / 2024-10-23 / 2024/10。
+# 年份后必须有分隔符，避免在英文日期（October 23, 2024）上误匹配裸年份。
+_DATE_PATTERN = re.compile(
+    r"(?P<year>19\d{2}|20\d{2})[ \t]*[年\-/.]"
+    r"(?:(?P<month>1[0-2]|0?[1-9])[ \t]*[月\-/.]"
+    r"(?:(?P<day>3[01]|[12]\d|0?[1-9])[ \t]*日?)?)?"
+)
+_ENGLISH_DATE_PATTERN = re.compile(
+    r"(?P<month_name>January|February|March|April|May|June|July|August|"
+    r"September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|"
+    r"Sept|Sep|Oct|Nov|Dec)"
+    r"\.?\s+(?:(?P<day>3[01]|[12]\d|0?[1-9])(?:st|nd|rd|th)?,?\s+)?"
+    r"(?P<year>19\d{2}|20\d{2})"
+)
+_ENGLISH_MONTHS = {
+    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5,
+    "june": 6, "july": 7, "august": 8, "september": 9, "october": 10,
+    "november": 11, "december": 12, "jan": 1, "feb": 2, "mar": 3,
+    "apr": 4, "jun": 6, "jul": 7, "aug": 8, "sept": 9, "sep": 9,
+    "oct": 10, "nov": 11, "dec": 12,
+}
 
 
 @dataclass(frozen=True, slots=True)
 class CompressionRequest:
     """一项可独立并发执行的网页压缩请求。"""
+
     tool_call_id: str
     order: int
     document: RawDocument
     selection: ChunkSelection
+    user_query: str
     active_query: str
     task_id: str
     section_id: str
     time_range: ResearchTimeRange | None = None
 
 
-def parse_note_json(raw: str) -> ResearchNotePayload:
-    """先严格校验，再修复常见 JSON 格式问题并重新校验。"""
-    try:
-        return ResearchNotePayload.model_validate_json(raw)
-    except (ValidationError, ValueError, json.JSONDecodeError):
-        try:
-            repaired = json_repair.loads(raw)
-            return ResearchNotePayload.model_validate(repaired)
-        except (ValidationError, ValueError, TypeError) as exc:
-            raise ValueError("无法解析 ResearchNote JSON") from exc
+def _split_sentences(text: str) -> list[str]:
+    """在句末标点与换行处切分；超长片段按逗号级二段切分，不改动原文。"""
+    sentences: list[str] = []
+    for raw in _SENTENCE_PATTERN.findall(text or ""):
+        piece = raw.strip()
+        if not piece:
+            continue
+        if len(piece) <= _MAX_SENTENCE_CHARS:
+            sentences.append(piece)
+            continue
+        buffer = ""
+        for part in _CLAUSE_PATTERN.findall(piece):
+            buffer += part
+            if len(buffer) >= _MAX_SENTENCE_CHARS:
+                sentences.append(buffer.strip())
+                buffer = ""
+        if buffer.strip():
+            sentences.append(buffer.strip())
+    return sentences
+
+
+def _candidate_sentences(chunks: Sequence[Any]) -> list[str]:
+    """按块顺序展开句子，并对重叠块导致的重复句子去重。"""
+    result: list[str] = []
+    seen: set[str] = set()
+    for chunk in chunks:
+        for sentence in _split_sentences(chunk.text):
+            key = re.sub(r"\s+", "", sentence)
+            if len(key) < _MIN_SENTENCE_CHARS or key in seen:
+                continue
+            seen.add(key)
+            result.append(sentence)
+    return result
+
+
+def _clamp_day(year: int, month: int, day: int) -> date:
+    return date(year, month, min(day, calendar.monthrange(year, month)[1]))
+
+
+def _span_for(year: int, month: int | None, day: int | None) -> tuple[date, date]:
+    if month is None:
+        return date(year, 1, 1), date(year, 12, 31)
+    if day is None:
+        return (
+            date(year, month, 1),
+            date(year, month, calendar.monthrange(year, month)[1]),
+        )
+    exact = _clamp_day(year, month, day)
+    return exact, exact
+
+
+def extract_event_dates(text: str) -> tuple[date | None, date | None]:
+    """从入选句子提取事件时间跨度的确定性近似：最早与最晚日期。"""
+    starts: list[date] = []
+    ends: list[date] = []
+
+    def _collect(match: re.Match[str]) -> None:
+        year = int(match.group("year"))
+        month_name = match.groupdict().get("month_name")
+        month = (
+            _ENGLISH_MONTHS.get(month_name.lower())
+            if month_name
+            else (int(match.group("month")) if match.group("month") else None)
+        )
+        day_text = match.group("day")
+        day = int(day_text) if day_text else None
+        start, end = _span_for(year, month, day)
+        starts.append(start)
+        ends.append(end)
+
+    for pattern in (_DATE_PATTERN, _ENGLISH_DATE_PATTERN):
+        for match in pattern.finditer(text):
+            _collect(match)
+    if not starts:
+        return None, None
+    return min(starts), max(ends)
 
 
 def _note_id(doc_id: str, active_query: str, task_id: str) -> str:
@@ -70,7 +167,7 @@ def build_extractive_note(
     error: str,
     time_range: ResearchTimeRange | None = None,
 ) -> ResearchNote:
-    """压缩最终失败时直接保留全部入选块，保证已抓信息不丢失。"""
+    """压缩路径异常时直接保留全部入选块，保证已抓信息不丢失。"""
     snippets = [chunk.text for chunk in selection.chunks if chunk.text.strip()]
     return ResearchNote(
         note_id=_note_id(document.doc_id, active_query, task_id),
@@ -93,57 +190,22 @@ def build_extractive_note(
 
 
 class CompressionService:
-    """有界并发调用 LLM；单页失败不会取消同批其他页面。"""
+    """句子级向量过滤压缩：本地 embedding 打分，无模型调用、无 token 消耗。"""
 
     def __init__(
         self,
-        model: Any,
-        concurrency: int = 3,
-        timeout_seconds: float = 60.0,
+        runtime: CompressionRuntime,
+        *,
+        top_sentences: int = 8,
+        sentence_threshold: float = 0.35,
     ) -> None:
-        if concurrency < 1:
-            raise ValueError("concurrency 必须大于 0")
-        if timeout_seconds <= 0:
-            raise ValueError("timeout_seconds 必须大于 0")
-        self._model = model
-        self._semaphore = asyncio.Semaphore(concurrency)
-        self._timeout_seconds = timeout_seconds
-
-    @staticmethod
-    def _messages(request: CompressionRequest) -> list[Any]:
-        return build_compression_messages(
-            active_query=request.active_query,
-            title=request.document.title,
-            url=request.document.final_url,
-            chunks=[
-                (chunk.index, chunk.text) for chunk in request.selection.chunks
-            ],
-            time_range=request.time_range,
-            source_published_at=request.document.source_published_at,
-            publisher=request.document.publisher,
-        )
-
-    @staticmethod
-    def _message_text(message: Any) -> str:
-        content = getattr(message, "content", message)
-        if isinstance(content, str):
-            return content
-        return json.dumps(content, ensure_ascii=False)
-
-    @staticmethod
-    def _usage(message: Any) -> TokenUsage:
-        metadata = getattr(message, "usage_metadata", None) or {}
-        input_tokens = int(metadata.get("input_tokens", 0) or 0)
-        output_tokens = int(metadata.get("output_tokens", 0) or 0)
-        total_tokens = int(
-            metadata.get("total_tokens", input_tokens + output_tokens)
-            or input_tokens + output_tokens
-        )
-        return TokenUsage(
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            total_tokens=total_tokens,
-        )
+        if top_sentences < 1:
+            raise ValueError("top_sentences 必须大于 0")
+        if not 0.0 <= sentence_threshold <= 1.0:
+            raise ValueError("sentence_threshold 必须位于 [0, 1]")
+        self._runtime = runtime
+        self._top_sentences = top_sentences
+        self._sentence_threshold = sentence_threshold
 
     @staticmethod
     def _irrelevant_outcome(request: CompressionRequest) -> CompressionOutcome:
@@ -168,79 +230,104 @@ class CompressionService:
             tool_call_id=request.tool_call_id, note=note, order=request.order
         )
 
-    async def compress_one(self, request: CompressionRequest) -> CompressionOutcome:
-        """JSON repair 后仍失败会重试一次，最终回退为抽取式笔记。"""
-        if not request.selection.is_relevant:
-            return self._irrelevant_outcome(request)
-        messages = self._messages(request)
-        last_error = "compression_failed"
-        total_usage = TokenUsage()
-        async with self._semaphore:
-            for _attempt in range(2):
-                try:
-                    response = await asyncio.wait_for(
-                        self._model.ainvoke(messages),
-                        timeout=self._timeout_seconds,
-                    )
-                    usage = self._usage(response)
-                    total_usage = TokenUsage(
-                        input_tokens=total_usage.input_tokens + usage.input_tokens,
-                        output_tokens=total_usage.output_tokens + usage.output_tokens,
-                        total_tokens=total_usage.total_tokens + usage.total_tokens,
-                    )
-                    payload = parse_note_json(self._message_text(response))
-                    relation = normalize_temporal_relation(
-                        request.time_range,
-                        request.document.source_published_at,
-                        payload.event_start_date,
-                        payload.event_end_date,
-                    )
-                    note = ResearchNote(
-                        note_id=_note_id(
-                            request.document.doc_id,
-                            request.active_query,
-                            request.task_id,
-                        ),
-                        doc_id=request.document.doc_id,
-                        task_id=request.task_id,
-                        section_id=request.section_id,
-                        active_query=request.active_query,
-                        title=payload.title,
-                        key_points=payload.key_points,
-                        evidence_snippets=payload.evidence_snippets,
-                        source_url=request.document.final_url,
-                        relevance_score=request.selection.top1_fused_score,
-                        compression_status="compressed",
-                        source_published_at=request.document.source_published_at,
-                        event_start_date=payload.event_start_date,
-                        event_end_date=payload.event_end_date,
-                        source_kind=payload.source_kind,
-                        temporal_relation=relation,
-                        temporal_scope=payload.temporal_scope,
-                    )
-                    return CompressionOutcome(
-                        tool_call_id=request.tool_call_id,
-                        note=note,
-                        order=request.order,
-                        usage=total_usage,
-                    )
-                except Exception as exc:
-                    last_error = f"{type(exc).__name__}: {exc}"
-        return CompressionOutcome(
-            tool_call_id=request.tool_call_id,
-            note=build_extractive_note(
-                request.document,
-                request.selection,
+    def _compress_sync(self, request: CompressionRequest) -> CompressionOutcome:
+        sentences = _candidate_sentences(request.selection.chunks)
+        if not sentences:
+            return CompressionOutcome(
+                tool_call_id=request.tool_call_id,
+                note=build_extractive_note(
+                    request.document,
+                    request.selection,
+                    request.active_query,
+                    request.task_id,
+                    request.section_id,
+                    "no_sentences",
+                    request.time_range,
+                ),
+                error="no_sentences",
+                order=request.order,
+            )
+        vectors = self._runtime.embed(sentences)
+        active_scores = vectors @ self._runtime.query_vector(request.active_query)
+        scores = active_scores
+        if request.user_query.strip():
+            user_scores = vectors @ self._runtime.query_vector(request.user_query)
+            scores = np.maximum(user_scores, active_scores)
+
+        ranked = np.argsort(-scores, kind="stable")
+        selected = [
+            int(index)
+            for index in ranked
+            if scores[index] >= self._sentence_threshold
+        ][: self._top_sentences]
+        if not selected:
+            selected = [int(ranked[0])]
+
+        evidence_snippets = [sentences[index] for index in sorted(selected)]
+        key_points = [
+            sentences[index]
+            for index in sorted(selected[:3], key=lambda idx: -scores[idx])
+        ]
+        event_start, event_end = extract_event_dates(
+            "\n".join(evidence_snippets)
+        )
+        relation = normalize_temporal_relation(
+            request.time_range,
+            request.document.source_published_at,
+            event_start,
+            event_end,
+        )
+        note = ResearchNote(
+            note_id=_note_id(
+                request.document.doc_id,
                 request.active_query,
                 request.task_id,
-                request.section_id,
-                last_error,
-                request.time_range,
             ),
-            error=last_error,
-            order=request.order,
-            usage=total_usage,
+            doc_id=request.document.doc_id,
+            task_id=request.task_id,
+            section_id=request.section_id,
+            active_query=request.active_query,
+            title=request.document.title or request.document.final_url,
+            key_points=key_points,
+            evidence_snippets=evidence_snippets,
+            source_url=request.document.final_url,
+            relevance_score=request.selection.top1_fused_score,
+            compression_status="compressed",
+            source_published_at=request.document.source_published_at,
+            event_start_date=event_start,
+            event_end_date=event_end,
+            source_kind="unknown",
+            temporal_relation=relation,
         )
+        return CompressionOutcome(
+            tool_call_id=request.tool_call_id,
+            note=note,
+            order=request.order,
+            usage=TokenUsage(),
+        )
+
+    async def compress_one(self, request: CompressionRequest) -> CompressionOutcome:
+        """embedding 为 CPU 密集计算，放入线程避免阻塞事件循环。"""
+        if not request.selection.is_relevant:
+            return self._irrelevant_outcome(request)
+        try:
+            return await asyncio.to_thread(self._compress_sync, request)
+        except Exception as exc:
+            error = f"{type(exc).__name__}: {exc}"
+            return CompressionOutcome(
+                tool_call_id=request.tool_call_id,
+                note=build_extractive_note(
+                    request.document,
+                    request.selection,
+                    request.active_query,
+                    request.task_id,
+                    request.section_id,
+                    error,
+                    request.time_range,
+                ),
+                error=error,
+                order=request.order,
+            )
 
     async def compress_many(
         self, requests: Sequence[CompressionRequest]

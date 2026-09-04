@@ -76,7 +76,6 @@ class Settings:
     embedding_model_path: Path = Path(r"D:\Dev\Models\bge-m3")
     min_relevance_score: float = 0.45
     embedding_batch_size: int = 8
-    compression_concurrency: int = 3
     min_extracted_chars: int = 500
     min_extracted_tokens: int = 200
     soft_max_steps: int = 8
@@ -85,17 +84,13 @@ class Settings:
     token_encoding: str = "cl100k_base"
     allow_benchmark_dns_proxy: bool = False
     max_research_tasks: int = 4
+    task_concurrency: int = 2  # 并行研究的子任务数
+    use_memory: bool = False  # 跨运行复用已抓取页面
+    memory_path: Path = Path("memory/notes.jsonl")
     max_task_rounds: int = 3
     min_sources_per_task: int = 2
     max_fetched_pages: int = 20
     max_runtime_seconds: int = 600
-    max_api_tokens: int = 120_000
-    writer_token_reserve_ratio: float = 0.15
-    verification_token_reserve_ratio: float = 0.20
-    research_runtime_ratio: float = 0.70
-    max_verification_gaps_per_task: int = 2
-    max_verification_fetches_per_task: int = 3
-    max_verification_rounds_per_task: int = 1
     input_cost_per_million: Decimal | None = None
     output_cost_per_million: Decimal | None = None
     max_cost_usd: Decimal | None = None
@@ -130,18 +125,6 @@ class Settings:
         if max_cost is not None and (input_cost is None or output_cost is None):
             raise RuntimeError("设置费用上限前必须同时配置模型单价")
 
-        writer_reserve_ratio = _bounded_float(
-            "DEEPTRACE_WRITER_TOKEN_RESERVE_RATIO", 0.15, 0.05, 0.40
-        )
-        verification_reserve_ratio = _bounded_float(
-            "DEEPTRACE_VERIFICATION_TOKEN_RESERVE_RATIO",
-            0.20,
-            0.05,
-            0.40,
-        )
-        if writer_reserve_ratio + verification_reserve_ratio >= 0.80:
-            raise RuntimeError("Writer 与 Verification Token 预留之和必须小于 0.80")
-
         return cls(
             openai_api_key=_required("OPENAI_API_KEY"),
             openai_base_url=_required("OPENAI_BASE_URL"),
@@ -157,9 +140,6 @@ class Settings:
             ),
             embedding_batch_size=_bounded_int(
                 "DEEPTRACE_EMBEDDING_BATCH_SIZE", 8, 1, 256
-            ),
-            compression_concurrency=_bounded_int(
-                "DEEPTRACE_COMPRESSION_CONCURRENCY", 3, 1, 32
             ),
             min_extracted_chars=_bounded_int(
                 "DEEPTRACE_MIN_EXTRACTED_CHARS", 500, 1, 1_000_000
@@ -191,22 +171,12 @@ class Settings:
             max_runtime_seconds=_bounded_int(
                 "DEEPTRACE_MAX_RUNTIME_SECONDS", 600, 1, 86_400
             ),
-            max_api_tokens=_bounded_int(
-                "DEEPTRACE_MAX_API_TOKENS", 120_000, 1, 100_000_000
+            task_concurrency=_bounded_int(
+                "DEEPTRACE_TASK_CONCURRENCY", 2, 1, 8
             ),
-            writer_token_reserve_ratio=writer_reserve_ratio,
-            verification_token_reserve_ratio=verification_reserve_ratio,
-            research_runtime_ratio=_bounded_float(
-                "DEEPTRACE_RESEARCH_RUNTIME_RATIO", 0.70, 0.50, 0.90
-            ),
-            max_verification_gaps_per_task=_bounded_int(
-                "DEEPTRACE_MAX_VERIFICATION_GAPS_PER_TASK", 2, 1, 10
-            ),
-            max_verification_fetches_per_task=_bounded_int(
-                "DEEPTRACE_MAX_VERIFICATION_FETCHES_PER_TASK", 3, 1, 10
-            ),
-            max_verification_rounds_per_task=_bounded_int(
-                "DEEPTRACE_MAX_VERIFICATION_ROUNDS_PER_TASK", 1, 1, 10
+            use_memory=_boolean("DEEPTRACE_USE_MEMORY", False),
+            memory_path=Path(
+                os.getenv("DEEPTRACE_MEMORY_PATH", "memory/notes.jsonl")
             ),
             input_cost_per_million=input_cost,
             output_cost_per_million=output_cost,

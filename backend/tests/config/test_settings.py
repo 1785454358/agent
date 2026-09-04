@@ -20,7 +20,6 @@ def test_stage_two_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.embedding_model_path == Path(r"D:\Dev\Models\bge-m3")
     assert settings.min_relevance_score == 0.45
     assert settings.embedding_batch_size == 8
-    assert settings.compression_concurrency == 3
     assert settings.soft_max_steps == 8
     assert settings.hard_max_steps == 12
     assert settings.query_loop_threshold == 0.85
@@ -62,36 +61,6 @@ def test_stage3_budget_defaults(
     assert settings.min_sources_per_task == 2
     assert settings.max_fetched_pages == 20
     assert settings.max_runtime_seconds == 600
-    assert settings.max_api_tokens == 120_000
-
-
-def test_stage_four_budget_defaults(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    _set_required_environment(monkeypatch)
-    monkeypatch.setenv("DEEPTRACE_EMBEDDING_MODEL_PATH", str(tmp_path))
-
-    settings = Settings.from_env()
-
-    assert settings.verification_token_reserve_ratio == 0.20
-    assert settings.research_runtime_ratio == 0.70
-    assert settings.max_verification_gaps_per_task == 2
-    assert settings.max_verification_fetches_per_task == 3
-    assert settings.max_verification_rounds_per_task == 1
-
-
-def test_writer_and_verifier_reserves_must_leave_research_budget(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    _set_required_environment(monkeypatch)
-    monkeypatch.setenv("DEEPTRACE_EMBEDDING_MODEL_PATH", str(tmp_path))
-    monkeypatch.setenv("DEEPTRACE_WRITER_TOKEN_RESERVE_RATIO", "0.40")
-    monkeypatch.setenv(
-        "DEEPTRACE_VERIFICATION_TOKEN_RESERVE_RATIO", "0.40"
-    )
-
-    with pytest.raises(RuntimeError, match="预留"):
-        Settings.from_env()
 
 
 def test_cost_limit_requires_pricing(

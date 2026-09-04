@@ -3,12 +3,6 @@
 from deeptrace.orchestration.graph import (
     build_research_graph,
     route_after_agent,
-    route_after_research,
-    route_after_task,
-    route_after_task_completion,
-    route_after_tools,
-    route_after_verification,
-    route_after_verification_research,
 )
 from deeptrace.orchestration.nodes import (
     ResearchNodes,
@@ -34,12 +28,6 @@ __all__ = [
     "keep_recent_tool_turns",
     "merge_dicts",
     "route_after_agent",
-    "route_after_research",
-    "route_after_task",
-    "route_after_task_completion",
-    "route_after_tools",
-    "route_after_verification",
-    "route_after_verification_research",
     "select_agent_model_mode",
     "note_is_valid",
     "source_identity",

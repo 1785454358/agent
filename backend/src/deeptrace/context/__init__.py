@@ -4,9 +4,7 @@ from deeptrace.context.chunking import chunk_document
 from deeptrace.context.compression import (
     CompressionRequest,
     CompressionService,
-    ResearchNotePayload,
     build_extractive_note,
-    parse_note_json,
 )
 from deeptrace.context.embeddings import CompressionRuntime
 from deeptrace.context.retrieval import (
@@ -23,12 +21,10 @@ __all__ = [
     "CompressionRequest",
     "CompressionRuntime",
     "CompressionService",
-    "ResearchNotePayload",
     "build_extractive_note",
     "chunk_document",
     "is_repeated_query",
     "note_embedding_text",
-    "parse_note_json",
     "retrieve_notes",
     "select_relevant_chunks",
     "normalize_temporal_relation",

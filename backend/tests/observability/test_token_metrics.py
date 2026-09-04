@@ -44,15 +44,15 @@ def test_token_metrics_compute_net_saving_and_accumulate_raw_baseline() -> None:
     assert round_metrics.provider_usage.total_tokens == 14
 
 
-def test_role_usage_includes_claim_extractor_and_verifier() -> None:
+def test_role_usage_renders_remaining_roles() -> None:
     from deeptrace.models import UsageBreakdown
 
     rendered = format_role_usage(
         UsageBreakdown(
-            claim_extractor=TokenUsage(total_tokens=7),
-            verifier=TokenUsage(total_tokens=11),
+            researcher=TokenUsage(total_tokens=7),
+            writer=TokenUsage(total_tokens=11),
         )
     )
 
-    assert "Claim Extractor: 7" in rendered
-    assert "Verifier: 11" in rendered
+    assert "Researcher: 7" in rendered
+    assert "Writer: 11" in rendered

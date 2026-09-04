@@ -13,4 +13,3 @@ def test_quality_defaults(raw_document, research_note, research_task) -> None:
     assert research_note.event_end_date is None
     assert coverage.valid_note_ids == []
     assert coverage.out_of_range_note_ids == []
-    assert coverage.api_tokens_used == 0

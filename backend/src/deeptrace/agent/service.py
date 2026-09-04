@@ -141,9 +141,7 @@ def build_real_agent(
         bound_model=bound_model,
         final_model=model,
         runtime=runtime,
-        compressor=CompressionService(
-            model, concurrency=settings.compression_concurrency
-        ),
+        compressor=CompressionService(runtime),
         fetcher=fetcher,
         tools=ToolContext(
             tavily=TavilyClient(api_key=settings.tavily_api_key),
@@ -165,10 +163,8 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from deeptrace.agent.planner import PlannerAgent
-from deeptrace.agent.claim_extractor import ClaimExtractorAgent
 from deeptrace.agent.researcher import ResearcherAgent
 from deeptrace.agent.writer import WriterAgent
-from deeptrace.agent.writer import sources_from_used_claims
 from deeptrace.models import (
     ResearchNote,
     ResearchPlan,
@@ -176,12 +172,12 @@ from deeptrace.models import (
     SectionResult,
     TokenUsage,
     UsageBreakdown,
-    VerificationResult,
 )
+from deeptrace.memory import ResearchMemory
 from deeptrace.observability import estimate_usage_cost
 from deeptrace.orchestration import ResearchWorkflowNodes
+from deeptrace.orchestration.budget import GlobalBudget
 from deeptrace.orchestration.tool_executor import ResearchToolExecutor
-from deeptrace.verification import VerifierAgent
 
 
 def _sources_from_used_notes(
@@ -196,7 +192,9 @@ def _sources_from_used_notes(
     return sources
 
 
-def _initial_stage_four_state(question: str) -> dict[str, Any]:
+def _initial_research_state(
+    question: str, started_at: datetime | None = None
+) -> dict[str, Any]:
     """集中初始化完整 State，避免新增节点读取缺失键。"""
     return {
         "user_query": question,
@@ -205,12 +203,6 @@ def _initial_stage_four_state(question: str) -> dict[str, Any]:
         "documents": {},
         "chunks": {},
         "notes": {},
-        "sources": {},
-        "evidence": {},
-        "claims": {},
-        "verification_results": {},
-        "verification_gaps": {},
-        "task_verification": {},
         "queries": [],
         "pending_fetches": [],
         "pending_tool_order": [],
@@ -220,19 +212,17 @@ def _initial_stage_four_state(question: str) -> dict[str, Any]:
         "task_coverages": {},
         "section_results": {},
         "pending_task_completion": None,
-        "verification_task_id": None,
-        "verification_mode": "done",
-        "verification_tool_rounds": 0,
         "force_finalize": False,
         "events": [],
-        "started_at": datetime.now(UTC).isoformat(),
+        "started_at": (
+            started_at if started_at is not None else datetime.now(UTC)
+        ).isoformat(),
         "fetched_page_count": 0,
         "api_token_count": 0,
         "estimated_cost_usd": 0.0,
         "provider_usage": TokenUsage(),
         "role_usage": UsageBreakdown(),
         "used_note_ids": [],
-        "used_claim_ids": [],
         "token_metrics": [],
         "context_audits": [],
         "step_count": 0,
@@ -258,12 +248,6 @@ class AgentResult:
     plan: ResearchPlan | None
     sections: list[SectionResult]
     used_note_ids: list[str]
-    used_claim_ids: list[str]
-    verification_results: list[VerificationResult]
-    evidence_location_counts: dict[str, int]
-    verdict_counts: dict[str, int]
-    verification_gap_count: int
-    supplement_rounds: int
     provider_usage: TokenUsage
     role_usage: UsageBreakdown
     estimated_cost_usd: Decimal | None
@@ -289,7 +273,23 @@ class ResearchAgent:
         clean_question = question.strip()
         if not clean_question:
             raise ValueError("问题不能为空")
-        initial = _initial_stage_four_state(clean_question)
+        started_at = datetime.now(UTC)
+        budget = GlobalBudget(self._settings, started_at)
+        self._nodes.budget = budget
+        self._nodes.executor.budget = budget
+        memory = None
+        if self._settings.use_memory:
+            memory = ResearchMemory(self._settings.memory_path)
+            for entry in memory.entries():
+                document = memory.entry_to_document(entry)
+                for key in {
+                    document.requested_url,
+                    document.final_url,
+                    document.canonical_url,
+                }:
+                    if key:
+                        self._nodes.executor._document_cache[key] = document
+        initial = _initial_research_state(clean_question, started_at=started_at)
         final = await self._graph.ainvoke(
             initial,
             config={
@@ -297,11 +297,7 @@ class ResearchAgent:
                 "recursion_limit": (
                     self._settings.hard_max_steps * 4
                     + 20
-                    + self._settings.max_research_tasks
-                    * (
-                        4
-                        + self._settings.max_verification_rounds_per_task * 3
-                    )
+                    + self._settings.max_research_tasks * 4
                 ),
             },
         )
@@ -312,63 +308,32 @@ class ResearchAgent:
             if plan
             else []
         )
+        if memory is not None:
+            memory.add_documents(final.get("documents", {}).values())
         reason = final.get("termination_reason") or "completed"
         answer = final.get("final_answer", "")
-        claims_by_id = final.get("claims", {})
-        all_results = final.get("verification_results", {})
-        all_gaps = [
-            gap
-            for gap in final.get("verification_gaps", {}).values()
-            if gap is not None
-        ]
-        each_task_has_verified_key = bool(sections) and all(
-            any(
-                claim_id in claims_by_id
-                and claims_by_id[claim_id].importance == "key"
-                and claim_id in all_results
-                and all_results[claim_id].verdict == "verified"
-                for claim_id in section.claim_ids
-            )
-            for section in sections
-        )
-        no_high_gap = not any(gap.priority == "high" for gap in all_gaps)
-        if each_task_has_verified_key and no_high_gap and reason == "completed":
+        has_material = bool(
+            final.get("final_sources")
+        ) or bool(final.get("used_note_ids"))
+        if reason == "completed" and answer and has_material:
             status: Literal["completed", "partial", "failed"] = "completed"
         elif answer:
             status = "partial"
         else:
             status = "failed"
-        notes = final.get("notes", {})
         used_note_ids = list(final.get("used_note_ids", []))
-        used_claim_ids = list(final.get("used_claim_ids", []))
         usage = final.get("provider_usage", TokenUsage())
         role_usage = final.get("role_usage", UsageBreakdown())
-        evidence_by_id = final.get("evidence", {})
-        sources_by_id = final.get("sources", {})
-        evidence_location_counts = {
-            "exact": sum(
-                item.location_status == "exact"
-                for item in evidence_by_id.values()
-            ),
-            "unlocated": sum(
-                item.location_status == "unlocated"
-                for item in evidence_by_id.values()
-            ),
-        }
-        verdict_counts: dict[str, int] = {}
-        for result in all_results.values():
-            verdict_counts[result.verdict] = (
-                verdict_counts.get(result.verdict, 0) + 1
-            )
+        sources = list(final.get("final_sources", [])) or sorted(
+            {
+                document.final_url
+                for document in final.get("documents", {}).values()
+            }
+        )
         return AgentResult(
             status=status,
             answer=answer,
-            sources=sources_from_used_claims(
-                used_claim_ids,
-                claims_by_id,
-                evidence_by_id,
-                sources_by_id,
-            ),
+            sources=sources,
             steps=final.get("step_count", 0),
             events=list(final.get("events", [])),
             token_metrics=list(final.get("token_metrics", [])),
@@ -376,21 +341,6 @@ class ResearchAgent:
             plan=plan,
             sections=sections,
             used_note_ids=used_note_ids,
-            used_claim_ids=used_claim_ids,
-            verification_results=[
-                all_results[claim_id]
-                for claim_id in used_claim_ids
-                if claim_id in all_results
-            ],
-            evidence_location_counts=evidence_location_counts,
-            verdict_counts=verdict_counts,
-            verification_gap_count=len(all_gaps),
-            supplement_rounds=sum(
-                summary.supplement_rounds
-                for summary in final.get(
-                    "task_verification", {}
-                ).values()
-            ),
             provider_usage=usage,
             role_usage=role_usage,
             estimated_cost_usd=estimate_usage_cost(
@@ -429,9 +379,7 @@ def build_real_agent(
         max_page_chars=settings.max_page_chars,
         allow_benchmark_dns_proxy=settings.allow_benchmark_dns_proxy,
     )
-    compressor = CompressionService(
-        model, concurrency=settings.compression_concurrency
-    )
+    compressor = CompressionService(runtime)
     ledger = TokenLedger(TokenEstimator(settings.token_encoding))
     executor = ResearchToolExecutor(
         runtime=runtime,
@@ -449,8 +397,6 @@ def build_real_agent(
             min_sources=settings.min_sources_per_task,
         ),
         researcher=ResearcherAgent(model),
-        claim_extractor=ClaimExtractorAgent(model),
-        verifier=VerifierAgent(model),
         writer=WriterAgent(model),
         executor=executor,
         settings=settings,

@@ -13,27 +13,18 @@ from deeptrace.orchestration.state import (
 )
 
 
-def test_stage_four_usage_roles_and_state_fields_are_present() -> None:
+def test_usage_roles_and_state_fields_are_present() -> None:
     usage = merge_usage_breakdown(
-        UsageBreakdown(claim_extractor=TokenUsage(total_tokens=3)),
-        UsageBreakdown(verifier=TokenUsage(total_tokens=5)),
+        UsageBreakdown(researcher=TokenUsage(total_tokens=3)),
+        UsageBreakdown(writer=TokenUsage(total_tokens=5)),
     )
 
-    assert usage.claim_extractor.total_tokens == 3
-    assert usage.verifier.total_tokens == 5
+    assert usage.researcher.total_tokens == 3
+    assert usage.writer.total_tokens == 5
     assert usage.total.total_tokens == 8
-    assert {
-        "sources",
-        "evidence",
-        "claims",
-        "verification_results",
-        "verification_gaps",
-        "task_verification",
-        "verification_task_id",
-        "verification_mode",
-        "verification_tool_rounds",
-        "used_claim_ids",
-    } <= GraphState.__required_keys__
+    assert "final_sources" in GraphState.__annotations__
+    assert "used_claim_ids" not in GraphState.__annotations__
+    assert "verification_results" not in GraphState.__annotations__
 
 
 def test_merge_dicts_preserves_old_entries_and_overwrites_same_key() -> None:

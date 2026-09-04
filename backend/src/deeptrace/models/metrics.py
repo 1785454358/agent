@@ -27,8 +27,6 @@ class UsageBreakdown(BaseModel):
     researcher: TokenUsage = Field(default_factory=TokenUsage)
     compression: TokenUsage = Field(default_factory=TokenUsage)
     writer: TokenUsage = Field(default_factory=TokenUsage)
-    claim_extractor: TokenUsage = Field(default_factory=TokenUsage)
-    verifier: TokenUsage = Field(default_factory=TokenUsage)
 
     @property
     def total(self) -> TokenUsage:
@@ -37,8 +35,6 @@ class UsageBreakdown(BaseModel):
             self.researcher,
             self.compression,
             self.writer,
-            self.claim_extractor,
-            self.verifier,
         )
 
 

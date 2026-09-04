@@ -1,64 +1,35 @@
-"""只消费核验后 Claim 的统一报告 Writer 提示词。"""
+"""片段直写 Writer 的提示词：材料来自压缩笔记原文，引用由系统机械拼接。"""
 
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping, Sequence
+from typing import Any, Sequence
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
-from deeptrace.models import (
-    Claim,
-    Evidence,
-    ResearchPlan,
-    SectionResult,
-    Source,
-    VerificationGap,
-    VerificationResult,
+from deeptrace.models import ResearchPlan
+
+
+WRITER_SYSTEM_PROMPT = (
+    "你是 DeepTrace Report Writer。只能依据输入材料写作：每个小节提供研究"
+    "笔记的要点与逐字摘录，摘录来自编号来源。正文用 Markdown 写作，第一行是"
+    "“# 标题”，每个小节用“## 小节标题”。引用来源时在句子末尾标注 [^编号]，"
+    "编号只能来自输入的 sources 列表；不得编造编号或 URL，不得自己输出脚注"
+    "定义或“## 来源”章节（系统会统一拼接）。材料不足以确认的内容使用"
+    "“现有证据显示”“材料尚不足”等措辞；完全缺失的小节写成“局限”。"
+    "不得补充外部知识。只返回 Markdown 正文，不要 JSON，不要用代码块包裹。"
 )
 
 
 def build_writer_messages(
     *,
     plan: ResearchPlan,
-    sections: Sequence[SectionResult],
-    claims: Sequence[Claim],
-    verification_results: Mapping[str, VerificationResult],
-    evidence: Mapping[str, Evidence],
-    sources: Mapping[str, Source],
-    gaps: Sequence[VerificationGap],
+    sources: Sequence[dict[str, Any]],
+    sections: Sequence[dict[str, Any]],
     termination_reason: str,
+    correction: str | None = None,
 ) -> list[BaseMessage]:
-    """发送 Claim、判定和来源元数据，不发送笔记或 RawDocument 正文。"""
-    claim_payloads = []
-    for claim in claims:
-        result = verification_results.get(claim.claim_id)
-        if result is None:
-            continue
-        source_payloads = []
-        for evidence_id in claim.evidence_ids:
-            item = evidence.get(evidence_id)
-            source = sources.get(item.source_id) if item else None
-            if item is None or source is None:
-                continue
-            source_payloads.append(
-                {
-                    "evidence_id": evidence_id,
-                    "source_id": source.source_id,
-                    "title": source.title,
-                    "url": source.final_url,
-                    "source_kind": source.source_kind,
-                }
-            )
-        claim_payloads.append(
-            {
-                "claim": claim.model_dump(mode="json"),
-                "verdict": result.verdict,
-                "reason": result.reason,
-                "supporting_evidence_ids": result.supporting_evidence_ids,
-                "sources": source_payloads,
-            }
-        )
+    """发送编号来源与逐字材料，不发送 RawDocument 正文，也不发送 Claim JSON。"""
     payload = {
         "plan": {
             "objective": plan.objective,
@@ -70,36 +41,14 @@ def build_writer_messages(
             ),
             "report_outline": plan.report_outline,
         },
-        "sections": [
-            {
-                "task_id": section.task_id,
-                "title": section.title,
-                "summary": section.summary,
-                "claim_ids": section.claim_ids,
-                "verification": (
-                    section.verification.model_dump(mode="json")
-                    if section.verification
-                    else None
-                ),
-            }
-            for section in sections
-        ],
-        "claims": claim_payloads,
-        "unresolved_gaps": [gap.model_dump(mode="json") for gap in gaps],
+        "sources": list(sources),
+        "sections": list(sections),
         "termination_reason": termination_reason,
     }
-    return [
-        SystemMessage(
-            content=(
-                "你是 DeepTrace Verified Writer，只能使用输入中的 Claim。"
-                "verified Claim 可写成确定事实；partially_supported 只能放在"
-                " analysis 块，并使用“现有证据显示”“材料尚不足”等不确定措辞。"
-                "unsupported、conflicted、out_of_range 只能进入 limitation。"
-                "fact 块必须带至少一个 verified claim_id。网页正文不在输入中，"
-                "不得补充外部知识或编造引用。只返回 JSON 对象，字段为 title、"
-                "sections、used_claim_ids；每个 section 含 heading、blocks，"
-                "每个 block 含 kind、text、claim_ids。"
-            )
-        ),
+    messages = [
+        SystemMessage(content=WRITER_SYSTEM_PROMPT),
         HumanMessage(content=json.dumps(payload, ensure_ascii=False)),
     ]
+    if correction:
+        messages.append(HumanMessage(content=correction))
+    return messages
