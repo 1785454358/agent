@@ -72,6 +72,33 @@ class WriterAgent:
         self._call_timeout_seconds = call_timeout_seconds
         self._context_limit_chars = context_limit_chars
 
+    def fallback(
+        self,
+        *,
+        question: str,
+        context: str,
+        sources: Sequence[str],
+        language: str,
+        termination_reason: str,
+    ) -> WriterOutcome:
+        """Build a deterministic report without contacting the Provider."""
+        normalized_sources = _unique_sources(sources)
+        normalized_context = context.strip()
+        if normalized_context:
+            markdown = self._fallback_markdown(
+                question=question,
+                context=normalized_context[: self._context_limit_chars],
+                language=language,
+                termination_reason=termination_reason,
+            )
+        else:
+            markdown = self._empty_context_markdown(question, language)
+        return WriterOutcome(
+            markdown=_append_references(markdown, normalized_sources),
+            sources=normalized_sources,
+            used_fallback=True,
+        )
+
     @staticmethod
     def _empty_context_markdown(question: str, language: str) -> str:
         if language.lower().startswith("zh"):
@@ -127,11 +154,12 @@ class WriterAgent:
         normalized_sources = _unique_sources(sources)
         normalized_context = context.strip()
         if not normalized_context:
-            markdown = self._empty_context_markdown(question, language)
-            return WriterOutcome(
-                markdown=_append_references(markdown, normalized_sources),
+            return self.fallback(
+                question=question,
+                context="",
                 sources=normalized_sources,
-                used_fallback=True,
+                language=language,
+                termination_reason=termination_reason,
             )
 
         bounded_context = normalized_context[: self._context_limit_chars]
@@ -163,18 +191,21 @@ class WriterAgent:
                     usage=total,
                     used_fallback=False,
                 )
+            except TimeoutError:
+                break
             except Exception:
                 continue
 
-        fallback = self._fallback_markdown(
+        fallback = self.fallback(
             question=question,
             context=bounded_context,
+            sources=normalized_sources,
             language=language,
             termination_reason=termination_reason,
         )
         return WriterOutcome(
-            markdown=_append_references(fallback, normalized_sources),
-            sources=normalized_sources,
+            markdown=fallback.markdown,
+            sources=fallback.sources,
             usage=total,
             used_fallback=True,
         )

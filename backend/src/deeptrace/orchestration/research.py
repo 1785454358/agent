@@ -78,6 +78,14 @@ class ParallelResearchService:
         )
         self._document_cache: dict[str, RawDocument] = {}
 
+    @property
+    def budget(self) -> GlobalBudget | None:
+        return self._budget
+
+    @budget.setter
+    def budget(self, value: GlobalBudget | None) -> None:
+        self._budget = value
+
     def cache_documents(self, documents: Sequence[RawDocument]) -> None:
         """Seed the page cache, typically with documents restored from Memory."""
         for document in documents:
@@ -186,11 +194,7 @@ class ParallelResearchService:
 
         context_values = await asyncio.gather(
             *(
-                self._compressor.aget_context(
-                    query,
-                    documents,
-                    max_results=int(getattr(self._settings, "context_max_results", 10)),
-                )
+                self._get_context(query, documents)
                 for query, documents in zip(
                     ordered_queries, documents_by_query, strict=True
                 )
@@ -207,7 +211,11 @@ class ParallelResearchService:
             zip(ordered_queries, documents_by_query, context_values, strict=True)
         ):
             if isinstance(context_value, BaseException):
-                query_errors[index].append("context_failed")
+                query_errors[index].append(
+                    "time_budget"
+                    if isinstance(context_value, TimeoutError)
+                    else "context_failed"
+                )
                 context = ""
             else:
                 context = context_value.strip()
@@ -238,6 +246,28 @@ class ParallelResearchService:
             )
 
         return "\n\n".join(contexts), collected_documents, sources, results
+
+    async def _get_context(
+        self, query: str, documents: Sequence[RawDocument]
+    ) -> str:
+        if not documents:
+            return ""
+        operation = self._compressor.aget_context(
+            query,
+            documents,
+            max_results=int(getattr(self._settings, "context_max_results", 10)),
+        )
+        if self._budget is None:
+            return await operation
+        remaining = self._budget.remaining_seconds(datetime.now(UTC))
+        if remaining <= 0:
+            operation.close()
+            raise TimeoutError("研究运行时间预算已耗尽")
+        try:
+            return await asyncio.wait_for(operation, timeout=remaining)
+        except TimeoutError:
+            self._budget.stop_reason(datetime.now(UTC))
+            raise
 
     async def _reuse_or_search(
         self,
@@ -315,7 +345,18 @@ class ParallelResearchService:
 
     async def _fetch_one(self, url: str) -> RawDocument:
         async with self._fetch_semaphore:
-            return await self._fetcher.fetch(url)
+            if self._budget is None:
+                return await self._fetcher.fetch(url)
+            remaining = self._budget.remaining_seconds(datetime.now(UTC))
+            if remaining <= 0:
+                raise TimeoutError("研究运行时间预算已耗尽")
+            try:
+                return await asyncio.wait_for(
+                    self._fetcher.fetch(url), timeout=remaining
+                )
+            except TimeoutError:
+                self._budget.stop_reason(datetime.now(UTC))
+                raise
 
     def _cache_document(
         self, document: RawDocument, *, requested_alias: str | None = None
@@ -369,6 +410,8 @@ class ParallelResearchService:
 
     @staticmethod
     def _fetch_error_code(error: BaseException) -> str:
+        if isinstance(error, TimeoutError):
+            return "time_budget"
         if isinstance(error, WebFetchError):
             return error.code
         return "fetch_failed"

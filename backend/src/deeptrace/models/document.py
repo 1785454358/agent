@@ -1,4 +1,4 @@
-"""网页抓取、分块和待处理调用的数据模型。"""
+"""Web documents used by the Basic research pipeline."""
 
 from __future__ import annotations
 
@@ -6,18 +6,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field
-
-
-class PendingFetch(BaseModel):
-    """一次尚未处理的网页抓取工具调用。"""
-
-    tool_call_id: str
-    url: str
-    active_query: str
-    task_id: str
-    section_id: str
-    order: int = Field(ge=0)
+from pydantic import BaseModel
 
 
 class ScraperUsed(StrEnum):
@@ -31,7 +20,7 @@ class ScraperUsed(StrEnum):
 
 
 class RawDocument(BaseModel):
-    """抓取后的原始文档；正文只保存在 State 文档区。"""
+    """A fetched page retained only for the duration of a research run."""
 
     doc_id: str
     requested_url: str
@@ -47,15 +36,3 @@ class RawDocument(BaseModel):
     source_published_at: datetime | None = None
     source_modified_at: datetime | None = None
     publisher: str | None = None
-
-
-class DocumentChunk(BaseModel):
-    """带原文定位信息的文本块，不保存 numpy 向量。"""
-
-    chunk_id: str
-    doc_id: str
-    index: int = Field(ge=0)
-    text: str
-    token_count: int = Field(ge=0)
-    char_start: int = Field(ge=0)
-    char_end: int = Field(ge=0)

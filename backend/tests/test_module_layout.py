@@ -1,81 +1,44 @@
-"""模块化目录的公共接口契约。"""
+"""Public module contracts for the Basic research implementation."""
 
-from datetime import date
-
-from deeptrace.context import (
-    CompressionRuntime,
-    CompressionService,
-    chunk_document,
-    retrieve_notes,
-    select_relevant_chunks,
-)
-from deeptrace.config import Settings
-from deeptrace.models import RawDocument, ResearchNote, ResearchPlan, TokenUsage
-from deeptrace.observability import (
-    TokenEstimator,
-    TokenLedger,
-    calculate_round_metrics,
-    format_round_metrics,
-    format_token_summary,
-)
-from deeptrace.orchestration import GraphState, ResearchWorkflowNodes, build_research_graph
-from deeptrace.prompts.research import FINAL_REPORT_PROMPT, build_system_prompt
-from deeptrace.tools import EXTERNAL_TOOL_SCHEMAS, RESEARCHER_TOOL_SCHEMAS, ToolContext
+from deeptrace.context import CompressionRuntime, ContextCompressor, format_document_context
+from deeptrace.models import RawDocument, RunEvent, TokenUsage, UsageBreakdown
+from deeptrace.observability import estimate_usage_cost, format_role_usage
+from deeptrace.orchestration.graph import build_research_graph
+from deeptrace.orchestration.state import GraphState
+from deeptrace.prompts import build_planner_messages, build_writer_messages
+import deeptrace.tools as tools_package
+from deeptrace.tools import ToolContext
 from deeptrace.tools.scraper import AsyncWebFetcher, normalize_url_before_fetch
 from deeptrace.tools.search import search_web
-from deeptrace import AgentResult, ResearchAgent, build_real_agent
 
 
-def test_foundation_packages_expose_stable_interfaces() -> None:
-    assert Settings.__name__ == "Settings"
+def test_foundation_packages_expose_basic_interfaces() -> None:
     assert RawDocument.__name__ == "RawDocument"
-    assert ResearchNote.__name__ == "ResearchNote"
-    assert ResearchPlan.__name__ == "ResearchPlan"
+    assert RunEvent.__name__ == "RunEvent"
     assert TokenUsage.__name__ == "TokenUsage"
+    assert UsageBreakdown.__name__ == "UsageBreakdown"
+    assert set(UsageBreakdown.model_fields) == {"planner", "writer"}
 
 
-def test_prompts_are_built_in_prompts_package() -> None:
-    system = build_system_prompt(date(2026, 8, 31))
-    assert "2026-08-31" in system
-    assert "停止调用工具" in FINAL_REPORT_PROMPT
-
-
-def test_tools_package_exposes_search_and_scraper_interfaces() -> None:
-    assert {item["function"]["name"] for item in EXTERNAL_TOOL_SCHEMAS} == {
-        "search_web",
-        "fetch_webpage",
-    }
-    assert {item["function"]["name"] for item in RESEARCHER_TOOL_SCHEMAS} == {
-        "search_web",
-        "fetch_webpage",
-        "complete_research_task",
-    }
-    assert ToolContext.__name__ == "ToolContext"
+def test_context_and_web_interfaces_remain_available() -> None:
+    assert CompressionRuntime.__name__ == "CompressionRuntime"
+    assert ContextCompressor.__name__ == "ContextCompressor"
+    assert callable(format_document_context)
     assert AsyncWebFetcher.__name__ == "AsyncWebFetcher"
     assert search_web.__name__ == "search_web"
     assert normalize_url_before_fetch("https://example.com/") == "https://example.com/"
 
 
-def test_context_package_exposes_compression_pipeline() -> None:
-    assert CompressionRuntime.__name__ == "CompressionRuntime"
-    assert CompressionService.__name__ == "CompressionService"
-    assert chunk_document.__name__ == "chunk_document"
-    assert retrieve_notes.__name__ == "retrieve_notes"
-    assert select_relevant_chunks.__name__ == "select_relevant_chunks"
-
-
-def test_public_agent_and_orchestration_interfaces() -> None:
-    assert AgentResult.__name__ == "AgentResult"
-    assert ResearchAgent.__name__ == "ResearchAgent"
-    assert callable(build_real_agent)
+def test_graph_and_observability_interfaces_are_basic_only() -> None:
     assert GraphState.__name__ == "GraphState"
-    assert ResearchWorkflowNodes.__name__ == "ResearchWorkflowNodes"
     assert callable(build_research_graph)
+    assert callable(estimate_usage_cost)
+    assert callable(format_role_usage)
 
 
-def test_observability_package_exposes_token_interfaces() -> None:
-    assert TokenEstimator.__name__ == "TokenEstimator"
-    assert TokenLedger.__name__ == "TokenLedger"
-    assert callable(calculate_round_metrics)
-    assert callable(format_round_metrics)
-    assert callable(format_token_summary)
+def test_prompts_and_tools_have_no_agent_loop_compatibility_exports() -> None:
+    assert callable(build_planner_messages)
+    assert callable(build_writer_messages)
+    assert ToolContext.__name__ == "ToolContext"
+    assert not hasattr(tools_package, "EXTERNAL_TOOL_SCHEMAS")
+    assert not hasattr(tools_package, "RESEARCHER_TOOL_SCHEMAS")

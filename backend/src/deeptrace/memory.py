@@ -1,7 +1,7 @@
-"""研究记忆：跨运行复用已抓取页面与笔记元数据。
+"""研究记忆：跨运行复用已抓取页面。
 
 记忆只保存带来源 URL、标题、发布时间与抓取时间的一手页面正文。
-命中记忆的 URL 在后续运行中免网络抓取，直接进入召回与压缩；
+命中记忆的 URL 在后续运行中免网络抓取，直接进入上下文筛选；
 是否启用由 DEEPTRACE_USE_MEMORY 控制，存储为运行目录下的 JSONL。
 """
 
@@ -112,8 +112,8 @@ class ResearchMemory:
 
 
 def default_memory_path() -> Path:
-    """默认记忆文件路径：DEEPTRACE_MEMORY_PATH 或 backend/memory/notes.jsonl。"""
+    """默认记忆文件路径：DEEPTRACE_MEMORY_PATH 或 memory/pages.jsonl。"""
     env = os.getenv("DEEPTRACE_MEMORY_PATH")
     if env:
         return Path(env)
-    return Path(__file__).resolve().parents[2] / "memory" / "notes.jsonl"
+    return Path(__file__).resolve().parents[2] / "memory" / "pages.jsonl"

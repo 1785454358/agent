@@ -24,8 +24,6 @@ def get_budget_reason(
     """按设计优先级返回第一个已触发的全局预算。"""
     if state.get("force_finalize"):
         return "forced_finalize"
-    if state.get("step_count", 0) >= settings.hard_max_steps:
-        return "step_budget"
     if state.get("fetched_page_count", 0) >= getattr(settings, "max_fetched_pages", 20):
         return "page_budget"
     max_cost: Any = getattr(settings, "max_cost_usd", None)

@@ -1,8 +1,10 @@
-"""DeepTrace 提示词公共接口。"""
+"""Prompt builders for the Basic Planner and Writer calls."""
 
-from deeptrace.prompts.research import FINAL_REPORT_PROMPT, build_system_prompt
+from deeptrace.prompts.planner import build_planner_messages
+from deeptrace.prompts.writer import WRITER_SYSTEM_PROMPT, build_writer_messages
 
 __all__ = [
-    "FINAL_REPORT_PROMPT",
-    "build_system_prompt",
+    "WRITER_SYSTEM_PROMPT",
+    "build_planner_messages",
+    "build_writer_messages",
 ]

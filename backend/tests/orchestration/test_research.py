@@ -2,25 +2,10 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
-import sys
 import threading
 import time
-from types import ModuleType, SimpleNamespace
+from types import SimpleNamespace
 from typing import Any
-
-
-# Task 3 intentionally deletes modules still imported by the legacy package facade.
-# Load the new module through namespace packages until Tasks 5-6 replace that facade.
-SRC_ROOT = Path(__file__).resolve().parents[2] / "src" / "deeptrace"
-if "deeptrace" not in sys.modules:
-    deeptrace_package = ModuleType("deeptrace")
-    deeptrace_package.__path__ = [str(SRC_ROOT)]
-    sys.modules["deeptrace"] = deeptrace_package
-if "deeptrace.orchestration" not in sys.modules:
-    orchestration_package = ModuleType("deeptrace.orchestration")
-    orchestration_package.__path__ = [str(SRC_ROOT / "orchestration")]
-    sys.modules["deeptrace.orchestration"] = orchestration_package
 
 from deeptrace.context import ContextCompressor
 from deeptrace.models import RawDocument, ScraperUsed
@@ -310,6 +295,63 @@ def test_async_search_is_bounded_by_remaining_deadline() -> None:
 
     assert payload["error"]["code"] == "time_budget"
     assert elapsed < 0.2
+
+
+def test_fetch_is_bounded_by_remaining_deadline() -> None:
+    async def run():
+        settings = make_settings(max_runtime_seconds=0.02)
+        budget = GlobalBudget(settings, datetime.now(UTC))
+        service, _search, _fetcher = make_service(
+            {"a": ["https://e.test/slow"]},
+            fetch_delay=60,
+            settings=settings,
+            budget=budget,
+        )
+        return await asyncio.wait_for(
+            service.acollect("root", ["a"], None), timeout=0.2
+        )
+
+    _context, documents, sources, results = asyncio.run(run())
+
+    assert documents == {}
+    assert sources == []
+    assert results[0].errors == ["time_budget"]
+
+
+def test_context_filter_is_bounded_by_remaining_deadline() -> None:
+    class HangingCompressor:
+        async def aget_context(self, *_args, **_kwargs):
+            await asyncio.sleep(60)
+
+    async def run():
+        settings = make_settings(max_runtime_seconds=0.02)
+        budget = GlobalBudget(settings, datetime.now(UTC))
+        service = ParallelResearchService(
+            tools=object(),
+            fetcher=CountingFetcher(),
+            compressor=HangingCompressor(),
+            settings=settings,
+            budget=budget,
+            search=SearchStub(
+                {
+                    "a": [
+                        {
+                            "title": "provider",
+                            "url": "https://e.test/provider",
+                            "raw_content": "full content",
+                        }
+                    ]
+                }
+            ),
+        )
+        return await asyncio.wait_for(
+            service.acollect("root", ["a"], None), timeout=0.2
+        )
+
+    context, _documents, _sources, results = asyncio.run(run())
+
+    assert context == ""
+    assert results[0].errors == ["time_budget"]
 
 
 def test_collect_uses_one_shared_fetch_semaphore() -> None:

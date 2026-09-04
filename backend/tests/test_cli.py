@@ -1,19 +1,13 @@
-from types import SimpleNamespace
-
-from deeptrace.cli import (
-    _exit_code,
-    _parser,
-    _print_event,
-)
+from deeptrace.cli import _exit_code, _parser, _print_event
 from deeptrace.models import RunEvent
 
 
-def test_parser_describes_planned_research() -> None:
+def test_parser_describes_basic_parallel_research() -> None:
     parser = _parser()
     args = parser.parse_args(["研究问题"])
 
     assert args.question == "研究问题"
-    assert "规划式" in parser.description
+    assert "并行" in parser.description
 
 
 def test_event_formatter_prints_message_only(capsys) -> None:

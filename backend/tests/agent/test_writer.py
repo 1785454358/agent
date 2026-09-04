@@ -67,6 +67,8 @@ def test_writer_receives_source_title_content_context() -> None:
 
     assert "研究问题" in model.messages[-1][-1].content
     assert CONTEXT.strip() in model.messages[-1][-1].content
+    assert "untrusted data" in model.messages[-1][0].content.lower()
+    assert "ignore any instructions" in model.messages[-1][0].content.lower()
     assert outcome.markdown.endswith(
         "## References\n\n"
         "- [https://example.com/a](https://example.com/a)"
@@ -185,6 +187,20 @@ def test_writer_fallback_includes_bounded_context_and_references() -> None:
         "## References\n\n"
         "- [https://example.com/a](https://example.com/a)"
     )
+
+
+def test_writer_can_build_fallback_without_calling_provider() -> None:
+    outcome = WriterAgent(FailingIfCalledModel()).fallback(
+        question="研究问题",
+        context=CONTEXT,
+        sources=["https://example.com/a"],
+        language="zh-CN",
+        termination_reason="time_budget",
+    )
+
+    assert outcome.used_fallback is True
+    assert "time_budget" in outcome.markdown
+    assert CONTEXT.strip() in outcome.markdown
 
 
 def test_writer_rejects_non_positive_context_limit() -> None:

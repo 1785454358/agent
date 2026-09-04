@@ -9,22 +9,24 @@ def test_elapsed_seconds_is_non_negative() -> None:
     assert elapsed_seconds((now - timedelta(seconds=2)).isoformat(), now) == 2
 
 
-def test_token_usage_does_not_trigger_budget() -> None:
+def test_steps_and_token_usage_do_not_trigger_budget() -> None:
     settings = SimpleNamespace(
-        hard_max_steps=12,
         max_fetched_pages=20,
         max_runtime_seconds=600,
         max_cost_usd=None,
     )
     now = datetime.now(UTC)
-    state = {"started_at": now.isoformat(), "api_token_count": 999_999_999}
+    state = {
+        "started_at": now.isoformat(),
+        "step_count": 999_999_999,
+        "api_token_count": 999_999_999,
+    }
     assert get_budget_reason(state, settings, now) is None
 
 
 def test_total_runtime_deadline_still_triggers() -> None:
     now = datetime.now(UTC)
     settings = SimpleNamespace(
-        hard_max_steps=12,
         max_fetched_pages=20,
         max_runtime_seconds=100,
         max_cost_usd=None,

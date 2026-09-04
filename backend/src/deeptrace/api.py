@@ -40,8 +40,7 @@ class RunRecord(BaseModel):
     finished_at: str | None = None
     answer: str = ""
     sources: list[str] = Field(default_factory=list)
-    plan: dict[str, Any] | None = None
-    sections: list[dict[str, Any]] = Field(default_factory=list)
+    search_queries: list[str] = Field(default_factory=list)
     events: list[dict[str, Any]] = Field(default_factory=list)
     usage: dict[str, Any] | None = None
     error: str | None = None
@@ -94,18 +93,19 @@ def create_app(
         record.finished_at = datetime.now(UTC).isoformat()
         record.answer = result.answer
         record.sources = result.sources
-        record.plan = (
-            result.plan.model_dump(mode="json") if result.plan else None
-        )
-        record.sections = [
-            section.model_dump(mode="json") for section in result.sections
-        ]
+        record.search_queries = result.search_queries
         record.usage = {
             "total_tokens": result.provider_usage.total_tokens,
             "input_tokens": result.provider_usage.input_tokens,
             "output_tokens": result.provider_usage.output_tokens,
             "role_usage": result.role_usage.model_dump(mode="json"),
             "steps": result.steps,
+            "estimated_cost_usd": (
+                str(result.estimated_cost_usd)
+                if result.estimated_cost_usd is not None
+                else None
+            ),
+            "stage_seconds": result.stage_seconds,
         }
 
     async def _execute(record: RunRecord, state: _RunState) -> None:

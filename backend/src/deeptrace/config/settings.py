@@ -1,4 +1,4 @@
-"""环境变量读取、默认值与配置校验。"""
+"""Environment loading and validation for Basic research."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+
 def _required(name: str) -> str:
-    """读取必需的环境变量，如果未配置则抛出异常"""
     value = os.getenv(name, "").strip()
     if not value:
         raise RuntimeError(
@@ -19,8 +19,8 @@ def _required(name: str) -> str:
         )
     return value
 
+
 def _bounded_int(name: str, default: int, minimum: int, maximum: int) -> int:
-    """读取整数类型的环境变量，验证是否在有效范围内"""
     raw = os.getenv(name, str(default)).strip()
     try:
         value = int(raw)
@@ -30,8 +30,10 @@ def _bounded_int(name: str, default: int, minimum: int, maximum: int) -> int:
         raise RuntimeError(f"{name} must be between {minimum} and {maximum}")
     return value
 
-def _bounded_float(name: str, default: float, minimum: float, maximum: float) -> float:
-    """读取浮点环境变量，并限制在可解释的配置范围内。"""
+
+def _bounded_float(
+    name: str, default: float, minimum: float, maximum: float
+) -> float:
     raw = os.getenv(name, str(default)).strip()
     try:
         value = float(raw)
@@ -43,7 +45,6 @@ def _bounded_float(name: str, default: float, minimum: float, maximum: float) ->
 
 
 def _boolean(name: str, default: bool = False) -> bool:
-    """读取明确的布尔开关，避免任意非空字符串被误判为 True。"""
     raw = os.getenv(name, str(default)).strip().lower()
     if raw in {"1", "true", "yes", "on"}:
         return True
@@ -64,41 +65,42 @@ def _optional_decimal(name: str) -> Decimal | None:
         raise RuntimeError(f"{name} 不能为负数")
     return value
 
+
 @dataclass(frozen=True)
 class Settings:
-    """应用配置类，存储所有必要的配置参数"""
-    openai_api_key: str      # OpenAI API 密钥
-    openai_base_url: str     # OpenAI API 基础 URL
-    openai_model: str        # 使用的模型名称
-    tavily_api_key: str      # Tavily 搜索 API 密钥
-    max_steps: int = 8       # Agent 最大执行步数
-    max_page_chars: int = 20_000  # 网页内容最大字符数
+    """Validated settings for the flat, one-pass pipeline."""
+
+    openai_api_key: str
+    openai_base_url: str
+    openai_model: str
+    tavily_api_key: str
+    max_page_chars: int = 20_000
     embedding_model_path: Path = Path(r"D:\Dev\Models\bge-m3")
-    min_relevance_score: float = 0.45
     embedding_batch_size: int = 8
     min_extracted_chars: int = 500
     min_extracted_tokens: int = 200
-    soft_max_steps: int = 8
-    hard_max_steps: int = 12
-    query_loop_threshold: float = 0.85
-    token_encoding: str = "cl100k_base"
     allow_benchmark_dns_proxy: bool = False
-    max_research_tasks: int = 4
-    task_concurrency: int = 2  # 并行研究的子任务数
-    use_memory: bool = False  # 跨运行复用已抓取页面
-    memory_path: Path = Path("memory/notes.jsonl")
-    max_task_rounds: int = 3
-    min_sources_per_task: int = 2
+    search_query_count: int = 3
+    max_search_results_per_query: int = 5
+    scraper_concurrency: int = 15
+    context_max_results: int = 10
+    context_direct_threshold_chars: int = 8_000
+    context_chunk_chars: int = 1_000
+    context_chunk_overlap_chars: int = 100
+    context_similarity_threshold: float = 0.42
+    planner_timeout_seconds: float = 60.0
+    writer_timeout_seconds: float = 60.0
     max_fetched_pages: int = 20
-    max_runtime_seconds: int = 600
+    max_runtime_seconds: int = 300
+    use_memory: bool = False
+    memory_path: Path = Path("memory/pages.jsonl")
     input_cost_per_million: Decimal | None = None
     output_cost_per_million: Decimal | None = None
     max_cost_usd: Decimal | None = None
 
     @classmethod
     def from_env(cls) -> "Settings":
-        """从环境变量创建配置实例"""
-        load_dotenv()  # 加载 .env 文件
+        load_dotenv()
         embedding_model_path = Path(
             os.getenv(
                 "DEEPTRACE_EMBEDDING_MODEL_PATH", r"D:\Dev\Models\bge-m3"
@@ -110,14 +112,16 @@ class Settings:
                 "请设置 DEEPTRACE_EMBEDDING_MODEL_PATH。"
             )
 
-        soft_max_steps = _bounded_int("DEEPTRACE_SOFT_MAX_STEPS", 8, 1, 100)
-        hard_max_steps = _bounded_int("DEEPTRACE_HARD_MAX_STEPS", 12, 1, 100)
-        if soft_max_steps > hard_max_steps:
-            raise RuntimeError("soft_max_steps 不能大于 hard_max_steps")
-
-        token_encoding = os.getenv("DEEPTRACE_TOKEN_ENCODING", "cl100k_base").strip()
-        if not token_encoding:
-            raise RuntimeError("DEEPTRACE_TOKEN_ENCODING 不能为空")
+        chunk_chars = _bounded_int(
+            "DEEPTRACE_CONTEXT_CHUNK_CHARS", 1_000, 100, 20_000
+        )
+        overlap_chars = _bounded_int(
+            "DEEPTRACE_CONTEXT_CHUNK_OVERLAP_CHARS", 100, 0, 19_999
+        )
+        if overlap_chars >= chunk_chars:
+            raise RuntimeError(
+                "DEEPTRACE_CONTEXT_CHUNK_OVERLAP_CHARS overlap 必须小于 chunk"
+            )
 
         input_cost = _optional_decimal("DEEPTRACE_INPUT_COST_PER_MILLION")
         output_cost = _optional_decimal("DEEPTRACE_OUTPUT_COST_PER_MILLION")
@@ -130,14 +134,10 @@ class Settings:
             openai_base_url=_required("OPENAI_BASE_URL"),
             openai_model=_required("OPENAI_MODEL"),
             tavily_api_key=_required("TAVILY_API_KEY"),
-            max_steps=_bounded_int("DEEPTRACE_MAX_STEPS", 8, 1, 20),
             max_page_chars=_bounded_int(
                 "DEEPTRACE_MAX_PAGE_CHARS", 20_000, 1_000, 100_000
             ),
             embedding_model_path=embedding_model_path,
-            min_relevance_score=_bounded_float(
-                "DEEPTRACE_MIN_RELEVANCE_SCORE", 0.45, 0.0, 1.0
-            ),
             embedding_batch_size=_bounded_int(
                 "DEEPTRACE_EMBEDDING_BATCH_SIZE", 8, 1, 256
             ),
@@ -147,36 +147,47 @@ class Settings:
             min_extracted_tokens=_bounded_int(
                 "DEEPTRACE_MIN_EXTRACTED_TOKENS", 200, 1, 100_000
             ),
-            soft_max_steps=soft_max_steps,
-            hard_max_steps=hard_max_steps,
-            query_loop_threshold=_bounded_float(
-                "DEEPTRACE_QUERY_LOOP_THRESHOLD", 0.85, 0.0, 1.0
-            ),
-            token_encoding=token_encoding,
             allow_benchmark_dns_proxy=_boolean(
                 "DEEPTRACE_ALLOW_BENCHMARK_DNS_PROXY", False
             ),
-            max_research_tasks=_bounded_int(
-                "DEEPTRACE_MAX_RESEARCH_TASKS", 4, 1, 5
+            search_query_count=_bounded_int(
+                "DEEPTRACE_SEARCH_QUERY_COUNT", 3, 1, 10
             ),
-            max_task_rounds=_bounded_int(
-                "DEEPTRACE_MAX_TASK_ROUNDS", 3, 1, 20
+            max_search_results_per_query=_bounded_int(
+                "DEEPTRACE_MAX_SEARCH_RESULTS_PER_QUERY", 5, 1, 8
             ),
-            min_sources_per_task=_bounded_int(
-                "DEEPTRACE_MIN_SOURCES_PER_TASK", 2, 1, 5
+            scraper_concurrency=_bounded_int(
+                "DEEPTRACE_SCRAPER_CONCURRENCY", 15, 1, 100
+            ),
+            context_max_results=_bounded_int(
+                "DEEPTRACE_CONTEXT_MAX_RESULTS", 10, 1, 10
+            ),
+            context_direct_threshold_chars=_bounded_int(
+                "DEEPTRACE_CONTEXT_DIRECT_THRESHOLD_CHARS",
+                8_000,
+                0,
+                1_000_000,
+            ),
+            context_chunk_chars=chunk_chars,
+            context_chunk_overlap_chars=overlap_chars,
+            context_similarity_threshold=_bounded_float(
+                "DEEPTRACE_CONTEXT_SIMILARITY_THRESHOLD", 0.42, -1.0, 1.0
+            ),
+            planner_timeout_seconds=_bounded_float(
+                "DEEPTRACE_PLANNER_TIMEOUT_SECONDS", 60.0, 0.1, 600.0
+            ),
+            writer_timeout_seconds=_bounded_float(
+                "DEEPTRACE_WRITER_TIMEOUT_SECONDS", 60.0, 0.1, 600.0
             ),
             max_fetched_pages=_bounded_int(
                 "DEEPTRACE_MAX_FETCHED_PAGES", 20, 1, 1_000
             ),
             max_runtime_seconds=_bounded_int(
-                "DEEPTRACE_MAX_RUNTIME_SECONDS", 600, 1, 86_400
-            ),
-            task_concurrency=_bounded_int(
-                "DEEPTRACE_TASK_CONCURRENCY", 2, 1, 8
+                "DEEPTRACE_MAX_RUNTIME_SECONDS", 300, 1, 86_400
             ),
             use_memory=_boolean("DEEPTRACE_USE_MEMORY", False),
             memory_path=Path(
-                os.getenv("DEEPTRACE_MEMORY_PATH", "memory/notes.jsonl")
+                os.getenv("DEEPTRACE_MEMORY_PATH", "memory/pages.jsonl")
             ),
             input_cost_per_million=input_cost,
             output_cost_per_million=output_cost,

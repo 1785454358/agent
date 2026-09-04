@@ -1,49 +1,102 @@
+import asyncio
+from datetime import UTC, datetime
 from decimal import Decimal
+from types import SimpleNamespace
 
-from deeptrace.agent.service import (
-    _initial_research_state,
-    _sources_from_used_notes,
-)
-from deeptrace.models import TokenUsage
-from deeptrace.observability import estimate_usage_cost
+import pytest
+
+from deeptrace.agent.service import ResearchAgent, _initial_research_state
+from deeptrace.models import RunEvent, TokenUsage, UsageBreakdown
 
 
-def test_sources_follow_writer_note_order(research_note) -> None:
-    second = research_note.model_copy(
-        update={"note_id": "note-02", "source_url": "https://example.com/b"}
+class _Graph:
+    async def ainvoke(self, initial, config):
+        assert initial["user_query"] == "研究问题"
+        assert config["configurable"]["service"] is not None
+        return {
+            **initial,
+            "search_queries": ["技术进展", "研究问题"],
+            "final_answer": "# 报告",
+            "final_sources": ["https://example.com/a"],
+            "events": [RunEvent(event_type="run.completed", message="完成")],
+            "step_count": 3,
+            "provider_usage": TokenUsage(
+                input_tokens=100, output_tokens=20, total_tokens=120
+            ),
+            "role_usage": UsageBreakdown(
+                planner=TokenUsage(total_tokens=30),
+                writer=TokenUsage(total_tokens=90),
+            ),
+            "stage_seconds": {"plan": 1.0, "parallel_research": 2.0},
+            "termination_reason": "completed",
+        }
+
+
+class _Fetcher:
+    closed = False
+
+    async def aclose(self):
+        self.closed = True
+
+
+def _settings():
+    return SimpleNamespace(
+        use_memory=False,
+        input_cost_per_million=Decimal("2"),
+        output_cost_per_million=Decimal("6"),
     )
-
-    sources = _sources_from_used_notes(
-        {research_note.note_id: research_note, second.note_id: second},
-        [second.note_id, research_note.note_id, second.note_id],
-    )
-
-    assert sources == ["https://example.com/b", "https://example.com/a"]
-
-
-def test_usage_cost_uses_decimal_prices() -> None:
-    cost = estimate_usage_cost(
-        TokenUsage(input_tokens=1_000_000, output_tokens=500_000),
-        Decimal("2.00"),
-        Decimal("4.00"),
-    )
-
-    assert cost == Decimal("4.00")
 
 
 def test_initial_research_state_is_fully_initialized() -> None:
-    state = _initial_research_state("研究问题")
+    state = _initial_research_state(
+        "研究问题", started_at=datetime(2026, 9, 4, tzinfo=UTC)
+    )
 
     assert state["user_query"] == "研究问题"
-    assert state["research_plan"] is None
-    assert state["current_task_index"] == 0
-    for key in {
-        "sources",
-        "evidence",
-        "claims",
-        "verification_results",
-        "used_claim_ids",
-    }:
+    assert state["search_queries"] == []
+    assert state["initial_search"] is None
+    assert state["research_context"] == ""
+    assert state["documents"] == {}
+    assert state["final_sources"] == []
+    for key in {"notes", "chunks", "research_plan", "used_note_ids"}:
         assert key not in state
-    assert state["started_at"]
-    assert isinstance(state["provider_usage"], TokenUsage)
+
+
+def test_agent_maps_basic_graph_result() -> None:
+    fetcher = _Fetcher()
+    agent = ResearchAgent(
+        graph=_Graph(),
+        nodes=SimpleNamespace(budget=None),
+        collector=SimpleNamespace(cache_documents=lambda _documents: None),
+        fetcher=fetcher,
+        settings=_settings(),
+    )
+
+    result = asyncio.run(agent.arun("  研究问题  "))
+
+    assert result.status == "completed"
+    assert result.answer == "# 报告"
+    assert result.sources == ["https://example.com/a"]
+    assert result.search_queries == ["技术进展", "研究问题"]
+    assert result.provider_usage.total_tokens == 120
+    assert result.estimated_cost_usd == Decimal("0.00032")
+    assert result.stage_seconds["parallel_research"] == 2.0
+    assert not hasattr(result, "plan")
+    assert not hasattr(result, "sections")
+    assert not hasattr(result, "token_metrics")
+
+
+def test_agent_rejects_empty_question_and_closes_fetcher() -> None:
+    fetcher = _Fetcher()
+    agent = ResearchAgent(
+        graph=_Graph(),
+        nodes=SimpleNamespace(budget=None),
+        collector=SimpleNamespace(cache_documents=lambda _documents: None),
+        fetcher=fetcher,
+        settings=_settings(),
+    )
+
+    with pytest.raises(ValueError, match="问题不能为空"):
+        asyncio.run(agent.arun("   "))
+    asyncio.run(agent.aclose())
+    assert fetcher.closed is True
