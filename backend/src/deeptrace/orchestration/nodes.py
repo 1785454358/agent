@@ -11,9 +11,14 @@ from typing import Any
 
 from deeptrace.agent.planner import PlannerAgent, normalize_question
 from deeptrace.agent.writer import WriterAgent
-from deeptrace.models import RunEvent, TokenUsage, UsageBreakdown
+from deeptrace.models import (
+    RunEvent,
+    TokenUsage,
+    UsageBreakdown,
+    add_token_usages,
+)
 from deeptrace.observability import estimate_usage_cost
-from deeptrace.orchestration.budget import GlobalBudget
+from deeptrace.orchestration.budget import GlobalBudget, elapsed_seconds
 from deeptrace.orchestration.research import ParallelResearchService, QueryResearchResult
 from deeptrace.orchestration.state import GraphState
 
@@ -248,7 +253,25 @@ class ResearchWorkflowNodes:
                     "Writer 失败，使用确定性降级报告",
                 )
             )
-        events.append(self._event("run.completed", "研究任务完成"))
+        total_usage = add_token_usages(
+            state.get("provider_usage", TokenUsage()), outcome.usage
+        )
+        total_elapsed = elapsed_seconds(state["started_at"], datetime.now(UTC))
+        events.append(
+            self._event(
+                "run.completed",
+                (
+                    f"研究任务完成；总耗时 {total_elapsed:.1f} 秒；"
+                    f"总消耗 Token {total_usage.total_tokens:,}"
+                ),
+                details={
+                    "elapsed_seconds": round(total_elapsed, 3),
+                    "total_tokens": total_usage.total_tokens,
+                    "input_tokens": total_usage.input_tokens,
+                    "output_tokens": total_usage.output_tokens,
+                },
+            )
+        )
         return {
             "final_answer": outcome.markdown,
             "final_sources": outcome.sources,

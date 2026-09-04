@@ -1,5 +1,5 @@
 import asyncio
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
 from deeptrace.agent.writer import WriterOutcome
@@ -120,6 +120,12 @@ def _state(question="问题"):
         "research_context": "",
         "final_sources": [],
         "termination_reason": "",
+        "started_at": (datetime.now(UTC) - timedelta(seconds=2)).isoformat(),
+        "provider_usage": TokenUsage(
+            input_tokens=3,
+            output_tokens=4,
+            total_tokens=7,
+        ),
     }
 
 
@@ -208,6 +214,14 @@ def test_writer_node_finishes_run_and_accounts_usage() -> None:
         "writing.completed",
         "run.completed",
     ]
+    completed = update["events"][-1]
+    assert completed.event_type == "run.completed"
+    assert "总耗时" in completed.message
+    assert "总消耗 Token 18" in completed.message
+    assert completed.details["total_tokens"] == 18
+    assert completed.details["input_tokens"] == 3
+    assert completed.details["output_tokens"] == 4
+    assert 2 <= completed.details["elapsed_seconds"] < 5
 
 
 def test_writer_node_does_not_start_provider_after_global_deadline() -> None:
