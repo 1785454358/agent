@@ -58,7 +58,7 @@ def test_small_context_skips_embedding(raw_document) -> None:
     )
 
 
-def test_small_documents_over_limit_use_embeddings_so_later_source_can_win(
+def test_small_documents_over_hard_limit_use_embeddings_so_later_source_can_win(
     raw_document,
 ) -> None:
     documents = [
@@ -85,7 +85,7 @@ def test_small_documents_over_limit_use_embeddings_so_later_source_can_win(
         DeterministicEmbeddingRuntime(), direct_threshold_chars=8000
     )
 
-    context = asyncio.run(compressor.aget_context("相关", documents, max_results=10))
+    context = asyncio.run(compressor.aget_context("相关", documents, max_results=99))
 
     assert context == (
         "Source: https://example.com/relevant\n"

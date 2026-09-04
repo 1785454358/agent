@@ -120,7 +120,7 @@ class ContextCompressor:
         total_chars = sum(len(document.content.strip()) for document in valid_documents)
         if (
             total_chars < self._direct_threshold_chars
-            and len(valid_documents) <= max_results
+            and len(valid_documents) <= limit
         ):
             return "\n".join(
                 format_document_context(document, document.content)
