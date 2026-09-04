@@ -25,3 +25,4 @@
 - **解决**：默认模式改为 GPT-Researcher Basic 风格的一次性扁平流程。首次搜索作为 Planner 背景，Planner 默认生成 3 个搜索词并追加原问题；全部搜索并发执行，URL 全局去重后最多 15 路抓取；小文本直接进入上下文，大文本仅由 BGE-M3 筛选相关原文；Writer 直接消费 `Source / Title / Content` 字符串并一次成稿。运行图固定为 `plan → parallel_research → writer`。
 - **删除**：移除研究计划、子任务、研究笔记、文档分块持久对象、覆盖率、逐轮 Token 账本、Researcher 工具调用循环及对应公共字段。API 改为返回 `search_queries`，Provider 用量只保留 Planner 与 Writer。
 - **时延机制**：搜索并行、抓取共享并发 15、每个搜索词最多 5 个候选、Planner 与 Writer 各 60 秒共享重试期限、整次运行默认限制 300 秒。相比原来的串行任务轮次，主要耗时只剩一次 Planner、一次并行采集和一次 Writer。
+- **真实复测**：运行 `79d8e0706b4f` 使用相同问题，于 2026-09-05 00:06:44 至 00:10:20（Asia/Shanghai）完成，总墙钟 216.0 秒。Planner 62.7 秒后降级，单查询采集 86.5 秒并取得 4 个来源，Writer 60.0 秒后降级；最终报告 11560 字符。事件序列仅包含 `planning.*`、`query.*`、`research.completed`、`writing.*` 和 `run.completed`，旧任务与工具轮事件为 0。当前瓶颈已从串行子任务循环收敛为 Provider 超时与单次采集阶段。
