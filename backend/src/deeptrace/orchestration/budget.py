@@ -120,3 +120,14 @@ class GlobalBudget:
         if self._deadline_reason(now) is not None:
             self.reason = "time_budget"
         return self.reason
+
+    def remaining_seconds(self, now: datetime) -> float:
+        """返回全局期限剩余秒数；期限到达时同步冻结预算。"""
+        if self.stop_reason(now) is not None:
+            return 0.0
+        elapsed = elapsed_seconds(self._started_at.isoformat(), now)
+        return max(
+            0.0,
+            float(getattr(self._settings, "max_runtime_seconds", 600))
+            - elapsed,
+        )

@@ -23,6 +23,7 @@ class PendingFetch(BaseModel):
 class ScraperUsed(StrEnum):
     """最终提供正文的抓取及提取路径。"""
 
+    SEARCH_PROVIDER = "search_provider"
     HTTPX_TRAFILATURA = "httpx_trafilatura"
     HTTPX_BS4 = "httpx_bs4"
     PLAYWRIGHT_TRAFILATURA = "playwright_trafilatura"

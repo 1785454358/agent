@@ -6,17 +6,38 @@ import asyncio
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import hashlib
+import inspect
+import re
 from typing import Any
 
 from deeptrace.context import ContextCompressor
-from deeptrace.models import RawDocument
+from deeptrace.models import RawDocument, ScraperUsed
 from deeptrace.orchestration.budget import GlobalBudget
 from deeptrace.tools import ToolContext, search_web
 from deeptrace.tools.scraper import AsyncWebFetcher, WebFetchError, normalize_url_before_fetch
 
 
 JsonObject = dict[str, Any]
-SearchFunction = Callable[[ToolContext, str, int, set[int] | None], JsonObject]
+SearchFunction = Callable[
+    [ToolContext, str, int, set[int] | None], Any
+]
+
+
+def _query_key(value: str) -> str:
+    """比较查询身份时忽略大小写及空白，避免原问题被重复搜索。"""
+    return re.sub(r"\s+", "", value).casefold()
+
+
+def _budget_error() -> JsonObject:
+    return {
+        "ok": False,
+        "error": {
+            "code": "time_budget",
+            "message": "研究运行时间预算已耗尽",
+            "details": {},
+        },
+    }
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,6 +95,23 @@ class ParallelResearchService:
     ) -> tuple[str, dict[str, RawDocument], list[str], list[QueryResearchResult]]:
         """Search all queries, fetch each URL once, and build Writer-ready context."""
         ordered_queries = [str(query).strip() for query in queries]
+        if self._budget is not None and self._budget.stop_reason(
+            datetime.now(UTC)
+        ) is not None:
+            results = [
+                QueryResearchResult(
+                    query=query,
+                    context="",
+                    sources=[],
+                    documents=[],
+                    candidate_count=0,
+                    fetch_success_count=0,
+                    fetch_failure_count=0,
+                    errors=[self._budget.reason or "time_budget"],
+                )
+                for query in ordered_queries
+            ]
+            return "", {}, [], results
         search_payloads = await asyncio.gather(
             *(
                 self._reuse_or_search(question, query, initial_search)
@@ -87,6 +125,7 @@ class ParallelResearchService:
         candidate_counts = [0 for _query in ordered_queries]
         claimed_urls: list[str] = []
         globally_claimed: set[str] = set()
+        provided_documents: dict[str, RawDocument] = {}
 
         for query_index, payload in enumerate(search_payloads):
             if isinstance(payload, BaseException):
@@ -112,10 +151,20 @@ class ParallelResearchService:
                     continue
                 seen_in_query.add(normalized)
                 query_urls[query_index].append(normalized)
+                raw_content = item.get("raw_content") if isinstance(item, Mapping) else None
+                if isinstance(raw_content, str) and raw_content.strip():
+                    provided_documents.setdefault(
+                        normalized,
+                        self._document_from_search_result(
+                            normalized, item, raw_content.strip()
+                        ),
+                    )
                 if normalized not in globally_claimed:
                     globally_claimed.add(normalized)
                     claimed_urls.append(normalized)
 
+        for normalized, document in provided_documents.items():
+            self._cache_document(document, requested_alias=normalized)
         fetch_errors = await self._fetch_claimed_urls(claimed_urls)
 
         documents_by_query: list[list[RawDocument]] = []
@@ -196,19 +245,26 @@ class ParallelResearchService:
         query: str,
         initial_search: Mapping[str, Any] | None,
     ) -> JsonObject:
-        if initial_search is not None and query == question:
+        if initial_search is not None and _query_key(query) == _query_key(question):
             return dict(initial_search)
         return await self._search_one(query)
 
     async def _search_one(self, query: str) -> JsonObject:
+        timeout: float | None = None
+        if self._budget is not None:
+            timeout = self._budget.remaining_seconds(datetime.now(UTC))
+            if timeout <= 0:
+                return _budget_error()
         try:
-            return await asyncio.to_thread(
-                self._search,
-                self._tools,
-                query,
-                int(getattr(self._settings, "max_search_results_per_query", 5)),
-                None,
+            operation = self._invoke_search(query)
+            return await asyncio.wait_for(
+                operation,
+                timeout=timeout,
             )
+        except TimeoutError:
+            if self._budget is not None:
+                self._budget.stop_reason(datetime.now(UTC))
+            return _budget_error()
         except Exception:
             return {
                 "ok": False,
@@ -218,6 +274,21 @@ class ParallelResearchService:
                     "details": {},
                 },
             }
+
+    async def _invoke_search(self, query: str) -> JsonObject:
+        args = (
+            self._tools,
+            query,
+            int(getattr(self._settings, "max_search_results_per_query", 5)),
+            None,
+        )
+        async_call = inspect.iscoroutinefunction(self._search) or (
+            hasattr(self._search, "__call__")
+            and inspect.iscoroutinefunction(self._search.__call__)
+        )
+        if async_call:
+            return await self._search(*args)
+        return await asyncio.to_thread(self._search, *args)
 
     async def _fetch_claimed_urls(self, urls: Sequence[str]) -> dict[str, str]:
         errors: dict[str, str] = {}
@@ -263,6 +334,31 @@ class ParallelResearchService:
             except ValueError:
                 continue
             self._document_cache[normalized] = document
+
+    @staticmethod
+    def _document_from_search_result(
+        normalized_url: str,
+        item: Mapping[str, Any],
+        content: str,
+    ) -> RawDocument:
+        content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+        identity = hashlib.sha256(
+            f"{normalized_url}\0{content_hash}".encode("utf-8")
+        ).hexdigest()[:20]
+        title = item.get("title")
+        return RawDocument(
+            doc_id=f"search-{identity}",
+            requested_url=normalized_url,
+            final_url=normalized_url,
+            canonical_url=normalized_url,
+            title=(title.strip() if isinstance(title, str) else "")
+            or normalized_url,
+            content=content,
+            content_hash=content_hash,
+            fetched_at=datetime.now(UTC),
+            scraper_used=ScraperUsed.SEARCH_PROVIDER,
+            status="success",
+        )
 
     @staticmethod
     def _payload_error_code(payload: Mapping[str, Any]) -> str:

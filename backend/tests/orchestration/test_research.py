@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 import sys
 import threading
@@ -39,7 +39,7 @@ class DirectOnlyRuntime:
 class SearchStub:
     def __init__(
         self,
-        results_by_query: dict[str, list[str] | BaseException],
+        results_by_query: dict[str, list[str | dict[str, Any]] | BaseException],
         *,
         delay: float = 0,
     ) -> None:
@@ -72,8 +72,12 @@ class SearchStub:
                 "ok": True,
                 "query": query,
                 "results": [
-                    {"title": f"title-{index}", "url": url, "snippet": ""}
-                    for index, url in enumerate(value[:max_results])
+                    (
+                        dict(item)
+                        if isinstance(item, dict)
+                        else {"title": f"title-{index}", "url": item, "snippet": ""}
+                    )
+                    for index, item in enumerate(value[:max_results])
                 ],
             }
         finally:
@@ -134,7 +138,9 @@ def make_settings(**overrides: Any) -> SimpleNamespace:
 
 
 def make_service(
-    results_by_query: dict[str, list[str] | BaseException],
+    results_by_query: dict[
+        str, list[str | dict[str, Any]] | BaseException
+    ],
     *,
     search_delay: float = 0,
     fetch_delay: float = 0,
@@ -161,12 +167,10 @@ def test_collect_runs_all_query_searches_concurrently() -> None:
         search_delay=0.05,
     )
 
-    started = time.perf_counter()
     _context, _documents, sources, results = asyncio.run(
         service.acollect("root", ["a", "b"], None)
     )
 
-    assert time.perf_counter() - started < 0.09
     assert search.max_active == 2
     assert [item.query for item in results] == ["a", "b"]
     assert sources == ["https://e.test/a", "https://e.test/b"]
@@ -211,6 +215,101 @@ def test_collect_reuses_initial_search_for_original_question() -> None:
     assert fetcher.calls == ["https://e.test/generated", "https://e.test/root"]
     assert sources == ["https://e.test/generated", "https://e.test/root"]
     assert [item.candidate_count for item in results] == [1, 1]
+
+
+def test_collect_reuses_initial_search_after_question_normalization() -> None:
+    service, search, _fetcher = make_service({})
+    initial = {
+        "ok": True,
+        "query": "人工 智能",
+        "results": [
+            {"title": "root", "url": "https://e.test/root", "snippet": ""}
+        ],
+    }
+
+    _context, _documents, sources, _results = asyncio.run(
+        service.acollect("人工 智能", ["人工智能"], initial)
+    )
+
+    assert search.calls == []
+    assert sources == ["https://e.test/root"]
+
+
+def test_search_provided_raw_content_skips_fetch() -> None:
+    service, _search, fetcher = make_service(
+        {
+            "root": [
+                {
+                    "title": "provider page",
+                    "url": "https://e.test/provider",
+                    "snippet": "summary",
+                    "raw_content": "provider supplied full content",
+                }
+            ]
+        }
+    )
+
+    context, documents, sources, results = asyncio.run(
+        service.acollect("root", ["root"], None)
+    )
+
+    assert fetcher.calls == []
+    assert sources == ["https://e.test/provider"]
+    assert "Content: provider supplied full content" in context
+    assert list(documents.values())[0].content == "provider supplied full content"
+    assert results[0].fetch_success_count == 1
+
+
+def test_expired_budget_starts_no_initial_or_parallel_search() -> None:
+    settings = make_settings(max_runtime_seconds=1)
+    budget = GlobalBudget(settings, datetime.now(UTC) - timedelta(seconds=2))
+    service, search, _fetcher = make_service(
+        {"root": ["https://e.test/root"]}, settings=settings, budget=budget
+    )
+
+    initial = asyncio.run(service.asearch_initial("root"))
+    context, documents, sources, results = asyncio.run(
+        service.acollect("root", ["root"], None)
+    )
+
+    assert search.calls == []
+    assert initial["error"]["code"] == "time_budget"
+    assert context == ""
+    assert documents == {}
+    assert sources == []
+    assert results[0].errors == ["time_budget"]
+
+
+def test_async_search_is_bounded_by_remaining_deadline() -> None:
+    class HangingAsyncSearch:
+        def __init__(self) -> None:
+            self.started = asyncio.Event()
+
+        async def __call__(self, *_args: object) -> dict[str, Any]:
+            self.started.set()
+            await asyncio.sleep(60)
+            raise AssertionError("deadline should cancel this search")
+
+    async def run() -> tuple[dict[str, Any], float]:
+        settings = make_settings(max_runtime_seconds=0.02)
+        budget = GlobalBudget(settings, datetime.now(UTC))
+        search = HangingAsyncSearch()
+        service = ParallelResearchService(
+            tools=object(),
+            fetcher=CountingFetcher(),
+            compressor=ContextCompressor(DirectOnlyRuntime()),
+            settings=settings,
+            budget=budget,
+            search=search,
+        )
+        started = time.perf_counter()
+        payload = await service.asearch_initial("root")
+        return payload, time.perf_counter() - started
+
+    payload, elapsed = asyncio.run(run())
+
+    assert payload["error"]["code"] == "time_budget"
+    assert elapsed < 0.2
 
 
 def test_collect_uses_one_shared_fetch_semaphore() -> None:

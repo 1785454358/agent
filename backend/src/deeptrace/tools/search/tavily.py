@@ -54,14 +54,16 @@ def search_web(
         url = str(item.get("url", "")).strip()
         if not url.startswith(("http://", "https://")):
             continue
-        results.append(
-            {
-                "title": str(item.get("title", "")).strip() or url,
-                "url": url,
-                "snippet": str(item.get("content", "")).strip(),
-                "score": item.get("score"),
-            }
-        )
+        result = {
+            "title": str(item.get("title", "")).strip() or url,
+            "url": url,
+            "snippet": str(item.get("content", "")).strip(),
+            "score": item.get("score"),
+        }
+        raw_content = item.get("raw_content")
+        if isinstance(raw_content, str) and raw_content.strip():
+            result["raw_content"] = raw_content.strip()
+        results.append(result)
     results = rank_search_results(results, clean_query, target_years or set())
     return {
         "ok": True,
