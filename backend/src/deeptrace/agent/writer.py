@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
@@ -100,8 +101,13 @@ def _strip_code_fence(text: str) -> str:
 class WriterAgent:
     """直接基于原文片段写作；输出校验失败重试一次，再走确定性降级。"""
 
-    def __init__(self, model: Any) -> None:
+    def __init__(
+        self, model: Any, *, call_timeout_seconds: float = 120.0
+    ) -> None:
+        if call_timeout_seconds <= 0:
+            raise ValueError("Writer 调用超时必须大于 0 秒")
         self._model = model
+        self._call_timeout_seconds = call_timeout_seconds
 
     @staticmethod
     def _numbered_sources(
@@ -224,10 +230,17 @@ class WriterAgent:
             sections=payload_sections,
             termination_reason=termination_reason,
         )
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + self._call_timeout_seconds
         body = ""
         for attempt in range(2):
             try:
-                response = await self._model.ainvoke(messages)
+                remaining = deadline - loop.time()
+                if remaining <= 0:
+                    raise TimeoutError("Writer Provider 调用超过总时限")
+                response = await asyncio.wait_for(
+                    self._model.ainvoke(messages), timeout=remaining
+                )
                 total = add_usage(total, message_usage(response))
                 body = _strip_code_fence(message_text(response))
                 used_numbers = citation_numbers(body)

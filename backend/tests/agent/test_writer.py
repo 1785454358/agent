@@ -50,6 +50,17 @@ class ScriptedModel:
         )
 
 
+class HangingModel:
+    """模拟 Provider 已接收请求但永不返回。"""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def ainvoke(self, _messages):
+        self.calls += 1
+        await asyncio.Event().wait()
+
+
 GOOD_BODY = "# 2024 年智能体进展\n\n## 技术进展\n\n- 关键进展[^1]。"
 
 
@@ -130,6 +141,30 @@ def test_awrite_falls_back_after_second_invalid_output(
     )
 
     assert model.calls == 2
+    assert outcome.used_fallback is True
+    assert "关键进展[^1]" in outcome.markdown
+    assert "[^1]: [来源标题](https://example.com/a)" in outcome.markdown
+
+
+def test_awrite_falls_back_when_provider_exceeds_total_timeout(
+    research_plan, section_result
+) -> None:
+    model = HangingModel()
+    agent = WriterAgent(model, call_timeout_seconds=0.01)
+
+    outcome = _run(
+        asyncio.wait_for(
+            agent.awrite(
+                plan=research_plan,
+                sections=[section_result],
+                notes_by_section={"task-01": [_note()]},
+                termination_reason="time_budget",
+            ),
+            timeout=0.2,
+        )
+    )
+
+    assert model.calls == 1
     assert outcome.used_fallback is True
     assert "关键进展[^1]" in outcome.markdown
     assert "[^1]: [来源标题](https://example.com/a)" in outcome.markdown
