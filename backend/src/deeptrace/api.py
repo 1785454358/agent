@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from deeptrace.agent.service import AgentResult, build_real_agent
@@ -191,79 +191,12 @@ def create_app(
             generator(), media_type="text/event-stream"
         )
 
-    @app.get("/", response_class=HTMLResponse)
-    async def dashboard() -> HTMLResponse:
-        return HTMLResponse(_DASHBOARD_HTML)
+    @app.get("/", response_class=FileResponse)
+    async def dashboard() -> FileResponse:
+        return FileResponse(Path(__file__).parent / "static" / "index.html")
 
     return app
 
-
-_DASHBOARD_HTML = """<!doctype html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<title>DeepTrace 研究仪表盘</title>
-<style>
-  body { font-family: system-ui, sans-serif; margin: 24px; background: #f6f7f9; }
-  h1 { font-size: 20px; }
-  .card { background: #fff; border: 1px solid #e3e5e8; border-radius: 8px;
-          padding: 16px; margin-bottom: 16px; }
-  input { width: 60%; padding: 8px; }
-  button { padding: 8px 16px; }
-  pre { white-space: pre-wrap; word-break: break-word; background: #fafafa;
-        padding: 12px; border-radius: 6px; max-height: 480px; overflow: auto; }
-  .event { font-size: 12px; color: #555; }
-</style>
-</head>
-<body>
-<h1>DeepTrace 研究仪表盘</h1>
-<div class="card">
-  <input id="q" placeholder="输入研究问题，例如：2024 年 AI Agent 领域有哪些热点新闻？">
-  <button onclick="start()">开始研究</button>
-  <span id="status"></span>
-</div>
-<div class="card"><b>研究事件</b><div id="events" class="event"></div></div>
-<div class="card"><b>最终报告</b><pre id="report">（等待运行）</pre></div>
-<script>
-let runId = null;
-async function start() {
-  const question = document.getElementById('q').value.trim();
-  const resp = await fetch('/researches', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({question})
-  });
-  runId = (await resp.json()).id;
-  document.getElementById('status').textContent = '运行中：' + runId;
-  listen();
-  poll();
-}
-function listen() {
-  const es = new EventSource('/researches/' + runId + '/events');
-  es.onmessage = (e) => {
-    const item = JSON.parse(e.data);
-    const div = document.getElementById('events');
-    div.innerHTML += `<div>[${
-      (item.ts || '').slice(11, 19)
-    }] ${item.event_type}: ${item.message}</div>`;
-  };
-  es.addEventListener('done', () => es.close());
-}
-async function poll() {
-  const resp = await fetch('/researches/' + runId);
-  const data = await resp.json();
-  if (['completed', 'partial', 'failed', 'cancelled'].includes(data.status)) {
-    document.getElementById('status').textContent =
-      '状态：' + data.status + '；报告来源 ' + data.sources.length + ' 个';
-    document.getElementById('report').textContent = data.answer || data.error;
-    return;
-  }
-  setTimeout(poll, 2000);
-}
-</script>
-</body>
-</html>
-"""
 
 app = create_app()
 
