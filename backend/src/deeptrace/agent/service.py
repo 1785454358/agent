@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from langchain_openai import ChatOpenAI
 from tavily import TavilyClient
@@ -25,6 +25,9 @@ from deeptrace.orchestration.nodes import ResearchWorkflowNodes
 from deeptrace.orchestration.research import ParallelResearchService
 from deeptrace.tools import ToolContext
 from deeptrace.tools.scraper import AsyncWebFetcher
+
+if TYPE_CHECKING:
+    from deeptrace.deep.agent import DeepResearchAgent
 
 
 @dataclass(frozen=True)
@@ -154,13 +157,18 @@ class ResearchAgent:
 def build_real_agent(
     settings: Settings,
     on_event: Callable[[RunEvent], None] | None = None,
-) -> ResearchAgent:
+    *,
+    mode: Literal["basic", "deep"] = "basic",
+) -> ResearchAgent | DeepResearchAgent:
     """Assemble the Provider, search, scraper, embeddings, and Basic graph."""
+    if mode not in {"basic", "deep"}:
+        raise ValueError("研究模式必须为 basic 或 deep")
     model = ChatOpenAI(
         api_key=settings.openai_api_key,
         base_url=settings.openai_base_url,
         model=settings.openai_model,
         temperature=0,
+        max_tokens=settings.openai_max_tokens,
     )
     runtime = CompressionRuntime(
         settings.embedding_model_path,
@@ -179,10 +187,38 @@ def build_real_agent(
         ),
         chunk_size=getattr(settings, "context_chunk_chars", 1_000),
         chunk_overlap=getattr(settings, "context_chunk_overlap_chars", 100),
-        similarity_threshold=getattr(
-            settings, "context_similarity_threshold", 0.42
-        ),
+        similarity_threshold=getattr(settings, "context_similarity_threshold", 0.42),
     )
+    if mode == "deep":
+        from deeptrace.deep.agent import DeepResearchAgent
+        from deeptrace.deep.tools import ResearchToolbox
+        from deeptrace.tools import search_web
+
+        tool_context = ToolContext(tavily=TavilyClient(api_key=settings.tavily_api_key))
+
+        def search(query):
+            return search_web(
+                tool_context, query, settings.max_search_results_per_query, None
+            )
+
+        return DeepResearchAgent(
+            model=model,
+            writer=WriterAgent(
+                model, call_timeout_seconds=settings.writer_timeout_seconds
+            ),
+            tools=ResearchToolbox(
+                search=search,
+                fetcher=fetcher,
+                compressor=compressor,
+                settings=settings,
+                runtime=runtime,
+                memory=ResearchMemory(settings.memory_path)
+                if settings.use_memory
+                else None,
+            ),
+            settings=settings,
+            on_event=on_event,
+        )
     collector = ParallelResearchService(
         tools=ToolContext(tavily=TavilyClient(api_key=settings.tavily_api_key)),
         fetcher=fetcher,

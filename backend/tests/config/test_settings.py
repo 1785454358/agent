@@ -12,7 +12,7 @@ def _set_required_environment(
     monkeypatch.setattr(
         "deeptrace.config.settings.load_dotenv", lambda *args, **kwargs: False
     )
-    for name in [key for key in os.environ if key.startswith("DEEPTRACE_")]:
+    for name in [key for key in os.environ if key.startswith(("DEEPTRACE_", "OPENAI_"))]:
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("OPENAI_API_KEY", "real-value-not-used")
     monkeypatch.setenv("OPENAI_BASE_URL", "https://example.com/v1")
@@ -36,7 +36,8 @@ def test_basic_defaults(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     assert settings.context_similarity_threshold == 0.42
     assert settings.planner_timeout_seconds == 60
     assert settings.writer_timeout_seconds == 60
-    assert settings.max_runtime_seconds == 300
+    assert settings.max_runtime_seconds is None
+    assert settings.openai_max_tokens is None
     assert not hasattr(settings, "max_task_rounds")
     assert not hasattr(settings, "task_concurrency")
     assert not hasattr(settings, "query_loop_threshold")
@@ -71,4 +72,13 @@ def test_cost_limit_requires_pricing(
     monkeypatch.delenv("DEEPTRACE_OUTPUT_COST_PER_MILLION", raising=False)
 
     with pytest.raises(RuntimeError, match="模型单价"):
+        Settings.from_env()
+
+
+def test_deep_settings_are_bounded(monkeypatch, tmp_path):
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv("DEEPTRACE_DEEP_MAX_STEPS", "8")
+    assert Settings.from_env().deep_max_steps == 8
+    monkeypatch.setenv("DEEPTRACE_DEEP_MAX_STEPS", "0")
+    with pytest.raises(RuntimeError, match="DEEP_MAX_STEPS"):
         Settings.from_env()

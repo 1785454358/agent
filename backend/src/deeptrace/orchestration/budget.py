@@ -31,9 +31,8 @@ def get_budget_reason(
         str(state.get("estimated_cost_usd", 0.0))
     ) >= max_cost:
         return "cost_budget"
-    if elapsed_seconds(state["started_at"], now) >= getattr(
-        settings, "max_runtime_seconds", 600
-    ):
+    max_runtime = getattr(settings, "max_runtime_seconds", None)
+    if max_runtime is not None and elapsed_seconds(state["started_at"], now) >= max_runtime:
         return "time_budget"
     return None
 
@@ -105,9 +104,10 @@ class GlobalBudget:
                 self.reason = "token_budget"
 
     def _deadline_reason(self, now: datetime) -> str | None:
-        if elapsed_seconds(self._started_at.isoformat(), now) >= getattr(
-            self._settings, "max_runtime_seconds", 600
-        ):
+        max_runtime = getattr(self._settings, "max_runtime_seconds", None)
+        if max_runtime is not None and elapsed_seconds(
+            self._started_at.isoformat(), now
+        ) >= max_runtime:
             return "time_budget"
         return None
 
@@ -123,9 +123,8 @@ class GlobalBudget:
         """返回全局期限剩余秒数；期限到达时同步冻结预算。"""
         if self.stop_reason(now) is not None:
             return 0.0
+        max_runtime = getattr(self._settings, "max_runtime_seconds", None)
+        if max_runtime is None:
+            return float("inf")
         elapsed = elapsed_seconds(self._started_at.isoformat(), now)
-        return max(
-            0.0,
-            float(getattr(self._settings, "max_runtime_seconds", 600))
-            - elapsed,
-        )
+        return max(0.0, float(max_runtime) - elapsed)

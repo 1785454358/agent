@@ -31,9 +31,7 @@ def _bounded_int(name: str, default: int, minimum: int, maximum: int) -> int:
     return value
 
 
-def _bounded_float(
-    name: str, default: float, minimum: float, maximum: float
-) -> float:
+def _bounded_float(name: str, default: float, minimum: float, maximum: float) -> float:
     raw = os.getenv(name, str(default)).strip()
     try:
         value = float(raw)
@@ -66,6 +64,19 @@ def _optional_decimal(name: str) -> Decimal | None:
     return value
 
 
+def _optional_int(name: str) -> int | None:
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return None
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise RuntimeError(f"{name} must be an integer") from exc
+    if value <= 0:
+        raise RuntimeError(f"{name} 必须为正整数")
+    return value
+
+
 @dataclass(frozen=True)
 class Settings:
     """Validated settings for the flat, one-pass pipeline."""
@@ -91,20 +102,26 @@ class Settings:
     planner_timeout_seconds: float = 60.0
     writer_timeout_seconds: float = 60.0
     max_fetched_pages: int = 20
-    max_runtime_seconds: int = 300
+    max_runtime_seconds: int | None = None
+    deep_call_timeout_seconds: float = 45.0
+    deep_max_tasks: int = 6
+    deep_max_rounds_per_task: int = 4
+    deep_max_steps: int = 12
+    deep_max_replans: int = 2
+    deep_max_tokens: int = 40_000
+    deep_memory_max_age_days: int = 7
     use_memory: bool = False
     memory_path: Path = Path("memory/pages.jsonl")
     input_cost_per_million: Decimal | None = None
     output_cost_per_million: Decimal | None = None
     max_cost_usd: Decimal | None = None
+    openai_max_tokens: int | None = None
 
     @classmethod
     def from_env(cls) -> "Settings":
         load_dotenv()
         embedding_model_path = Path(
-            os.getenv(
-                "DEEPTRACE_EMBEDDING_MODEL_PATH", r"D:\Dev\Models\bge-m3"
-            ).strip()
+            os.getenv("DEEPTRACE_EMBEDDING_MODEL_PATH", r"D:\Dev\Models\bge-m3").strip()
         )
         if not embedding_model_path.is_dir():
             raise RuntimeError(
@@ -112,9 +129,7 @@ class Settings:
                 "请设置 DEEPTRACE_EMBEDDING_MODEL_PATH。"
             )
 
-        chunk_chars = _bounded_int(
-            "DEEPTRACE_CONTEXT_CHUNK_CHARS", 1_000, 100, 20_000
-        )
+        chunk_chars = _bounded_int("DEEPTRACE_CONTEXT_CHUNK_CHARS", 1_000, 100, 20_000)
         overlap_chars = _bounded_int(
             "DEEPTRACE_CONTEXT_CHUNK_OVERLAP_CHARS", 100, 0, 19_999
         )
@@ -150,9 +165,7 @@ class Settings:
             allow_benchmark_dns_proxy=_boolean(
                 "DEEPTRACE_ALLOW_BENCHMARK_DNS_PROXY", False
             ),
-            search_query_count=_bounded_int(
-                "DEEPTRACE_SEARCH_QUERY_COUNT", 3, 1, 10
-            ),
+            search_query_count=_bounded_int("DEEPTRACE_SEARCH_QUERY_COUNT", 3, 1, 10),
             max_search_results_per_query=_bounded_int(
                 "DEEPTRACE_MAX_SEARCH_RESULTS_PER_QUERY", 5, 1, 8
             ),
@@ -179,17 +192,27 @@ class Settings:
             writer_timeout_seconds=_bounded_float(
                 "DEEPTRACE_WRITER_TIMEOUT_SECONDS", 60.0, 0.1, 600.0
             ),
-            max_fetched_pages=_bounded_int(
-                "DEEPTRACE_MAX_FETCHED_PAGES", 20, 1, 1_000
-            ),
-            max_runtime_seconds=_bounded_int(
-                "DEEPTRACE_MAX_RUNTIME_SECONDS", 300, 1, 86_400
-            ),
+            max_fetched_pages=_bounded_int("DEEPTRACE_MAX_FETCHED_PAGES", 20, 1, 1_000),
+            max_runtime_seconds=_optional_int("DEEPTRACE_MAX_RUNTIME_SECONDS"),
             use_memory=_boolean("DEEPTRACE_USE_MEMORY", False),
-            memory_path=Path(
-                os.getenv("DEEPTRACE_MEMORY_PATH", "memory/pages.jsonl")
+            deep_call_timeout_seconds=_bounded_float(
+                "DEEPTRACE_DEEP_CALL_TIMEOUT_SECONDS", 45, 0.1, 300
             ),
+            deep_max_tasks=_bounded_int("DEEPTRACE_DEEP_MAX_TASKS", 6, 1, 6),
+            deep_max_rounds_per_task=_bounded_int(
+                "DEEPTRACE_DEEP_MAX_ROUNDS_PER_TASK", 4, 1, 12
+            ),
+            deep_max_steps=_bounded_int("DEEPTRACE_DEEP_MAX_STEPS", 12, 1, 50),
+            deep_max_replans=_bounded_int("DEEPTRACE_DEEP_MAX_REPLANS", 2, 0, 5),
+            deep_max_tokens=_bounded_int(
+                "DEEPTRACE_DEEP_MAX_TOKENS", 40_000, 1, 1_000_000
+            ),
+            deep_memory_max_age_days=_bounded_int(
+                "DEEPTRACE_DEEP_MEMORY_MAX_AGE_DAYS", 7, 1, 365
+            ),
+            memory_path=Path(os.getenv("DEEPTRACE_MEMORY_PATH", "memory/pages.jsonl")),
             input_cost_per_million=input_cost,
             output_cost_per_million=output_cost,
             max_cost_usd=max_cost,
+            openai_max_tokens=_optional_int("OPENAI_MAX_TOKENS"),
         )
