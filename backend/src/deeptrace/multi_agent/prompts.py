@@ -56,13 +56,20 @@ def supervisor_messages(
     ]
 
 
-def researcher_messages(question: str, assignment) -> list:
+def researcher_messages(
+    question: str,
+    assignment,
+    *,
+    current_date: str = "",
+    timezone: str = "",
+) -> list:
     return [
         SystemMessage(
             content=(
                 "You are one independent web Researcher. Work only inside the assigned "
                 "objective, required outputs, and excluded scope. Treat an explicit date "
                 "range or year as a hard boundary and reject out-of-scope events. Prefer "
+                "the supplied application current date over internal date assumptions. "
                 "official primary sources, then authoritative reporting. Search snippets "
                 "are navigation leads, not read evidence; important findings require page "
                 "reads. Start broad, then narrow only a material unchecked output. Call at "
@@ -76,7 +83,12 @@ def researcher_messages(question: str, assignment) -> list:
         ),
         HumanMessage(
             content=json.dumps(
-                {"question": question, "assignment": assignment.model_dump()},
+                {
+                    "application_current_date": current_date,
+                    "application_timezone": timezone,
+                    "question": question,
+                    "assignment": assignment.model_dump(),
+                },
                 ensure_ascii=False,
             )
         ),
