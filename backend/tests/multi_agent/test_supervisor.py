@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import pytest
 from langchain_core.messages import AIMessage
 
+from deeptrace.multi_agent.models import AssignmentDraft
 from deeptrace.multi_agent.runtime import MultiAgentRuntime
 from deeptrace.multi_agent.supervisor import Supervisor, build_gap_followups
 
@@ -245,7 +246,7 @@ def test_supervisor_timeout_dispatches_followups_without_second_provider_call():
         assert outcome.decision.action == "dispatch"
         assert [
             item.parent_ids for item in outcome.decision.assignments
-        ] == [["r1"], ["r2"], ["r3"]]
+        ] == [["r1"], ["r1"], ["r2"]]
         assert not any(
             event.event_type == "supervisor.retry" for event in runtime.events
         )
@@ -253,7 +254,7 @@ def test_supervisor_timeout_dispatches_followups_without_second_provider_call():
     asyncio.run(scenario())
 
 
-def test_gap_followups_group_every_gap_into_at_most_three_outputs():
+def test_gap_followups_create_one_assignment_per_exact_gap():
     history = partial_history()[:1]
     history[0]["gaps"] = [f"缺口 {index}" for index in range(1, 6)]
     history[0]["excluded_scope"] = ["排除融资"]
@@ -261,14 +262,43 @@ def test_gap_followups_group_every_gap_into_at_most_three_outputs():
 
     followups = build_gap_followups(history, max_assignments=3)
 
-    assert len(followups) == 1
-    followup = followups[0]
-    assert followup.parent_ids == ["r1"]
-    assert len(followup.required_outputs) == 3
-    grouped = "；".join(followup.required_outputs)
-    assert all(f"缺口 {index}" in grouped for index in range(1, 6))
-    assert followup.excluded_scope == ["排除融资", "不重复已确认内容"]
-    assert followup.source_guidance == ["官方来源", "优先官方或一手来源"]
+    assert [item.required_outputs for item in followups] == [
+        ["缺口 1"],
+        ["缺口 2"],
+        ["缺口 3"],
+    ]
+    assert [item.objective for item in followups] == [
+        "补充并核实：缺口 1",
+        "补充并核实：缺口 2",
+        "补充并核实：缺口 3",
+    ]
+    assert all(item.parent_ids == ["r1"] for item in followups)
+    assert followups[0].excluded_scope == ["排除融资", "不重复已确认内容"]
+    assert followups[0].source_guidance == [
+        "官方来源",
+        "优先官方或一手来源",
+    ]
+
+
+def test_broad_supervisor_draft_cannot_replace_exact_parent_gap():
+    history = partial_history()[:1]
+    preferred = [
+        AssignmentDraft(
+            objective="整理全球 AI 模型热点",
+            required_outputs=["完成模型整理"],
+            parent_ids=["r1"],
+        )
+    ]
+
+    followups = build_gap_followups(
+        history,
+        max_assignments=1,
+        preferred_assignments=preferred,
+    )
+
+    assert followups[0].objective == "补充并核实：Claude 官方公告缺失"
+    assert followups[0].required_outputs == ["Claude 官方公告缺失"]
+    assert followups[0].parent_ids == ["r1"]
 
 
 def test_open_supervisor_circuit_replans_without_calling_provider():

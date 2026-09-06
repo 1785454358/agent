@@ -74,44 +74,67 @@ def _bounded_unique(values: list, extra: str) -> list[str]:
     return list(dict.fromkeys(unique))[:6]
 
 
-def _group_gaps(gaps: list[str], groups: int = 3) -> list[str]:
-    clean = list(dict.fromkeys(gap.strip() for gap in gaps if gap.strip()))
-    if not clean:
-        return []
-    buckets: list[list[str]] = [
-        [] for _ in range(min(groups, len(clean)))
-    ]
-    for index, gap in enumerate(clean):
-        buckets[index % len(buckets)].append(gap)
-    return ["；".join(bucket)[:1000] for bucket in buckets]
-
-
 def build_gap_followups(
-    history: list[dict], *, max_assignments: int
+    history: list[dict],
+    *,
+    max_assignments: int,
+    preferred_assignments: list[AssignmentDraft] | None = None,
 ) -> list[AssignmentDraft]:
-    """Build one bounded follow-up for each unresolved executed leaf task."""
+    """Compile exact unresolved gaps into one-output follow-up tasks."""
     normalized = _normalized_history(history)
-    superseded = {
-        parent_id
+    covered = {
+        (parent_id, required_output)
         for item in normalized
         if item.get("status") in {"completed", "partial", "blocked"}
         for parent_id in item.get("parent_ids", [])
+        for required_output in item.get("required_outputs", [])
     }
-    followups: list[AssignmentDraft] = []
+    records: list[tuple[str, str, dict]] = []
     for item in normalized:
         task_id = item.get("id")
         gaps = [gap for gap in item.get("gaps", []) if isinstance(gap, str)]
         if (
             not task_id
-            or task_id in superseded
             or item.get("status") not in {"partial", "blocked"}
             or not gaps
         ):
             continue
+        for gap in gaps:
+            if (task_id, gap) not in covered:
+                records.append((task_id, gap, item))
+
+    preferred_keys: list[tuple[str, str]] = []
+    for draft in preferred_assignments or []:
+        for parent_id in draft.parent_ids:
+            parent_records = [
+                record for record in records if record[0] == parent_id
+            ]
+            exact = [
+                record
+                for required_output in draft.required_outputs
+                for record in parent_records
+                if record[1] == required_output
+            ]
+            for task_id, gap, _ in [*exact, *parent_records]:
+                key = (task_id, gap)
+                if key not in preferred_keys:
+                    preferred_keys.append(key)
+    ordered_keys = preferred_keys + [
+        (task_id, gap)
+        for task_id, gap, _ in records
+        if (task_id, gap) not in preferred_keys
+    ]
+    records_by_key = {
+        (task_id, gap): item for task_id, gap, item in records
+    }
+
+    followups: list[AssignmentDraft] = []
+    for task_id, gap in ordered_keys[: max(0, max_assignments)]:
+        item = records_by_key[(task_id, gap)]
         followups.append(
             AssignmentDraft(
-                objective=f"补充并核实 {task_id} 未完成的关键资料",
-                required_outputs=_group_gaps(gaps),
+                objective=f"补充并核实：{gap}",
+                required_outputs=[gap],
                 excluded_scope=_bounded_unique(
                     item.get("excluded_scope", []), "不重复已确认内容"
                 ),
@@ -121,8 +144,6 @@ def build_gap_followups(
                 parent_ids=[task_id],
             )
         )
-        if len(followups) >= max(0, max_assignments):
-            break
     return followups
 
 

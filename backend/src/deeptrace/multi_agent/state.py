@@ -48,34 +48,48 @@ def ready_task_ids(tasks: Mapping[str, PlannedTask]) -> list[str]:
     ]
 
 
-def open_leaf_tasks(tasks: Mapping[str, PlannedTask]) -> list[PlannedTask]:
-    """Return unresolved terminal tasks not superseded by an executed child."""
-    superseded = {
-        parent_id
+def leaf_gap_records(
+    tasks: Mapping[str, PlannedTask],
+) -> list[tuple[str, str]]:
+    """Return unresolved ``(task_id, gap)`` pairs not covered by a child."""
+    covered = {
+        (parent_id, required_output)
         for task in tasks.values()
         if task.result is not None
         for parent_id in task.assignment.parent_ids
+        for required_output in task.assignment.required_outputs
     }
+    records: list[tuple[str, str]] = []
+    for task_id, task in tasks.items():
+        if (
+            task.status not in {"partial", "blocked"}
+            or task.result is None
+        ):
+            continue
+        for gap in task.result.gaps:
+            if (task_id, gap) not in covered:
+                records.append((task_id, gap))
+    return records
+
+
+def open_leaf_tasks(tasks: Mapping[str, PlannedTask]) -> list[PlannedTask]:
+    """Return terminal tasks with at least one uncovered gap."""
+    open_task_ids = {task_id for task_id, _ in leaf_gap_records(tasks)}
     return [
         task
         for task_id, task in tasks.items()
-        if task_id not in superseded
-        and task.status in {"partial", "blocked"}
-        and task.result is not None
-        and bool(task.result.gaps)
+        if task_id in open_task_ids
     ]
 
 
 def leaf_gaps(tasks: Mapping[str, PlannedTask]) -> list[str]:
     """Return stable, de-duplicated gaps from current plan leaves."""
     gaps: list[str] = []
-    for task in open_leaf_tasks(tasks):
-        assert task.result is not None
-        for gap in task.result.gaps:
-            if gap not in gaps:
-                gaps.append(gap)
-                if len(gaps) == 6:
-                    return gaps
+    for _, gap in leaf_gap_records(tasks):
+        if gap not in gaps:
+            gaps.append(gap)
+            if len(gaps) == 6:
+                return gaps
     return gaps
 
 
