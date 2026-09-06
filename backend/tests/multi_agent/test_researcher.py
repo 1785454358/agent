@@ -382,6 +382,44 @@ def test_followup_prompt_requires_direct_gap_research():
         assert "broad context" in initial_prompt
         assert "follow-up assignment" in followup_prompt
         assert "do not restart broad topic research" in followup_prompt
+        assert "Start broad" not in followup_prompt
+
+    asyncio.run(scenario())
+
+
+def test_target_output_uses_the_schema_whitespace_normalization():
+    class TrackingTools(Tools):
+        def __init__(self):
+            super().__init__()
+            self.received_args = None
+
+        async def execute(self, name, args):
+            self.received_args = args
+            return await super().execute(name, args)
+
+    async def scenario():
+        model = ScriptedModel(
+            [
+                call(
+                    "research_topic",
+                    {
+                        "query": "代表性技术进展 官方公告",
+                        "max_pages": 1,
+                        "target_output": " 代表性进展 ",
+                    },
+                ),
+                call("finish_research", finish_args()),
+            ]
+        )
+        tools = TrackingTools()
+        runtime = MultiAgentRuntime(settings(2))
+
+        await Researcher(model, runtime).run(assignment(), tools)
+
+        assert tools.received_args["target_output"] == "代表性进展"
+        assert not any(
+            event.event_type == "tool.rejected" for event in runtime.events
+        )
 
     asyncio.run(scenario())
 

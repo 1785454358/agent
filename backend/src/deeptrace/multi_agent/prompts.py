@@ -84,7 +84,7 @@ def researcher_messages(
                 "the supplied application current date over internal date assumptions. "
                 "Prefer official primary sources, then authoritative reporting. Search snippets "
                 "are navigation leads, not read evidence; important findings require page "
-                "reads. Start broad, then narrow only a material unchecked output. Call at "
+                "reads. Choose research actions for material unchecked outputs. Call at "
                 "most one research tool per decision. When the required outputs are covered "
                 "or no useful next action remains, finish immediately. finish_research must "
                 "be the only tool in its response. "

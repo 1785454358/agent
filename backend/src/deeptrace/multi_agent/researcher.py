@@ -149,18 +149,22 @@ class Researcher:
                 )
                 calls = calls[:1]
 
-            call = calls[0]
-            target_output = call.get("args", {}).get("target_output")
+            call = {**calls[0], "args": dict(calls[0].get("args", {}))}
+            raw_target_output = call["args"].get("target_output")
+            target_output = (
+                raw_target_output.strip()
+                if isinstance(raw_target_output, str)
+                else ""
+            )
+            call["args"]["target_output"] = target_output
+            calls = [call]
             if target_output not in assignment.required_outputs:
-                safe_target = (
-                    target_output if isinstance(target_output, str) else ""
-                )
                 self.runtime.emit(
                     "tool.rejected",
                     f"{assignment.id} 工具调用未绑定有效检查项",
                     task_id=assignment.id,
                     tool=call["name"],
-                    target_output=safe_target,
+                    target_output=target_output,
                     reason_code="unknown_target_output",
                 )
                 turns.append(
