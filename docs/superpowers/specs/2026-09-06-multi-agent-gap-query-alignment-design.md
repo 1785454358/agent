@@ -66,8 +66,8 @@ Researcher 在单次任务内部维护轻量进度，不建立新的证据对象
 
 研究事件补充以下信息：
 
-- `researcher.started`：显示 objective，并在 details 中保存 `required_outputs` 和 `parent_ids`。
-- `tool.started`：显示 `target_output` 与 Query/URL，details 中保存 `target_output`。
+- `researcher.started`：显示 objective，并在 details 中以 JSON 字符串保存 `required_outputs`，`parent_ids` 继续使用逗号分隔字符串，保持现有公共事件类型不变。
+- `tool.started`：显示 `target_output` 与 Query/URL，details 中保存标量字符串 `target_output`。
 - 对齐校验失败：产生 `tool.rejected`，原因码为 `unknown_target_output`，不记录未清洗的 Provider 内容。
 - `replanning.completed`：补查任务显示对应的具体缺口，而不是只显示宽泛主题。
 
