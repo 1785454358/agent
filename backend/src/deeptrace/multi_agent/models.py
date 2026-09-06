@@ -142,6 +142,24 @@ class FetchArgs(BaseModel):
     refresh: bool = False
 
 
+class TargetedSearchArgs(SearchArgs):
+    """A task-local search action tied to one assignment output."""
+
+    target_output: Text
+
+
+class TargetedResearchTopicArgs(ResearchTopicArgs):
+    """A topic research action tied to one assignment output."""
+
+    target_output: Text
+
+
+class TargetedFetchArgs(FetchArgs):
+    """A page read tied to one assignment output."""
+
+    target_output: Text
+
+
 def tool_schema(name: str, description: str, model: type[BaseModel]) -> dict:
     return {
         "type": "function",
@@ -163,13 +181,17 @@ RESEARCH_TOOLS = [
     tool_schema(
         "research_topic",
         "围绕当前任务完成一次搜索并读取少量相关网页；适合建立资料基础。",
-        ResearchTopicArgs,
+        TargetedResearchTopicArgs,
     ),
     tool_schema("search_web", "搜索网页并返回摘要和 URL。", SearchArgs),
     tool_schema(
-        "fetch_page", "读取搜索、用户输入或记忆中已知的 URL 原文。", FetchArgs
+        "fetch_page",
+        "读取搜索、用户输入或记忆中已知的 URL 原文。",
+        TargetedFetchArgs,
     ),
-    tool_schema("search_memory", "检索有效期内的历史网页。", SearchArgs),
+    tool_schema(
+        "search_memory", "检索有效期内的历史网页。", TargetedSearchArgs
+    ),
 ]
 
 RESEARCHER_MODEL_TOOLS = [
