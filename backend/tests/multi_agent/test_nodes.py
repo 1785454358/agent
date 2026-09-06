@@ -300,6 +300,7 @@ def test_replan_rejects_insufficient_finish_while_capacity_remains():
         state["supervisor_iteration"] = 1
         state["first_batch"] = False
         update = await nodes.replan_node(state)
+        assert supervisor.calls == 1
         assert update["termination_reason"] == ""
         assert update["ready_task_ids"] == ["r4", "r5", "r6"]
         assert all(
@@ -380,6 +381,7 @@ def test_replan_finishes_when_completed_tasks_have_no_open_gaps():
         state["supervisor_iteration"] = 1
         state["first_batch"] = False
         update = await nodes.replan_node(state)
+        assert supervisor.calls == 0
         assert update["termination_reason"] == "completed"
         assert update["final_sufficient"]
         assert update["final_gaps"] == []
@@ -418,9 +420,94 @@ def test_replan_cannot_add_tasks_after_researcher_limit():
         state["supervisor_iteration"] = 1
         state["first_batch"] = False
         update = await nodes.replan_node(state)
+        assert supervisor.calls == 0
         assert update["ready_task_ids"] == []
         assert update["termination_reason"] == "researcher_limit"
         assert len(update["tasks"]) == 6
+
+    asyncio.run(scenario())
+
+
+def test_replan_skips_supervisor_when_global_tool_limit_is_terminal():
+    async def scenario():
+        tasks = {"r1": terminal_task("r1", gaps=["政策日期未确认"])}
+        supervisor = ReplanningSupervisor(
+            SupervisorOutcome(
+                decision=SupervisorDecision(
+                    action="finish",
+                    rationale="不应调用",
+                    sufficient=False,
+                    gaps=["不应使用"],
+                )
+            )
+        )
+        resources = Resources()
+        resources.quota.consumed = 29
+        current_settings = settings()
+        nodes = MultiAgentWorkflowNodes(
+            model=object(),
+            writer=Writer(),
+            resources=resources,
+            settings=current_settings,
+            runtime=MultiAgentRuntime(current_settings),
+            supervisor=supervisor,
+        )
+        state = initial_state(tasks=tasks)
+        state["next_task_number"] = 2
+        state["supervisor_iteration"] = 1
+        state["first_batch"] = False
+        update = await nodes.replan_node(state)
+        assert supervisor.calls == 0
+        assert update["termination_reason"] == "global_tool_limit"
+        assert update["final_gaps"] == ["政策日期未确认"]
+
+    asyncio.run(scenario())
+
+
+def test_replan_skips_supervisor_when_no_followup_round_remains():
+    async def scenario():
+        tasks = {
+            "r1": terminal_task("r1", status="completed"),
+            "r5": terminal_task(
+                "r5",
+                gaps=["联合国全球AI治理对话机制成立月份未明确"],
+                parents=("r3",),
+            ),
+        }
+        supervisor = ReplanningSupervisor(
+            SupervisorOutcome(
+                decision=SupervisorDecision(
+                    action="finish",
+                    rationale="不应调用",
+                    sufficient=False,
+                    gaps=["不应使用"],
+                )
+            )
+        )
+        current_settings = settings()
+        runtime = MultiAgentRuntime(current_settings)
+        nodes = MultiAgentWorkflowNodes(
+            model=object(),
+            writer=Writer(),
+            resources=Resources(),
+            settings=current_settings,
+            runtime=runtime,
+            supervisor=supervisor,
+        )
+        state = initial_state(tasks=tasks)
+        state["next_task_number"] = 6
+        state["supervisor_iteration"] = 2
+        state["first_batch"] = False
+        update = await nodes.replan_node(state)
+        assert supervisor.calls == 0
+        assert update["termination_reason"] == "supervisor_round_limit"
+        assert update["final_gaps"] == [
+            "联合国全球AI治理对话机制成立月份未明确"
+        ]
+        assert not any(
+            event.event_type in {"supervisor.retry", "supervisor.fallback"}
+            for event in runtime.events
+        )
 
     asyncio.run(scenario())
 

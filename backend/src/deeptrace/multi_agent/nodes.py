@@ -273,28 +273,54 @@ class MultiAgentWorkflowNodes:
             **self._telemetry(),
         }
 
+    def _finish_replan(
+        self,
+        state: dict,
+        *,
+        tasks: dict,
+        gaps: list[str],
+        reason: str,
+        sufficient: bool = False,
+    ) -> dict:
+        message = (
+            "补查未增加新来源，停止重复研究"
+            if reason == "stagnant"
+            else "主管结束研究，检查项已满足"
+            if sufficient
+            else "主管结束研究并保留未解决问题"
+        )
+        self.runtime.emit(
+            "replanning.completed",
+            message,
+            termination_reason=reason,
+            sufficient=sufficient,
+        )
+        return {
+            "tasks": tasks,
+            "ready_task_ids": [],
+            "supervisor_iteration": int(state["supervisor_iteration"]),
+            "final_sufficient": sufficient,
+            "final_gaps": gaps,
+            "termination_reason": reason,
+            **self._telemetry(),
+        }
+
     async def replan_node(self, state: dict) -> dict:
         """Review one completed batch and either dispatch gaps or terminate."""
         tasks = dict(state["tasks"])
         gaps = leaf_gaps(tasks)
+        self.runtime.emit(
+            "replanning.started",
+            "主管正在评估研究结果并补充未解决任务",
+        )
         has_followup = any(task.assignment.parent_ids for task in tasks.values())
         current_sources = task_source_urls(tasks)
         previous_sources = set(state.get("sources_before_batch", []))
 
         if has_followup and gaps and not (current_sources - previous_sources):
-            self.runtime.emit(
-                "replanning.completed",
-                "补查未增加新来源，停止重复研究",
-                termination_reason="stagnant",
+            return self._finish_replan(
+                state, tasks=tasks, gaps=gaps, reason="stagnant"
             )
-            return {
-                "tasks": tasks,
-                "ready_task_ids": [],
-                "final_sufficient": False,
-                "final_gaps": gaps,
-                "termination_reason": "stagnant",
-                **self._telemetry(),
-            }
 
         max_researchers = int(self.settings.multi_agent_max_researchers)
         remaining_slots = max(0, max_researchers - len(tasks))
@@ -306,19 +332,32 @@ class MultiAgentWorkflowNodes:
         )
         current_iteration = int(state["supervisor_iteration"])
         decision_has_followup_round = current_iteration + 1 < max_iterations
+        if not gaps:
+            return self._finish_replan(
+                state,
+                tasks=tasks,
+                gaps=[],
+                reason="completed",
+                sufficient=True,
+            )
+        if remaining_slots <= 0:
+            return self._finish_replan(
+                state, tasks=tasks, gaps=gaps, reason="researcher_limit"
+            )
+        if self.resources.quota.remaining < 2:
+            return self._finish_replan(
+                state, tasks=tasks, gaps=gaps, reason="global_tool_limit"
+            )
+        if not decision_has_followup_round:
+            return self._finish_replan(
+                state, tasks=tasks, gaps=gaps, reason="supervisor_round_limit"
+            )
+
         quota_capacity = self.resources.quota.remaining // 2
         max_assignments = min(
             remaining_slots,
             int(self.settings.multi_agent_max_batch_size),
             quota_capacity,
-        )
-        can_dispatch = bool(
-            gaps and max_assignments > 0 and decision_has_followup_round
-        )
-
-        self.runtime.emit(
-            "replanning.started",
-            "主管正在评估研究结果并补充未解决任务",
         )
         outcome = await self.supervisor.replan(
             state["question"],
@@ -326,15 +365,15 @@ class MultiAgentWorkflowNodes:
             current_date=state["current_date"],
             timezone=state["timezone"],
             remaining_slots=remaining_slots,
-            max_assignments=max_assignments if can_dispatch else 0,
+            max_assignments=max_assignments,
             circuit_open=bool(state["supervisor_circuit_open"]),
         )
         decision = outcome.decision
         next_iteration = current_iteration + 1
         drafts = []
-        if decision.action == "dispatch" and can_dispatch:
+        if decision.action == "dispatch":
             drafts = decision.assignments[:max_assignments]
-        elif decision.action == "finish" and can_dispatch:
+        elif decision.action == "finish":
             self.runtime.emit(
                 "plan.finish_rejected",
                 "主管尝试在存在缺口和执行容量时结束，已改为定向补查",

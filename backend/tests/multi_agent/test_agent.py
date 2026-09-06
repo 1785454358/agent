@@ -305,7 +305,7 @@ def test_one_researcher_failure_isolated_and_report_is_partial():
         assert result.status == "partial"
         assert result.termination_reason == "researcher_limit"
         assert all("secret" not in event.message for event in result.events)
-        assert len(supervisor.histories[1]) == 2
+        assert supervisor.histories == [[]]
 
     asyncio.run(scenario())
 
