@@ -117,6 +117,16 @@ class SupervisorDecision(BaseModel):
                 raise ValueError("parent IDs must reference executed assignments")
 
 
+class SupervisorOutcome(BaseModel):
+    """A Supervisor decision plus deterministic failure-control metadata."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    decision: SupervisorDecision
+    circuit_open: bool = False
+    fallback_reason: str | None = None
+
+
 class SearchArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
     query: Text
