@@ -9,7 +9,7 @@
 
 **技术栈**　Python、LangGraph、LangChain、FastAPI、Pydantic、OpenAI Function Calling、Tavily、Playwright、BGE-M3、SSE、Pytest
 
-- 设计三层研究架构，Basic 采用固定 Workflow 完成一次规划、并行检索和报告生成，Deep 采用 Plan-and-Execute 与 ReAct 执行，Multi-Agent 通过 LangGraph 编排 Supervisor 和多个 Researcher。
+- 设计三种研究模式，Basic 采用固定 Workflow 完成一次规划、并行检索和报告生成，Deep 采用 Plan-and-Execute 与 ReAct 执行，Multi-Agent 通过 LangGraph 编排 Supervisor 和多个 Researcher。
 - 实现面向复杂问题的任务拆解和持续执行，由 Planner 生成研究目标、完成条件与任务依赖，Executor 根据工具反馈推进任务，Replanner 针对未完成内容动态调整后续计划。
 - 基于 Function Calling 封装网页搜索、正文抓取和历史资料检索工具，使用 BGE-M3 筛选相关原文，结合可选长期记忆生成正文顺序引用与文末参考内容。
 - 构建 Supervisor Multi-Agent 协作流程，限并发执行多个隔离的 ReAct Researcher，根据执行结果识别未解决叶子缺口，并生成与具体缺口对齐的定向补查任务。
