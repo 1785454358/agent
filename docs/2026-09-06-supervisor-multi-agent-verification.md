@@ -24,8 +24,8 @@
 ## LangGraph 重构与提前结束修正
 
 - 持久任务表保留初始任务和补查任务的稳定 ID、父子关系、状态、任务摘要与具体缺口；重规划只追加任务，不覆盖尚未执行或已经完成的任务。
-- 最终未解决问题只从当前叶子任务计算。子任务执行后才替代父任务缺口；部分完成的子任务会继续暴露自己的新缺口。
-- 当叶子缺口、研究员名额、至少两次网络额度和后续主管轮次同时存在时，Supervisor 的结束决策即使声称充分也会被拒绝，并按每个未解决叶子任务生成一个定向补查任务。
+- 最终未解决问题只从当前叶子缺口计算。子任务执行后只替代其 `required_outputs` 精确承接的父缺口；同一父任务未派发的其他缺口继续保留，部分完成的子任务会暴露自己的新缺口。
+- 当叶子缺口、研究员名额、至少两次网络额度和后续主管轮次同时存在时，Supervisor 的结束决策即使声称充分也会被拒绝，并按每个未解决叶子缺口生成一个定向补查任务。
 - Supervisor 超时只发起一次 Provider 调用，随后打开运行内熔断；后续重规划使用确定性缺口计划，不再连续等待相同超时。
 - 补查批次未增加任何新来源时以 `stagnant` 停止；研究员数量、工具额度和主管轮次分别使用 `researcher_limit`、`global_tool_limit`、`supervisor_round_limit` 标识。
 - 应用当前日期和时区作为权威输入传给 Supervisor、Researcher 与 Writer，避免模型用训练截止知识误判当前年份。
@@ -46,6 +46,15 @@
 - 中文来源区由“参考文献”改为“参考内容”；渲染器仍能清理模型自行输出的旧、新来源区标题，英文继续使用 `References`。
 - 没有增加 Critic、Editor 或第二次 Writer 调用。自动化测试不发起真实研究，因此不声明固定 Token 或耗时降幅。
 
+## 2026-09-07 缺口与查询对齐修正
+
+- 诊断运行 `61fcb37fe34f` 中，r5 的补查目标被概括为“整理完成2025年全球AI监管与政策方向的热点新闻”，首次查询也退化为同一宽泛主题；具体的巴黎峰会和欧盟 AI 法案缺口直到强制收尾才出现。
+- 重规划现在将每个未解决叶子缺口确定性编译为一个单检查项 Assignment。Supervisor 建议只用于父任务和精确缺口的优先排序，不能用宽泛 objective 或 required output 覆盖原缺口。
+- 每个 Researcher 可见的研究工具调用必须提供 `target_output`，并与 Assignment 的一个 `required_outputs` 精确匹配。缺失或未知目标产生 `tool.rejected`，不会进入 `ResearcherTools.execute`，因此不消耗网络额度。
+- 初始任务可以围绕选定检查项建立资料基础；存在 `parent_ids` 的补查任务提示不包含“Start broad”，要求第一轮直接面向唯一缺口。成功工具动作只记为 task-local `researched`，不冒充证据或事实支持。
+- `researcher.queued`、`researcher.started` 和 `tool.started` 事件记录检查项映射，可以从运行文件追踪“父缺口 → 子任务 → target_output → Query/URL”。
+- 本次没有增加模型调用、研究轮次或工具上限，也未运行付费对照，因此不声明实际 Token 或耗时降幅。
+
 诊断基线运行 `7867aea35c1e` 用时 499.9 秒、消耗 78,259 Token，包含 19 次搜索、8 次抓取尝试、6 个成功页面和两次 Supervisor 修复。该数据只用于定位问题；未运行付费对照，因此不宣称真实场景的百分比提升。模型本身的工具调用稳定性和响应速度仍可能主导总耗时。
 
 ## 自动化命令
@@ -60,7 +69,7 @@ uv lock --check
 .\.venv\Scripts\python.exe -m deeptrace.cli --help
 ```
 
-全量测试结果为 `200 passed`。Multi-Agent、共享 Writer 与对应测试的 Ruff 检查通过；源码和测试编译、锁文件校验、CLI 三模式枚举及 `git diff --check` 均通过。本次没有把未修改目录纳入全仓库 Ruff 结论。
+全量测试结果为 `210 passed`。Multi-Agent 与对应测试的 Ruff 检查通过；源码和测试编译、锁文件校验及 `git diff --check` 均通过。本次没有把未修改目录纳入全仓库 Ruff 结论。
 
 ## 尚未执行
 
