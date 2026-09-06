@@ -16,6 +16,6 @@ __all__ = [
     "ResearcherResult",
     "SupervisorDecision",
     "SupervisorResearchAgent",
-    "build_multi_agent_graph",
     "build_multi_agent",
+    "build_multi_agent_graph",
 ]

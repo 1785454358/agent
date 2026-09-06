@@ -334,11 +334,7 @@ class MultiAgentWorkflowNodes:
         drafts = []
         if decision.action == "dispatch" and can_dispatch:
             drafts = decision.assignments[:max_assignments]
-        elif (
-            decision.action == "finish"
-            and not decision.sufficient
-            and can_dispatch
-        ):
+        elif decision.action == "finish" and can_dispatch:
             self.runtime.emit(
                 "plan.finish_rejected",
                 "主管尝试在存在缺口和执行容量时结束，已改为定向补查",

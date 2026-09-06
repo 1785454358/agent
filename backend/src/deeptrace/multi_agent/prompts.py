@@ -70,7 +70,7 @@ def researcher_messages(
                 "objective, required outputs, and excluded scope. Treat an explicit date "
                 "range or year as a hard boundary and reject out-of-scope events. Prefer "
                 "the supplied application current date over internal date assumptions. "
-                "official primary sources, then authoritative reporting. Search snippets "
+                "Prefer official primary sources, then authoritative reporting. Search snippets "
                 "are navigation leads, not read evidence; important findings require page "
                 "reads. Start broad, then narrow only a material unchecked output. Call at "
                 "most one research tool per decision. When the required outputs are covered "

@@ -318,6 +318,43 @@ def test_replan_rejects_insufficient_finish_while_capacity_remains():
     asyncio.run(scenario())
 
 
+def test_replan_rejects_sufficient_finish_when_leaf_gap_remains():
+    async def scenario():
+        tasks = {"r1": terminal_task("r1", gaps=["官方发布日期未确认"])}
+        supervisor = ReplanningSupervisor(
+            SupervisorOutcome(
+                decision=SupervisorDecision(
+                    action="finish",
+                    rationale="误判为已经完成",
+                    sufficient=True,
+                )
+            )
+        )
+        current_settings = settings()
+        runtime = MultiAgentRuntime(current_settings)
+        nodes = MultiAgentWorkflowNodes(
+            model=object(),
+            writer=Writer(),
+            resources=Resources(),
+            settings=current_settings,
+            runtime=runtime,
+            supervisor=supervisor,
+        )
+        state = initial_state(tasks=tasks)
+        state["next_task_number"] = 2
+        state["supervisor_iteration"] = 1
+        state["first_batch"] = False
+        update = await nodes.replan_node(state)
+        assert update["ready_task_ids"] == ["r2"]
+        assert update["tasks"]["r2"].assignment.parent_ids == ["r1"]
+        assert any(
+            event.event_type == "plan.finish_rejected"
+            for event in runtime.events
+        )
+
+    asyncio.run(scenario())
+
+
 def test_replan_finishes_when_completed_tasks_have_no_open_gaps():
     async def scenario():
         tasks = {"r1": terminal_task("r1", status="completed")}

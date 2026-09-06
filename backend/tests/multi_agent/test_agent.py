@@ -137,6 +137,11 @@ def test_batch_runs_all_assignments_when_first_researcher_exhausts_lease():
                 rationale="主要方向已覆盖",
                 sufficient=True,
             ),
+            SupervisorDecision(
+                action="finish",
+                rationale="补查后已覆盖",
+                sufficient=True,
+            ),
         ]
         supervisor = Supervisor(decisions)
         active = 0
@@ -176,11 +181,11 @@ def test_batch_runs_all_assignments_when_first_researcher_exhausts_lease():
             researcher_factory=lambda *args: FakeResearcher(),
         )
         result = await agent.arun("2025 AI 热点")
-        assert started == ["r1", "r2", "r3"]
+        assert started == ["r1", "r2", "r3", "r4"]
         assert max_active == 2
         assert len(supervisor.histories[1]) == 3
-        assert result.status == "partial"
-        assert len(result.sources) == 3
+        assert result.status == "completed"
+        assert len(result.sources) == 4
         assert "writer" in result.stage_seconds
         assert result.stage_seconds["writer"] >= 0
         assert resources.writer_max_chars == 30_000

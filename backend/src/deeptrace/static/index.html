@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DeepTrace · 深度研究</title>
+<title>ResearchPilot · 自主深度研究</title>
 <style>
   :root {
     --bg: #0d1117;
@@ -72,6 +72,11 @@
   }
   .search input::placeholder { color: var(--faint); }
   .search input:focus { border-color: var(--amber-dim); }
+  .search select {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--line-strong); border-radius: 4px;
+    padding: 8px; font-family: var(--sans);
+  }
   .search button {
     background: var(--amber);
     color: #141008;
@@ -164,6 +169,8 @@
     .topbar { gap: 14px; padding: 20px 0 16px; }
     .report { padding: 26px 22px; font-size: 15px; }
     .search { min-width: 0; }
+    .search { flex-wrap: wrap; }
+    .search input { min-width: 180px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -176,10 +183,15 @@
 
   <header class="topbar">
     <div class="brand">
-      <h1>Deep<em>Trace</em></h1>
-      <div class="tagline">Deep Research Agent</div>
+      <h1>Research<em>Pilot</em></h1>
+      <div class="tagline">Plan · Research · Refine</div>
     </div>
     <div class="search">
+      <select id="mode" aria-label="研究模式">
+        <option value="basic">Basic · 快速研究</option>
+        <option value="deep">Deep · 自主深度研究</option>
+        <option value="multi_agent">Multi-Agent · 协作研究</option>
+      </select>
       <input id="q" placeholder="输入研究问题，例如：2026 年量子计算领域有哪些最新进展？" autocomplete="off">
       <button id="btn" onclick="start()">开始研究</button>
     </div>
@@ -209,7 +221,7 @@ let pollTimer = null;
 
 const $ = (id) => document.getElementById(id);
 
-const MAJOR = new Set(['planning.completed', 'research.completed', 'writing.completed']);
+const MAJOR = new Set(['planning.started', 'planning.completed', 'replanning.started', 'replanning.completed', 'plan.finish_rejected', 'task.started', 'supervisor.dispatched', 'supervisor.retry', 'supervisor.fallback', 'supervisor.reviewed', 'researcher.queued', 'researcher.started', 'researcher.completed', 'tool.batch_limited', 'research.completed', 'writing.completed']);
 const FINAL = new Set(['run.completed']);
 
 async function start() {
@@ -225,7 +237,7 @@ async function start() {
     const resp = await fetch('/researches', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({question})
+      body: JSON.stringify({question, mode: $('mode').value})
     });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     runId = (await resp.json()).id;
