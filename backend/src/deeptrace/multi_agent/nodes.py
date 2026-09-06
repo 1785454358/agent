@@ -282,13 +282,12 @@ class MultiAgentWorkflowNodes:
         reason: str,
         sufficient: bool = False,
     ) -> dict:
-        message = (
-            "补查未增加新来源，停止重复研究"
-            if reason == "stagnant"
-            else "主管结束研究，检查项已满足"
-            if sufficient
-            else "主管结束研究并保留未解决问题"
-        )
+        if reason == "stagnant":
+            message = "补查未增加新来源，停止重复研究"
+        elif sufficient:
+            message = "主管结束研究，检查项已满足"
+        else:
+            message = "主管结束研究并保留未解决问题"
         self.runtime.emit(
             "replanning.completed",
             message,
