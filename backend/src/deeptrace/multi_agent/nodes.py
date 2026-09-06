@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import time
 
 from deeptrace.multi_agent.models import (
     PlannedTask,
@@ -399,6 +400,83 @@ class MultiAgentWorkflowNodes:
             "supervisor_circuit_open": outcome.circuit_open,
             "final_sufficient": final_sufficient,
             "final_gaps": final_gaps,
+            "termination_reason": reason,
+            **self._telemetry(),
+        }
+
+    async def writer_node(self, state: dict) -> dict:
+        """Build the final report from terminal task material exactly once."""
+        results = [
+            task.result
+            for task in state["tasks"].values()
+            if task.result is not None
+        ]
+        context, sources = self.resources.writer_material(
+            results, max_chars=30_000
+        )
+        gaps = list(state.get("final_gaps", []))
+        if gaps:
+            self.runtime.emit("research.gaps", "尚未解决：" + "；".join(gaps))
+
+        reason = state.get("termination_reason", "")
+        if not context:
+            reason = "no_sources"
+        elif reason != "completed":
+            reason = reason or "incomplete_research"
+        self.runtime.emit(
+            "research.completed",
+            f"协作研究结束：{len(results)} 个研究员任务，{len(sources)} 个报告来源",
+            task_count=len(results),
+            source_count=len(sources),
+            termination_reason=reason,
+            network_attempts=self.resources.quota.consumed,
+        )
+        self.runtime.emit("writing.started", "正在汇总原始资料并生成报告")
+        if context:
+            self.runtime.steps += 1
+        writer_started = time.monotonic()
+        try:
+            outcome = await self.writer.awrite(
+                question=state["question"],
+                context=context,
+                sources=sources,
+                language="zh-CN",
+                termination_reason=reason
+                + ("；未解决：" + "；".join(gaps) if gaps else ""),
+                current_date=state["current_date"],
+                timezone=state["timezone"],
+            )
+        finally:
+            self.runtime.stage_seconds["writer"] = self.runtime.stage_seconds.get(
+                "writer", 0.0
+            ) + (time.monotonic() - writer_started)
+        self.runtime.account("writer", outcome.usage)
+        try:
+            await self.resources.persist()
+        except Exception:  # noqa: BLE001 - persistence is best-effort
+            self.runtime.emit(
+                "memory.failed",
+                "协作研究资料缓存写入失败，本次报告仍可使用",
+            )
+        if outcome.used_fallback and context:
+            reason = "writing_failed"
+        self.runtime.emit("writing.completed", "研究报告已生成")
+        elapsed = time.monotonic() - self.runtime.started
+        self.runtime.emit(
+            "run.completed",
+            f"研究任务完成；总耗时 {elapsed:.1f} 秒；"
+            f"总消耗 Token {self.runtime.role_usage.total.total_tokens:,}",
+            elapsed_seconds=round(elapsed, 3),
+            total_tokens=self.runtime.role_usage.total.total_tokens,
+            input_tokens=self.runtime.role_usage.total.input_tokens,
+            output_tokens=self.runtime.role_usage.total.output_tokens,
+            tool_calls=self.resources.quota.consumed,
+            researcher_tasks=len(results),
+        )
+        return {
+            "research_context": context,
+            "final_sources": list(outcome.sources),
+            "final_answer": outcome.markdown,
             "termination_reason": reason,
             **self._telemetry(),
         }

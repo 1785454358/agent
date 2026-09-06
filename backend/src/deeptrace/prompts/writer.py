@@ -26,6 +26,8 @@ def build_writer_messages(
     sources: Sequence[str],
     language: str,
     termination_reason: str,
+    current_date: str | None = None,
+    timezone: str | None = None,
 ) -> list[BaseMessage]:
     """Put the question, source catalog, and direct Source/Title/Content text
     in one user message."""
@@ -33,8 +35,14 @@ def build_writer_messages(
         f"[[source:{index}]] {source}"
         for index, source in enumerate(sources, start=1)
     )
+    date_context = ""
+    if current_date:
+        date_context += f"Application current date:\n{current_date}\n\n"
+    if timezone:
+        date_context += f"Application timezone:\n{timezone}\n\n"
     user_content = (
         f"Research question:\n{question.strip()}\n\n"
+        f"{date_context}"
         f"Report language:\n{language}\n\n"
         f"Run termination reason:\n{termination_reason}\n\n"
         "Source catalog:\n"

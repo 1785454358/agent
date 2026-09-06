@@ -1,7 +1,7 @@
 import asyncio
 from types import SimpleNamespace
 
-from deeptrace.models import UsageBreakdown
+from deeptrace.models import TokenUsage, UsageBreakdown
 from deeptrace.multi_agent.models import (
     AssignmentDraft,
     PlannedTask,
@@ -13,6 +13,7 @@ from deeptrace.multi_agent.models import (
 from deeptrace.multi_agent.nodes import MultiAgentWorkflowNodes
 from deeptrace.multi_agent.runtime import MultiAgentRuntime, QuotaManager
 from deeptrace.multi_agent.state import route_after_plan, route_after_replan
+from deeptrace.writer import WriterOutcome
 
 
 def settings(**overrides):
@@ -71,6 +72,15 @@ def assignment(task_id):
 class Resources:
     def __init__(self):
         self.quota = QuotaManager(total=30, per_researcher=10)
+        self.persisted = 0
+
+    def writer_material(self, results, max_chars=50_000):
+        sources = [url for result in results for url in result.source_urls]
+        context = "\n\n".join(f"Source: {url}\n原文" for url in sources)
+        return context[:max_chars], sources
+
+    async def persist(self):
+        self.persisted += 1
 
 
 class Writer:
@@ -429,3 +439,54 @@ def test_graph_routes_only_when_ready_tasks_exist():
     assert route_after_replan(state) == "execute"
     state["termination_reason"] = "researcher_limit"
     assert route_after_replan(state) == "writer"
+
+
+def test_writer_node_uses_all_terminal_results_and_authoritative_date():
+    async def scenario():
+        class CapturingWriter:
+            def __init__(self):
+                self.kwargs = None
+
+            async def awrite(self, **kwargs):
+                self.kwargs = kwargs
+                return WriterOutcome(
+                    markdown="1 报告\n\n内容 [1]",
+                    sources=list(kwargs["sources"]),
+                    usage=TokenUsage(total_tokens=7),
+                )
+
+        writer = CapturingWriter()
+        resources = Resources()
+        current_settings = settings()
+        runtime = MultiAgentRuntime(current_settings)
+        nodes = MultiAgentWorkflowNodes(
+            model=object(),
+            writer=writer,
+            resources=resources,
+            settings=current_settings,
+            runtime=runtime,
+            supervisor=PlanningSupervisor(),
+        )
+        state = initial_state(
+            tasks={
+                "r1": terminal_task("r1", status="completed"),
+                "r2": terminal_task("r2", status="completed"),
+            }
+        )
+        state["termination_reason"] = "completed"
+        state["final_sufficient"] = True
+        update = await nodes.writer_node(state)
+        assert writer.kwargs["current_date"] == "2026-09-06"
+        assert writer.kwargs["timezone"] == "Asia/Shanghai"
+        assert writer.kwargs["sources"] == [
+            "https://example.com/r1",
+            "https://example.com/r2",
+        ]
+        assert update["final_answer"].startswith("1 报告")
+        assert update["final_sources"] == writer.kwargs["sources"]
+        assert update["termination_reason"] == "completed"
+        assert update["role_usage"].writer.total_tokens == 7
+        assert resources.persisted == 1
+        assert runtime.events[-1].event_type == "run.completed"
+
+    asyncio.run(scenario())
