@@ -314,7 +314,7 @@ class Supervisor:
             current_date=current_date,
             timezone=timezone,
             remaining_slots=remaining_slots,
-            can_dispatch=remaining_slots > 0,
+            can_dispatch=remaining_slots > 0 and max_assignments > 0,
             max_assignments=max_assignments,
             circuit_open=False,
         )
@@ -337,7 +337,7 @@ class Supervisor:
             current_date=current_date,
             timezone=timezone,
             remaining_slots=remaining_slots,
-            can_dispatch=remaining_slots > 0,
+            can_dispatch=remaining_slots > 0 and max_assignments > 0,
             max_assignments=max_assignments,
             circuit_open=circuit_open,
         )

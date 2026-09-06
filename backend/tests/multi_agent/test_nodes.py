@@ -12,6 +12,7 @@ from deeptrace.multi_agent.models import (
 )
 from deeptrace.multi_agent.nodes import MultiAgentWorkflowNodes
 from deeptrace.multi_agent.runtime import MultiAgentRuntime, QuotaManager
+from deeptrace.multi_agent.state import route_after_plan, route_after_replan
 
 
 def settings(**overrides):
@@ -86,6 +87,45 @@ class PlanningSupervisor:
                 assignments=[draft("技术"), draft("产业")],
             )
         )
+
+
+class ReplanningSupervisor:
+    def __init__(self, outcome):
+        self.outcome = outcome
+        self.calls = 0
+
+    async def replan(self, *args, **kwargs):
+        self.calls += 1
+        return self.outcome
+
+
+def terminal_task(
+    task_id, status="partial", gaps=None, *, parents=(), url=None
+):
+    current_assignment = ResearchAssignment(
+        id=task_id,
+        objective=f"研究 {task_id}",
+        required_outputs=[f"{task_id}结果"],
+        excluded_scope=[],
+        source_guidance=["官方来源"],
+        parent_ids=list(parents),
+    )
+    current_gaps = list(
+        gaps or ([] if status == "completed" else [f"{task_id}缺口"])
+    )
+    current_result = ResearcherResult(
+        task_id=task_id,
+        status=status,
+        summary=f"{task_id}交付",
+        source_urls=[url or f"https://example.com/{task_id}"],
+        gaps=current_gaps,
+        stop_reason="completed" if status == "completed" else "round_limit",
+    )
+    return PlannedTask(
+        assignment=current_assignment,
+        status=status,
+        result=current_result,
+    )
 
 
 def test_plan_node_adds_stable_pending_tasks():
@@ -216,3 +256,176 @@ def test_execute_node_isolates_one_researcher_failure():
         assert all("private" not in event.message for event in runtime.events)
 
     asyncio.run(scenario())
+
+
+def test_replan_rejects_insufficient_finish_while_capacity_remains():
+    async def scenario():
+        tasks = {
+            "r1": terminal_task("r1", gaps=["产品发布未确认"]),
+            "r2": terminal_task("r2", gaps=["监管政策未确认"]),
+            "r3": terminal_task("r3", gaps=["科研突破未确认"]),
+        }
+        supervisor = ReplanningSupervisor(
+            SupervisorOutcome(
+                decision=SupervisorDecision(
+                    action="finish",
+                    rationale="2025 has not occurred yet",
+                    sufficient=False,
+                    gaps=["2025 has not occurred yet"],
+                )
+            )
+        )
+        current_settings = settings()
+        runtime = MultiAgentRuntime(current_settings)
+        nodes = MultiAgentWorkflowNodes(
+            model=object(),
+            writer=Writer(),
+            resources=Resources(),
+            settings=current_settings,
+            runtime=runtime,
+            supervisor=supervisor,
+        )
+        state = initial_state(tasks=tasks)
+        state["next_task_number"] = 4
+        state["supervisor_iteration"] = 1
+        state["first_batch"] = False
+        update = await nodes.replan_node(state)
+        assert update["termination_reason"] == ""
+        assert update["ready_task_ids"] == ["r4", "r5", "r6"]
+        assert all(
+            update["tasks"][task_id].status == "pending"
+            for task_id in update["ready_task_ids"]
+        )
+        assert [
+            update["tasks"][task_id].assignment.parent_ids
+            for task_id in update["ready_task_ids"]
+        ] == [["r1"], ["r2"], ["r3"]]
+        assert any(
+            event.event_type == "plan.finish_rejected"
+            for event in runtime.events
+        )
+
+    asyncio.run(scenario())
+
+
+def test_replan_finishes_when_completed_tasks_have_no_open_gaps():
+    async def scenario():
+        tasks = {"r1": terminal_task("r1", status="completed")}
+        supervisor = ReplanningSupervisor(
+            SupervisorOutcome(
+                decision=SupervisorDecision(
+                    action="finish",
+                    rationale="检查项已完成",
+                    sufficient=True,
+                )
+            )
+        )
+        current_settings = settings()
+        nodes = MultiAgentWorkflowNodes(
+            model=object(),
+            writer=Writer(),
+            resources=Resources(),
+            settings=current_settings,
+            runtime=MultiAgentRuntime(current_settings),
+            supervisor=supervisor,
+        )
+        state = initial_state(tasks=tasks)
+        state["supervisor_iteration"] = 1
+        state["first_batch"] = False
+        update = await nodes.replan_node(state)
+        assert update["termination_reason"] == "completed"
+        assert update["final_sufficient"]
+        assert update["final_gaps"] == []
+        assert route_after_replan({**state, **update}) == "writer"
+
+    asyncio.run(scenario())
+
+
+def test_replan_cannot_add_tasks_after_researcher_limit():
+    async def scenario():
+        tasks = {
+            f"r{index}": terminal_task(f"r{index}", gaps=[f"缺口 {index}"])
+            for index in range(1, 7)
+        }
+        supervisor = ReplanningSupervisor(
+            SupervisorOutcome(
+                decision=SupervisorDecision(
+                    action="finish",
+                    rationale="仍有缺口",
+                    sufficient=False,
+                    gaps=["仍有缺口"],
+                )
+            )
+        )
+        current_settings = settings()
+        nodes = MultiAgentWorkflowNodes(
+            model=object(),
+            writer=Writer(),
+            resources=Resources(),
+            settings=current_settings,
+            runtime=MultiAgentRuntime(current_settings),
+            supervisor=supervisor,
+        )
+        state = initial_state(tasks=tasks)
+        state["next_task_number"] = 7
+        state["supervisor_iteration"] = 1
+        state["first_batch"] = False
+        update = await nodes.replan_node(state)
+        assert update["ready_task_ids"] == []
+        assert update["termination_reason"] == "researcher_limit"
+        assert len(update["tasks"]) == 6
+
+    asyncio.run(scenario())
+
+
+def test_replan_stops_after_followup_adds_no_new_source():
+    async def scenario():
+        tasks = {
+            "r1": terminal_task("r1", gaps=["旧缺口"], url="https://example.com/a"),
+            "r2": terminal_task(
+                "r2",
+                gaps=["补查后仍未确认"],
+                parents=("r1",),
+                url="https://example.com/a",
+            ),
+        }
+        supervisor = ReplanningSupervisor(
+            SupervisorOutcome(
+                decision=SupervisorDecision(
+                    action="dispatch",
+                    rationale="再次补查",
+                    assignments=[draft("再次补查")],
+                )
+            )
+        )
+        current_settings = settings()
+        nodes = MultiAgentWorkflowNodes(
+            model=object(),
+            writer=Writer(),
+            resources=Resources(),
+            settings=current_settings,
+            runtime=MultiAgentRuntime(current_settings),
+            supervisor=supervisor,
+        )
+        state = initial_state(tasks=tasks)
+        state["next_task_number"] = 3
+        state["supervisor_iteration"] = 2
+        state["first_batch"] = False
+        state["sources_before_batch"] = ["https://example.com/a"]
+        update = await nodes.replan_node(state)
+        assert update["ready_task_ids"] == []
+        assert update["termination_reason"] == "stagnant"
+        assert update["final_gaps"] == ["补查后仍未确认"]
+        assert supervisor.calls == 0
+
+    asyncio.run(scenario())
+
+
+def test_graph_routes_only_when_ready_tasks_exist():
+    state = initial_state()
+    assert route_after_plan(state) == "writer"
+    state["ready_task_ids"] = ["r1"]
+    assert route_after_plan(state) == "execute"
+    assert route_after_replan(state) == "execute"
+    state["termination_reason"] = "researcher_limit"
+    assert route_after_replan(state) == "writer"

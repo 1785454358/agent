@@ -11,7 +11,13 @@ from deeptrace.multi_agent.models import (
     ResearcherResult,
 )
 from deeptrace.multi_agent.researcher import Researcher
-from deeptrace.multi_agent.state import ready_task_ids
+from deeptrace.multi_agent.state import (
+    compact_task_history,
+    leaf_gaps,
+    ready_task_ids,
+    task_source_urls,
+)
+from deeptrace.multi_agent.supervisor import build_gap_followups
 from deeptrace.multi_agent.tools import ResearcherTools
 
 
@@ -263,5 +269,136 @@ class MultiAgentWorkflowNodes:
             "ready_task_ids": [],
             "first_batch": False,
             "sources_before_batch": previous_sources,
+            **self._telemetry(),
+        }
+
+    async def replan_node(self, state: dict) -> dict:
+        """Review one completed batch and either dispatch gaps or terminate."""
+        tasks = dict(state["tasks"])
+        gaps = leaf_gaps(tasks)
+        has_followup = any(task.assignment.parent_ids for task in tasks.values())
+        current_sources = task_source_urls(tasks)
+        previous_sources = set(state.get("sources_before_batch", []))
+
+        if has_followup and gaps and not (current_sources - previous_sources):
+            self.runtime.emit(
+                "replanning.completed",
+                "补查未增加新来源，停止重复研究",
+                termination_reason="stagnant",
+            )
+            return {
+                "tasks": tasks,
+                "ready_task_ids": [],
+                "final_sufficient": False,
+                "final_gaps": gaps,
+                "termination_reason": "stagnant",
+                **self._telemetry(),
+            }
+
+        max_researchers = int(self.settings.multi_agent_max_researchers)
+        remaining_slots = max(0, max_researchers - len(tasks))
+        max_iterations = int(
+            state.get(
+                "max_supervisor_iterations",
+                self.settings.multi_agent_max_supervisor_rounds,
+            )
+        )
+        current_iteration = int(state["supervisor_iteration"])
+        decision_has_followup_round = current_iteration + 1 < max_iterations
+        quota_capacity = self.resources.quota.remaining // 2
+        max_assignments = min(
+            remaining_slots,
+            int(self.settings.multi_agent_max_batch_size),
+            quota_capacity,
+        )
+        can_dispatch = bool(
+            gaps and max_assignments > 0 and decision_has_followup_round
+        )
+
+        self.runtime.emit(
+            "replanning.started",
+            "主管正在评估研究结果并补充未解决任务",
+        )
+        outcome = await self.supervisor.replan(
+            state["question"],
+            compact_task_history(tasks),
+            current_date=state["current_date"],
+            timezone=state["timezone"],
+            remaining_slots=remaining_slots,
+            max_assignments=max_assignments if can_dispatch else 0,
+            circuit_open=bool(state["supervisor_circuit_open"]),
+        )
+        decision = outcome.decision
+        next_iteration = current_iteration + 1
+        drafts = []
+        if decision.action == "dispatch" and can_dispatch:
+            drafts = decision.assignments[:max_assignments]
+        elif (
+            decision.action == "finish"
+            and not decision.sufficient
+            and can_dispatch
+        ):
+            self.runtime.emit(
+                "plan.finish_rejected",
+                "主管尝试在存在缺口和执行容量时结束，已改为定向补查",
+                reason_code="incomplete_with_capacity",
+            )
+            drafts = build_gap_followups(
+                compact_task_history(tasks),
+                max_assignments=max_assignments,
+            )
+
+        if drafts:
+            tasks, new_ids, next_number = self._add_assignments(state, drafts)
+            self.runtime.emit(
+                "replanning.completed",
+                "主管补充研究计划："
+                + "；".join(
+                    f"{task_id} {tasks[task_id].assignment.objective}"
+                    for task_id in new_ids
+                ),
+                task_ids=",".join(new_ids),
+            )
+            return {
+                "tasks": tasks,
+                "ready_task_ids": new_ids,
+                "next_task_number": next_number,
+                "supervisor_iteration": next_iteration,
+                "supervisor_circuit_open": outcome.circuit_open,
+                "termination_reason": "",
+                "final_gaps": [],
+                **self._telemetry(),
+            }
+
+        if decision.action == "finish" and decision.sufficient and not gaps:
+            reason = "completed"
+            final_sufficient = True
+            final_gaps: list[str] = []
+        else:
+            final_sufficient = False
+            final_gaps = gaps or list(decision.gaps)
+            if remaining_slots <= 0:
+                reason = "researcher_limit"
+            elif self.resources.quota.remaining < 2:
+                reason = "global_tool_limit"
+            elif not decision_has_followup_round:
+                reason = "supervisor_round_limit"
+            else:
+                reason = "incomplete_research"
+        self.runtime.emit(
+            "replanning.completed",
+            "主管结束研究"
+            + ("，检查项已满足" if final_sufficient else "并保留未解决问题"),
+            termination_reason=reason,
+            sufficient=final_sufficient,
+        )
+        return {
+            "tasks": tasks,
+            "ready_task_ids": [],
+            "supervisor_iteration": next_iteration,
+            "supervisor_circuit_open": outcome.circuit_open,
+            "final_sufficient": final_sufficient,
+            "final_gaps": final_gaps,
+            "termination_reason": reason,
             **self._telemetry(),
         }

@@ -79,6 +79,32 @@ def leaf_gaps(tasks: Mapping[str, PlannedTask]) -> list[str]:
     return gaps
 
 
+def task_source_urls(tasks: Mapping[str, PlannedTask]) -> set[str]:
+    """Return every source URL actually read by terminal tasks."""
+    return {
+        url
+        for task in tasks.values()
+        if task.result is not None
+        for url in task.result.source_urls
+    }
+
+
+def _route_ready_work(state: Mapping) -> str:
+    if state.get("termination_reason"):
+        return "writer"
+    return "execute" if state.get("ready_task_ids") else "writer"
+
+
+def route_after_plan(state: Mapping) -> str:
+    """Route a planned graph run to execution only with executable work."""
+    return _route_ready_work(state)
+
+
+def route_after_replan(state: Mapping) -> str:
+    """Route a reviewed graph run to its next batch or final writing."""
+    return _route_ready_work(state)
+
+
 def compact_task_history(tasks: Mapping[str, PlannedTask]) -> list[dict]:
     """Build the bounded coordination view sent to the Supervisor."""
     history: list[dict] = []
