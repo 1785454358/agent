@@ -16,7 +16,7 @@ Multi-Agent 是独立的第三种执行策略，不替换也不调用 Deep 的�
 
 相同搜索和 URL 在同次运行内采用单飞与缓存复用，只有实际发起网络请求的一方扣额度；失败尝试也计数。模型不直接调用 `search_web`，而是通过一次 `research_topic` 完成导航搜索和少量原文读取。搜索观察最多返回 3 条结果，标题和摘要分别限制为 200、300 字符；Researcher 每个来源最多看到 1,200 字符，Writer 可使用每来源最多 3,000 字符、整次最多 30,000 字符的 BGE 筛选原文。
 
-每个 Researcher 的消息、已知 URL、已读来源和本地额度相互隔离，一个任务失败不会取消同批任务。`researcher.queued` 表示等待并发槽，`researcher.started` 才表示实际开始执行；单轮请求多个工具时只执行第一个并产生 `tool.batch_limited`。Supervisor 无效结构最多修复一次；调用超时不再重试，会打开本次运行的主管熔断并按叶子缺口生成确定性补查。只要仍有叶子缺口和执行容量，任何结束决策都会产生 `plan.finish_rejected`，不会提前写报告。补查没有新增来源时以 `stagnant` 收尾，避免重复消耗。应用当前日期与时区会明确传入 Supervisor、Researcher 和 Writer。任务摘要只供 Supervisor 协调，Writer 的事实输入仍是网页正文或 BGE 筛选的原文片段，不建立 `ResearchNote`、Claim、Evidence 或 Verifier 对象。
+每个 Researcher 的消息、已知 URL、已读来源和本地额度相互隔离，一个任务失败不会取消同批任务。`researcher.queued` 表示等待并发槽，`researcher.started` 才表示实际开始执行；单轮请求多个工具时只执行第一个并产生 `tool.batch_limited`。Supervisor 无效结构最多修复一次；调用超时不再重试，会打开本次运行的主管熔断并按叶子缺口生成确定性补查。只要仍有叶子缺口和执行容量，任何结束决策都会产生 `plan.finish_rejected`，不会提前写报告。任务已无缺口，或研究员、网络额度、主管轮次已经形成硬边界时，系统直接进入 Writer，不再调用无法改变路由结果的 Supervisor。补查没有新增来源时以 `stagnant` 收尾，避免重复消耗。应用当前日期与时区会明确传入 Supervisor、Researcher 和 Writer。任务摘要只供 Supervisor 协调，Writer 的事实输入仍是网页正文或 BGE 筛选的原文片段，不建立 `ResearchNote`、Claim、Evidence 或 Verifier 对象。
 
 ```powershell
 uv run researchpilot --mode multi_agent "研究问题"
@@ -83,7 +83,7 @@ Title: 页面标题
 Content: 网页正文或 BGE-M3 筛选出的相关原文
 ```
 
-`Content` 是源网页文本，不是 LLM 摘要。总正文小于 8000 字符且来源数不超过上限时直接传入；较大内容按 1000 字符切分、重叠 100 字符，以 0.42 相似度阈值筛选，每个搜索词最多保留 10 段。Writer 在正文中使用按首次出现顺序生成的 `[1]` 编号引用，正文不显示 URL，文末统一列出参考文献 URL。报告标题使用 `1`、`1.1`、`1.1.1` 数字层级，不使用 `#`。最后一条研究事件汇总本次运行总耗时与 Planner、Writer 的 Provider Token 用量。
+`Content` 是源网页文本，不是 LLM 摘要。总正文小于 8000 字符且来源数不超过上限时直接传入；较大内容按 1000 字符切分、重叠 100 字符，以 0.42 相似度阈值筛选，每个搜索词最多保留 10 段。Writer 在正文中使用按首次出现顺序生成的 `[1]` 编号引用，正文不显示 URL，文末统一列入“参考内容”。中文报告依次包含总述、带自然承接的主题分析、存在实质缺口时的研究局限和正文最后的综合结论；仍只调用一次 Writer。报告标题使用 `1`、`1.1`、`1.1.1` 数字层级，不使用 `#`。最后一条研究事件汇总本次运行总耗时与 Planner、Writer 的 Provider Token 用量。
 
 ## 运行
 
