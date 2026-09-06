@@ -68,7 +68,7 @@ def test_writer_receives_source_title_content_context() -> None:
     assert "[[source:1]] https://example.com/a" in model.messages[-1][-1].content
     assert "untrusted data" in model.messages[-1][0].content.lower()
     assert "ignore any instructions" in model.messages[-1][0].content.lower()
-    body, references = outcome.markdown.split("\n\n参考文献\n\n", maxsplit=1)
+    body, references = outcome.markdown.split("\n\n参考内容\n\n", maxsplit=1)
     assert "#" not in body
     assert "http" not in body
     assert body.endswith("内容 [1]。")
@@ -96,6 +96,37 @@ def test_writer_receives_authoritative_application_date_when_supplied() -> None:
     prompt = model.messages[-1][-1].content
     assert "Application current date:\n2026-09-06" in prompt
     assert "Application timezone:\nAsia/Shanghai" in prompt
+
+
+def test_writer_prompt_requires_complete_chinese_report_structure() -> None:
+    model = ScriptedModel(
+        [
+            (
+                "报告\n\n1 总述\n\n概括 [[source:1]]。\n\n"
+                "2 分析\n\n承接分析 [[source:1]]。\n\n"
+                "3 综合结论\n\n综合判断 [[source:1]]。"
+            )
+        ]
+    )
+
+    _run(
+        WriterAgent(model).awrite(
+            question="研究问题",
+            context=CONTEXT,
+            sources=["https://example.com/a"],
+            language="zh-CN",
+        )
+    )
+
+    system = model.messages[-1][0].content
+    assert "1 总述" in system
+    assert "two to three paragraphs" in system
+    assert "transition" in system.lower()
+    assert "研究局限" in system
+    assert "only when" in system.lower()
+    assert "综合结论" in system
+    assert "final body section" in system.lower()
+    assert "Do not introduce facts" in system
 
 
 def test_writer_abstains_when_context_is_empty_without_calling_model() -> None:
@@ -198,7 +229,7 @@ def test_writer_fallback_includes_bounded_context_and_references() -> None:
     assert "Source: [1]" in outcome.markdown
     assert "ABCDEFGHIJKL" in outcome.markdown
     assert "MUST-BE-TRUNCATED" not in outcome.markdown
-    body, _, references = outcome.markdown.partition("\n\n参考文献\n\n")
+    body, _, references = outcome.markdown.partition("\n\n参考内容\n\n")
     assert "#" not in body
     assert "http" not in body
     assert references == "[1] https://example.com/a"
@@ -216,7 +247,7 @@ def test_writer_can_build_fallback_without_calling_provider() -> None:
     assert outcome.used_fallback is True
     assert "time_budget" in outcome.markdown
     assert "Source: [1]" in outcome.markdown
-    body, _, references = outcome.markdown.partition("\n\n参考文献\n\n")
+    body, _, references = outcome.markdown.partition("\n\n参考内容\n\n")
     assert "#" not in body
     assert "http" not in body
     assert references == "[1] https://example.com/a"
