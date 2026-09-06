@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import json
 import time
 
 from deeptrace.multi_agent.models import (
@@ -178,6 +179,9 @@ class MultiAgentWorkflowNodes:
                 task_id=assignment.id,
                 local_tool_limit=lease.limit,
                 parent_ids=",".join(assignment.parent_ids),
+                required_outputs=json.dumps(
+                    assignment.required_outputs, ensure_ascii=False
+                ),
             )
             try:
                 async with semaphore:
@@ -187,6 +191,9 @@ class MultiAgentWorkflowNodes:
                         task_id=assignment.id,
                         local_tool_limit=lease.limit,
                         parent_ids=",".join(assignment.parent_ids),
+                        required_outputs=json.dumps(
+                            assignment.required_outputs, ensure_ascii=False
+                        ),
                     )
                     if lease.limit < 2:
                         self.runtime.emit(
@@ -371,7 +378,11 @@ class MultiAgentWorkflowNodes:
         next_iteration = current_iteration + 1
         drafts = []
         if decision.action == "dispatch":
-            drafts = decision.assignments[:max_assignments]
+            drafts = build_gap_followups(
+                compact_task_history(tasks),
+                max_assignments=max_assignments,
+                preferred_assignments=decision.assignments,
+            )
         elif decision.action == "finish":
             self.runtime.emit(
                 "plan.finish_rejected",

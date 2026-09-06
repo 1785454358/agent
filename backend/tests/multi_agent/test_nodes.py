@@ -1,4 +1,5 @@
 import asyncio
+import json
 from types import SimpleNamespace
 
 from deeptrace.models import TokenUsage, UsageBreakdown
@@ -110,12 +111,18 @@ class ReplanningSupervisor:
 
 
 def terminal_task(
-    task_id, status="partial", gaps=None, *, parents=(), url=None
+    task_id,
+    status="partial",
+    gaps=None,
+    *,
+    parents=(),
+    required_outputs=None,
+    url=None,
 ):
     current_assignment = ResearchAssignment(
         id=task_id,
         objective=f"研究 {task_id}",
-        required_outputs=[f"{task_id}结果"],
+        required_outputs=list(required_outputs or [f"{task_id}结果"]),
         excluded_scope=[],
         source_guidance=["官方来源"],
         parent_ids=list(parents),
@@ -221,6 +228,12 @@ def test_execute_node_runs_ready_tasks_with_bounded_concurrency():
         assert len(
             [event for event in runtime.events if event.event_type == "researcher.completed"]
         ) == 3
+        started = next(
+            event
+            for event in runtime.events
+            if event.event_type == "researcher.started"
+        )
+        assert json.loads(started.details["required_outputs"]) == ["r1结果"]
         assert all(lease._released for lease in resources.quota._leases.values())
 
     asyncio.run(scenario())
@@ -315,6 +328,71 @@ def test_replan_rejects_insufficient_finish_while_capacity_remains():
             event.event_type == "plan.finish_rejected"
             for event in runtime.events
         )
+
+    asyncio.run(scenario())
+
+
+def test_replan_compiles_broad_supervisor_draft_into_exact_gap_tasks():
+    async def scenario():
+        tasks = {
+            "r1": terminal_task(
+                "r1",
+                gaps=["巴黎峰会成果未确认", "欧盟法案实施未确认"],
+            )
+        }
+        supervisor = ReplanningSupervisor(
+            SupervisorOutcome(
+                decision=SupervisorDecision(
+                    action="dispatch",
+                    rationale="补查政策方向",
+                    assignments=[
+                        AssignmentDraft(
+                            objective="整理全球 AI 监管与政策热点",
+                            required_outputs=["完成政策整理"],
+                            parent_ids=["r1"],
+                        )
+                    ],
+                )
+            )
+        )
+        current_settings = settings()
+        runtime = MultiAgentRuntime(current_settings)
+        nodes = MultiAgentWorkflowNodes(
+            model=object(),
+            writer=Writer(),
+            resources=Resources(),
+            settings=current_settings,
+            runtime=runtime,
+            supervisor=supervisor,
+        )
+        state = initial_state(tasks=tasks)
+        state["next_task_number"] = 2
+        state["supervisor_iteration"] = 1
+        state["first_batch"] = False
+
+        update = await nodes.replan_node(state)
+
+        assert update["ready_task_ids"] == ["r2", "r3"]
+        assignments = [
+            update["tasks"][task_id].assignment
+            for task_id in update["ready_task_ids"]
+        ]
+        assert [item.required_outputs for item in assignments] == [
+            ["巴黎峰会成果未确认"],
+            ["欧盟法案实施未确认"],
+        ]
+        assert [item.objective for item in assignments] == [
+            "补充并核实：巴黎峰会成果未确认",
+            "补充并核实：欧盟法案实施未确认",
+        ]
+        assert all(item.parent_ids == ["r1"] for item in assignments)
+        completed = next(
+            event
+            for event in runtime.events
+            if event.event_type == "replanning.completed"
+        )
+        assert "巴黎峰会成果未确认" in completed.message
+        assert "欧盟法案实施未确认" in completed.message
 
     asyncio.run(scenario())
 
@@ -520,6 +598,7 @@ def test_replan_stops_after_followup_adds_no_new_source():
                 "r2",
                 gaps=["补查后仍未确认"],
                 parents=("r1",),
+                required_outputs=["旧缺口"],
                 url="https://example.com/a",
             ),
         }
