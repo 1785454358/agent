@@ -77,6 +77,7 @@ class Researcher:
             timezone=self.timezone,
         )
         turns: list[list] = []
+        researched_outputs: set[str] = set()
         rounds = int(
             getattr(self.runtime.settings, "multi_agent_max_researcher_rounds", 3)
         )
@@ -86,11 +87,30 @@ class Researcher:
             messages = base + [message for turn in turns[-2:] for message in turn]
             messages.append(
                 HumanMessage(
-                    content=(
-                        f"Research decision {round_index + 1}/{normal_rounds}. "
-                        f"Local network attempts remaining: {max(0, tools.lease.limit - tools.lease.used)}. "
-                        "Finish as soon as the required outputs are supported; otherwise use "
-                        "tools only for a material missing item."
+                    content=json.dumps(
+                        {
+                            "research_decision": (
+                                f"{round_index + 1}/{normal_rounds}"
+                            ),
+                            "local_network_attempts_remaining": max(
+                                0, tools.lease.limit - tools.lease.used
+                            ),
+                            "not_yet_researched_outputs": [
+                                output
+                                for output in assignment.required_outputs
+                                if output not in researched_outputs
+                            ],
+                            "researched_outputs": [
+                                output
+                                for output in assignment.required_outputs
+                                if output in researched_outputs
+                            ],
+                            "instruction": (
+                                "Finish as soon as the required outputs are supported; "
+                                "otherwise use one tool for a material missing output."
+                            ),
+                        },
+                        ensure_ascii=False,
                     )
                 )
             )
@@ -129,14 +149,53 @@ class Researcher:
                 )
                 calls = calls[:1]
 
-            async def run_tool(call):
+            call = calls[0]
+            target_output = call.get("args", {}).get("target_output")
+            if target_output not in assignment.required_outputs:
+                safe_target = (
+                    target_output if isinstance(target_output, str) else ""
+                )
+                self.runtime.emit(
+                    "tool.rejected",
+                    f"{assignment.id} 工具调用未绑定有效检查项",
+                    task_id=assignment.id,
+                    tool=call["name"],
+                    target_output=safe_target,
+                    reason_code="unknown_target_output",
+                )
+                turns.append(
+                    [
+                        AIMessage(
+                            content=response.content or "",
+                            tool_calls=[call],
+                        ),
+                        ToolMessage(
+                            content=json.dumps(
+                                {
+                                    "ok": False,
+                                    "error": "unknown_target_output",
+                                    "allowed_target_outputs": list(
+                                        assignment.required_outputs
+                                    ),
+                                },
+                                ensure_ascii=False,
+                            ),
+                            tool_call_id=call["id"],
+                        ),
+                    ]
+                )
+                continue
+
+            async def run_tool(call, target_output=target_output):
                 started = time.monotonic()
                 self.runtime.emit(
                     "tool.started",
-                    f"{assignment.id} 调用 {call['name']}："
+                    f"{assignment.id} 针对检查项「{target_output}」"
+                    f"调用 {call['name']}："
                     + json.dumps(call["args"], ensure_ascii=False)[:300],
                     task_id=assignment.id,
                     tool=call["name"],
+                    target_output=target_output,
                 )
                 timeout = float(
                     getattr(
@@ -165,6 +224,11 @@ class Researcher:
                 return result
 
             results = await asyncio.gather(*(run_tool(call) for call in calls))
+            for current_call, result in zip(calls, results, strict=True):
+                if result.get("ok"):
+                    researched_outputs.add(
+                        current_call["args"]["target_output"]
+                    )
             history_response = AIMessage(
                 content=response.content or "",
                 tool_calls=calls,

@@ -1,6 +1,7 @@
 import asyncio
 from types import SimpleNamespace
 
+import pytest
 from langchain_core.messages import AIMessage
 
 from deeptrace.multi_agent.models import ResearchAssignment
@@ -16,13 +17,14 @@ def call(name, args):
     )
 
 
-def assignment():
+def assignment(*, parents=()):
     return ResearchAssignment(
         id="r1",
         objective="核对技术进展",
         required_outputs=["代表性进展"],
         excluded_scope=["融资"],
         source_guidance=["官方公告"],
+        parent_ids=list(parents),
     )
 
 
@@ -143,7 +145,11 @@ def test_only_first_valid_research_tool_executes_per_decision():
                         {
                             "id": f"topic-{index}",
                             "name": "research_topic",
-                            "args": {"query": query, "max_pages": 1},
+                            "args": {
+                                "query": query,
+                                "max_pages": 1,
+                                "target_output": "代表性进展",
+                            },
                         }
                         for index, query in enumerate(
                             ["first", "second", "third"], start=1
@@ -169,7 +175,14 @@ def test_last_tool_observation_is_visible_to_reserved_closeout():
     async def scenario():
         model = ScriptedModel(
             [
-                call("research_topic", {"query": "q", "max_pages": 1}),
+                call(
+                    "research_topic",
+                    {
+                        "query": "q",
+                        "max_pages": 1,
+                        "target_output": "代表性进展",
+                    },
+                ),
                 call("finish_research", finish_args()),
             ]
         )
@@ -188,7 +201,14 @@ def test_malformed_closeout_returns_conservative_partial():
     async def scenario():
         model = ScriptedModel(
             [
-                call("research_topic", {"query": "q", "max_pages": 1}),
+                call(
+                    "research_topic",
+                    {
+                        "query": "q",
+                        "max_pages": 1,
+                        "target_output": "代表性进展",
+                    },
+                ),
                 AIMessage(content="done"),
             ]
         )
@@ -229,7 +249,14 @@ def test_research_tool_timeout_is_reported_and_closeout_still_runs():
     async def scenario():
         model = ScriptedModel(
             [
-                call("research_topic", {"query": "q", "max_pages": 1}),
+                call(
+                    "research_topic",
+                    {
+                        "query": "q",
+                        "max_pages": 1,
+                        "target_output": "代表性进展",
+                    },
+                ),
                 call(
                     "finish_research",
                     finish_args(
@@ -248,5 +275,141 @@ def test_research_tool_timeout_is_reported_and_closeout_still_runs():
         assert result.status == "blocked"
         assert any("tool_timeout" in event.message for event in runtime.events)
         assert len(model.messages) == 2
+
+    asyncio.run(scenario())
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        {"query": "宽泛查询", "max_pages": 1},
+        {
+            "query": "宽泛查询",
+            "max_pages": 1,
+            "target_output": "不属于任务的检查项",
+        },
+    ],
+)
+def test_unknown_target_output_is_rejected_before_tool_execution(args):
+    class TrackingTools(Tools):
+        def __init__(self):
+            super().__init__()
+            self.execute_calls = 0
+
+        async def execute(self, name, current_args):
+            self.execute_calls += 1
+            return await super().execute(name, current_args)
+
+    async def scenario():
+        model = ScriptedModel(
+            [
+                call("research_topic", args),
+                call(
+                    "finish_research",
+                    finish_args(
+                        status="partial",
+                        gaps=["代表性进展：未确认"],
+                        stop_reason="round_limit",
+                    ),
+                ),
+            ]
+        )
+        tools = TrackingTools()
+        runtime = MultiAgentRuntime(settings(2))
+
+        result = await Researcher(model, runtime).run(assignment(), tools)
+
+        assert result.status == "partial"
+        assert tools.execute_calls == 0
+        assert tools.lease.used == 0
+        rejected = next(
+            event
+            for event in runtime.events
+            if event.event_type == "tool.rejected"
+        )
+        assert rejected.details["reason_code"] == "unknown_target_output"
+
+    asyncio.run(scenario())
+
+
+def test_valid_target_output_is_recorded_on_tool_event():
+    async def scenario():
+        model = ScriptedModel(
+            [
+                call(
+                    "research_topic",
+                    {
+                        "query": "代表性技术进展 官方公告",
+                        "max_pages": 1,
+                        "target_output": "代表性进展",
+                    },
+                ),
+                call("finish_research", finish_args()),
+            ]
+        )
+        runtime = MultiAgentRuntime(settings(2))
+
+        await Researcher(model, runtime).run(assignment(), Tools())
+
+        started = next(
+            event for event in runtime.events if event.event_type == "tool.started"
+        )
+        assert started.details["target_output"] == "代表性进展"
+        assert "代表性进展" in started.message
+
+    asyncio.run(scenario())
+
+
+def test_followup_prompt_requires_direct_gap_research():
+    async def scenario():
+        initial_model = ScriptedModel([call("finish_research", finish_args())])
+        followup_model = ScriptedModel([call("finish_research", finish_args())])
+
+        await Researcher(initial_model, MultiAgentRuntime(settings())).run(
+            assignment(), Tools()
+        )
+        await Researcher(followup_model, MultiAgentRuntime(settings())).run(
+            assignment(parents=("r0",)), Tools()
+        )
+
+        initial_prompt = "\n".join(
+            str(message.content) for message in initial_model.messages[0]
+        )
+        followup_prompt = "\n".join(
+            str(message.content) for message in followup_model.messages[0]
+        )
+        assert "initial assignment" in initial_prompt
+        assert "broad context" in initial_prompt
+        assert "follow-up assignment" in followup_prompt
+        assert "do not restart broad topic research" in followup_prompt
+
+    asyncio.run(scenario())
+
+
+def test_next_decision_receives_task_local_output_progress():
+    async def scenario():
+        model = ScriptedModel(
+            [
+                call(
+                    "research_topic",
+                    {
+                        "query": "代表性技术进展 官方公告",
+                        "max_pages": 1,
+                        "target_output": "代表性进展",
+                    },
+                ),
+                call("finish_research", finish_args()),
+            ]
+        )
+
+        await Researcher(model, MultiAgentRuntime(settings(3))).run(
+            assignment(), Tools()
+        )
+
+        second_prompt = "\n".join(
+            str(message.content) for message in model.messages[1]
+        )
+        assert '"researched_outputs": ["代表性进展"]' in second_prompt
+        assert '"not_yet_researched_outputs": []' in second_prompt
 
     asyncio.run(scenario())
