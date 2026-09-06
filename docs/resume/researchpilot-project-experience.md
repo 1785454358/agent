@@ -4,7 +4,7 @@
 
 **ResearchPilot｜多模式深度研究 Agent｜个人项目**
 
-面向复杂开放问题构建自主研究 Agent，覆盖任务规划、网页检索、原文获取、动态补查和带引用报告生成。  
+面向复杂开放问题构建自主研究 Agent，覆盖任务规划、网页检索、原文获取、动态补查和带引用报告生成。
 独立实现 Workflow、Plan-and-Execute 和 Supervisor Multi-Agent 三种研究模式，可按研究深度和成本要求选择执行策略。
 
 **技术栈**　Python、LangGraph、LangChain、FastAPI、Pydantic、OpenAI Function Calling、Tavily、Playwright、BGE-M3、SSE、Pytest
