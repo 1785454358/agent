@@ -12,7 +12,9 @@ def _set_required_environment(
     monkeypatch.setattr(
         "deeptrace.config.settings.load_dotenv", lambda *args, **kwargs: False
     )
-    for name in [key for key in os.environ if key.startswith(("DEEPTRACE_", "OPENAI_"))]:
+    for name in [
+        key for key in os.environ if key.startswith(("DEEPTRACE_", "OPENAI_"))
+    ]:
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("OPENAI_API_KEY", "real-value-not-used")
     monkeypatch.setenv("OPENAI_BASE_URL", "https://example.com/v1")
@@ -43,6 +45,65 @@ def test_basic_defaults(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     assert not hasattr(settings, "query_loop_threshold")
 
 
+def test_distributed_runtime_settings(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv("DEEPTRACE_RUNTIME_MODE", "distributed")
+    monkeypatch.setenv(
+        "DEEPTRACE_MYSQL_DSN", "mysql+asyncmy://app:pw@mysql/researchpilot"
+    )
+    monkeypatch.setenv("DEEPTRACE_REDIS_URL", "redis://redis:6379/0")
+    monkeypatch.setenv("DEEPTRACE_WORKER_LEASE_SECONDS", "180")
+
+    settings = Settings.from_env()
+
+    assert settings.runtime_mode == "distributed"
+    assert settings.mysql_dsn == "mysql+asyncmy://app:pw@mysql/researchpilot"
+    assert settings.redis_url == "redis://redis:6379/0"
+    assert settings.redis_job_stream == "deeptrace:research:jobs"
+    assert settings.redis_consumer_group == "research-workers"
+    assert settings.worker_lease_seconds == 180
+    assert settings.worker_max_attempts == 3
+
+
+def test_invalid_runtime_mode_is_rejected(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv("DEEPTRACE_RUNTIME_MODE", "cluster")
+
+    with pytest.raises(RuntimeError, match="DEEPTRACE_RUNTIME_MODE"):
+        Settings.from_env()
+
+
+@pytest.mark.parametrize(
+    ("missing_name", "present_name", "present_value"),
+    [
+        ("DEEPTRACE_MYSQL_DSN", "DEEPTRACE_REDIS_URL", "redis://redis:6379/0"),
+        (
+            "DEEPTRACE_REDIS_URL",
+            "DEEPTRACE_MYSQL_DSN",
+            "mysql+asyncmy://app:pw@mysql/researchpilot",
+        ),
+    ],
+)
+def test_distributed_mode_requires_both_connections(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    missing_name: str,
+    present_name: str,
+    present_value: str,
+) -> None:
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv("DEEPTRACE_RUNTIME_MODE", "distributed")
+    monkeypatch.delenv(missing_name, raising=False)
+    monkeypatch.setenv(present_name, present_value)
+
+    with pytest.raises(RuntimeError, match=missing_name):
+        Settings.from_env()
+
+
 def test_missing_embedding_model_directory_is_rejected(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -63,7 +124,7 @@ def test_chunk_overlap_must_be_smaller_than_chunk(
         Settings.from_env()
 
 
-def test_cost_limit_requires_pricing(
+def test_legacy_total_limits_are_ignored(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     _set_required_environment(monkeypatch, tmp_path)
@@ -71,8 +132,12 @@ def test_cost_limit_requires_pricing(
     monkeypatch.delenv("DEEPTRACE_INPUT_COST_PER_MILLION", raising=False)
     monkeypatch.delenv("DEEPTRACE_OUTPUT_COST_PER_MILLION", raising=False)
 
-    with pytest.raises(RuntimeError, match="模型单价"):
-        Settings.from_env()
+    monkeypatch.setenv("DEEPTRACE_MAX_RUNTIME_SECONDS", "1")
+    monkeypatch.setenv("DEEPTRACE_DEEP_MAX_TOKENS", "1")
+    settings = Settings.from_env()
+    assert settings.max_runtime_seconds is None
+    assert settings.max_cost_usd is None
+    assert settings.deep_max_tool_calls == 30
 
 
 def test_deep_settings_are_bounded(monkeypatch, tmp_path):

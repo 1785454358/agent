@@ -111,6 +111,7 @@ class SupervisorResearchAgent:
             stage_seconds=dict(
                 final.get("stage_seconds", runtime.stage_seconds)
             ),
+            unresolved_gaps=list(final.get("final_gaps", [])),
         )
 
     async def aclose(self) -> None:

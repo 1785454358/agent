@@ -1,7 +1,7 @@
 [project]
-name = "deeptrace-stage-01-cli-agent"
-version = "0.1.0"
-description = "Stage 1 reference implementation for a real web research CLI agent"
+name = "researchpilot"
+version = "0.2.0"
+description = "Multi-mode research agent with workflows, ReAct, and Supervisor collaboration"
 requires-python = ">=3.11"
 dependencies = [
     "beautifulsoup4>=4.13",
@@ -19,15 +19,35 @@ dependencies = [
     "tiktoken>=0.11",
     "tld>=0.13",
     "trafilatura>=2.2.0",
+    "torch==2.5.1+cu121",
     "uvicorn[standard]>=0.52.4",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncmy>=0.2",
+    "alembic>=1.13",
+    "redis>=5.0",
 ]
 
+# torch 走 PyTorch 官方 CUDA 索引（PyPI 的 Windows wheel 是 CPU-only 版本）；
+# cu121（CUDA 12.1）与本机驱动 536.40（CUDA 12.2）严格匹配。explicit = true
+# 表示该索引只服务于 torch。
+[[tool.uv.index]]
+name = "pytorch-cu121"
+url = "https://download.pytorch.org/whl/cu121"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu121" }
+
 [project.scripts]
+researchpilot = "deeptrace.cli:main"
 deeptrace = "deeptrace.cli:main"
 
 [dependency-groups]
 dev = [
+    "aiosqlite>=0.20",
+    "fakeredis>=2.26",
     "pytest>=8.0.0",
+    "pytest-asyncio>=0.24",
 ]
 
 [build-system]

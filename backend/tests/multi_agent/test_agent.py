@@ -97,6 +97,7 @@ def test_agent_adapts_compiled_graph_state_to_public_result():
                     "final_sources": ["https://example.com/a"],
                     "termination_reason": "completed",
                     "research_context": "原文",
+                    "final_gaps": ["缺少监管原文"],
                     "role_usage": UsageBreakdown(
                         writer=TokenUsage(total_tokens=7)
                     ),
@@ -120,6 +121,7 @@ def test_agent_adapts_compiled_graph_state_to_public_result():
         assert result.answer == "1 报告"
         assert result.sources == ["https://example.com/a"]
         assert result.provider_usage.total_tokens == 7
+        assert result.unresolved_gaps == ["缺少监管原文"]
 
     asyncio.run(scenario())
 

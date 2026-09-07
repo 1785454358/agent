@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -51,6 +51,14 @@ def _boolean(name: str, default: bool = False) -> bool:
     raise RuntimeError(f"{name} must be a boolean")
 
 
+def _choice(name: str, default: str, choices: set[str]) -> str:
+    value = os.getenv(name, default).strip().lower()
+    if value not in choices:
+        allowed = ", ".join(sorted(choices))
+        raise RuntimeError(f"{name} must be one of: {allowed}")
+    return value
+
+
 def _optional_decimal(name: str) -> Decimal | None:
     raw = os.getenv(name, "").strip()
     if not raw:
@@ -79,12 +87,22 @@ def _optional_int(name: str) -> int | None:
 
 @dataclass(frozen=True)
 class Settings:
-    """Validated settings for the flat, one-pass pipeline."""
+    """Validated settings shared by all research modes."""
 
     openai_api_key: str
     openai_base_url: str
     openai_model: str
     tavily_api_key: str
+    runtime_mode: str = "local"
+    mysql_dsn: str = ""
+    redis_url: str = ""
+    redis_job_stream: str = "deeptrace:research:jobs"
+    redis_consumer_group: str = "research-workers"
+    redis_consumer_name: str = "worker-1"
+    redis_claim_idle_ms: int = 60_000
+    worker_lease_seconds: int = 120
+    worker_max_attempts: int = 3
+    redis_cancel_ttl_seconds: int = 86_400
     max_page_chars: int = 20_000
     embedding_model_path: Path = Path(r"D:\Dev\Models\bge-m3")
     embedding_batch_size: int = 8
@@ -102,24 +120,55 @@ class Settings:
     planner_timeout_seconds: float = 60.0
     writer_timeout_seconds: float = 60.0
     max_fetched_pages: int = 20
+    max_tool_calls: int = 30
+    tool_timeout_seconds: float = 45.0
+    # Accepted by older callers, but no longer used as a stopping condition.
     max_runtime_seconds: int | None = None
     deep_call_timeout_seconds: float = 45.0
     deep_max_tasks: int = 6
     deep_max_rounds_per_task: int = 4
     deep_max_steps: int = 12
     deep_max_replans: int = 2
-    deep_max_tokens: int = 40_000
+    deep_max_tool_calls: int = 30
     deep_memory_max_age_days: int = 7
+    multi_agent_max_researchers: int = 6
+    multi_agent_max_batch_size: int = 3
+    multi_agent_concurrency: int = 3
+    multi_agent_max_supervisor_rounds: int = 3
+    multi_agent_max_researcher_rounds: int = 3
+    multi_agent_max_tool_calls: int = 30
+    multi_agent_max_tools_per_researcher: int = 10
+    multi_agent_call_timeout_seconds: float = 45.0
+    multi_agent_memory_max_age_days: int = 7
+    multi_agent_memory_path: Path = Path("memory/multi-agent-pages.jsonl")
     use_memory: bool = False
     memory_path: Path = Path("memory/pages.jsonl")
     input_cost_per_million: Decimal | None = None
     output_cost_per_million: Decimal | None = None
     max_cost_usd: Decimal | None = None
     openai_max_tokens: int | None = None
+    # 开发模式：run.completed 事件输出各角色 Token/耗时明细表。
+    show_usage_report: bool = False
+    # 详细事件：推送 tool.started/tool.completed 等细粒度过程事件。
+    verbose_events: bool = False
 
     @classmethod
-    def from_env(cls) -> "Settings":
+    def from_env(cls) -> Settings:
         load_dotenv()
+        runtime_mode = _choice(
+            "DEEPTRACE_RUNTIME_MODE", "local", {"local", "distributed"}
+        )
+        mysql_dsn = os.getenv("DEEPTRACE_MYSQL_DSN", "").strip()
+        redis_url = os.getenv("DEEPTRACE_REDIS_URL", "").strip()
+        if runtime_mode == "distributed":
+            if not mysql_dsn:
+                raise RuntimeError(
+                    "DEEPTRACE_MYSQL_DSN is required in distributed mode"
+                )
+            if not redis_url:
+                raise RuntimeError(
+                    "DEEPTRACE_REDIS_URL is required in distributed mode"
+                )
         embedding_model_path = Path(
             os.getenv("DEEPTRACE_EMBEDDING_MODEL_PATH", r"D:\Dev\Models\bge-m3").strip()
         )
@@ -140,15 +189,57 @@ class Settings:
 
         input_cost = _optional_decimal("DEEPTRACE_INPUT_COST_PER_MILLION")
         output_cost = _optional_decimal("DEEPTRACE_OUTPUT_COST_PER_MILLION")
-        max_cost = _optional_decimal("DEEPTRACE_MAX_COST_USD")
-        if max_cost is not None and (input_cost is None or output_cost is None):
-            raise RuntimeError("设置费用上限前必须同时配置模型单价")
+        memory_path = Path(os.getenv("DEEPTRACE_MEMORY_PATH", "memory/pages.jsonl"))
+        multi_agent_memory_path = Path(
+            os.getenv(
+                "DEEPTRACE_MULTI_AGENT_MEMORY_PATH",
+                "memory/multi-agent-pages.jsonl",
+            )
+        )
+        if memory_path.resolve() == multi_agent_memory_path.resolve():
+            raise RuntimeError(
+                "DEEPTRACE_MULTI_AGENT_MEMORY_PATH must differ from DEEPTRACE_MEMORY_PATH"
+            )
+        multi_agent_max_batch_size = _bounded_int(
+            "DEEPTRACE_MULTI_AGENT_MAX_BATCH_SIZE", 3, 1, 6
+        )
+        multi_agent_concurrency = _bounded_int(
+            "DEEPTRACE_MULTI_AGENT_CONCURRENCY", 3, 1, 6
+        )
+        if multi_agent_concurrency > multi_agent_max_batch_size:
+            raise RuntimeError(
+                "DEEPTRACE_MULTI_AGENT_CONCURRENCY cannot exceed MAX_BATCH_SIZE"
+            )
 
         return cls(
             openai_api_key=_required("OPENAI_API_KEY"),
             openai_base_url=_required("OPENAI_BASE_URL"),
             openai_model=_required("OPENAI_MODEL"),
             tavily_api_key=_required("TAVILY_API_KEY"),
+            runtime_mode=runtime_mode,
+            mysql_dsn=mysql_dsn,
+            redis_url=redis_url,
+            redis_job_stream=os.getenv(
+                "DEEPTRACE_REDIS_JOB_STREAM", "deeptrace:research:jobs"
+            ).strip(),
+            redis_consumer_group=os.getenv(
+                "DEEPTRACE_REDIS_CONSUMER_GROUP", "research-workers"
+            ).strip(),
+            redis_consumer_name=os.getenv(
+                "DEEPTRACE_REDIS_CONSUMER_NAME", "worker-1"
+            ).strip(),
+            redis_claim_idle_ms=_bounded_int(
+                "DEEPTRACE_REDIS_CLAIM_IDLE_MS", 60_000, 1_000, 86_400_000
+            ),
+            worker_lease_seconds=_bounded_int(
+                "DEEPTRACE_WORKER_LEASE_SECONDS", 120, 10, 86_400
+            ),
+            worker_max_attempts=_bounded_int(
+                "DEEPTRACE_WORKER_MAX_ATTEMPTS", 3, 1, 20
+            ),
+            redis_cancel_ttl_seconds=_bounded_int(
+                "DEEPTRACE_REDIS_CANCEL_TTL_SECONDS", 86_400, 60, 604_800
+            ),
             max_page_chars=_bounded_int(
                 "DEEPTRACE_MAX_PAGE_CHARS", 20_000, 1_000, 100_000
             ),
@@ -193,7 +284,10 @@ class Settings:
                 "DEEPTRACE_WRITER_TIMEOUT_SECONDS", 60.0, 0.1, 600.0
             ),
             max_fetched_pages=_bounded_int("DEEPTRACE_MAX_FETCHED_PAGES", 20, 1, 1_000),
-            max_runtime_seconds=_optional_int("DEEPTRACE_MAX_RUNTIME_SECONDS"),
+            max_tool_calls=_bounded_int("DEEPTRACE_MAX_TOOL_CALLS", 30, 1, 200),
+            tool_timeout_seconds=_bounded_float(
+                "DEEPTRACE_TOOL_TIMEOUT_SECONDS", 45, 0.1, 600
+            ),
             use_memory=_boolean("DEEPTRACE_USE_MEMORY", False),
             deep_call_timeout_seconds=_bounded_float(
                 "DEEPTRACE_DEEP_CALL_TIMEOUT_SECONDS", 45, 0.1, 300
@@ -204,15 +298,40 @@ class Settings:
             ),
             deep_max_steps=_bounded_int("DEEPTRACE_DEEP_MAX_STEPS", 12, 1, 50),
             deep_max_replans=_bounded_int("DEEPTRACE_DEEP_MAX_REPLANS", 2, 0, 5),
-            deep_max_tokens=_bounded_int(
-                "DEEPTRACE_DEEP_MAX_TOKENS", 40_000, 1, 1_000_000
+            deep_max_tool_calls=_bounded_int(
+                "DEEPTRACE_DEEP_MAX_TOOL_CALLS", 30, 1, 200
             ),
             deep_memory_max_age_days=_bounded_int(
                 "DEEPTRACE_DEEP_MEMORY_MAX_AGE_DAYS", 7, 1, 365
             ),
-            memory_path=Path(os.getenv("DEEPTRACE_MEMORY_PATH", "memory/pages.jsonl")),
+            multi_agent_max_researchers=_bounded_int(
+                "DEEPTRACE_MULTI_AGENT_MAX_RESEARCHERS", 6, 1, 20
+            ),
+            multi_agent_max_batch_size=multi_agent_max_batch_size,
+            multi_agent_concurrency=multi_agent_concurrency,
+            multi_agent_max_supervisor_rounds=_bounded_int(
+                "DEEPTRACE_MULTI_AGENT_MAX_SUPERVISOR_ROUNDS", 3, 2, 10
+            ),
+            multi_agent_max_researcher_rounds=_bounded_int(
+                "DEEPTRACE_MULTI_AGENT_MAX_RESEARCHER_ROUNDS", 3, 2, 20
+            ),
+            multi_agent_max_tool_calls=_bounded_int(
+                "DEEPTRACE_MULTI_AGENT_MAX_TOOL_CALLS", 30, 2, 500
+            ),
+            multi_agent_max_tools_per_researcher=_bounded_int(
+                "DEEPTRACE_MULTI_AGENT_MAX_TOOLS_PER_RESEARCHER", 10, 2, 100
+            ),
+            multi_agent_call_timeout_seconds=_bounded_float(
+                "DEEPTRACE_MULTI_AGENT_CALL_TIMEOUT_SECONDS", 45, 0.1, 600
+            ),
+            multi_agent_memory_max_age_days=_bounded_int(
+                "DEEPTRACE_MULTI_AGENT_MEMORY_MAX_AGE_DAYS", 7, 1, 365
+            ),
+            multi_agent_memory_path=multi_agent_memory_path,
+            memory_path=memory_path,
             input_cost_per_million=input_cost,
             output_cost_per_million=output_cost,
-            max_cost_usd=max_cost,
             openai_max_tokens=_optional_int("OPENAI_MAX_TOKENS"),
+            show_usage_report=_boolean("DEEPTRACE_SHOW_USAGE_REPORT", False),
+            verbose_events=_boolean("DEEPTRACE_VERBOSE_EVENTS", False),
         )
