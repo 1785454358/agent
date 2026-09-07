@@ -17,6 +17,7 @@ def test_run_record_has_stable_defaults() -> None:
     assert run.version == 0
     assert run.sources == []
     assert run.unresolved_gaps == []
+    assert run.events == []
     assert run.lease_owner is None
     assert run.lease_expires_at is None
 

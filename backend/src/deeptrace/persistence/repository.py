@@ -55,7 +55,7 @@ class SqlAlchemyRunRepository:
 
     async def create(self, run: RunRecord) -> None:
         async with self._sessions() as session:
-            session.add(ResearchRunRow(**run.model_dump()))
+            session.add(ResearchRunRow(**run.model_dump(exclude={"events"})))
             await session.commit()
 
     async def get(self, run_id: str) -> RunRecord | None:

@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 import deeptrace
 from deeptrace.api import create_app
 from deeptrace.models import AgentResult, TokenUsage, UsageBreakdown
+from deeptrace.runtime.local import LocalResearchRuntime
 
 
 class FakeAgent:
@@ -40,17 +41,15 @@ def test_public_router_selects_multi_agent_and_rejects_unknown(monkeypatch):
         raise AssertionError("unknown mode was silently routed to Basic")
 
 
-def test_api_accepts_and_persists_multi_agent_mode(tmp_path, monkeypatch):
-    import deeptrace.api as api_module
-
+def test_api_accepts_and_persists_multi_agent_mode(tmp_path):
     selected = []
 
     def factory(settings, on_event=None, mode="basic"):
         selected.append(mode)
         return FakeAgent()
 
-    monkeypatch.setattr(api_module, "build_real_agent", factory)
-    app = create_app(settings=object(), runs_dir=tmp_path)
+    runtime = LocalResearchRuntime(object(), tmp_path, factory)
+    app = create_app(settings=object(), runtime=runtime)
     with TestClient(app) as client:
         created = client.post(
             "/researches", json={"question": "研究问题", "mode": "multi_agent"}

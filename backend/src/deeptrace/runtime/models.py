@@ -35,6 +35,7 @@ class RunRecord(BaseModel):
     sources: list[str] = Field(default_factory=list)
     search_queries: list[str] = Field(default_factory=list)
     unresolved_gaps: list[str] = Field(default_factory=list)
+    events: list[dict[str, Any]] = Field(default_factory=list)
     usage: dict[str, Any] | None = None
     error: str | None = None
     request_payload: dict[str, Any] = Field(default_factory=dict)
