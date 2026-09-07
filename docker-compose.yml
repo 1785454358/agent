@@ -1,0 +1,81 @@
+x-runtime-environment: &runtime-environment
+  DEEPTRACE_RUNTIME_MODE: distributed
+  DEEPTRACE_MYSQL_DSN: mysql+asyncmy://researchpilot:${MYSQL_PASSWORD:-researchpilot}@mysql:3306/researchpilot
+  DEEPTRACE_REDIS_URL: redis://redis:6379/0
+  DEEPTRACE_REDIS_JOB_STREAM: deeptrace:research:jobs
+  DEEPTRACE_REDIS_CONSUMER_GROUP: research-workers
+  DEEPTRACE_EMBEDDING_MODEL_PATH: /models/bge-m3
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+  OPENAI_MODEL: ${OPENAI_MODEL}
+  TAVILY_API_KEY: ${TAVILY_API_KEY}
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: researchpilot
+      MYSQL_USER: researchpilot
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-researchpilot}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root-local-only}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build: ./backend
+    command: ["sh", "-c", "alembic upgrade head && uvicorn deeptrace.api:app --host 0.0.0.0 --port 8000"]
+    environment: *runtime-environment
+    volumes:
+      - ${DEEPTRACE_EMBEDDING_MODEL_HOST_PATH}:/models/bge-m3:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  worker:
+    build: ./backend
+    command: ["python", "-m", "deeptrace.worker"]
+    environment:
+      <<: *runtime-environment
+      DEEPTRACE_REDIS_CONSUMER_NAME: worker-1
+    volumes:
+      - ${DEEPTRACE_EMBEDDING_MODEL_HOST_PATH}:/models/bge-m3:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  redis-data:

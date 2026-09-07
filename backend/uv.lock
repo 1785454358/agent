@@ -2105,6 +2105,7 @@ dev = [
     { name = "fakeredis" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
+    { name = "pyyaml" },
 ]
 
 [package.metadata]
@@ -2138,6 +2139,7 @@ dev = [
     { name = "fakeredis", specifier = ">=2.26" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
+    { name = "pyyaml", specifier = ">=6" },
 ]
 
 [[package]]
