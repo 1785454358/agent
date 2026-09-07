@@ -1,3 +1,4 @@
+import asyncio
 from datetime import UTC, datetime
 
 import fakeredis.aioredis
@@ -134,3 +135,37 @@ async def test_distributed_runtime_replays_events_after_cursor(infrastructure) -
 
     assert [event.event_type for event in events] == ["planning.completed", "done"]
     assert events[0].id == second.id
+
+
+@pytest.mark.asyncio
+async def test_distributed_runtime_fetches_event_after_redis_notification(
+    infrastructure,
+) -> None:
+    repository, broker, _ = infrastructure
+    runtime = DistributedResearchRuntime(
+        repository, broker, id_factory=lambda: "run-1"
+    )
+    await runtime.start()
+    await runtime.create("研究问题", "basic")
+    stream = runtime.events("run-1")
+    next_event = asyncio.create_task(anext(stream))
+    await asyncio.sleep(0.05)
+
+    stored = await repository.append_event(
+        "run-1", RunEvent(event_type="tool.completed", message="工具完成")
+    )
+    await broker.publish_event(stored)
+
+    received = await asyncio.wait_for(next_event, timeout=1)
+    assert received.id == stored.id
+    assert received.payload["message"] == "工具完成"
+    await stream.aclose()
+
+
+@pytest.mark.asyncio
+async def test_distributed_runtime_stops_broker(infrastructure) -> None:
+    repository, broker, _ = infrastructure
+    runtime = DistributedResearchRuntime(repository, broker)
+    await runtime.start()
+
+    await runtime.stop()

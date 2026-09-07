@@ -9,6 +9,8 @@ from deeptrace.persistence.repository import RunRepository
 from deeptrace.queue.protocol import ResearchBroker
 from deeptrace.runtime.models import RunMode, RunRecord
 
+TERMINAL_STATUSES = {"completed", "partial", "failed", "cancelled"}
+
 
 class JobDispatchError(RuntimeError):
     """The durable run exists but its queue dispatch failed."""
@@ -28,6 +30,9 @@ class DistributedResearchRuntime:
 
     async def start(self) -> None:
         await self._broker.ensure_group()
+
+    async def stop(self) -> None:
+        await self._broker.aclose()
 
     async def create(self, question: str, mode: RunMode) -> RunRecord:
         clean_question = question.strip()
@@ -66,3 +71,26 @@ class DistributedResearchRuntime:
             return await self._repository.get(run_id)
         await self._broker.request_cancel(run_id)
         return run
+
+    async def events(self, run_id: str, after_event_id: int = 0):
+        cursor = after_event_id
+        async with self._broker.subscription(run_id) as notifications:
+            while True:
+                events = await self._repository.events_after(run_id, cursor)
+                if events:
+                    for event in events:
+                        cursor = event.id
+                        yield event
+                        if event.event_type == "done":
+                            return
+                    continue
+
+                run = await self._repository.get(run_id)
+                if run is None:
+                    return
+                if run.status in TERMINAL_STATUSES:
+                    return
+                try:
+                    await anext(notifications)
+                except StopAsyncIteration:
+                    return

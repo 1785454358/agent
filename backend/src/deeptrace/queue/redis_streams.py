@@ -121,3 +121,6 @@ class RedisResearchBroker:
     @staticmethod
     def _event_channel(run_id: str) -> str:
         return f"deeptrace:research:events:{run_id}"
+
+    async def aclose(self) -> None:
+        await self._redis.aclose()
