@@ -7,13 +7,13 @@
 面向复杂开放问题构建自主研究 Agent，覆盖任务规划、网页检索、原文获取、动态补查和带引用报告生成。
 独立实现 Workflow、Plan-and-Execute 和 Supervisor Multi-Agent 三种研究模式，可按研究深度和成本要求选择执行策略。
 
-**技术栈**　Python、LangGraph、LangChain、FastAPI、Pydantic、OpenAI Function Calling、Tavily、Playwright、BGE-M3、SSE、Pytest
+**技术栈**　Python、LangGraph、LangChain、FastAPI、Pydantic、SQLAlchemy、MySQL、Redis、Alembic、Docker Compose、OpenAI Function Calling、Tavily、Playwright、BGE-M3、SSE、Pytest
 
 - 设计三种研究模式，Basic 采用固定 Workflow 完成一次规划、并行检索和报告生成，Deep 采用 Plan-and-Execute 与 ReAct 执行，Multi-Agent 通过 LangGraph 编排 Supervisor 和多个 Researcher。
-- 实现面向复杂问题的任务拆解和持续执行，由 Planner 生成研究目标、完成条件与任务依赖，Executor 根据工具反馈推进任务，Replanner 针对未完成内容动态调整后续计划。
+- 实现面向复杂问题的任务拆解和持续执行，由 Planner 生成研究目标、完成条件与任务依赖，Executor 根据工具反馈推进任务，Supervisor 和 Replanner 针对具体未完成项调整后续计划。
 - 基于 Function Calling 封装网页搜索、正文抓取和历史资料检索工具，使用 BGE-M3 筛选相关原文，结合可选长期记忆生成正文顺序引用与文末参考内容。
-- 构建 Supervisor Multi-Agent 协作流程，限并发执行多个隔离的 ReAct Researcher，根据执行结果识别未解决叶子缺口，并生成与具体缺口对齐的定向补查任务。
-- 通过异步并行、本地语义筛选、上下文长度限制、请求缓存、单飞复用和终止短路减少重复网络请求与无效模型调用，使用 FastAPI、SSE 展示运行过程，完成 210 项自动化测试。
+- 通过异步并行、本地语义筛选、上下文长度限制、请求缓存、单飞复用和终止短路减少重复网络请求与无效模型调用，并让补查任务及工具查询绑定具体研究缺口。
+- 设计 Local 与 Distributed 双运行时，使用 MySQL 持久化任务、报告和有序事件，Redis Stream 投递任务，独立 Worker 通过租约、幂等更新、有限重试和恢复扫描处理异常，SSE 支持按事件 ID 断线续传，完成 266 项自动化测试。
 
 ## 一分钟面试介绍
 
@@ -22,6 +22,8 @@ ResearchPilot 是我独立开发的深度研究 Agent。我做这个项目时，
 项目保留了三种模式。Basic 是固定 Workflow，适合快速完成一次规划和并行检索。Deep 使用 Plan-and-Execute，Planner 拆任务，ReAct Executor 根据工具结果执行，出现缺口后由 Replanner 调整计划。Multi-Agent 使用 LangGraph 编排 Supervisor 和多个 Researcher，让不同研究方向并行推进，再根据未解决缺口补充研究。
 
 我在开发中重点处理了任务和搜索行为对不齐的问题。现在每个补查任务只对应一个具体缺口，Researcher 的工具调用也要关联任务检查项，避免重新进行宽泛搜索。Writer 直接使用网页原文或 BGE-M3 筛选出的相关片段生成带引用报告。下一步我准备建立固定评测集，对三种模式的事实正确性、来源覆盖、耗时和 Token 消耗做可复现比较。
+
+项目还保留 Local 与 Distributed 两套运行方式。Distributed 模式把 API 和研究执行拆开，MySQL 保存任务状态、报告和事件，Redis Stream 负责投递，独立 Worker 用数据库租约和条件更新处理重复消息及进程中断。SSE 能从指定事件 ID 补发进度，整套服务可通过 Docker Compose 启动。
 
 ## 面试追问准备
 
@@ -40,6 +42,10 @@ Planner 主要在任务开始时生成执行计划。Supervisor 除了初始分�
 ### 如何控制报告幻觉和引用错误
 
 搜索摘要只用于发现候选页面，不能直接作为报告依据。Researcher 必须实际读取网页，Writer 只接收成功抓取的正文或 BGE-M3 筛选出的原文片段。正文引用按照来源首次出现顺序编号，URL 统一放在文末，任务摘要只用于 Supervisor 协调，不作为事实输入。
+
+### 为什么同时使用 MySQL 和 Redis
+
+MySQL 保存可恢复的权威状态，包括任务、报告、用量和有序事件。Redis Stream 负责异步任务投递，Pub/Sub 只唤醒在线 SSE 连接，取消信号也通过带过期时间的 Redis Key 传递。Worker 收到重复消息时会先通过数据库条件更新领取租约，只有当前租约持有者能写入终态。Redis 或 Worker 短暂中断后，系统仍能根据 MySQL 状态和 Redis pending 消息继续恢复。
 
 ### 为什么目前没有写 Token 降幅，下一步怎样评测
 

@@ -136,3 +136,23 @@ async def test_runtime_factory_selects_distributed_adapter(monkeypatch) -> None:
     assert cleanup is not None
     await runtime.stop()
     await cleanup()
+
+
+def test_api_closes_runtime_when_startup_fails() -> None:
+    runtime = FakeDistributedRuntime()
+    runtime.stopped = False
+
+    async def broken_start() -> None:
+        raise ConnectionError("redis unavailable")
+
+    async def record_stop() -> None:
+        runtime.stopped = True
+
+    runtime.start = broken_start
+    runtime.stop = record_stop
+
+    with pytest.raises(ConnectionError, match="redis unavailable"):
+        with TestClient(create_app(settings=object(), runtime=runtime)):
+            pass
+
+    assert runtime.stopped is True

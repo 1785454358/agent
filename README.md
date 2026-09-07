@@ -35,7 +35,7 @@ Deep 的 Planner 生成目标、完成条件与依赖；Executor 根据实际工
 内容的主题分析、必要时的研究局限和正文末尾的综合结论；URL 统一放在“参考内容”。
 该调整仍使用一次 Writer 调用，没有增加 Critic 或润色 Agent。
 
-## 启动
+## 本地模式
 
 ```powershell
 cd backend
@@ -46,6 +46,36 @@ uv run python -m deeptrace.api
 ```
 
 打开 http://127.0.0.1:8000，在模式选择中切换 Basic / Deep / Multi-Agent。
+
+本地模式沿用进程内异步任务和 `runs/*.json`，无需安装 MySQL、Redis 或 Worker。
+
+## 分布式模式
+
+```powershell
+Copy-Item .env.docker.example .env.docker
+# 填写模型、Tavily 和 BGE-M3 的宿主机路径后启动
+docker compose --env-file .env.docker up --build
+```
+
+分布式模式把 API 与研究执行分开。API 将运行记录写入 MySQL，再把任务投递到
+Redis Stream。独立 Worker 消费任务，持续保存研究事件和最终报告。MySQL 保存
+权威状态，Redis 负责任务投递、取消信号和 SSE 实时唤醒。Worker 使用租约、条件
+更新和有限重试处理重复投递，浏览器断线后可通过事件 ID 补收进度。
+
+下面两条命令可分别查看运行记录与队列长度。
+
+```powershell
+docker compose --env-file .env.docker exec mysql mysql -uresearchpilot -p researchpilot -e "SELECT id, mode, status, attempt_count FROM research_runs ORDER BY created_at DESC LIMIT 20;"
+docker compose --env-file .env.docker exec redis redis-cli XLEN deeptrace:research:jobs
+```
+
+普通停止不会删除 MySQL 和 Redis 数据。
+
+```powershell
+docker compose --env-file .env.docker down
+```
+
+只有确认需要清空本地数据库和队列时才执行 `docker compose --env-file .env.docker down -v`。
 
 ```powershell
 uv run researchpilot --mode deep "比较几种 Agent 架构，并说明各自适用场景与局限"
@@ -59,8 +89,9 @@ uv run python bench_deep.py --output runs/deep-smoke.json
 - [后端配置与 API](backend/README.md)
 - [Deep 架构设计](docs/superpowers/specs/2026-09-05-deep-research-design.md)
 - [Supervisor Multi-Agent 架构设计](docs/superpowers/specs/2026-09-06-supervisor-multi-agent-design.md)
+- [MySQL、Redis 与异步 Worker 设计](docs/superpowers/specs/2026-09-07-mysql-redis-worker-design.md)
 - [文档索引](docs/README.md)
 
-当前已实现单 Agent 的规划、执行和重规划闭环。模式不涉及模型训练或内部
+当前已实现单 Agent 的规划、执行和重规划循环。模式不涉及模型训练或内部
 推理展示；事件展示的是可核对的计划、工具选择和结果。研究质量仍取决于
 来源与模型判断，复杂问题的质量/成本对照评测尚待建立。

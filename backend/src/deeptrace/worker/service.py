@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
+from datetime import UTC, datetime, timedelta
 
 from redis.asyncio import Redis
 
@@ -45,6 +46,7 @@ class ResearchWorker:
             await self._broker.ensure_group()
             for job in await self._broker.reclaim_stale():
                 await self.process(job)
+            await self.recover_stale()
             while True:
                 for job in await self._broker.read():
                     await self.process(job)
@@ -55,6 +57,11 @@ class ResearchWorker:
         await self._broker.aclose()
         if self._close_callback is not None:
             await self._close_callback()
+
+    async def recover_stale(self, *, older_than_seconds: int = 60) -> None:
+        cutoff = datetime.now(UTC) - timedelta(seconds=older_than_seconds)
+        for run in await self._repository.recoverable_before(cutoff, limit=100):
+            await self._broker.enqueue(run.id)
 
     async def process(self, job: JobMessage) -> None:
         run = await self._repository.claim(
@@ -126,7 +133,10 @@ class ResearchWorker:
                 except Exception as exc:
                     execution_error = exc
             else:
-                control_outcome = monitor_task.result()
+                try:
+                    control_outcome = monitor_task.result()
+                except Exception as exc:
+                    execution_error = exc
                 research_task.cancel()
                 with suppress(asyncio.CancelledError):
                     await research_task
@@ -140,9 +150,14 @@ class ResearchWorker:
             )
             raise
         finally:
-            await agent.aclose()
-            event_queue.put_nowait(None)
-            await drain_task
+            try:
+                await agent.aclose()
+            except Exception as exc:
+                if execution_error is None:
+                    execution_error = exc
+            finally:
+                event_queue.put_nowait(None)
+                await drain_task
 
         if control_outcome == "cancelled":
             cancelled = await self._repository.cancel(

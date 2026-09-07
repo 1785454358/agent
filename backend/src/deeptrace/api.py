@@ -74,13 +74,15 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        await selected_runtime.start()
         try:
+            await selected_runtime.start()
             yield
         finally:
-            await selected_runtime.stop()
-            if dispose_resources is not None:
-                await dispose_resources()
+            try:
+                await selected_runtime.stop()
+            finally:
+                if dispose_resources is not None:
+                    await dispose_resources()
 
     app = FastAPI(title="ResearchPilot API", lifespan=lifespan)
 

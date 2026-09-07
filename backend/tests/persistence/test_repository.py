@@ -246,3 +246,45 @@ async def test_repository_reclaims_a_run_after_lease_expires(repository) -> None
     assert reclaimed.lease_owner == "worker-2"
     assert reclaimed.attempt_count == 2
     assert reclaimed.version == 2
+
+
+@pytest.mark.asyncio
+async def test_repository_finds_only_stale_pending_and_expired_running_runs(
+    repository,
+) -> None:
+    now = datetime.now(UTC)
+    runs = (
+        RunRecord(
+            id="stale-pending",
+            question="问题",
+            created_at=now - timedelta(minutes=5),
+        ),
+        RunRecord(id="new-pending", question="问题", created_at=now),
+        RunRecord(
+            id="expired-running",
+            question="问题",
+            status="running",
+            created_at=now - timedelta(minutes=5),
+            lease_owner="dead-worker",
+            lease_expires_at=now - timedelta(seconds=1),
+        ),
+        RunRecord(
+            id="active-running",
+            question="问题",
+            status="running",
+            created_at=now - timedelta(minutes=5),
+            lease_owner="active-worker",
+            lease_expires_at=now + timedelta(minutes=1),
+        ),
+    )
+    for run in runs:
+        await repository.create(run)
+
+    recoverable = await repository.recoverable_before(
+        now - timedelta(seconds=60), limit=100
+    )
+
+    assert {run.id for run in recoverable} == {
+        "stale-pending",
+        "expired-running",
+    }

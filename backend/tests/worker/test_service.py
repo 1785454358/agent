@@ -1,5 +1,5 @@
 import asyncio
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -29,6 +29,11 @@ class RecordingBroker:
         self.acked = []
         self.cancelled = set()
         self.closed = False
+        self.enqueued = []
+
+    async def enqueue(self, run_id: str) -> str:
+        self.enqueued.append(run_id)
+        return f"message-{len(self.enqueued)}"
 
     async def publish_event(self, event) -> None:
         self.published.append(event)
@@ -477,3 +482,124 @@ async def test_worker_does_not_ack_when_result_fencing_write_fails(repository) -
     await worker.process(JobMessage(message_id="1-0", run_id="run-1"))
 
     assert broker.acked == []
+
+
+@pytest.mark.asyncio
+async def test_worker_requeues_stale_and_expired_database_runs(repository) -> None:
+    now = datetime.now(UTC)
+    await repository.create(
+        RunRecord(
+            id="stale-pending",
+            question="问题",
+            created_at=now - timedelta(minutes=5),
+        )
+    )
+    await repository.create(
+        RunRecord(
+            id="expired-running",
+            question="问题",
+            status="running",
+            created_at=now - timedelta(minutes=5),
+            lease_owner="dead-worker",
+            lease_expires_at=now - timedelta(seconds=1),
+        )
+    )
+    broker = RecordingBroker()
+    worker = ResearchWorker(
+        repository,
+        broker,
+        SimpleNamespace(worker_lease_seconds=60, worker_max_attempts=3),
+        agent_factory=lambda *args, **kwargs: None,
+        worker_id="worker-1",
+    )
+
+    await worker.recover_stale(older_than_seconds=60)
+
+    assert set(broker.enqueued) == {"stale-pending", "expired-running"}
+
+
+@pytest.mark.asyncio
+async def test_worker_stops_agent_when_redis_monitor_fails(repository) -> None:
+    await repository.create(
+        RunRecord(id="run-1", question="研究问题", created_at=datetime.now(UTC))
+    )
+    started = asyncio.Event()
+
+    class BrokenMonitorBroker(RecordingBroker):
+        async def is_cancel_requested(self, run_id: str) -> bool:
+            if started.is_set():
+                raise ConnectionError("redis password secret-test-key")
+            return False
+
+    class BlockingAgent(EventfulAgent):
+        def __init__(self, on_event) -> None:
+            super().__init__(on_event)
+            self.cancelled = False
+
+        async def arun(self, question: str) -> AgentResult:
+            started.set()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                self.cancelled = True
+                raise
+
+    broker = BrokenMonitorBroker()
+    agent = None
+
+    def factory(settings, on_event=None, mode="basic"):
+        nonlocal agent
+        agent = BlockingAgent(on_event)
+        return agent
+
+    worker = ResearchWorker(
+        repository,
+        broker,
+        SimpleNamespace(worker_lease_seconds=60, worker_max_attempts=3),
+        agent_factory=factory,
+        worker_id="worker-1",
+        heartbeat_interval_seconds=0.01,
+    )
+
+    await asyncio.wait_for(
+        worker.process(JobMessage(message_id="1-0", run_id="run-1")), timeout=1
+    )
+
+    run = await repository.get("run-1")
+    assert run is not None
+    assert run.status == "failed"
+    assert run.error == "运行失败（ConnectionError），请检查服务与模型配置"
+    assert "secret-test-key" not in run.model_dump_json()
+    assert agent is not None and agent.cancelled is True and agent.closed is True
+    assert broker.acked == ["1-0"]
+
+
+@pytest.mark.asyncio
+async def test_worker_drains_events_and_fails_when_agent_close_fails(repository) -> None:
+    await repository.create(
+        RunRecord(id="run-1", question="研究问题", created_at=datetime.now(UTC))
+    )
+    broker = RecordingBroker()
+
+    class BrokenCloseAgent(EventfulAgent):
+        async def aclose(self) -> None:
+            raise OSError("close leaked secret-test-key")
+
+    worker = ResearchWorker(
+        repository,
+        broker,
+        SimpleNamespace(worker_lease_seconds=60, worker_max_attempts=3),
+        agent_factory=lambda settings, on_event=None, mode="basic": BrokenCloseAgent(
+            on_event
+        ),
+        worker_id="worker-1",
+    )
+
+    await worker.process(JobMessage(message_id="1-0", run_id="run-1"))
+
+    run = await repository.get("run-1")
+    events = await repository.events_after("run-1", 0)
+    assert run is not None and run.status == "failed"
+    assert run.error == "运行失败（OSError），请检查服务与模型配置"
+    assert [event.event_type for event in events] == ["planning.completed", "done"]
+    assert broker.acked == ["1-0"]

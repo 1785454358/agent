@@ -20,6 +20,10 @@ class RunRepository(Protocol):
 
     async def list(self, limit: int = 100) -> list[RunRecord]: ...
 
+    async def recoverable_before(
+        self, cutoff: datetime, limit: int = 100
+    ) -> list[RunRecord]: ...
+
     async def claim(
         self, run_id: str, worker_id: str, lease_seconds: int
     ) -> RunRecord | None: ...
@@ -67,6 +71,32 @@ class SqlAlchemyRunRepository:
         statement = (
             select(ResearchRunRow)
             .order_by(ResearchRunRow.created_at.desc())
+            .limit(limit)
+        )
+        async with self._sessions() as session:
+            rows = (await session.scalars(statement)).all()
+            return [self._to_record(row) for row in rows]
+
+    async def recoverable_before(
+        self, cutoff: datetime, limit: int = 100
+    ) -> list[RunRecord]:
+        now = datetime.now(UTC)
+        statement = (
+            select(ResearchRunRow)
+            .where(
+                or_(
+                    and_(
+                        ResearchRunRow.status == "pending",
+                        ResearchRunRow.created_at < cutoff,
+                    ),
+                    and_(
+                        ResearchRunRow.status == "running",
+                        ResearchRunRow.lease_expires_at.is_not(None),
+                        ResearchRunRow.lease_expires_at < now,
+                    ),
+                )
+            )
+            .order_by(ResearchRunRow.created_at)
             .limit(limit)
         )
         async with self._sessions() as session:

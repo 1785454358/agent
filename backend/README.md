@@ -2,6 +2,17 @@
 
 ResearchPilot 提供 Basic、Deep 与 Multi-Agent 三种平级模式。Basic 参考 GPT-Researcher 的基础报告路径；Deep 使用 Plan-and-Execute、ReAct 原生工具调用与动态重规划；Multi-Agent 使用 LangGraph 编排 Supervisor Plan-and-Execute 和多个独立 ReAct Researcher。Python 包名、旧 CLI 命令和环境变量前缀继续兼容 DeepTrace。
 
+## 两种运行方式
+
+Local 适合开发和单机测试。API 在进程内执行研究任务，并把记录保存到
+`runs/*.json`。它不连接 MySQL 和 Redis。
+
+Distributed 适合演示服务拆分与故障恢复。API 只创建和查询任务，MySQL 保存运行
+状态、报告、用量和有序事件。Redis Stream 把任务交给独立 Worker，Pub/Sub 只负责
+唤醒 SSE 连接，断线后的事件仍从 MySQL 补发。Worker 使用数据库租约和条件更新
+避免旧进程覆盖新结果，并在启动时恢复 Redis pending 消息、长时间未领取的 pending
+运行和租约过期的 running 运行。
+
 ## Multi-Agent 协作研究模式
 
 ```text
@@ -39,7 +50,7 @@ Planner（任务、完成条件、依赖）
 URL，或搜索/记忆返回的 URL；请求仍经过现有抓取器的地址校验。
 每轮最多三个独立读工具并行，任务本身按依赖顺序执行。
 
-默认上限：6 个已执行任务、每任务 4 轮、全局 12 轮 Executor、2 次重规划、
+默认上限为 6 个已执行任务、每任务 4 轮、全局 12 轮 Executor、2 次重规划、
 30 次研究工具调用。使用 `DEEPTRACE_DEEP_*` 调整（见 `.env.example`）。
 搜索、阅读和记忆检索共用工具配额，包括缓存命中及失败调用；并行调用不会超额。
 `submit_plan` 和 `finish_task` 属于控制决策，由规划/执行轮次限制，不扣研究工具配额。
@@ -75,7 +86,7 @@ API 请求 `POST /researches` 的 JSON 可使用 `{"question":"研究问题","mo
 
 ## 输入 Writer 的内容
 
-每段资料使用以下格式：
+每段资料使用以下格式。
 
 ```text
 Source: https://example.com/article
@@ -85,9 +96,9 @@ Content: 网页正文或 BGE-M3 筛选出的相关原文
 
 `Content` 是源网页文本，不是 LLM 摘要。总正文小于 8000 字符且来源数不超过上限时直接传入；较大内容按 1000 字符切分、重叠 100 字符，以 0.42 相似度阈值筛选，每个搜索词最多保留 10 段。Writer 在正文中使用按首次出现顺序生成的 `[1]` 编号引用，正文不显示 URL，文末统一列入“参考内容”。中文报告依次包含总述、带自然承接的主题分析、存在实质缺口时的研究局限和正文最后的综合结论；仍只调用一次 Writer。报告标题使用 `1`、`1.1`、`1.1.1` 数字层级，不使用 `#`。最后一条研究事件汇总本次运行总耗时与 Planner、Writer 的 Provider Token 用量。
 
-## 运行
+## Local 运行
 
-复制 `.env.example` 为 `.env`，填写 OpenAI-compatible Provider 和 Tavily 凭据：
+复制 `.env.example` 为 `.env`，填写 OpenAI-compatible Provider 和 Tavily 凭据后运行。
 
 ```powershell
 uv sync
@@ -95,20 +106,43 @@ uv run playwright install chromium
 uv run deeptrace "今天 AI Agent 领域有哪些热点新闻？"
 ```
 
-启动 Web 界面：
+按下面的命令启动 Web 界面。
 
 ```powershell
 uv run python -m deeptrace.api
 ```
 
-浏览器访问 `http://127.0.0.1:8000/`。API 提供：
+浏览器访问 `http://127.0.0.1:8000/`。API 提供以下接口。
 
 - `POST /researches` 创建后台研究运行
 - `GET /researches/{id}` 获取状态、搜索词、报告、来源与用量
-- `GET /researches/{id}/events` 订阅 SSE 进度事件
+- `GET /researches/{id}/events` 订阅 SSE 进度事件，可携带 `Last-Event-ID` 补发
 - `POST /researches/{id}/cancel` 取消运行
+- `GET /health` 查看 API 健康状态
 
 运行记录保存到 `runs/<id>.json`。开启 `DEEPTRACE_USE_MEMORY=true` 后，成功抓取的完整页面可跨运行复用；缓存命中不占网络抓取页数。
+
+## Distributed 运行
+
+在项目根目录执行以下命令。
+
+```powershell
+Copy-Item .env.docker.example .env.docker
+# 编辑 .env.docker，填写真实 Provider、Tavily 凭据和 BGE-M3 宿主机路径
+docker compose --env-file .env.docker up --build
+```
+
+Compose 启动 MySQL 8、Redis 7、API 和 Worker。API 会先运行 Alembic 迁移，Worker
+等待 API 健康后再读取队列。MySQL 与 Redis 默认不向宿主机暴露端口。
+
+```powershell
+docker compose --env-file .env.docker exec mysql mysql -uresearchpilot -p researchpilot -e "SELECT id, mode, status, attempt_count FROM research_runs ORDER BY created_at DESC LIMIT 20;"
+docker compose --env-file .env.docker exec redis redis-cli XLEN deeptrace:research:jobs
+docker compose --env-file .env.docker down
+```
+
+最后一条命令保留数据卷。确认要清空本地运行记录和队列时，再使用
+`docker compose --env-file .env.docker down -v`。
 
 ## 主要配置
 
@@ -126,6 +160,11 @@ DEEPTRACE_WRITER_TIMEOUT_SECONDS=60
 DEEPTRACE_MAX_FETCHED_PAGES=20
 DEEPTRACE_MAX_TOOL_CALLS=30
 DEEPTRACE_TOOL_TIMEOUT_SECONDS=45
+DEEPTRACE_RUNTIME_MODE=local
+DEEPTRACE_MYSQL_DSN=mysql+asyncmy://researchpilot:researchpilot@mysql:3306/researchpilot
+DEEPTRACE_REDIS_URL=redis://redis:6379/0
+DEEPTRACE_WORKER_LEASE_SECONDS=120
+DEEPTRACE_WORKER_MAX_ATTEMPTS=3
 ```
 
 `DEEPTRACE_EMBEDDING_MODEL_PATH` 指向本地 BGE-M3 目录。`DEEPTRACE_INPUT_COST_PER_MILLION` 和 `DEEPTRACE_OUTPUT_COST_PER_MILLION` 只用于费用估算。
@@ -145,8 +184,12 @@ src/deeptrace/
 ├── context/           # BGE-M3 与直接原文筛选
 ├── models/            # 页面、事件和 Provider 用量模型
 ├── observability/     # 费用估算与各角色用量展示
+├── persistence/       # SQLAlchemy 运行记录、事件与租约仓储
+├── queue/             # Redis Stream、Pub/Sub 与取消信号
 ├── prompts/           # Planner 与 Writer 提示词
+├── runtime/           # Local 和 Distributed 运行时适配器
 ├── tools/             # Tavily 搜索与网页抓取
+├── worker/            # 独立研究任务消费者与恢复逻辑
 ├── memory.py          # 页面级 JSONL 缓存
 ├── api.py             # FastAPI、SSE 和 Web 仪表盘
 └── cli.py             # 命令行入口
