@@ -1,0 +1,10 @@
+# 后端启动
+
+```powershell
+cd backend
+uv run python -m deeptrace.api
+```
+
+打开 http://127.0.0.1:8000 ，在模式选择中切换 Basic / Deep。
+
+注意：改了 .env 或代码后需重启后端才生效（先停掉占用 8000 端口的进程再启动）。

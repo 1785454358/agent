@@ -6,9 +6,8 @@ from collections.abc import Sequence
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
-
 WRITER_SYSTEM_PROMPT = (
-    "You are DeepTrace Report Writer. Write a complete research report using "
+    "You are ResearchPilot Report Writer. Write a complete research report using "
     "only the supplied research context. Use a plain report title and numbered "
     "section headings such as 1, 1.1, and 1.1.1; never use # heading markers. "
     "Cite support with the exact marker [[source:N]] from the source catalog. "

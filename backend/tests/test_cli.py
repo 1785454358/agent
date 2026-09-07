@@ -1,13 +1,26 @@
 from deeptrace.cli import _exit_code, _parser, _print_event
+
+
+def test_cli_can_select_deep_research():
+    assert _parser().parse_args(["--mode", "deep", "研究问题"]).mode == "deep"
+
+
+def test_cli_can_select_multi_agent_research():
+    assert (
+        _parser().parse_args(["--mode", "multi_agent", "研究问题"]).mode
+        == "multi_agent"
+    )
+
+
 from deeptrace.models import RunEvent
 
 
-def test_parser_describes_basic_parallel_research() -> None:
+def test_parser_defaults_to_basic_research() -> None:
     parser = _parser()
     args = parser.parse_args(["研究问题"])
 
     assert args.question == "研究问题"
-    assert "并行" in parser.description
+    assert args.mode == "basic"
 
 
 def test_event_formatter_prints_message_only(capsys) -> None:

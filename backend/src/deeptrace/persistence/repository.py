@@ -300,19 +300,31 @@ class SqlAlchemyRunRepository:
 
     @staticmethod
     def _to_record(row: ResearchRunRow) -> RunRecord:
-        return RunRecord.model_validate(
-            {
-                column.name: getattr(row, column.name)
-                for column in ResearchRunRow.__table__.columns
-            }
-        )
+        values = {
+            column.name: getattr(row, column.name)
+            for column in ResearchRunRow.__table__.columns
+        }
+        for name in (
+            "created_at",
+            "started_at",
+            "finished_at",
+            "updated_at",
+            "lease_expires_at",
+        ):
+            value = values[name]
+            if value is not None and value.tzinfo is None:
+                values[name] = value.replace(tzinfo=UTC)
+        return RunRecord.model_validate(values)
 
     @staticmethod
     def _to_event(row: RunEventRow) -> StoredEvent:
+        created_at = row.created_at
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=UTC)
         return StoredEvent(
             id=row.id,
             run_id=row.run_id,
             event_type=row.event_type,
             payload=row.payload,
-            created_at=row.created_at,
+            created_at=created_at,
         )

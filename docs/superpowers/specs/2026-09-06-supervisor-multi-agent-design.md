@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 
-状态：用户已于 2026-09-06 确认；尚未实现新模式。
+状态：用户已于 2026-09-06 确认；首版已实现并通过自动化回归。
 
 ## 1. 用户已确定的范围
 
@@ -24,12 +24,12 @@
 
 ## 2. 已核对的项目接入点
 
-- `backend/src/deeptrace/agent/service.py`：`build_real_agent()` 根据 mode 构建实例，返回统一 `AgentResult`。
-- `backend/src/deeptrace/api.py`：请求与记录当前只允许 basic/deep；统一后台运行、取消、SSE 和落盘。
+- `backend/src/deeptrace/__init__.py`：`build_real_agent()` 根据 mode 构建实例，返回统一 `AgentResult`。
+- `backend/src/deeptrace/api.py`：请求与记录允许 basic/deep/multi_agent；统一后台运行、取消、SSE 和落盘。
 - `backend/src/deeptrace/cli.py`：`--mode` 枚举与模式文案。
 - `backend/src/deeptrace/static/index.html`：现有页面以 select 提交 mode；只增加选项和必要的事件显示，不重做用户前端。
 - `backend/src/deeptrace/config/settings.py`：新增独立配置，不覆盖 `deep_*`。
-- `backend/src/deeptrace/models/metrics.py`、`observability/token_metrics.py`：当前用量字段是 planner/executor/replanner/writer；增量支持 supervisor/researcher，不把新角色伪装成旧角色。
+- `backend/src/deeptrace/models/metrics.py`、`observability/token_metrics.py`：用量结构增量支持 supervisor/researcher，不把新角色伪装成旧角色。
 - 当前 Deep 的 `ResearchToolbox` 同时保存研究状态、配额回调和工具缓存，不能直接作为多个研究员的共享会话或通过反复 reset 复用。
 
 工作区已有大量用户修改及未跟踪 Deep 文件。实施时以当前工作树为基线，不回退、移动或清理它们，不把这些变更混入新模式提交。

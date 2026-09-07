@@ -24,9 +24,23 @@ def estimate_usage_cost(
 
 def format_role_usage(usage: UsageBreakdown) -> str:
     """Render the only Provider-consuming roles in the Basic pipeline."""
-    return (
-        "Provider Token（按角色）\n"
-        f"Planner: {usage.planner.total_tokens:,}\n"
-        f"Writer: {usage.writer.total_tokens:,}\n"
-        f"Total: {usage.total.total_tokens:,}"
+    lines = [
+        "Provider Token（按角色）",
+        f"Planner: {usage.planner.total_tokens:,}",
+        f"Executor: {usage.executor.total_tokens:,}",
+        f"Replanner: {usage.replanner.total_tokens:,}",
+    ]
+    if usage.supervisor.total_tokens or usage.researcher.total_tokens:
+        lines.extend(
+            [
+                f"Supervisor: {usage.supervisor.total_tokens:,}",
+                f"Researcher: {usage.researcher.total_tokens:,}",
+            ]
+        )
+    lines.extend(
+        [
+            f"Writer: {usage.writer.total_tokens:,}",
+            f"Total: {usage.total.total_tokens:,}",
+        ]
     )
+    return "\n".join(lines)

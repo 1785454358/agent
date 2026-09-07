@@ -25,11 +25,19 @@ class UsageBreakdown(BaseModel):
     """各模型角色的真实 Provider usage。"""
 
     planner: TokenUsage = Field(default_factory=TokenUsage)
+    executor: TokenUsage = Field(default_factory=TokenUsage)
+    replanner: TokenUsage = Field(default_factory=TokenUsage)
+    supervisor: TokenUsage = Field(default_factory=TokenUsage)
+    researcher: TokenUsage = Field(default_factory=TokenUsage)
     writer: TokenUsage = Field(default_factory=TokenUsage)
 
     @property
     def total(self) -> TokenUsage:
         return add_token_usages(
             self.planner,
+            self.executor,
+            self.replanner,
+            self.supervisor,
+            self.researcher,
             self.writer,
         )
