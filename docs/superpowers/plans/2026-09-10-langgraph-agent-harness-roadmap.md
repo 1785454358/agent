@@ -45,6 +45,8 @@ Implements WorkflowResearchGraph, AnswerGraph, BriefGraph, ReportGraph, citation
 
 **Exit gate:** A real API run using `workflow` returns a concise cited answer by default and a full report only when requested; legacy `basic` records remain readable.
 
+Before enabling this production path, the Application Service must reject any invocation where `config.configurable.thread_id` differs from `ConversationState.thread_id`, so checkpoint tenancy has one authoritative identity.
+
 ### Plan 4: Plan-and-Execute Profile
 
 Replaces the current Deep Python loop with plan, task selection, executor, tool, evaluation, repair, and replan nodes connected by explicit LangGraph routes.

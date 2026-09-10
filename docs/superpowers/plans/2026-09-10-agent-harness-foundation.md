@@ -787,6 +787,8 @@ git commit -m "feat: add research profile registry"
 - Consumes: `HarnessState`, `ResearchInput`, `ResearchOutcome`, `ProfileRegistry`, and a LangGraph checkpointer.
 - Produces: `build_harness_graph(registry, checkpointer=None)` returning a compiled graph.
 
+**Review correction:** The approved Runtime Context contract supersedes the initial sample's direct `datetime.now()` call. The parent graph must declare `context_schema=HarnessContext`, create ResearchInput time fields from `runtime.context.clock.now()`, propagate `RunnableConfig` to the child, and reject an outcome whose Profile differs from its route. Tests must use a compiled child `StateGraph` with `checkpointer=True`, assert the selected Profile checkpoint namespace, prove Runtime Context and configurable values reach the child node, and prove child-private fields do not enter root State.
+
 - [ ] **Step 1: Write failing end-to-end routing and checkpoint tests**
 
 ```python
