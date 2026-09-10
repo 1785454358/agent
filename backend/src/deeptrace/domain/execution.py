@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
+
+from deeptrace.domain.conversation import ConversationSummary
+from deeptrace.domain.evidence import Finding
 
 
 class ResearchProfile(StrEnum):
@@ -88,7 +90,9 @@ class ErrorRecord(BaseModel):
 
 class ResearchInput(BaseModel):
     question: str = Field(min_length=1)
-    conversation_summary: dict[str, Any] = Field(default_factory=dict)
+    conversation_summary: ConversationSummary = Field(
+        default_factory=ConversationSummary
+    )
     prior_evidence_ids: list[str] = Field(default_factory=list)
     unresolved_gaps: list[str] = Field(default_factory=list)
     budget: BudgetSnapshot = Field(default_factory=BudgetSnapshot)
@@ -99,7 +103,7 @@ class ResearchInput(BaseModel):
 class ResearchOutcome(BaseModel):
     profile: ResearchProfile
     evidence_ids: list[str] = Field(default_factory=list)
-    findings: list[dict[str, Any]] = Field(default_factory=list)
+    findings: list[Finding] = Field(default_factory=list)
     unresolved_gaps: list[str] = Field(default_factory=list)
     executed_steps: int = Field(ge=0)
     termination_reason: str = Field(min_length=1)
