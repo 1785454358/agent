@@ -36,6 +36,7 @@
 
 - `src/deeptrace/harness/state.py`: ConversationState, TurnState, reducers, and constructors.
 - `src/deeptrace/harness/context.py`: immutable dependency context and provider-independent ports.
+- `src/deeptrace/harness/checkpoint.py`: strict JsonPlus checkpoint serializer with a minimal DeepTrace type allowlist.
 - `src/deeptrace/harness/registry.py`: duplicate-safe canonical Profile registry.
 - `src/deeptrace/harness/graph.py`: minimal compiled HarnessGraph and registered child invocation adapters.
 - `src/deeptrace/harness/__init__.py`: stable Harness exports.
@@ -438,12 +439,15 @@ git commit -m "feat: add conversation and evidence contracts"
 **Files:**
 - Create: `backend/src/deeptrace/harness/state.py`
 - Create: `backend/src/deeptrace/harness/context.py`
+- Create: `backend/src/deeptrace/harness/checkpoint.py`
 - Create: `backend/tests/harness/__init__.py`
 - Create: `backend/tests/harness/test_state.py`
 
 **Interfaces:**
 - Consumes: `ConversationSummary`, `Finding`, `ResearchInput`, `ResearchOutcome`, Profile and status enums.
-- Produces: `ConversationState`, `TurnState`, `HarnessState`, `merge_conversation`, `new_conversation`, `new_turn`, provider-independent gateway Protocols, and `HarnessContext`.
+- Produces: `ConversationState`, `ConversationUpdate`, `TurnState`, `HarnessState`, `merge_conversation`, `new_conversation`, `new_turn`, provider-independent gateway Protocols, `HarnessContext`, and `create_harness_checkpoint_serializer()`.
+
+**Review correction:** LangGraph reducer channels initialize a `TypedDict` aggregate with `{}`, so the reducer must accept that identity on the first graph write. Strict msgpack also blocks unregistered application types. The implementation must exercise a compiled StateGraph first write and configure `JsonPlusSerializer` with the exact Harness domain type allowlist; broad allowlisting and pickle fallback are forbidden.
 
 - [ ] **Step 1: Write failing reducer, reset, and context tests**
 
