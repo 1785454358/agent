@@ -6,12 +6,17 @@ from deeptrace.domain import (
     ConversationSummary,
     ErrorCategory,
     ErrorRecord,
+    Evidence,
+    EvidenceLifecycleStatus,
     ExecutionStatus,
     Finding,
     ResearchInput,
     ResearchOutcome,
     ResearchProfile,
     ResponseProfile,
+    ToolName,
+    ToolRequest,
+    ToolResult,
 )
 
 
@@ -27,6 +32,11 @@ HARNESS_STATE_MSGPACK_TYPES = (
     ErrorRecord,
     ResearchInput,
     ResearchOutcome,
+    ToolName,
+    ToolRequest,
+    ToolResult,
+    Evidence,
+    EvidenceLifecycleStatus,
 )
 
 

@@ -10,11 +10,16 @@ from deeptrace.domain import (
     ErrorCategory,
     ErrorRecord,
     ExecutionStatus,
+    Evidence,
+    EvidenceLifecycleStatus,
     Finding,
     ResearchInput,
     ResearchOutcome,
     ResearchProfile,
     ResponseProfile,
+    ToolName,
+    ToolRequest,
+    ToolResult,
 )
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
 from deeptrace.harness.context import HarnessContext
@@ -141,6 +146,49 @@ def test_checkpoint_serializer_does_not_reconstruct_unregistered_models() -> Non
 
     assert not isinstance(restored["custom"], _UnregisteredCheckpointModel)
     assert restored["custom"] == {"value": "blocked"}
+
+
+def test_checkpoint_serializer_round_trips_tool_and_evidence_contracts() -> None:
+    request = ToolRequest(
+        request_id="request-1",
+        run_id="run-1",
+        thread_id="thread-1",
+        call_id="call-1",
+        tool=ToolName.FETCH_PAGE,
+        arguments={"url": "https://example.com/research"},
+    )
+    result = ToolResult(
+        request_id="request-1",
+        run_id="run-1",
+        thread_id="thread-1",
+        call_id="call-1",
+        tool=ToolName.FETCH_PAGE,
+        ok=True,
+        preview="Research summary",
+        data_ref="evidence://evidence-1/body",
+        evidence_ids=["evidence-1"],
+    )
+    evidence = Evidence(
+        id="evidence-1",
+        canonical_url="https://example.com/research",
+        title="Research source",
+        media_type="text/html",
+        content_hash="sha256:" + "a" * 64,
+        fetched_at="2026-09-10T08:00:00Z",
+        source_quality=0.9,
+        status=EvidenceLifecycleStatus.ACTIVE,
+        version=1,
+        metadata={"language": "en"},
+    )
+    value = {"request": request, "result": result, "evidence": evidence}
+
+    serializer = create_harness_checkpoint_serializer()
+    restored = serializer.loads_typed(serializer.dumps_typed(value))
+
+    assert restored == value
+    assert isinstance(restored["request"], ToolRequest)
+    assert isinstance(restored["result"], ToolResult)
+    assert isinstance(restored["evidence"], Evidence)
 
 
 def test_harness_context_is_immutable() -> None:

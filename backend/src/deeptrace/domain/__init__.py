@@ -1,5 +1,5 @@
 from deeptrace.domain.conversation import ConversationSummary
-from deeptrace.domain.evidence import Finding
+from deeptrace.domain.evidence import Evidence, EvidenceLifecycleStatus, Finding
 from deeptrace.domain.execution import (
     BudgetSnapshot,
     ConversationIntent,
@@ -12,6 +12,7 @@ from deeptrace.domain.execution import (
     ResponseProfile,
     normalize_research_profile,
 )
+from deeptrace.domain.tools import ToolName, ToolRequest, ToolResult
 
 __all__ = [
     "BudgetSnapshot",
@@ -20,10 +21,15 @@ __all__ = [
     "ErrorCategory",
     "ErrorRecord",
     "ExecutionStatus",
+    "Evidence",
+    "EvidenceLifecycleStatus",
     "Finding",
     "ResearchInput",
     "ResearchOutcome",
     "ResearchProfile",
     "ResponseProfile",
+    "ToolName",
+    "ToolRequest",
+    "ToolResult",
     "normalize_research_profile",
 ]
