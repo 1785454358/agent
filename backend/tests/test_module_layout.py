@@ -8,6 +8,8 @@ from deeptrace.context import (
     ContextCompressor,
     format_document_context,
 )
+from deeptrace.domain import ResearchProfile
+from deeptrace.harness import ProfileRegistry, build_harness_graph
 from deeptrace.models import RawDocument, RunEvent, TokenUsage, UsageBreakdown
 from deeptrace.multi_agent import SupervisorResearchAgent, build_multi_agent
 from deeptrace.observability import estimate_usage_cost, format_role_usage
@@ -43,6 +45,14 @@ def test_graph_and_observability_interfaces_are_basic_only() -> None:
 def test_multi_agent_is_a_peer_mode_with_its_own_public_entrypoints() -> None:
     assert SupervisorResearchAgent.__name__ == "SupervisorResearchAgent"
     assert callable(build_multi_agent)
+
+
+def test_harness_foundation_interfaces_are_available() -> None:
+    assert ResearchProfile.WORKFLOW.value == "workflow"
+    assert ResearchProfile.PLAN_EXECUTE.value == "plan_execute"
+    assert ResearchProfile.MULTI_AGENT.value == "multi_agent"
+    assert ProfileRegistry.__name__ == "ProfileRegistry"
+    assert callable(build_harness_graph)
 
 
 def test_prompts_and_tools_have_no_agent_loop_compatibility_exports() -> None:
