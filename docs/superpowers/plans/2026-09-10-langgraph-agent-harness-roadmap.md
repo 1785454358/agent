@@ -35,6 +35,8 @@ Creates the domain contracts, canonical Profile names, Harness State, Runtime Co
 
 ### Plan 2: Tool Gateway and Evidence Store
 
+**Document:** `docs/superpowers/plans/2026-09-10-tool-gateway-evidence-store.md`
+
 Creates atomic research capability ports, ToolSpec, ToolRequest, ToolResult, middleware ordering, hierarchical budget reservations, idempotency ledger, cache/singleflight ownership, Evidence storage, and security policy adapters.
 
 **Exit gate:** Scripted concurrent tool calls prove allowlist enforcement, no pre-validation budget charge, singleflight reuse, result offloading, and replay-safe idempotency.
