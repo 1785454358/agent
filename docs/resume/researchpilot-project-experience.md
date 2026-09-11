@@ -4,15 +4,15 @@
 
 **（1）多模式深度研究 Agent　　　　　　　　　独立开发　　　　　　　　　2026.04-2026.06**
 
-**技术栈**　Python、LangGraph、LangChain、FastAPI、Pydantic、SQLAlchemy、MySQL、Redis Streams、Docker Compose、Function Calling、SSE、Pytest
+**技术栈**　Python、LangGraph、LangChain、FastAPI、Pydantic、SQLAlchemy、MySQL、Redis Streams、BGE-M3、Docker Compose、Function Calling、SSE、Pytest
 
 **项目描述**　面向复杂开放问题构建可多轮追问的深度研究 Agent，以统一 Agent Harness 承载 Workflow、Plan-and-Execute、Multi-Agent 三种执行策略，完成检索、查证、回答及按需报告生成。
 
 - **Agent Harness**　基于 LangGraph 构建 HarnessGraph，用统一 State、Runtime Context 和 Profile Registry 编排请求、路由、工具、记忆、响应与恢复，使三种策略共享运行协议并隔离子图状态。
 - **三种研究 Profile**　将 Workflow、Plan-and-Execute、Multi-Agent 实现为固定流程、动态重规划、主管并行调度三类子图，支持按问题范围、研究深度与成本显式选择，并为 Auto 路由预留注册扩展点。
-- **Tool Gateway 与 Evidence**　统一治理 `search_web`、`fetch_page`、`search_memory` 三个原子工具，执行参数、预算、重试和幂等校验；结果写入 Evidence Store，图状态只保留证据引用，使结论可回溯到来源原文。
+- **Tool Gateway 与 Evidence**　模型调用与工具调用分别经过 ModelGateway 和 Tool Gateway；网关处理参数、预算、幂等、超时与错误分类，临时故障仅由 LangGraph Node RetryPolicy 重放工具节点；Evidence Store 统一保存规范化、分块且有大小上限的正文，图状态只保留证据引用。
 - **记忆与上下文管理**　短期记忆以滑动窗口保留近期消息，达到压缩阈值时将历史整理为目标、事实与待办；长期记忆只在出现稳定偏好或可信事实时写入，按作用域组织，仅在当前意图需要历史信息时召回，并以版本、衰减和删除处理更新与遗忘。
-- **持久化与可靠性**　MySQL 保存业务数据、Evidence、长期记忆、工具账本和 LangGraph Checkpoint，通过社区 `langgraph-checkpoint-mysql[asyncmy]` 接入；Redis Streams 负责投递与唤醒，结合幂等账本、租约和断点续跑处理重复消息及中断。
+- **持久化与可靠性**　MySQL 保存权威业务状态、Evidence 元数据、检索索引与正文记录、长期记忆和工具账本，版本锁定的社区 `langgraph-checkpoint-mysql[asyncmy]` 仅接入项目所需 Checkpointer 能力；Redis Streams 负责投递与唤醒，结合租约、Checkpoint 和幂等账本识别并降低重复执行影响。
 
 ## 可选项目要点库
 
@@ -29,13 +29,13 @@
 
 - **Workflow**　将查询改写、并行检索、证据筛选和完整性评估固化为短路径图，适合边界清晰、时效要求高的研究问题，并通过统一 Harness 获得工具治理、记忆和恢复能力。
 - **Plan-and-Execute**　Planner 先生成结构化任务计划，Executor 逐项执行并回写发现，Replanner 根据证据缺口调整剩余步骤，在调用预算和终止条件内处理需要多轮查证的问题。
-- **Multi-Agent**　Supervisor 维护任务依赖和完成状态，按研究方向并发调度 Researcher，再由 Writer 基于 Evidence 汇总结论；共享证据引用和任务进度，同时隔离各 Agent 的工作上下文。
+- **Multi-Agent**　Supervisor 维护任务依赖和完成状态，按研究方向并发调度 Researcher，聚合各任务的 Evidence、Finding 与未解决缺口并返回统一 ResearchOutcome，同时隔离各 Agent 的工作上下文。
 
 ### Tool Gateway 与 Evidence
 
-- **原子工具治理**　Tool Gateway 只暴露搜索、抓取和记忆检索三个原子工具，在一次调用链中完成模式校验、参数规范化、预算预留、幂等去重、执行、结果校验和可观测事件记录。
+- **原子工具治理**　Tool Gateway 只暴露搜索、抓取和记忆检索三个原子工具，负责参数、权限、预算、幂等、超时和错误分类；Provider SDK 内置重试设为 0，临时异常交由 LangGraph Node RetryPolicy 重放节点。
 - **图与工具的边界**　把带重规划和终止条件的复合研究过程建模为 LangGraph 子图，工具保持单一外部副作用，避免把隐藏循环包装成工具后失去节点级 Checkpoint 和轨迹。
-- **证据与引用可信**　搜索摘要只用于发现候选来源，事实输入来自实际抓取正文或记忆中的有效原文片段；Evidence Store 保存正文、来源和内容哈希，Graph State 仅携带 Evidence ID，控制 Checkpoint 体积并支持引用回溯。
+- **证据与引用可信**　搜索摘要只用于发现候选来源；Evidence Store 是正文唯一所有者，统一保存规范化、分块且有大小上限的正文、来源和内容哈希，Graph State 与长期记忆仅携带 Evidence ID，控制 Checkpoint 体积并支持引用回溯。
 
 ### 短期记忆与上下文
 
@@ -46,20 +46,20 @@
 ### 长期记忆
 
 - **长期记忆写入策略**　仅在用户明确表达稳定偏好、关键事实被可靠证据支持或任务结束需要保存研究结论时生成候选记忆，经类型、置信度、来源和敏感性检查后写入，临时指令与未验证推断不进入长期存储。
-- **长期记忆组织与召回**　按 user、workspace 和 global 命名空间组织偏好、事实与研究资料，结合语义相关性、关键词、时效、作用域和置信度排序；仅在意图判断需要历史信息时召回，并把结果作为带来源的候选上下文。
+- **长期记忆组织与召回**　按 user、workspace 和 global 命名空间组织 Preference、Fact、Episode 与 Evidence 引用；MySQL 先按作用域和时间筛选有界候选集，再由本地 BGE-M3 做语义重排，仅在当前意图需要历史信息时召回。
 - **长期记忆更新与遗忘**　为记忆保存版本、来源、有效期和最后访问时间；新事实与旧记录冲突时追加新版本并降低旧版本权重，用户可显式更正或删除，系统按过期、长期未使用、低置信度和来源失效执行衰减或清理。
 
 ### 对话与输出
 
-- **多轮意图路由**　区分新研究、追问、澄清、继续执行和报告请求，沿用同一 thread 的 Checkpoint 与证据集合；追问优先复用已有结论，研究目标发生变化时重新选择 Profile，发起新 run 或增量研究。
+- **多轮意图路由**　区分新研究、追问、澄清、继续执行和报告请求，沿用同一 thread 的 Checkpoint 与证据集合；同一 thread 仅允许一个修改状态的 active run 持有 MySQL Lease，后续请求排队，避免并发覆盖会话状态。
 - **按需响应格式**　普通问答由 Response Graph 生成简洁回答并保留必要引用。用户明确提出报告要求时才进入 Report Graph，组织摘要、章节和完整参考来源，避免固定报告模板拖长日常回答。
 
 ### 持久化与可靠性
 
-- **MySQL Checkpoint 恢复**　通过社区 `langgraph-checkpoint-mysql[asyncmy]` 实现的 `BaseCheckpointSaver` 适配器持久化 LangGraph Checkpoint，并在启动时执行表结构初始化和序列化兼容验证，使会话可按 thread 和 checkpoint 继续执行。
-- **Redis 与 MySQL 分工**　Redis Streams 承担任务投递、消费者恢复、唤醒和取消通知，MySQL 保存权威状态；已写入账本的调用复用结果，具备幂等语义的工具按调用键去重，执行采用 at-least-once 投递且不承诺 exactly-once。
+- **MySQL Checkpoint 恢复**　在 MySQL 8.0.19 及以上版本使用社区 `langgraph-checkpoint-mysql[asyncmy]` 接入项目所需核心 Checkpointer 能力，通过版本锁定、`setup()`、契约测试和故障注入验证恢复行为；长期记忆由自建 MySQL Memory Store 管理。
+- **Redis 与 MySQL 分工**　Redis Streams 承担任务投递、消费者恢复、唤醒和取消通知，MySQL 保存权威状态；采用 at-least-once 投递，账本仅复用已提交成功结果，Provider 成功但账本未提交的窗口仍可能重复调用。
 - **分层预算控制**　在模型和工具调用前统一预留调用次数、Token、时间和并发预算，并发请求通过预留、提交和释放避免额度竞争；超限时返回结构化原因及已有阶段性结果。
-- **Checkpoint 与事件**　关键节点提交可恢复 State 和单调递增事件，客户端按事件 ID 续传进度；节点失败后从最近 Checkpoint 恢复，通过执行账本和调用键控制 at-least-once 投递产生的重复副作用。
+- **Checkpoint 与事件**　关键节点提交可恢复 State 和单调递增事件，客户端按事件 ID 续传进度；节点失败后从最近 Checkpoint 恢复，通过执行账本和调用键识别并降低 at-least-once 投递造成的重复影响。
 
 ### 可观测性与评测
 
