@@ -1,52 +1,67 @@
-# ResearchPilot 项目简历材料
+# 多模式深度研究 Agent 简历材料
 
-## 可直接放入简历的版本
+## 五条核心版本
 
-**ResearchPilot｜多模式深度研究 Agent｜个人项目**
+**（1）多模式深度研究 Agent　　　　　　　　　独立开发　　　　　　　　　2026.04-2026.06**
 
-面向复杂开放问题构建自主研究 Agent，覆盖任务规划、网页检索、原文获取、动态补查和带引用报告生成。
-独立实现 Workflow、Plan-and-Execute 和 Supervisor Multi-Agent 三种研究模式，可按研究深度和成本要求选择执行策略。
+**技术栈**　Python、LangGraph、LangChain、FastAPI、Pydantic、SQLAlchemy、MySQL、Redis Streams、Docker Compose、Function Calling、SSE、Pytest
 
-**技术栈**　Python、LangGraph、LangChain、FastAPI、Pydantic、SQLAlchemy、MySQL、Redis、Alembic、Docker Compose、OpenAI Function Calling、Tavily、Playwright、BGE-M3、SSE、Pytest
+**项目描述**　面向复杂开放问题构建可多轮追问的深度研究 Agent，以统一 Agent Harness 承载 Workflow、Plan-and-Execute、Multi-Agent 三种执行策略，完成检索、查证、回答及按需报告生成。
 
-- 设计三种研究模式，Basic 采用固定 Workflow 完成一次规划、并行检索和报告生成，Deep 采用 Plan-and-Execute 与 ReAct 执行，Multi-Agent 通过 LangGraph 编排 Supervisor 和多个 Researcher。
-- 实现面向复杂问题的任务拆解和持续执行，由 Planner 生成研究目标、完成条件与任务依赖，Executor 根据工具反馈推进任务，Supervisor 和 Replanner 针对具体未完成项调整后续计划。
-- 基于 Function Calling 封装网页搜索、正文抓取和历史资料检索工具，使用 BGE-M3 筛选相关原文，结合可选长期记忆生成正文顺序引用与文末参考内容。
-- 通过异步并行、本地语义筛选、上下文长度限制、请求缓存、单飞复用和终止短路减少重复网络请求与无效模型调用，并让补查任务及工具查询绑定具体研究缺口。
-- 设计 Local 与 Distributed 双运行时，使用 MySQL 持久化任务、报告和有序事件，Redis Stream 投递任务，独立 Worker 通过租约、幂等更新、有限重试和恢复扫描处理异常，SSE 支持按事件 ID 断线续传，完成 266 项自动化测试。
+- **Agent Harness**　基于 LangGraph 构建 HarnessGraph，用统一 State、Runtime Context 和 Profile Registry 编排请求、路由、工具、记忆、响应与恢复，使三种策略共享运行协议并隔离子图状态。
+- **三种研究 Profile**　将 Workflow、Plan-and-Execute、Multi-Agent 实现为固定流程、动态重规划、主管并行调度三类子图，支持按问题范围、研究深度与成本显式选择，并为 Auto 路由预留注册扩展点。
+- **Tool Gateway 与 Evidence**　统一治理 `search_web`、`fetch_page`、`search_memory` 三个原子工具，执行参数、预算、重试和幂等校验；结果写入 Evidence Store，图状态只保留证据引用，使结论可回溯到来源原文。
+- **记忆与上下文管理**　短期记忆以滑动窗口保留近期消息，达到压缩阈值时将历史整理为目标、事实与待办；长期记忆只在出现稳定偏好或可信事实时写入，按作用域组织，仅在当前意图需要历史信息时召回，并以版本、衰减和删除处理更新与遗忘。
+- **持久化与可靠性**　MySQL 保存业务数据、Evidence、长期记忆、工具账本和 LangGraph Checkpoint，通过社区 `langgraph-checkpoint-mysql[asyncmy]` 接入；Redis Streams 负责投递与唤醒，结合幂等账本、租约和断点续跑处理重复消息及中断。
 
-## 一分钟面试介绍
+## 可选项目要点库
 
-ResearchPilot 是我独立开发的深度研究 Agent。我做这个项目时，主要想解决开放问题需要多轮检索、资料核对和报告汇总的问题，同时比较不同 Agent 架构在速度、研究深度和成本上的差异。
+以下要点可根据岗位要求和简历版面替换，建议最终保留五至七条。
 
-项目保留了三种模式。Basic 是固定 Workflow，适合快速完成一次规划和并行检索。Deep 使用 Plan-and-Execute，Planner 拆任务，ReAct Executor 根据工具结果执行，出现缺口后由 Replanner 调整计划。Multi-Agent 使用 LangGraph 编排 Supervisor 和多个 Researcher，让不同研究方向并行推进，再根据未解决缺口补充研究。
+### Agent Harness
 
-我在开发中重点处理了任务和搜索行为对不齐的问题。现在每个补查任务只对应一个具体缺口，Researcher 的工具调用也要关联任务检查项，避免重新进行宽泛搜索。Writer 直接使用网页原文或 BGE-M3 筛选出的相关片段生成带引用报告。下一步我准备建立固定评测集，对三种模式的事实正确性、来源覆盖、耗时和 Token 消耗做可复现比较。
+- **统一执行生命周期**　将请求规范化、意图识别、Profile 路由、上下文装载、工具调用、响应生成、记忆写入和事件记录编排为 HarnessGraph，集中处理横切能力，避免三种策略各自维护一套运行逻辑。
+- **状态与运行上下文**　用可序列化 State 保存可恢复的业务状态，以 Runtime Context 注入模型、工具、时钟和存储依赖，区分持久状态与进程内资源，便于测试、恢复和替换基础设施。
+- **Profile Registry 与子图隔离**　通过注册表按统一输入输出契约挂载 Workflow、Plan-and-Execute、Multi-Agent 子图；父图只接收标准 ResearchOutcome，子图私有规划和协作状态不泄漏到共享 State。
+- **统一 LangGraph 编排**　三种策略的循环、条件分支、并发派发、人工确认和恢复边界均由 LangGraph 表达，Checkpoint 能落在确定节点，避免手写循环绕开状态机和执行记录。
 
-项目还保留 Local 与 Distributed 两套运行方式。Distributed 模式把 API 和研究执行拆开，MySQL 保存任务状态、报告和事件，Redis Stream 负责投递，独立 Worker 用数据库租约和条件更新处理重复消息及进程中断。SSE 能从指定事件 ID 补发进度，整套服务可通过 Docker Compose 启动。
+### Research Profile
 
-## 面试追问准备
+- **Workflow**　将查询改写、并行检索、证据筛选和完整性评估固化为短路径图，适合边界清晰、时效要求高的研究问题，并通过统一 Harness 获得工具治理、记忆和恢复能力。
+- **Plan-and-Execute**　Planner 先生成结构化任务计划，Executor 逐项执行并回写发现，Replanner 根据证据缺口调整剩余步骤，在调用预算和终止条件内处理需要多轮查证的问题。
+- **Multi-Agent**　Supervisor 维护任务依赖和完成状态，按研究方向并发调度 Researcher，再由 Writer 基于 Evidence 汇总结论；共享证据引用和任务进度，同时隔离各 Agent 的工作上下文。
 
-### 为什么同时保留 Workflow、Plan-and-Execute 和 Multi-Agent
+### Tool Gateway 与 Evidence
 
-三种模式对应不同任务成本。固定 Workflow 路径短、调用次数少，适合边界清晰的问题。Plan-and-Execute 能根据执行反馈调整计划，适合需要多轮查证的复杂问题。Multi-Agent 可以并行覆盖互相独立的研究方向，适合范围更广的主题。保留三种模式也方便在统一输入和 Writer 下进行效果与成本比较。
+- **原子工具治理**　Tool Gateway 只暴露搜索、抓取和记忆检索三个原子工具，在一次调用链中完成模式校验、参数规范化、预算预留、幂等去重、执行、结果校验和可观测事件记录。
+- **图与工具的边界**　把带重规划和终止条件的复合研究过程建模为 LangGraph 子图，工具保持单一外部副作用，避免把隐藏循环包装成工具后失去节点级 Checkpoint 和轨迹。
+- **证据与引用可信**　搜索摘要只用于发现候选来源，事实输入来自实际抓取正文或记忆中的有效原文片段；Evidence Store 保存正文、来源和内容哈希，Graph State 仅携带 Evidence ID，控制 Checkpoint 体积并支持引用回溯。
 
-### Supervisor 和普通 Planner 有什么区别
+### 短期记忆与上下文
 
-Planner 主要在任务开始时生成执行计划。Supervisor 除了初始分工，还会持续读取各 Researcher 的完成状态和具体缺口，决定是否派发补查任务或结束研究。项目中的 Supervisor 管理一张持久任务表，补查任务只追加，不会覆盖已经完成的任务。
+- **滑动窗口短期记忆**　以 thread 为边界保留最近若干轮原始消息，优先维持当前追问所需的指代、约束和用户反馈，超过窗口的内容转入摘要，防止历史消息持续占用模型上下文。
+- **结构化动态压缩**　根据 Token 水位触发压缩，将早期对话整理为用户目标、已确认事实、约束条件、未解决问题和关键 Evidence 引用；新摘要基于旧摘要与被淘汰消息增量更新，并保留版本以便恢复。
+- **多轮上下文装配**　每轮请求先合并会话摘要、近期消息、当前输入和按需召回的长期记忆，再交给选定 Profile；输出后更新窗口和摘要，使追问能够沿用已确认结论且不重复整段研究流程。
 
-### 如何避免 Researcher 重复搜索或偏离任务
+### 长期记忆
 
-初始任务允许围绕指定检查项建立资料基础，补查任务只能面向一个具体叶子缺口。每次研究工具调用都要关联 Assignment 中的检查项，错误目标会在网络请求前被拒绝。同次运行还会复用相同查询和 URL 的结果，减少重复抓取。
+- **长期记忆写入策略**　仅在用户明确表达稳定偏好、关键事实被可靠证据支持或任务结束需要保存研究结论时生成候选记忆，经类型、置信度、来源和敏感性检查后写入，临时指令与未验证推断不进入长期存储。
+- **长期记忆组织与召回**　按 user、workspace 和 global 命名空间组织偏好、事实与研究资料，结合语义相关性、关键词、时效、作用域和置信度排序；仅在意图判断需要历史信息时召回，并把结果作为带来源的候选上下文。
+- **长期记忆更新与遗忘**　为记忆保存版本、来源、有效期和最后访问时间；新事实与旧记录冲突时追加新版本并降低旧版本权重，用户可显式更正或删除，系统按过期、长期未使用、低置信度和来源失效执行衰减或清理。
 
-### 如何控制报告幻觉和引用错误
+### 对话与输出
 
-搜索摘要只用于发现候选页面，不能直接作为报告依据。Researcher 必须实际读取网页，Writer 只接收成功抓取的正文或 BGE-M3 筛选出的原文片段。正文引用按照来源首次出现顺序编号，URL 统一放在文末，任务摘要只用于 Supervisor 协调，不作为事实输入。
+- **多轮意图路由**　区分新研究、追问、澄清、继续执行和报告请求，沿用同一 thread 的 Checkpoint 与证据集合；追问优先复用已有结论，研究目标发生变化时重新选择 Profile，发起新 run 或增量研究。
+- **按需响应格式**　普通问答由 Response Graph 生成简洁回答并保留必要引用。用户明确提出报告要求时才进入 Report Graph，组织摘要、章节和完整参考来源，避免固定报告模板拖长日常回答。
 
-### 为什么同时使用 MySQL 和 Redis
+### 持久化与可靠性
 
-MySQL 保存可恢复的权威状态，包括任务、报告、用量和有序事件。Redis Stream 负责异步任务投递，Pub/Sub 只唤醒在线 SSE 连接，取消信号也通过带过期时间的 Redis Key 传递。Worker 收到重复消息时会先通过数据库条件更新领取租约，只有当前租约持有者能写入终态。Redis 或 Worker 短暂中断后，系统仍能根据 MySQL 状态和 Redis pending 消息继续恢复。
+- **MySQL Checkpoint 恢复**　通过社区 `langgraph-checkpoint-mysql[asyncmy]` 实现的 `BaseCheckpointSaver` 适配器持久化 LangGraph Checkpoint，并在启动时执行表结构初始化和序列化兼容验证，使会话可按 thread 和 checkpoint 继续执行。
+- **Redis 与 MySQL 分工**　Redis Streams 承担任务投递、消费者恢复、唤醒和取消通知，MySQL 保存权威状态；已写入账本的调用复用结果，具备幂等语义的工具按调用键去重，执行采用 at-least-once 投递且不承诺 exactly-once。
+- **分层预算控制**　在模型和工具调用前统一预留调用次数、Token、时间和并发预算，并发请求通过预留、提交和释放避免额度竞争；超限时返回结构化原因及已有阶段性结果。
+- **Checkpoint 与事件**　关键节点提交可恢复 State 和单调递增事件，客户端按事件 ID 续传进度；节点失败后从最近 Checkpoint 恢复，通过执行账本和调用键控制 at-least-once 投递产生的重复副作用。
 
-### 为什么目前没有写 Token 降幅，下一步怎样评测
+### 可观测性与评测
 
-现有运行记录来自不同阶段的代码和模型配置，直接比较容易混入口径差异。下一步会建立固定问题集，为三种模式设置相同模型、搜索服务和运行参数，多次记录事实正确性、来源覆盖率、完整度、墙钟耗时与 Token。拿到稳定结果后，再把简历中的成本控制改成带样本规模和质量约束的量化结论。
+- **结构化可观测性**　为每轮执行关联 run、thread、Profile、节点、模型调用、工具调用和 Evidence 标识，记录耗时、Token、重试、缓存命中与终止原因，用统一事件还原请求在 Harness 中的完整路径。
+- **多 Profile 评测**　构建固定问题集与回放环境，在相同模型和工具配置下比较三种 Profile 的事实正确性、证据覆盖、任务完成度、Token、耗时及失败恢复表现，为策略选择和后续 Auto 路由提供依据。
