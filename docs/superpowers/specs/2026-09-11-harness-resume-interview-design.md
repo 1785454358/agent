@@ -2,7 +2,7 @@
 
 ## 目标
 
-围绕项目完成后的最终形态准备求职材料。简历与面试回答以 Agent Harness 为主线，三种研究 Profile、工具执行、记忆、持久化和可靠性都作为 Harness 的组成部分展开。
+围绕项目完成后的最终形态准备求职材料。简历与面试回答以 Agent Harness 为主线，三种研究模式、工具执行、记忆、持久化和可靠性都作为 Harness 的组成部分展开。
 
 本文档不描述当前开发进度，不保留旧版 Basic、Deep 命名，也不把重构过程作为简历主线。
 
@@ -10,7 +10,8 @@
 
 - 项目标题固定为“多模式深度研究 Agent”，不使用 ResearchPilot 名称。
 - 项目性质使用个人项目、独立开发。
-- 三种研究 Profile 使用 Workflow、Plan-and-Execute、Multi-Agent。
+- 三种研究模式使用 Workflow、Plan-and-Execute、Multi-Agent。用户与 API 通过 `ResearchMode` 选择模式，`StrategyRegistry` 解析对应的 `ResearchStrategyGraph`。
+- `AgentHarnessGraph` 是项目内部的顶层 `StateGraph` 名称，不是 LangGraph 官方概念。公开讲解使用“Agent Harness 主图”。
 - 所有 Agent 编排、条件路由、并发派发、重规划、恢复边界统一使用 LangGraph。
 - 普通回答是默认输出。只有用户明确要求报告时才进入 Report Graph。
 - 多轮对话使用 thread 级短期记忆。上下文采用滑动窗口与结构化动态压缩。
@@ -35,7 +36,7 @@
 先提供适合直接投递的五条核心版本，再提供可按岗位和版面替换的扩展要点。项目要点按下面主题组织。
 
 1. Agent Harness
-2. 三种 Research Profile
+2. 三种研究模式与策略子图
 3. Tool Gateway 与 Evidence
 4. 记忆与上下文
 5. 持久化与可靠性
@@ -52,7 +53,7 @@ Memory 相关内容至少拆成短期记忆、动态压缩、长期记忆生命�
 
 - 项目解决什么问题。
 - 为什么需要统一 Harness。
-- Harness 如何承载三种研究 Profile。
+- Harness 如何承载三种研究模式与策略子图。
 - 工具、记忆、Checkpoint 和输出策略如何接入统一生命周期。
 - 项目最值得深挖的技术决策是什么。
 
@@ -62,10 +63,10 @@ Memory 相关内容至少拆成短期记忆、动态压缩、长期记忆生命�
 
 ```text
 Request
-→ HarnessGraph
-→ Intent and Profile Routing
+→ Agent Harness 主图
+→ Intent and Mode Routing
 → Context and Memory Recall
-→ Research Profile Subgraph
+→ Research Strategy Subgraph
 → Tool Gateway and Evidence Store
 → Response Graph
 → Memory Consolidation
@@ -80,7 +81,7 @@ Request
 
 - Harness 与普通 Agent 封装的区别
 - 为什么所有循环和路由都使用 LangGraph
-- 三种 Profile 如何共享能力又保持状态隔离
+- 三种研究策略子图如何共享能力又保持状态隔离
 - Tool Gateway 的中间件顺序
 - Evidence 为什么只在 State 中保存引用
 - 滑动窗口与动态压缩如何配合
@@ -88,7 +89,7 @@ Request
 - Checkpoint、幂等账本与 at-least-once 投递
 - MySQL Checkpointer 的选型、限制和验证方式
 - Redis 与 MySQL 的职责边界
-- 如何比较三个 Profile 的质量、成本和时延
+- 如何比较三种研究模式的质量、成本和时延
 
 ## 模拟面试方式
 

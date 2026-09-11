@@ -12,28 +12,28 @@ ResearchPilot 当前提供 Basic、Deep 和 Multi-Agent 三种研究模式，也
 
 这种结构验证了三种研究策略的可行性，但相同的运行治理能力被分散在模式目录中。新增策略时仍需重新实现模型、工具、额度、事件、缓存、Writer 和资源关闭，也无法统一支持多轮会话、节点级恢复和长期记忆生命周期。
 
-本次重构允许重新定义三种模式的执行行为，不要求保持原内部实现兼容。对外仍保留三个显式可选研究 Profile，后续在有评测依据后再增加 Auto Profile。
+本次重构允许重新定义三种模式的执行行为，不要求保持原内部实现兼容。对外仍保留三种显式可选研究模式，后续在有评测依据后再增加 Auto Mode。
 
 ## 2. 目标
 
 本次重构建立一套基于 LangGraph 的模块化 Research Agent Harness，并实现以下目标：
 
 1. 使用 LangGraph 统一所有 Agent 编排，不再保留手写研究循环。
-2. 通过 Harness 主图和 Profile 子图区分通用执行治理与研究策略。
-3. 保留三种显式 Profile，并统一更名为 Workflow、Plan-and-Execute 和 Multi-Agent。
-4. 支持同一会话持续追问、增量研究和 Profile 切换。
+2. 通过 Agent Harness 主图和研究策略子图区分通用执行治理与研究策略。
+3. 保留三种显式研究模式，并统一更名为 Workflow、Plan-and-Execute 和 Multi-Agent。
+4. 支持同一会话持续追问、增量研究和模式切换。
 5. 默认输出简洁自然的回答，只有用户明确要求时才生成正式报告。
 6. 实现滑动窗口与结构化动态压缩组成的短期记忆。
 7. 实现长期记忆的存储、组织、召回、更新和遗忘生命周期。
 8. 统一工具权限、参数校验、额度、缓存、超时、重试、幂等性和证据入库。
 9. 使用持久化 Checkpoint 支持节点级暂停、恢复和 Human-in-the-loop。
-10. 建立能够比较三种 Profile 质量、成本、延迟和可靠性的评测体系。
+10. 建立能够比较三种研究模式质量、成本、延迟和可靠性的评测体系。
 
 ## 3. 非目标
 
 第一版不实现以下能力：
 
-- Auto Profile 路由。
+- Auto Mode 路由。
 - Agent 自动修改系统 Prompt 或程序规则。
 - Researcher 递归创建新的子 Agent。
 - 不受策略控制的长期记忆写入工具。
@@ -51,10 +51,10 @@ ResearchPilot 当前提供 Basic、Deep 和 Multi-Agent 三种研究模式，也
 
 | 维度 | 类型 | 职责 |
 | --- | --- | --- |
-| Research Profile | Workflow、Plan-and-Execute、Multi-Agent | 决定如何规划、研究、评估和补查 |
+| Research Mode | Workflow、Plan-and-Execute、Multi-Agent | 用户选择的研究模式，决定如何规划、研究、评估和补查 |
 | Deployment Runtime | Local、Distributed | 决定任务在哪里执行、如何排队、持久化和取消 |
 
-### 4.2 Profile 更名
+### 4.2 研究模式更名
 
 | 旧标识 | 新标识 | 展示名称 |
 | --- | --- | --- |
@@ -64,20 +64,22 @@ ResearchPilot 当前提供 Basic、Deep 和 Multi-Agent 三种研究模式，也
 
 新代码采用 `WorkflowResearchGraph`、`PlanExecuteResearchGraph` 和 `MultiAgentResearchGraph`。旧标识只用于读取或迁移历史数据，不作为新 API 的公开值。
 
-### 4.3 Harness 与 Strategy
+### 4.3 Harness、Mode 与 Strategy
 
-Harness 负责每一次运行如何被治理，包括上下文、工具、资源、额度、事件、持久化、恢复和结果契约。Research Profile 负责下一步研究行为。LangGraph 是 Harness 和各 Profile 共同使用的状态编排内核。
+Agent Harness 负责每一次运行如何被治理，包括上下文、工具、资源、额度、事件、持久化、恢复和结果契约。`ResearchMode` 是用户与 API 选择的模式标识，`ResearchStrategyGraph` 是模式对应的策略子图接口。LangGraph 是 Harness 主图和各策略子图共同使用的状态编排内核。
+
+`AgentHarnessGraph`、`ResearchMode`、`ResearchStrategyGraph` 和 `StrategyRegistry` 是本项目的架构命名，不宣称为 LangGraph 官方类型。LangGraph 官方提供的是 `StateGraph`、State、Runtime、Node、Edge、Subgraph 和 Checkpointer 等基础能力。
 
 ## 5. 总体架构
 
-系统采用 Harness 主图加 Profile 子图的结构：
+系统采用 Agent Harness 主图加研究策略子图的结构：
 
 ```text
 API / CLI / Worker
         ↓
 ResearchApplicationService
         ↓
-HarnessGraph
+AgentHarnessGraph
   ├── load_session
   ├── initialize_turn
   ├── manage_short_term_context
@@ -85,11 +87,11 @@ HarnessGraph
   ├── recall_memory
   ├── decide_action
   │     ├── existing_evidence
-  │     └── ResearchProfile
+  │     └── ResearchMode
   │           ├── WorkflowResearchGraph
   │           ├── PlanExecuteResearchGraph
   │           └── MultiAgentResearchGraph
-  ├── select_response_profile
+  ├── select_response_mode
   │     ├── AnswerGraph
   │     ├── BriefGraph
   │     └── ReportGraph
@@ -98,7 +100,7 @@ HarnessGraph
   └── persist_session
 ```
 
-只有 `HarnessGraph` 对 Application 层公开。Profile、Response 和 Memory Graph 通过注册机制成为 Harness 子图。
+只有 `AgentHarnessGraph` 对 Application 层公开。研究策略、Response 和 Memory Graph 通过注册机制成为 Harness 子图。
 
 ## 6. 模块边界
 
@@ -171,7 +173,7 @@ src/deeptrace/
 - Strategy 不创建模型、数据库、Fetcher 或 Embedding 实例。
 - Graph 节点通过 `Runtime[HarnessContext]` 获取运行依赖。
 - Infrastructure 实现接口，但不决定研究流程。
-- API 和 Worker 不依赖具体 Profile 的节点或状态。
+- API 和 Worker 不依赖具体研究策略子图的节点或状态。
 - 子图仅通过可序列化输入输出契约交换数据。
 - 大型网页正文和向量不进入 Graph State，只保存引用 ID。
 
@@ -196,7 +198,7 @@ class ConversationState(TypedDict):
     thread_id: str
     messages: Annotated[list[AnyMessage], add_messages]
     summary: ConversationSummary
-    active_profile: Literal["workflow", "plan_execute", "multi_agent"]
+    active_mode: Literal["workflow", "plan_execute", "multi_agent"]
     user_memory_refs: list[str]
     workspace_memory_refs: list[str]
     evidence_ids: list[str]
@@ -216,8 +218,8 @@ class TurnState(TypedDict):
     run_id: str
     user_input: str
     intent: ConversationIntent
-    selected_profile: Literal["workflow", "plan_execute", "multi_agent"]
-    response_profile: Literal["answer", "brief", "report"]
+    selected_mode: Literal["workflow", "plan_execute", "multi_agent"]
+    response_mode: Literal["answer", "brief", "report"]
     requires_research: bool
     research_request: ResearchRequest | None
     research_outcome: ResearchOutcome | None
@@ -248,7 +250,7 @@ class HarnessContext:
 
 ## 8. 子图契约与状态隔离
 
-所有 Research Profile 接受统一输入并返回统一结果：
+所有研究策略子图接受统一输入并返回统一结果：
 
 ```python
 class ResearchInput(BaseModel):
@@ -261,7 +263,7 @@ class ResearchInput(BaseModel):
     timezone: str
 
 class ResearchOutcome(BaseModel):
-    profile: str
+    mode: str
     evidence_ids: list[str]
     findings: list[Finding]
     unresolved_gaps: list[str]
@@ -269,9 +271,9 @@ class ResearchOutcome(BaseModel):
     termination_reason: str
 ```
 
-每个 Profile 保留私有 State。Harness 不感知查询队列、计划任务、Researcher 消息和 Supervisor 轮次等内部字段。子图结束后仅将 `ResearchOutcome` 合并回主图。
+每个研究策略子图保留私有 State。Harness 不感知查询队列、计划任务、Researcher 消息和 Supervisor 轮次等内部字段。子图结束后仅将 `ResearchOutcome` 合并回主图。
 
-## 9. 三种 Research Profile
+## 9. 三种研究模式与策略子图
 
 ### 9.1 Workflow
 
@@ -318,13 +320,13 @@ Supervisor 只负责拆解、委派和完成判断，不直接访问网络。每
 - `clarification`
 - `research`
 - `incremental_research`
-- `switch_profile`
+- `switch_mode`
 - `report_request`
 - `memory_update`
 
-普通追问优先使用短期状态和已有 Evidence，不启动新研究。增量研究继承 ConversationSummary、有效 Evidence 和未解决缺口。Profile 切换不会清空会话，但旧证据必须重新经过时效性与适用范围检查。
+普通追问优先使用短期状态和已有 Evidence，不启动新研究。增量研究继承 ConversationSummary、有效 Evidence 和未解决缺口。研究模式切换不会清空会话，但旧证据必须重新经过时效性与适用范围检查。
 
-## 11. Response Profile
+## 11. 响应模式
 
 研究深度和输出形式是两个独立选择：
 
@@ -334,7 +336,7 @@ Supervisor 只负责拆解、委派和完成判断，不直接访问网络。每
 | `brief` | 输出结构化摘要、对比或阶段性结论 |
 | `report` | 仅在用户明确要求报告时生成正式报告 |
 
-`AnswerGraph` 和 `BriefGraph` 默认不联网，只使用本轮已有 Evidence。`ReportGraph` 先检查证据是否覆盖用户请求范围；若用户增加了新范围，则先运行当前 Research Profile，再生成报告。
+`AnswerGraph` 和 `BriefGraph` 默认不联网，只使用本轮已有 Evidence。`ReportGraph` 先检查证据是否覆盖用户请求范围；若用户增加了新范围，则先运行当前研究策略子图，再生成报告。
 
 三种输出共享 `CitationFormatter` 和 Evidence 校验，不允许引用没有实际进入输出上下文的来源。
 
@@ -401,7 +403,7 @@ class ConversationSummary(BaseModel):
 (user, user_id, preferences)
 (workspace, workspace_id, evidence)
 (workspace, workspace_id, facts)
-(global, episodes, profile, version)
+(global, episodes, mode, version)
 ```
 
 默认禁止跨 user 或 workspace 召回。Global 只接收经过显式策略筛选、不含私人数据的研究经验。
@@ -451,7 +453,7 @@ class ConversationSummary(BaseModel):
 
 ```text
 Registry Resolution
-→ Profile Allowlist
+→ Mode Allowlist
 → Arguments Validation
 → Security Policy
 → Idempotency Check
@@ -477,7 +479,7 @@ ToolResult 只向模型返回受控预览和 `data_ref`，大型正文保存在 
 
 ### 14.4 额度
 
-BudgetManager 支持 Run、Profile 和 Agent 三级额度，覆盖模型调用、工具调用、网络请求、抓取页数、Token、执行轮次和墙钟截止时间。
+BudgetManager 支持 Run、Mode 和 Agent 三级额度，覆盖模型调用、工具调用、网络请求、抓取页数、Token、执行轮次和墙钟截止时间。
 
 并发请求使用预留、提交和释放机制，避免多个 Researcher 同时读取剩余额度导致超限。缓存命中与失败尝试分别记录，预算策略明确决定是否计费。
 
@@ -493,20 +495,20 @@ Search Cache 使用规范化查询、Provider 和选项作为键。Page Cache �
 
 ## 15. 持久化与分布式运行
 
-现有 MySQL 替换为 PostgreSQL，Redis 保留。职责如下：
+MySQL 作为权威数据库，Redis 保留。职责如下：
 
-### 15.1 PostgreSQL
+### 15.1 MySQL
 
 - Conversation 与 Research Run。
 - 有序 Event。
 - Tool Execution Ledger。
-- LangGraph Checkpoint。
-- LangGraph Long-term Store。
+- 通过社区 `langgraph-checkpoint-mysql[asyncmy]` 保存项目使用的 LangGraph Checkpoint 能力。
+- 项目自建的 Long-term Memory Store 与 Repository。
 - Evidence 元数据。
 
-### 15.2 Object 或 File Storage
+### 15.2 Evidence Store
 
-保存网页正文、大型研究资料和其他不适合进入 Checkpoint 的内容。第一版本地环境可使用文件实现，接口需允许后续替换为对象存储。
+Evidence Store 是正文的唯一所有者。Local 使用文件实现，Distributed 使用 MySQL 保存规范化、分块且有大小上限的正文记录。Graph State 和长期记忆只保存 Evidence 引用。
 
 ### 15.3 Redis
 
@@ -515,7 +517,7 @@ Search Cache 使用规范化查询、Provider 和选项作为键。Page Cache �
 - Cancel Signal。
 - 必要的短期分布式协调。
 
-Redis 不保存权威运行结果。Redis 状态丢失后，可根据 PostgreSQL 中未完成的 Run 重新投递。
+Redis 不保存权威运行结果。Redis 状态丢失后，可根据 MySQL 中未完成的 Run 重新投递。
 
 ### 15.4 Local 与 Distributed 配置
 
@@ -523,19 +525,19 @@ Redis 不保存权威运行结果。Redis 状态丢失后，可根据 PostgreSQL
 
 | 能力 | Local | Distributed |
 | --- | --- | --- |
-| Graph Checkpoint | `AsyncSqliteSaver` | `AsyncPostgresSaver` |
-| Long-term Store | 开发用进程内 Store；重启后不承诺保留 | `AsyncPostgresStore` |
-| Run 记录 | SQLite 或现有文件 Adapter | PostgreSQL Repository |
-| Evidence 正文 | 本地文件 | Object Storage Adapter |
+| Graph Checkpoint | `AsyncSqliteSaver` | 社区 `langgraph-checkpoint-mysql[asyncmy]` 提供的异步 MySQL Saver |
+| Long-term Store | 开发用进程内 Store；重启后不承诺保留 | 项目自建 MySQL Memory Store 与 Repository |
+| Run 记录 | SQLite 或现有文件 Adapter | MySQL Repository |
+| Evidence 正文 | 本地文件 | MySQL Evidence Store |
 | 任务执行 | API 进程内异步任务 | Redis Stream 与独立 Worker |
 
-Local 的目标是零外部服务依赖的开发与测试，不宣称跨进程长期记忆和生产级恢复。需要验证完整长期记忆、Worker 接管和节点级持久化恢复时，必须使用 Distributed 配置。两种配置不得通过条件分支改变 Research Profile 的业务语义。
+Local 的目标是零外部服务依赖的开发与测试，不宣称跨进程长期记忆和生产级恢复。需要验证完整长期记忆、Worker 接管和节点级持久化恢复时，必须使用 Distributed 配置。两种配置不得通过条件分支改变研究模式的业务语义。
 
 ## 16. Checkpoint、恢复与幂等
 
 执行身份包括 `thread_id`、`run_id`、`checkpoint_id`、`attempt_id` 和 `tool_call_id`。
 
-Worker 获取数据库 Lease 后使用 `thread_id` 调用 HarnessGraph。Graph 在节点边界保存 Checkpoint。Worker 崩溃后 Lease 过期，Recovery Scanner 重新投递任务，新 Worker 从最近 Checkpoint 恢复。
+Worker 获取数据库 Lease 后使用 `thread_id` 调用 `AgentHarnessGraph`。Graph 在节点边界保存 Checkpoint。Worker 崩溃后 Lease 过期，Recovery Scanner 重新投递任务，新 Worker 从最近 Checkpoint 恢复。
 
 系统语义定义为：
 
@@ -557,7 +559,7 @@ At-least-once delivery
 - 后续增加的工具包含高风险外部写操作。
 - 意图歧义会显著改变任务范围。
 
-取消请求先持久化到 PostgreSQL，再通过 Redis 通知 Worker。取消状态在节点和 Tool Gateway 边界检查，并传播到活动子图。已发出的远程模型请求可能无法撤回，该限制必须在文档中明确说明。
+取消请求先持久化到 MySQL，再通过 Redis 通知 Worker。取消状态在节点和 Tool Gateway 边界检查，并传播到活动子图。已发出的远程模型请求可能无法撤回，该限制必须在文档中明确说明。
 
 ## 18. 错误处理
 
@@ -585,7 +587,7 @@ At-least-once delivery
 - Metric：面向监控与评测的聚合数据。
 - Log：面向故障排查的结构化日志。
 
-每条观测数据携带 thread、run、attempt、checkpoint、profile、graph、node、agent、task 和 tool call 等适用标识。
+每条观测数据携带 thread、run、attempt、checkpoint、mode、graph、node、agent、task 和 tool call 等适用标识。
 
 核心指标包括运行耗时、首响应时间、节点次数、模型 Token、工具次数、缓存命中、失败、Checkpoint 恢复、Memory 召回采用率、压缩率、过期拦截率、Researcher 并发度和重复搜索率。
 
@@ -595,11 +597,11 @@ At-least-once delivery
 
 ### 20.1 单元测试
 
-覆盖 Memory 生命周期、TTL、Evidence 去重、引用、Budget、Profile 注册、错误分类和纯路由策略。
+覆盖 Memory 生命周期、TTL、Evidence 去重、引用、Budget、研究模式注册、错误分类和纯路由策略。
 
 ### 20.2 Graph 路由测试
 
-使用脚本化模型和内存 Checkpointer 验证：普通追问不进入研究、增量研究进入所选 Profile、报告意图进入 Report、Plan-and-Execute 可以重规划、Multi-Agent 使用 `Send` 并发派发。
+使用脚本化模型和内存 Checkpointer 验证：普通追问不进入研究、增量研究进入所选研究模式、报告意图进入 Report、Plan-and-Execute 可以重规划、Multi-Agent 使用 `Send` 并发派发。
 
 ### 20.3 Tool Harness 测试
 
@@ -613,16 +615,16 @@ At-least-once delivery
 
 对何时存、存什么、如何组织、何时召回、如何更新和如何遗忘分别建立测试。动态压缩需验证用户约束、实体指代、Evidence ID 和未解决问题不丢失，且多次压缩后摘要大小受控。
 
-### 20.6 Profile 对照评测
+### 20.6 研究模式对照评测
 
-使用同一研究问题集比较 Workflow、Plan-and-Execute 和 Multi-Agent 的 Evidence 覆盖、引用有效性、未解决缺口、延迟、Token、网络次数、重复来源和回答质量。Auto Profile 只在该评测形成稳定基线后设计。
+使用同一研究问题集比较 Workflow、Plan-and-Execute 和 Multi-Agent 的 Evidence 覆盖、引用有效性、未解决缺口、延迟、Token、网络次数、重复来源和回答质量。Auto Mode 只在该评测形成稳定基线后设计。
 
 ## 21. 实施顺序
 
 1. 固化当前外部行为和评测基线。
 2. 建立 Domain Contracts。
-3. 引入 PostgreSQL Checkpointer 与 Store。
-4. 建立 HarnessGraph 和多轮会话入口。
+3. 引入 MySQL Checkpointer、Memory Store、Evidence Store 与 Repository。
+4. 建立 AgentHarnessGraph 和多轮会话入口。
 5. 建立 Tool Gateway、Evidence Store 和幂等 Ledger。
 6. 实现 WorkflowResearchGraph。
 7. 实现 PlanExecuteResearchGraph 并删除手写循环。
@@ -631,25 +633,25 @@ At-least-once delivery
 10. 实现短期记忆压缩与长期记忆生命周期。
 11. 接入 Worker 节点级恢复、取消和 Interrupt。
 12. 完善评测、架构文档、运行手册和面试材料。
-13. 基于三种 Profile 的评测结果另行设计 Auto Profile。
+13. 基于三种研究模式的评测结果另行设计 Auto Mode。
 
 ## 22. 验收标准
 
 重构完成必须满足：
 
-1. 三个 Profile 全部通过 HarnessGraph 执行。
+1. 三种研究模式全部通过 AgentHarnessGraph 执行。
 2. 不再存在手写 Agent 编排循环。
-3. 每个 Profile 都是可独立测试的 LangGraph 子图。
-4. 同一 thread 支持连续追问、增量研究和 Profile 切换。
+3. 每种研究策略都是可独立测试的 LangGraph 子图。
+4. 同一 thread 支持连续追问、增量研究和模式切换。
 5. 默认返回简洁回答，仅在明确请求时生成报告。
 6. 短期记忆支持滑动窗口和结构化动态压缩。
 7. 长期记忆覆盖完整六阶段生命周期和四级作用域。
 8. 工具通过统一中间件执行并形成可追溯 Evidence。
 9. Graph 可以从持久化 Checkpoint 恢复。
 10. 恢复后不重复已完成的工具副作用。
-11. API、Worker 和 UI 不依赖具体 Profile 实现。
+11. API、Worker 和 UI 不依赖具体研究策略子图实现。
 12. 所有引用都可追溯到实际 Evidence。
-13. 三个 Profile 有可重复的质量、成本和延迟对照评测。
+13. 三种研究模式有可重复的质量、成本和延迟对照评测。
 
 ## 23. 简历与面试表述边界
 
