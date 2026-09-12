@@ -80,10 +80,22 @@ class ResearchApplicationService:
             configurable["response_mode_override"] = request.response_mode
         merged_config["configurable"] = configurable
 
-        initial_state = {
-            "conversation": new_conversation(request.thread_id, request.mode),
-            "turn": new_turn(request.run_id, request.question, request.mode),
-        }
+        turn = new_turn(request.run_id, request.question, request.mode)
+        aget_state = getattr(self._graph, "aget_state", None)
+        snapshot = None
+        if aget_state is not None:
+            try:
+                snapshot = await aget_state(merged_config)
+            except ValueError:
+                snapshot = None  # no checkpointer: always a fresh conversation
+        if snapshot is not None and snapshot.values.get("conversation"):
+            # Multi-turn continuation: keep the persisted ConversationState.
+            initial_state: dict[str, Any] = {"turn": turn}
+        else:
+            initial_state = {
+                "conversation": new_conversation(request.thread_id, request.mode),
+                "turn": turn,
+            }
         result = await self._graph.ainvoke(
             initial_state, config=merged_config, context=context
         )

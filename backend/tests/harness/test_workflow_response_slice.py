@@ -299,3 +299,165 @@ async def test_multi_agent_mode_routes_through_application_service() -> None:
     assert outcome.partial_reason is None
     assert outcome.content == "多智能体结论 [1]。"
     assert [role for role, _ in model.calls][0] == "supervisor"
+
+
+@pytest.mark.asyncio
+async def test_follow_up_in_same_thread_answers_without_new_research() -> None:
+    model = ScriptedModelGateway(
+        {
+            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
+                prompt, sufficient=True
+            ),
+            "responder": json.dumps({"content": "根据已有资料：结论 [1]。"}),
+        }
+    )
+    fixture = _fixture(model)
+    strategies, responses = _registries()
+    checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
+    graph = build_agent_runtime_graph(
+        strategies, responses, checkpointer=checkpointer
+    )
+    config = {"configurable": {"thread_id": "thread-1"}}
+    service = ResearchApplicationService(graph)
+
+    first = await service.invoke(
+        ApplicationResearchRequest(
+            run_id="run-1",
+            thread_id="thread-1",
+            question="研究 LangGraph Harness",
+            mode=ResearchMode.WORKFLOW,
+        ),
+        config=config,
+        context=fixture.context,
+    )
+    assert first.partial_reason is None
+    tool_calls_after_first_turn = len(fixture.gateway.calls)
+
+    second = await service.invoke(
+        ApplicationResearchRequest(
+            run_id="run-2",
+            thread_id="thread-1",
+            question="总结一下上面的要点",
+            mode=ResearchMode.WORKFLOW,
+        ),
+        config=config,
+        context=fixture.context,
+    )
+
+    assert second.response_mode is ResponseMode.BRIEF
+    assert second.partial_reason is None
+    assert second.cited_evidence_ids == first.cited_evidence_ids
+    # no new research happened for the follow-up turn
+    assert len(fixture.gateway.calls) == tool_calls_after_first_turn
+    assert [role for role, _ in model.calls][-1] == "responder"
+
+
+@pytest.mark.asyncio
+async def test_report_request_after_research_skips_new_research() -> None:
+    model = ScriptedModelGateway(
+        {
+            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
+                prompt, sufficient=True
+            ),
+            "responder": json.dumps({"content": "# 报告\n结论 [1]。"}),
+        }
+    )
+    fixture = _fixture(model)
+    strategies, responses = _registries()
+    checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
+    graph = build_agent_runtime_graph(
+        strategies, responses, checkpointer=checkpointer
+    )
+    config = {"configurable": {"thread_id": "thread-1"}}
+    service = ResearchApplicationService(graph)
+    first_request = ApplicationResearchRequest(
+        run_id="run-1",
+        thread_id="thread-1",
+        question="研究 LangGraph Harness",
+        mode=ResearchMode.WORKFLOW,
+    )
+    second_request = ApplicationResearchRequest(
+        run_id="run-2",
+        thread_id="thread-1",
+        question="请生成报告",
+        mode=ResearchMode.WORKFLOW,
+    )
+
+    await service.invoke(first_request, config=config, context=fixture.context)
+    calls_after_research = len(fixture.gateway.calls)
+    outcome = await service.invoke(
+        second_request, config=config, context=fixture.context
+    )
+
+    assert outcome.response_mode is ResponseMode.REPORT
+    assert outcome.partial_reason is None
+    assert len(fixture.gateway.calls) == calls_after_research
+    assert "正式报告" in model.calls[-1][1]
+
+
+@pytest.mark.asyncio
+async def test_incremental_research_runs_again_in_same_thread() -> None:
+    model = ScriptedModelGateway(
+        {
+            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
+                prompt, sufficient=True
+            ),
+            "responder": json.dumps({"content": "增量结论 [1]。"}),
+        }
+    )
+    fixture = _fixture(model)
+    strategies, responses = _registries()
+    checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
+    graph = build_agent_runtime_graph(
+        strategies, responses, checkpointer=checkpointer
+    )
+    config = {"configurable": {"thread_id": "thread-1"}}
+    service = ResearchApplicationService(graph)
+    first_request = ApplicationResearchRequest(
+        run_id="run-1",
+        thread_id="thread-1",
+        question="研究 LangGraph Harness",
+        mode=ResearchMode.WORKFLOW,
+    )
+    second_request = ApplicationResearchRequest(
+        run_id="run-2",
+        thread_id="thread-1",
+        question="再查一下 2026 年的最新进展",
+        mode=ResearchMode.WORKFLOW,
+    )
+
+    await service.invoke(first_request, config=config, context=fixture.context)
+    calls_after_first = len(fixture.gateway.calls)
+    outcome = await service.invoke(
+        second_request, config=config, context=fixture.context
+    )
+
+    assert outcome.partial_reason is None
+    assert len(fixture.gateway.calls) > calls_after_first
+
+
+@pytest.mark.asyncio
+async def test_switch_mode_updates_conversation_without_research() -> None:
+    model = ScriptedModelGateway({"planner": "unused", "evaluator": "unused"})
+    fixture = _fixture(model)
+    strategies, responses = _registries()
+    graph = build_agent_runtime_graph(strategies, responses)
+    service = ResearchApplicationService(graph)
+
+    outcome = await service.invoke(
+        ApplicationResearchRequest(
+            run_id="run-1",
+            thread_id="thread-1",
+            question="切换到 plan_execute 模式",
+            mode=ResearchMode.WORKFLOW,
+        ),
+        config={"configurable": {"thread_id": "thread-1"}},
+        context=fixture.context,
+    )
+
+    assert outcome.partial_reason == "mode_switched"
+    assert fixture.gateway.calls == []
+    assert model.calls == []

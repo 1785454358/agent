@@ -173,7 +173,7 @@ def build_generate_node(policy: ResponsePolicy):
             )
         findings_lines = "\n".join(
             f"- {finding.claim}（{', '.join(finding.evidence_ids)}）"
-            for finding in response_input.research_outcome.findings
+            for finding in (response_input.research_outcome.findings if response_input.research_outcome else [])
         )
         prompt = (
             f"{policy.instructions}\n\n"

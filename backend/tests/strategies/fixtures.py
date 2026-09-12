@@ -121,6 +121,7 @@ class GatewayFixture:
 
 def build_gateway_fixture(
     *,
+    run_ids: tuple[str, ...] = ("run-1", "run-2"),
     search_results: dict[str, list[dict[str, str]]] | None = None,
     default_search_results: list[dict[str, str]] | None = None,
     search_fail: bool = False,
@@ -142,11 +143,14 @@ def build_gateway_fixture(
         "plan-execute-executor",
         *(f"researcher-{index}" for index in range(6)),
     )
-    scopes = [BudgetScopeKey.for_run("run-1")]
-    for mode in ResearchMode:
-        scopes.append(BudgetScopeKey.for_mode("run-1", mode))
-        for caller_id in caller_ids:
-            scopes.append(BudgetScopeKey.for_agent("run-1", mode, caller_id))
+    scopes: list[BudgetScopeKey] = [
+        BudgetScopeKey.for_run(run_id) for run_id in run_ids
+    ]
+    for run_id in run_ids:
+        for mode in ResearchMode:
+            scopes.append(BudgetScopeKey.for_mode(run_id, mode))
+            for caller_id in caller_ids:
+                scopes.append(BudgetScopeKey.for_agent(run_id, mode, caller_id))
     budgets = InMemoryBudgetManager({scope: limit for scope in scopes})
     evidence_store = evidence_store or InMemoryEvidenceStore()
     events = RecordingEventSink()

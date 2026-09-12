@@ -74,7 +74,7 @@ class ResponseInput(BaseModel):
 
     question: Question
     response_mode: ResponseMode
-    research_outcome: ResearchOutcome
+    research_outcome: ResearchOutcome | None = None
     active_evidence_ids: list[EvidenceIdentifier] = Field(
         default_factory=list,
         max_length=MAX_ACTIVE_EVIDENCE_IDS,
