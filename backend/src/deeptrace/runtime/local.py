@@ -38,7 +38,7 @@ class LocalResearchRuntime:
         agent_factory=build_real_agent,
         *,
         application=None,
-        context_factory: Callable[[], Any] | None = None,
+        context_factory: Callable[[str], Any] | None = None,
     ) -> None:
         self._settings = settings
         self._runs_dir = Path(runs_dir)
@@ -161,7 +161,7 @@ class LocalResearchRuntime:
 
     async def _execute_through_harness(self, state: _LocalRunState) -> None:
         record = state.record
-        context = self._context_factory()
+        context = self._context_factory(record.id)
         request = ApplicationResearchRequest(
             run_id=record.id,
             thread_id=record.id,

@@ -221,7 +221,7 @@ async def test_local_runtime_runs_through_application_service(tmp_path) -> None:
             AssertionError("legacy path must not run")
         ),
         application=application,
-        context_factory=FakeContext,
+        context_factory=lambda run_id: FakeContext(),
     )
     await runtime.start()
 

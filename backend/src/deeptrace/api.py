@@ -47,6 +47,19 @@ def _build_runtime(
     settings: Settings, runs_dir: Path | str | None
 ) -> tuple[ResearchRuntime, Callable[[], Awaitable[None]] | None]:
     if getattr(settings, "runtime_mode", "local") == "local":
+        if getattr(settings, "openai_api_key", ""):
+            from deeptrace.application.assembly import build_harness_runtime
+
+            application, context_factory = build_harness_runtime(settings)
+            return (
+                LocalResearchRuntime(
+                    settings,
+                    runs_dir or "runs",
+                    application=application,
+                    context_factory=context_factory,
+                ),
+                None,
+            )
         return LocalResearchRuntime(settings, runs_dir or "runs"), None
 
     engine, sessions = create_session_factory(settings.mysql_dsn)

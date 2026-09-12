@@ -213,9 +213,46 @@
 
 33. **测试基线：** Plan 7 完成时非真实套件 538 passed。
 
-## 后续 Plan 决策（待补充）
+## Plan 8：可观测性、评测与切换（2026-09-13 完成）
 
-- Plan 8（可观测性、评测与切换）：待实施。
+34. **真实 ModelGateway 落地。**
+    `harness/model_gateway.py:ChatModelGateway` 包装 `ChatOpenAI`（复用现有
+    `Settings` 配置），按 role 支持 bind 覆盖；策略节点已兼容 AIMessage.content。
+    从此 Harness 路径可承载真实流量。
+
+35. **本地运行时切换（保留旧路径）。**
+    `application/assembly.py:build_harness_runtime(settings)` 从 Settings 组装
+    完整运行时（真实搜索/抓取/模型 + 进程内预算/台账/缓存/Evidence Store +
+    HarnessEventRecorder）。`api.py:_build_runtime` 在 local 模式且配置了
+    openai_api_key 时默认走 Harness 路径；无 key 或显式注入运行时时回退旧路径，
+    `build_real_agent` 未删除。**注意：** context_factory 按 run_id 构建预算作用域，
+    gateway 与 context 必须共享同一个 Evidence Store 实例（踩坑已记录）。
+
+36. **结构化事件与指标。**
+    `observability/events.py:HarnessEventRecorder` 作为 EventSink 收集
+    tool.started/completed 等事件（仅标识与稳定错误码，无正文无异常文本），
+    `metrics()` 输出工具次数/失败/缓存命中/耗时聚合。
+
+37. **可重复的三模式对照基线。**
+    `tests/integration/test_mode_evaluation.py` 在同一脚本化数据集上评测三种模式
+    （脚本化模型 + 真实 LangGraph 子图 + 真实网关管道），输出质量/成本/延迟代理
+    指标（termination、evidence_count、executed_steps、model_calls、tool_calls）。
+    脚本化评估器按提示词特征返回 workflow 的 `sufficient` 或
+    plan_execute/multi_agent 的 `action` JSON——两套评估契约并存是设计使然。
+    真实 API 的对照评测脚本可在此骨架上换真实网关执行（-m real）。
+
+38. **真实 API 冒烟测试通过。**
+    `tests/real/test_real_smoke.py`（-m real，40s）：真实 Tavily 搜索 → 真实抓取 →
+    真实 LLM（planner/evaluator/responder）→ 带引用的简洁回答，走完整生产装配路径。
+
+## 交付总结（2026-09-13）
+
+- Plan 1–8 全部交付；非真实套件 539 passed + real 冒烟 1 passed。
+- 顶层运行图承载全部三种研究模式与响应模式；多轮会话、意图路由、滑动窗口、
+  记忆六问生命周期、持久 checkpoint 恢复、分层预算、幂等台账、引用校验全部有
+  可执行测试锁定。
+- 明确未做（诚实边界）：SQL 版记忆/Evidence Store 适配器（语义已在内存适配器固化）、
+  Auto Mode（等评测基线积累）、UI 更名（前端资源未动）。
 - Plan 5（Multi-Agent）：待实施。
 - Plan 6（会话与记忆）：待实施。
 - Plan 7（MySQL 与分布式恢复）：待实施。
