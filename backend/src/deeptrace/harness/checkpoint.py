@@ -25,6 +25,7 @@ from deeptrace.domain import (
     TopicStepError,
 )
 from deeptrace.strategies.workflow.models import QueryPlan, WorkflowEvaluation
+from deeptrace.responses.models import ResponseDraft
 
 
 HARNESS_STATE_MSGPACK_TYPES = (
@@ -45,6 +46,7 @@ HARNESS_STATE_MSGPACK_TYPES = (
     QueryPlan,
     WorkflowEvaluation,
     CitationRef,
+    ResponseDraft,
     ResponseInput,
     ResponseOutcome,
     ToolName,
