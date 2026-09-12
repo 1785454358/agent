@@ -25,9 +25,11 @@ from deeptrace.responses import (
     build_report_graph,
 )
 from deeptrace.strategies import (
+    build_plan_execute_research_graph,
     build_research_topic_graph,
     build_workflow_research_graph,
 )
+from deeptrace.application.research import ResearchApplicationService
 
 from strategies.fixtures import build_gateway_fixture
 
@@ -192,3 +194,55 @@ async def test_explicit_report_request_reuses_research_and_routes_to_report() ->
     assert turn["response_outcome"].citations[0].evidence_id == (
         turn["research_outcome"].evidence_ids[0]
     )
+
+
+@pytest.mark.asyncio
+async def test_plan_execute_mode_routes_through_application_service() -> None:
+    model = ScriptedModelGateway(
+        {
+            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
+                prompt, sufficient=True
+            ),
+            "responder": json.dumps({"content": "计划执行结论 [1]。"}),
+        }
+    )
+    fixture = build_gateway_fixture(
+        search_results={
+            "研究 LangGraph Harness": [
+                {"url": "https://example.com/a", "title": "来源 A", "snippet": "s"}
+            ]
+        },
+        pages={"https://example.com/a": "unique-pe-slice-body"},
+        model_gateway=model,
+    )
+    strategies = StrategyRegistry()
+    strategies.register(
+        StrategyRegistration(
+            ResearchMode.PLAN_EXECUTE,
+            build_plan_execute_research_graph(build_research_topic_graph()),
+        )
+    )
+    responses = ResponseGraphRegistry()
+    responses.register(
+        ResponseRegistration(ResponseMode.ANSWER, build_answer_graph())
+    )
+    graph = build_agent_runtime_graph(strategies, responses)
+
+    from deeptrace.application.research import ApplicationResearchRequest
+
+    outcome = await ResearchApplicationService(graph).invoke(
+        ApplicationResearchRequest(
+            run_id="run-1",
+            thread_id="thread-1",
+            question="研究 LangGraph Harness",
+            mode=ResearchMode.PLAN_EXECUTE,
+        ),
+        config={"configurable": {"thread_id": "thread-1"}},
+        context=fixture.context,
+    )
+
+    assert outcome.response_mode is ResponseMode.ANSWER
+    assert outcome.partial_reason is None
+    roles = [role for role, _ in model.calls]
+    assert roles == ["planner", "evaluator", "responder"]

@@ -89,9 +89,36 @@
 - Plan 3 完成时：非真实套件 487 passed，`compileall` 通过。
 - 真实 API（真实模型/Tavily）验证留待 Plan 8 评测阶段按需执行。
 
+## Plan 4：Plan-and-Execute 策略（2026-09-13 完成）
+
+计划文档：`docs/superpowers/plans/2026-09-13-plan-execute-strategy.md`（本次新撰写，路线图原本未给出）。
+
+13. **循环拓扑：队列驱动而非逐任务评估。**
+    拓扑为 `plan → select_task →(有任务)→ execute_task → select_task`、
+    `(队列空)→ evaluate →(replan 且未超限)→ replan → select_task`、
+    `(complete/block/解析失败/超限)→ finalize`。即先耗尽计划队列再做一次评估，
+    replan 生成新队列后重新进入同一 select_task 循环；重规划上限在条件边内强制。
+    首版拓扑（每个任务后立刻评估）会让评估器提前结束队列，已修正。
+
+14. **任务即查询。** 任务表示为归一化查询字符串（≤6 条、稳定去重），
+    单任务执行直接复用 ResearchTopicGraph（mode=PLAN_EXECUTE），
+    失败任务记入 gaps，兄弟任务证据保留；replan 生成的查询按 completed_tasks 去重，
+    生成不出新任务时以 `no_new_tasks_to_plan` 缺口终局（`max_replans_reached` 或
+    `insufficient_evidence`）。
+
+15. **模型输出解析助手下沉共享模块。**
+    `strategies/model_io.py` 提供 `payload_text/parse_json_object`（去 markdown 围栏、
+    容错 JSON 解析），workflow 与 plan_execute 共用，消除两份拷贝。
+
+16. **测试夹具预算作用域覆盖三种模式×三个 caller。**
+    GatewayFixture 为 run/mode/agent 三级、全部 canonical 模式与典型 caller_id
+    预配置预算，避免策略子图因未配置作用域在网关内报错。
+
+17. **测试基线：** Plan 4 完成时非真实套件 501 passed。
+
 ## 后续 Plan 决策（待补充）
 
-- Plan 4（Plan-and-Execute）：待实施。
+- Plan 5（Multi-Agent）：待实施。
 - Plan 5（Multi-Agent）：待实施。
 - Plan 6（会话与记忆）：待实施。
 - Plan 7（MySQL 与分布式恢复）：待实施。

@@ -20,6 +20,7 @@ from deeptrace.domain import (
 )
 from deeptrace.domain.evidence import Finding
 from deeptrace.harness.context import HarnessContext
+from deeptrace.strategies.model_io import parse_json_object, payload_text
 from deeptrace.strategies.workflow.models import QueryPlan, WorkflowEvaluation
 from deeptrace.strategies.workflow.state import TopicBranchState, WorkflowState
 
@@ -29,35 +30,8 @@ PLANNER_ROLE = "planner"
 EVALUATOR_ROLE = "evaluator"
 
 
-def _payload_text(response: Any) -> str:
-    if isinstance(response, str):
-        text = response
-    elif hasattr(response, "content"):
-        content = response.content
-        text = content if isinstance(content, str) else str(content)
-    else:
-        text = str(response)
-    stripped = text.strip()
-    if stripped.startswith("```"):
-        lines = stripped.splitlines()
-        if len(lines) >= 2 and lines[-1].strip().endswith("```"):
-            lines = lines[1:-1]
-        elif lines and lines[0].strip().startswith("```"):
-            lines = lines[1:]
-        stripped = "\n".join(lines).strip()
-    return stripped
-
-
-def _parse_json_object(text: str) -> dict[str, Any] | None:
-    try:
-        payload = json.loads(text)
-    except (TypeError, ValueError):
-        return None
-    return payload if isinstance(payload, dict) else None
-
-
 def parse_query_plan(text: str, *, limit: int, fallback: str) -> list[str]:
-    payload = _parse_json_object(_payload_text(text))
+    payload = parse_json_object(payload_text(text))
     queries: list[str] = []
     if payload is not None and isinstance(payload.get("queries"), list):
         for candidate in payload["queries"]:
@@ -228,7 +202,7 @@ async def evaluate_node(
         response = await runtime.context.model_gateway.invoke(
             role=EVALUATOR_ROLE, messages=[HumanMessage(content=prompt)]
         )
-        evaluation = WorkflowEvaluation.model_validate_json(_payload_text(response))
+        evaluation = WorkflowEvaluation.model_validate_json(payload_text(response))
     except (ValidationError, ValueError, TypeError):
         return {
             "evaluation": WorkflowEvaluation(

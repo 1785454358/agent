@@ -127,6 +127,7 @@ def build_gateway_fixture(
     pages: dict[str, str] | None = None,
     fetch_failures: dict[str, str] | None = None,
     model_gateway: Any | None = None,
+    evidence_store: InMemoryEvidenceStore | None = None,
 ) -> GatewayFixture:
     search = ScriptedSearch(
         results_by_query=search_results,
@@ -136,12 +137,14 @@ def build_gateway_fixture(
     fetcher = ScriptedFetcher(pages=pages, failures=fetch_failures)
     registry = build_research_tool_registry(search=search, fetcher=fetcher)
     limit = BudgetUnits(tool_calls=50, network_requests=50, fetched_pages=50)
+    caller_ids = ("workflow-graph", "plan-execute-executor", "researcher-1")
     scopes = [BudgetScopeKey.for_run("run-1")]
     for mode in ResearchMode:
         scopes.append(BudgetScopeKey.for_mode("run-1", mode))
-        scopes.append(BudgetScopeKey.for_agent("run-1", mode, "workflow-graph"))
+        for caller_id in caller_ids:
+            scopes.append(BudgetScopeKey.for_agent("run-1", mode, caller_id))
     budgets = InMemoryBudgetManager({scope: limit for scope in scopes})
-    evidence_store = InMemoryEvidenceStore()
+    evidence_store = evidence_store or InMemoryEvidenceStore()
     events = RecordingEventSink()
     inner = AgentToolGateway(
         registry=registry,
@@ -161,7 +164,7 @@ def build_gateway_fixture(
         tool_gateway=gateway,
         evidence_store=evidence_store,
         event_sink=events,
-        clock=lambda: FIXED_NOW,
+        clock=FixedClock(),
     )
     return GatewayFixture(
         gateway=gateway,
@@ -172,6 +175,11 @@ def build_gateway_fixture(
         budgets=budgets,
         context=context,
     )
+
+
+class FixedClock:
+    def now(self) -> datetime:
+        return FIXED_NOW
 
 
 def caller_from(call: dict[str, Any]) -> ToolCaller:
