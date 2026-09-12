@@ -131,6 +131,7 @@ def build_gateway_fixture(
     fetch_failures: dict[str, str] | None = None,
     model_gateway: Any | None = None,
     evidence_store: InMemoryEvidenceStore | None = None,
+    execution_store: Any | None = None,
 ) -> GatewayFixture:
     search = ScriptedSearch(
         results_by_query=search_results,
@@ -162,7 +163,7 @@ def build_gateway_fixture(
         allowlist=StaticToolAllowlist(),
         security=DeterministicUrlSecurityPolicy(),
         budgets=budgets,
-        executions=InMemoryToolExecutionStore(),
+        executions=execution_store or InMemoryToolExecutionStore(),
         cache=SuccessCacheSingleflight(InMemorySuccessCache()),
         evidence_store=evidence_store,
         event_sink=events,

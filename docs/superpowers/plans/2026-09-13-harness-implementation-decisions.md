@@ -181,9 +181,41 @@
 
 28. **测试基线：** Plan 6 完成时非真实套件 535 passed。
 
+## Plan 7：MySQL 持久化与分布式恢复（2026-09-13 完成）
+
+计划文档：`docs/superpowers/plans/2026-09-13-mysql-distributed-recovery.md`（本次新撰写）。
+
+29. **自研 SQLAlchemy Checkpoint Saver。**
+    `langgraph-checkpoint-mysql[asyncmy]` 未安装，选择自研
+    `persistence/checkpoint.py:SqlAlchemyCheckpointSaver`（BaseCheckpointSaver）：
+    复用 harness 严格序列化器；checkpoint/checkpoint_writes 两张表；
+    测试经 aiosqlite 跑同一套 SQL，生产切 `mysql+asyncmy` DSN，图代码零分支。
+    陷阱记录：PendingWrite 实际是 `(task_id, channel, value)` 三元组；
+    metadata 必须保存自己的 serde 类型（不能假设 json）。
+
+30. **SQL 工具执行台账。**
+    `SqlAlchemyToolExecutionStore`：claim 以 (tenant, run, call_id) 唯一键竞争所有权，
+    指纹冲突拒绝，FOLLOWER 轮询等待终态结果，abandon 后可回收；
+    与网关的 replay 语义一致（`manager_id` 每实例生成，claim 需携带）。
+
+31. **恢复语义的关键发现：子图 checkpoint 复用优先于台账重放。**
+    强制崩溃（以 CancelledError 注入节点边界，经 LangGraph 转为 NodeCancelledError
+    传播——普通 Exception 会被策略节点按"任务局部失败"吞掉，这是设计使然）后，
+    `ainvoke(None)` 从持久 checkpoint 恢复：计划节点不重跑（模型调用不重复），
+    已完成的 topic 子图直接复用其最终状态——提供方调用、台账写入、Evidence 入库
+    全部恰好一次。三个恢复测试覆盖：计划后崩溃、工具执行后崩溃、记忆沉淀后崩溃
+    （版本化 upsert 保证记忆不重复）。恢复测试中 4 项断言：
+    status=completed、提供方调用各一次、gateway 调用数、记忆 facts 恰好 1 条。
+
+32. **范围裁剪：** SQL 版记忆 Store 与 Evidence Store 适配器顺延至 Plan 8
+    （内存适配器已固化生产语义，SQL 映射属机械工作）；现有 Redis broker 的
+    租约/恢复扫描已有测试覆盖，不重写。
+
+33. **测试基线：** Plan 7 完成时非真实套件 538 passed。
+
 ## 后续 Plan 决策（待补充）
 
-- Plan 7（MySQL 与分布式恢复）：待实施。
+- Plan 8（可观测性、评测与切换）：待实施。
 - Plan 5（Multi-Agent）：待实施。
 - Plan 6（会话与记忆）：待实施。
 - Plan 7（MySQL 与分布式恢复）：待实施。

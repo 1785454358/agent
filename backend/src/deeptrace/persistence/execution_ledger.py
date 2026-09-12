@@ -1,0 +1,168 @@
+"""SQL-backed tool execution ledger with replay-safe claims."""
+
+from __future__ import annotations
+
+import uuid
+from datetime import UTC, datetime
+
+from deeptrace.domain import ToolRequest, ToolResult
+from deeptrace.tools.execution_store import (
+    canonical_request_fingerprint,
+    ClaimDisposition,
+    ExecutionAbandonedError,
+    ExecutionClaim,
+    ExecutionConflictError,
+)
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from deeptrace.persistence.orm import ToolExecutionRow
+
+
+def _now() -> datetime:
+    return datetime.now(UTC)
+
+
+class SqlAlchemyToolExecutionStore:
+    """Claim/complete/replay semantics over SQL; followers poll for the result.
+
+    ``wait`` is a bounded poll: distributed followers re-check the ledger until
+    the owner commits or the claim is abandoned.
+    """
+
+    def __init__(
+        self,
+        sessions: async_sessionmaker[AsyncSession],
+        *,
+        poll_interval_seconds: float = 0.02,
+        max_polls: int = 250,
+    ) -> None:
+        self._sessions = sessions
+        self._poll_interval_seconds = poll_interval_seconds
+        self._max_polls = max_polls
+        self._manager_id = uuid.uuid4().hex
+
+    async def claim(self, tenant_id: str, request: ToolRequest) -> ExecutionClaim:
+        fingerprint = canonical_request_fingerprint(request)
+        async with self._sessions() as session:
+            row = (
+                await session.execute(
+                    select(ToolExecutionRow).where(
+                        ToolExecutionRow.tenant_id == tenant_id,
+                        ToolExecutionRow.run_id == request.run_id,
+                        ToolExecutionRow.call_id == request.call_id,
+                    )
+                )
+            ).scalar_one_or_none()
+            if row is None:
+                token = uuid.uuid4().hex
+                session.add(
+                    ToolExecutionRow(
+                        tenant_id=tenant_id,
+                        run_id=request.run_id,
+                        call_id=request.call_id,
+                        fingerprint=fingerprint,
+                        status="running",
+                        generation=1,
+                        owner_token=token,
+                        created_at=_now(),
+                        updated_at=_now(),
+                    )
+                )
+                await session.commit()
+                return ExecutionClaim(
+                    manager_id=self._manager_id,
+                    tenant_id=tenant_id,
+                    run_id=request.run_id,
+                    call_id=request.call_id,
+                    fingerprint=fingerprint,
+                    disposition=ClaimDisposition.OWNER,
+                    owner_token=token,
+                    generation=1,
+                )
+            if row.fingerprint != fingerprint:
+                raise ExecutionConflictError(
+                    "call_id was reused with a different fingerprint"
+                )
+            if row.result_json is not None:
+                result = ToolResult.model_validate(row.result_json)
+                return ExecutionClaim(
+                    manager_id=self._manager_id,
+                    tenant_id=tenant_id,
+                    run_id=request.run_id,
+                    call_id=request.call_id,
+                    fingerprint=fingerprint,
+                    disposition=ClaimDisposition.REPLAY,
+                    result=result,
+                    generation=row.generation,
+                )
+            return ExecutionClaim(
+                manager_id=self._manager_id,
+                tenant_id=tenant_id,
+                run_id=request.run_id,
+                call_id=request.call_id,
+                fingerprint=fingerprint,
+                disposition=ClaimDisposition.FOLLOWER,
+                generation=row.generation,
+            )
+
+    async def wait(self, claim: ExecutionClaim) -> ToolResult:
+        import asyncio
+
+        for _ in range(self._max_polls):
+            async with self._sessions() as session:
+                row = (
+                    await session.execute(
+                        select(ToolExecutionRow).where(
+                            ToolExecutionRow.tenant_id == claim.tenant_id,
+                            ToolExecutionRow.run_id == claim.run_id,
+                            ToolExecutionRow.call_id == claim.call_id,
+                        )
+                    )
+                ).scalar_one_or_none()
+            if row is None:
+                raise ExecutionAbandonedError("execution record disappeared")
+            if row.result_json is not None:
+                return ToolResult.model_validate(row.result_json)
+            if row.status == "abandoned":
+                raise ExecutionAbandonedError("owner abandoned the execution")
+            await asyncio.sleep(self._poll_interval_seconds)
+        raise ExecutionAbandonedError("owner did not complete in time")
+
+    async def complete(self, claim: ExecutionClaim, result: ToolResult) -> bool:
+        async with self._sessions() as session:
+            row = (
+                await session.execute(
+                    select(ToolExecutionRow).where(
+                        ToolExecutionRow.tenant_id == claim.tenant_id,
+                        ToolExecutionRow.run_id == claim.run_id,
+                        ToolExecutionRow.call_id == claim.call_id,
+                    )
+                )
+            ).scalar_one_or_none()
+            if row is None or row.owner_token != claim.owner_token:
+                return False
+            row.result_json = result.model_dump(mode="json")
+            row.status = "completed"
+            row.updated_at = _now()
+            await session.commit()
+            return True
+
+    async def abandon(self, claim: ExecutionClaim) -> bool:
+        async with self._sessions() as session:
+            row = (
+                await session.execute(
+                    select(ToolExecutionRow).where(
+                        ToolExecutionRow.tenant_id == claim.tenant_id,
+                        ToolExecutionRow.run_id == claim.run_id,
+                        ToolExecutionRow.call_id == claim.call_id,
+                    )
+                )
+            ).scalar_one_or_none()
+            if row is None or row.owner_token != claim.owner_token:
+                return False
+            row.status = "abandoned"
+            row.owner_token = None
+            row.updated_at = _now()
+            await session.commit()
+            return True
