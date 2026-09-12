@@ -137,7 +137,11 @@ def build_gateway_fixture(
     fetcher = ScriptedFetcher(pages=pages, failures=fetch_failures)
     registry = build_research_tool_registry(search=search, fetcher=fetcher)
     limit = BudgetUnits(tool_calls=50, network_requests=50, fetched_pages=50)
-    caller_ids = ("workflow-graph", "plan-execute-executor", "researcher-1")
+    caller_ids = (
+        "workflow-graph",
+        "plan-execute-executor",
+        *(f"researcher-{index}" for index in range(6)),
+    )
     scopes = [BudgetScopeKey.for_run("run-1")]
     for mode in ResearchMode:
         scopes.append(BudgetScopeKey.for_mode("run-1", mode))

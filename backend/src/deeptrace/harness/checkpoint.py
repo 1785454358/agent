@@ -26,6 +26,7 @@ from deeptrace.domain import (
 )
 from deeptrace.strategies.workflow.models import QueryPlan, WorkflowEvaluation
 from deeptrace.strategies.plan_execute.models import ExecutorDecision, TaskPlan
+from deeptrace.strategies.multi_agent.models import SupervisorEvaluation
 from deeptrace.responses.models import ResponseDraft
 
 
@@ -48,6 +49,7 @@ HARNESS_STATE_MSGPACK_TYPES = (
     WorkflowEvaluation,
     TaskPlan,
     ExecutorDecision,
+    SupervisorEvaluation,
     CitationRef,
     ResponseDraft,
     ResponseInput,

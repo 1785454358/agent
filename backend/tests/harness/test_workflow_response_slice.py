@@ -25,11 +25,15 @@ from deeptrace.responses import (
     build_report_graph,
 )
 from deeptrace.strategies import (
+    build_multi_agent_research_graph,
     build_plan_execute_research_graph,
     build_research_topic_graph,
     build_workflow_research_graph,
 )
-from deeptrace.application.research import ResearchApplicationService
+from deeptrace.application.research import (
+    ApplicationResearchRequest,
+    ResearchApplicationService,
+)
 
 from strategies.fixtures import build_gateway_fixture
 
@@ -246,3 +250,52 @@ async def test_plan_execute_mode_routes_through_application_service() -> None:
     assert outcome.partial_reason is None
     roles = [role for role, _ in model.calls]
     assert roles == ["planner", "evaluator", "responder"]
+
+
+@pytest.mark.asyncio
+async def test_multi_agent_mode_routes_through_application_service() -> None:
+    model = ScriptedModelGateway(
+        {
+            "supervisor": json.dumps({"assignments": ["研究方向 A"]}),
+            "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
+                prompt, sufficient=True
+            ),
+            "responder": json.dumps({"content": "多智能体结论 [1]。"}),
+        }
+    )
+    fixture = build_gateway_fixture(
+        search_results={
+            "研究方向 A": [
+                {"url": "https://example.com/a", "title": "来源 A", "snippet": "s"}
+            ]
+        },
+        pages={"https://example.com/a": "unique-ma-slice-body"},
+        model_gateway=model,
+    )
+    strategies = StrategyRegistry()
+    strategies.register(
+        StrategyRegistration(
+            ResearchMode.MULTI_AGENT,
+            build_multi_agent_research_graph(build_research_topic_graph()),
+        )
+    )
+    responses = ResponseGraphRegistry()
+    responses.register(
+        ResponseRegistration(ResponseMode.ANSWER, build_answer_graph())
+    )
+    graph = build_agent_runtime_graph(strategies, responses)
+
+    outcome = await ResearchApplicationService(graph).invoke(
+        ApplicationResearchRequest(
+            run_id="run-1",
+            thread_id="thread-1",
+            question="研究 LangGraph Harness",
+            mode=ResearchMode.MULTI_AGENT,
+        ),
+        config={"configurable": {"thread_id": "thread-1"}},
+        context=fixture.context,
+    )
+
+    assert outcome.partial_reason is None
+    assert outcome.content == "多智能体结论 [1]。"
+    assert [role for role, _ in model.calls][0] == "supervisor"

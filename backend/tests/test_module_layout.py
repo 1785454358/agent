@@ -94,9 +94,15 @@ def test_workflow_response_vertical_slice_public_contracts() -> None:
         build_brief_graph,
         build_report_graph,
     )
-    from deeptrace.strategies import build_workflow_research_graph
+    from deeptrace.strategies import (
+        build_multi_agent_research_graph,
+        build_plan_execute_research_graph,
+        build_workflow_research_graph,
+    )
 
     assert callable(build_workflow_research_graph)
+    assert callable(build_plan_execute_research_graph)
+    assert callable(build_multi_agent_research_graph)
     assert callable(build_answer_graph)
     assert callable(build_brief_graph)
     assert callable(build_report_graph)

@@ -116,9 +116,35 @@
 
 17. **测试基线：** Plan 4 完成时非真实套件 501 passed。
 
+## Plan 5：Multi-Agent 策略（2026-09-13 完成）
+
+计划文档：`docs/superpowers/plans/2026-09-13-multi-agent-strategy.md`（本次新撰写）。
+
+18. **Researcher 即 Topic 子图实例。**
+    `Send("researcher", ResearcherBranchState(...))` 为每个研究方向派生独立分支，
+    分支内以 `ResearchTopicInput(mode=MULTI_AGENT, caller_id=researcher-{index})`
+    调用共享的 ResearchTopicGraph——研究员天然拥有隔离的任务视图与网关侧配额，
+    一个研究员失败只记自身缺口，兄弟证据经 reducer 合并保留。
+
+19. **Supervisor 结构性无网络权限。**
+    supervisor_plan / supervisor_evaluate / follow_up 三个节点只访问 model_gateway
+    与 evidence_store.get_many，从不触碰 ToolGateway；测试断言网关调用记录中的
+    caller_id 全部以 `researcher-` 开头。`dispatched_queries` 通道（reducer 去重）
+    保证 follow_up 不会重复派发已研究方向。
+
+20. **follow_up 路由返回 Send 列表。**
+    follow_up 节点后若返回字符串边，researcher 节点会拿到整份主状态而非分支输入
+    （KeyError: query）；必须与首次派发一致地返回 `Send` 列表，空 assignments 时
+    返回 "finalize"。这是 Send 拓扑的通用陷阱，已记录。
+
+21. **终止原因语义：** `completed` / `no_sources` / `max_follow_ups_reached` /
+    `insufficient_evidence`；默认一轮 follow-up（max_follow_ups=1）。
+
+22. **测试基线：** Plan 5 完成时非真实套件 514 passed。
+
 ## 后续 Plan 决策（待补充）
 
-- Plan 5（Multi-Agent）：待实施。
+- Plan 6（会话与记忆）：待实施。
 - Plan 5（Multi-Agent）：待实施。
 - Plan 6（会话与记忆）：待实施。
 - Plan 7（MySQL 与分布式恢复）：待实施。
