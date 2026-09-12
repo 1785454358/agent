@@ -6,24 +6,24 @@ from deeptrace.domain.execution import (
     ErrorCategory,
     ExecutionStatus,
     ResearchOutcome,
-    ResearchProfile,
-    ResponseProfile,
-    normalize_research_profile,
+    ResearchMode,
+    ResponseMode,
+    normalize_research_mode,
 )
 
 
-def test_profile_names_are_canonical_and_legacy_names_only_normalize() -> None:
-    assert [item.value for item in ResearchProfile] == [
+def test_mode_names_are_canonical_and_legacy_names_only_normalize() -> None:
+    assert [item.value for item in ResearchMode] == [
         "workflow",
         "plan_execute",
         "multi_agent",
     ]
-    assert normalize_research_profile("workflow") is ResearchProfile.WORKFLOW
-    assert normalize_research_profile("basic") is ResearchProfile.WORKFLOW
-    assert normalize_research_profile("deep") is ResearchProfile.PLAN_EXECUTE
-    assert normalize_research_profile("multi_agent") is ResearchProfile.MULTI_AGENT
-    with pytest.raises(ValueError, match="unknown research profile"):
-        normalize_research_profile("agent")
+    assert normalize_research_mode("workflow") is ResearchMode.WORKFLOW
+    assert normalize_research_mode("basic") is ResearchMode.WORKFLOW
+    assert normalize_research_mode("deep") is ResearchMode.PLAN_EXECUTE
+    assert normalize_research_mode("multi_agent") is ResearchMode.MULTI_AGENT
+    with pytest.raises(ValueError, match="unknown research mode"):
+        normalize_research_mode("agent")
 
 
 def test_budget_and_outcome_reject_invalid_values() -> None:
@@ -31,7 +31,7 @@ def test_budget_and_outcome_reject_invalid_values() -> None:
         BudgetSnapshot(max_model_calls=-1)
     with pytest.raises(ValidationError):
         ResearchOutcome(
-            profile=ResearchProfile.WORKFLOW,
+            mode=ResearchMode.WORKFLOW,
             evidence_ids=["ev-1", "ev-1"],
             findings=[],
             unresolved_gaps=[],
@@ -41,7 +41,7 @@ def test_budget_and_outcome_reject_invalid_values() -> None:
 
 
 def test_execution_and_response_values_are_stable() -> None:
-    assert ResponseProfile.ANSWER.value == "answer"
-    assert ResponseProfile.REPORT.value == "report"
+    assert ResponseMode.ANSWER.value == "answer"
+    assert ResponseMode.REPORT.value == "report"
     assert ErrorCategory.AGENT_RECOVERABLE.value == "agent_recoverable"
     assert ExecutionStatus.INTERRUPTED.value == "interrupted"

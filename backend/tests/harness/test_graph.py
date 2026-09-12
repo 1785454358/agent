@@ -7,11 +7,11 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.runtime import Runtime
 
-from deeptrace.domain import ExecutionStatus, ResearchProfile
+from deeptrace.domain import ExecutionStatus, ResearchMode
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
 from deeptrace.harness.context import HarnessContext
-from deeptrace.harness.graph import build_harness_graph
-from deeptrace.harness.registry import ProfileRegistration, ProfileRegistry
+from deeptrace.harness.graph import build_agent_runtime_graph
+from deeptrace.harness.registry import StrategyRegistration, StrategyRegistry
 from deeptrace.harness.state import new_conversation, new_turn
 
 
@@ -23,7 +23,7 @@ class _ChildState(TypedDict, total=False):
     budget: dict[str, int]
     current_date: str
     timezone: str
-    profile: str
+    mode: str
     evidence_ids: list[str]
     findings: list[dict[str, Any]]
     executed_steps: int
@@ -78,10 +78,10 @@ def _context() -> HarnessContext:
     )
 
 
-def _profile_graph(
-    profile: ResearchProfile,
+def _mode_graph(
+    mode: ResearchMode,
     *,
-    outcome_profile: ResearchProfile | None = None,
+    outcome_mode: ResearchMode | None = None,
 ):
     def research(
         state: _ChildState,
@@ -90,20 +90,20 @@ def _profile_graph(
     ) -> _ChildState:
         configurable = config["configurable"]
         return {
-            "profile": (outcome_profile or profile).value,
-            "evidence_ids": [f"ev-{profile.value}"],
+            "mode": (outcome_mode or mode).value,
+            "evidence_ids": [f"ev-{mode.value}"],
             "findings": [
                 {
-                    "id": f"finding-{profile.value}",
+                    "id": f"finding-{mode.value}",
                     "claim": f"{state['current_date']}|{state['timezone']}",
-                    "evidence_ids": [f"ev-{profile.value}"],
+                    "evidence_ids": [f"ev-{mode.value}"],
                     "confidence": 1.0,
                 }
             ],
             "unresolved_gaps": [],
             "executed_steps": 1,
             "termination_reason": "completed",
-            "_private_child_trace": f"trace-{profile.value}",
+            "_private_child_trace": f"trace-{mode.value}",
             "_private_child_user_id": runtime.context.user_id,
             "_private_child_thread_id": configurable["thread_id"],
             "_private_child_custom": configurable["custom_marker"],
@@ -117,19 +117,19 @@ def _profile_graph(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("profile", list(ResearchProfile))
-async def test_harness_routes_to_each_registered_profile(
-    profile: ResearchProfile,
+@pytest.mark.parametrize("mode", list(ResearchMode))
+async def test_harness_routes_to_each_registered_mode(
+    mode: ResearchMode,
 ) -> None:
-    registry = ProfileRegistry()
-    for item in ResearchProfile:
-        registry.register(ProfileRegistration(item, _profile_graph(item)))
+    registry = StrategyRegistry()
+    for item in ResearchMode:
+        registry.register(StrategyRegistration(item, _mode_graph(item)))
     checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
-    graph = build_harness_graph(registry, checkpointer=checkpointer)
-    thread_id = f"thread-{profile.value}"
+    graph = build_agent_runtime_graph(registry, checkpointer=checkpointer)
+    thread_id = f"thread-{mode.value}"
     initial = {
-        "conversation": new_conversation(thread_id, profile),
-        "turn": new_turn("run-1", "研究 Harness", profile),
+        "conversation": new_conversation(thread_id, mode),
+        "turn": new_turn("run-1", "研究 Harness", mode),
     }
 
     result = await graph.ainvoke(
@@ -137,7 +137,7 @@ async def test_harness_routes_to_each_registered_profile(
         config={
             "configurable": {
                 "thread_id": thread_id,
-                "custom_marker": f"custom-{profile.value}",
+                "custom_marker": f"custom-{mode.value}",
             }
         },
         context=_context(),
@@ -147,8 +147,8 @@ async def test_harness_routes_to_each_registered_profile(
     assert result["turn"]["research_request"].question == "研究 Harness"
     assert result["turn"]["research_request"].current_date == "2026-09-10"
     assert result["turn"]["research_request"].timezone == "Asia/Shanghai"
-    assert result["turn"]["research_outcome"].profile is profile
-    assert result["conversation"]["evidence_ids"] == [f"ev-{profile.value}"]
+    assert result["turn"]["research_outcome"].mode is mode
+    assert result["conversation"]["evidence_ids"] == [f"ev-{mode.value}"]
     assert result["conversation"]["established_findings"][0].claim == (
         "2026-09-10|Asia/Shanghai"
     )
@@ -161,9 +161,9 @@ async def test_harness_routes_to_each_registered_profile(
         {"configurable": {"thread_id": thread_id}}
     )
     assert snapshot.values["turn"]["run_id"] == "run-1"
-    assert snapshot.values["turn"]["research_outcome"].profile is profile
+    assert snapshot.values["turn"]["research_outcome"].mode is mode
     assert snapshot.values["conversation"]["established_findings"][0].id == (
-        f"finding-{profile.value}"
+        f"finding-{mode.value}"
     )
     assert "_private_child_trace" not in snapshot.values
     assert "_private_child_user_id" not in snapshot.values
@@ -179,12 +179,12 @@ async def test_harness_routes_to_each_registered_profile(
     child_checkpoints = [
         item
         for item in checkpoints
-        if item.config["configurable"].get("checkpoint_ns") == profile.value
+        if item.config["configurable"].get("checkpoint_ns") == mode.value
     ]
     assert child_checkpoints
     assert any(
         item.checkpoint["channel_values"].get("_private_child_trace")
-        == f"trace-{profile.value}"
+        == f"trace-{mode.value}"
         for item in child_checkpoints
     )
     assert any(
@@ -193,55 +193,55 @@ async def test_harness_routes_to_each_registered_profile(
         and item.checkpoint["channel_values"].get("_private_child_thread_id")
         == thread_id
         and item.checkpoint["channel_values"].get("_private_child_custom")
-        == f"custom-{profile.value}"
+        == f"custom-{mode.value}"
         for item in child_checkpoints
     )
 
 
 @pytest.mark.asyncio
-async def test_harness_rejects_an_unregistered_selected_profile() -> None:
-    registry = ProfileRegistry()
+async def test_harness_rejects_an_unregistered_selected_mode() -> None:
+    registry = StrategyRegistry()
     registry.register(
-        ProfileRegistration(
-            ResearchProfile.WORKFLOW,
-            _profile_graph(ResearchProfile.WORKFLOW),
+        StrategyRegistration(
+            ResearchMode.WORKFLOW,
+            _mode_graph(ResearchMode.WORKFLOW),
         )
     )
-    graph = build_harness_graph(registry)
+    graph = build_agent_runtime_graph(registry)
     initial = {
         "conversation": new_conversation(
-            "thread-1", ResearchProfile.MULTI_AGENT
+            "thread-1", ResearchMode.MULTI_AGENT
         ),
         "turn": new_turn(
-            "run-1", "研究 Harness", ResearchProfile.MULTI_AGENT
+            "run-1", "研究 Harness", ResearchMode.MULTI_AGENT
         ),
     }
 
-    with pytest.raises(KeyError, match="profile is not registered"):
+    with pytest.raises(KeyError, match="mode is not registered"):
         await graph.ainvoke(initial)
 
 
 @pytest.mark.asyncio
-async def test_harness_rejects_an_outcome_for_a_different_profile() -> None:
-    registry = ProfileRegistry()
+async def test_harness_rejects_an_outcome_for_a_different_mode() -> None:
+    registry = StrategyRegistry()
     registry.register(
-        ProfileRegistration(
-            ResearchProfile.WORKFLOW,
-            _profile_graph(
-                ResearchProfile.WORKFLOW,
-                outcome_profile=ResearchProfile.PLAN_EXECUTE,
+        StrategyRegistration(
+            ResearchMode.WORKFLOW,
+            _mode_graph(
+                ResearchMode.WORKFLOW,
+                outcome_mode=ResearchMode.PLAN_EXECUTE,
             ),
         )
     )
-    graph = build_harness_graph(registry)
+    graph = build_agent_runtime_graph(registry)
     initial = {
         "conversation": new_conversation(
-            "thread-1", ResearchProfile.WORKFLOW
+            "thread-1", ResearchMode.WORKFLOW
         ),
-        "turn": new_turn("run-1", "研究 Harness", ResearchProfile.WORKFLOW),
+        "turn": new_turn("run-1", "研究 Harness", ResearchMode.WORKFLOW),
     }
 
-    with pytest.raises(ValueError, match="outcome profile does not match"):
+    with pytest.raises(ValueError, match="outcome mode does not match"):
         await graph.ainvoke(
             initial,
             config={

@@ -8,9 +8,9 @@ from deeptrace.domain.execution import (
     ExecutionStatus,
     ResearchInput,
     ResearchOutcome,
-    ResearchProfile,
-    ResponseProfile,
-    normalize_research_profile,
+    ResearchMode,
+    ResponseMode,
+    normalize_research_mode,
 )
 from deeptrace.domain.tools import ToolName, ToolRequest, ToolResult
 
@@ -26,10 +26,10 @@ __all__ = [
     "Finding",
     "ResearchInput",
     "ResearchOutcome",
-    "ResearchProfile",
-    "ResponseProfile",
+    "ResearchMode",
+    "ResponseMode",
     "ToolName",
     "ToolRequest",
     "ToolResult",
-    "normalize_research_profile",
+    "normalize_research_mode",
 ]

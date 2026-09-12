@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from deeptrace.domain import ConversationSummary, Finding, ResearchOutcome, ResearchProfile
+from deeptrace.domain import ConversationSummary, Finding, ResearchOutcome, ResearchMode
 
 
 def test_conversation_summary_is_structured_and_bounded() -> None:
@@ -55,7 +55,7 @@ def test_conversation_summary_rejects_oversized_entity_keys_and_values() -> None
 
 def test_research_outcome_contains_findings_by_evidence_reference() -> None:
     outcome = ResearchOutcome(
-        profile=ResearchProfile.WORKFLOW,
+        mode=ResearchMode.WORKFLOW,
         evidence_ids=["ev-1"],
         findings=[
             Finding(

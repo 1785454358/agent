@@ -15,8 +15,8 @@ from deeptrace.domain import (
     Finding,
     ResearchInput,
     ResearchOutcome,
-    ResearchProfile,
-    ResponseProfile,
+    ResearchMode,
+    ResponseMode,
 )
 
 
@@ -24,7 +24,7 @@ class ConversationState(TypedDict):
     thread_id: str
     messages: list[AnyMessage]
     summary: ConversationSummary
-    active_profile: ResearchProfile
+    active_mode: ResearchMode
     user_memory_refs: list[str]
     workspace_memory_refs: list[str]
     evidence_ids: list[str]
@@ -39,7 +39,7 @@ class ConversationUpdate(TypedDict, total=False):
     thread_id: str
     messages: list[AnyMessage]
     summary: ConversationSummary
-    active_profile: ResearchProfile
+    active_mode: ResearchMode
     user_memory_refs: list[str]
     workspace_memory_refs: list[str]
     evidence_ids: list[str]
@@ -55,7 +55,7 @@ _CONVERSATION_UPDATE_FIELDS = frozenset(
         "thread_id",
         "messages",
         "summary",
-        "active_profile",
+        "active_mode",
         "user_memory_refs",
         "workspace_memory_refs",
         "evidence_ids",
@@ -72,8 +72,8 @@ class TurnState(TypedDict):
     run_id: str
     user_input: str
     intent: ConversationIntent
-    selected_profile: ResearchProfile
-    response_profile: ResponseProfile
+    selected_mode: ResearchMode
+    response_mode: ResponseMode
     requires_research: bool
     research_request: ResearchInput | None
     research_outcome: ResearchOutcome | None
@@ -107,14 +107,14 @@ class HarnessState(TypedDict):
 
 
 def new_conversation(
-    thread_id: str, profile: ResearchProfile
+    thread_id: str, mode: ResearchMode
 ) -> ConversationState:
     now = datetime.now(UTC).isoformat()
     return {
         "thread_id": thread_id,
         "messages": [],
         "summary": ConversationSummary(),
-        "active_profile": profile,
+        "active_mode": mode,
         "user_memory_refs": [],
         "workspace_memory_refs": [],
         "evidence_ids": [],
@@ -126,13 +126,13 @@ def new_conversation(
     }
 
 
-def new_turn(run_id: str, user_input: str, profile: ResearchProfile) -> TurnState:
+def new_turn(run_id: str, user_input: str, mode: ResearchMode) -> TurnState:
     return {
         "run_id": run_id,
         "user_input": user_input,
         "intent": ConversationIntent.RESEARCH,
-        "selected_profile": profile,
-        "response_profile": ResponseProfile.ANSWER,
+        "selected_mode": mode,
+        "response_mode": ResponseMode.ANSWER,
         "requires_research": True,
         "research_request": None,
         "research_outcome": None,

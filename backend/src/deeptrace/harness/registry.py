@@ -5,10 +5,10 @@ from typing import Any, Protocol
 
 from langchain_core.runnables import RunnableConfig
 
-from deeptrace.domain import ResearchProfile
+from deeptrace.domain import ResearchMode
 
 
-class ProfileGraph(Protocol):
+class ResearchStrategyGraph(Protocol):
     async def ainvoke(
         self,
         input: dict[str, Any],
@@ -18,31 +18,31 @@ class ProfileGraph(Protocol):
 
 
 @dataclass(frozen=True)
-class ProfileRegistration:
-    name: ResearchProfile
-    graph: ProfileGraph
+class StrategyRegistration:
+    name: ResearchMode
+    graph: ResearchStrategyGraph
 
 
-class ProfileRegistry:
+class StrategyRegistry:
     def __init__(self) -> None:
-        self._items: dict[ResearchProfile, ProfileRegistration] = {}
+        self._items: dict[ResearchMode, StrategyRegistration] = {}
 
-    def register(self, registration: ProfileRegistration) -> None:
-        if not isinstance(registration.name, ResearchProfile):
-            raise TypeError("registration name must be a ResearchProfile")
+    def register(self, registration: StrategyRegistration) -> None:
+        if not isinstance(registration.name, ResearchMode):
+            raise TypeError("registration name must be a ResearchMode")
         if registration.name in self._items:
             raise ValueError(
-                f"profile already registered: {registration.name.value}"
+                f"mode already registered: {registration.name.value}"
             )
         self._items[registration.name] = registration
 
-    def resolve(self, name: ResearchProfile) -> ProfileRegistration:
-        if not isinstance(name, ResearchProfile):
-            raise TypeError("profile name must be a ResearchProfile")
+    def resolve(self, name: ResearchMode) -> StrategyRegistration:
+        if not isinstance(name, ResearchMode):
+            raise TypeError("mode name must be a ResearchMode")
         try:
             return self._items[name]
         except KeyError as exc:
-            raise KeyError(f"profile is not registered: {name.value}") from exc
+            raise KeyError(f"mode is not registered: {name.value}") from exc
 
-    def profiles(self) -> tuple[ResearchProfile, ...]:
+    def modes(self) -> tuple[ResearchMode, ...]:
         return tuple(self._items)

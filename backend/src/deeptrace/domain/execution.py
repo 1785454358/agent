@@ -8,31 +8,31 @@ from deeptrace.domain.conversation import ConversationSummary
 from deeptrace.domain.evidence import Finding
 
 
-class ResearchProfile(StrEnum):
+class ResearchMode(StrEnum):
     WORKFLOW = "workflow"
     PLAN_EXECUTE = "plan_execute"
     MULTI_AGENT = "multi_agent"
 
 
-_LEGACY_PROFILES = {
-    "basic": ResearchProfile.WORKFLOW,
-    "deep": ResearchProfile.PLAN_EXECUTE,
+_LEGACY_MODES = {
+    "basic": ResearchMode.WORKFLOW,
+    "deep": ResearchMode.PLAN_EXECUTE,
 }
 
 
-def normalize_research_profile(value: str | ResearchProfile) -> ResearchProfile:
-    if isinstance(value, ResearchProfile):
+def normalize_research_mode(value: str | ResearchMode) -> ResearchMode:
+    if isinstance(value, ResearchMode):
         return value
     candidate = value.strip().lower()
-    if candidate in _LEGACY_PROFILES:
-        return _LEGACY_PROFILES[candidate]
+    if candidate in _LEGACY_MODES:
+        return _LEGACY_MODES[candidate]
     try:
-        return ResearchProfile(candidate)
+        return ResearchMode(candidate)
     except ValueError as exc:
-        raise ValueError(f"unknown research profile: {value}") from exc
+        raise ValueError(f"unknown research mode: {value}") from exc
 
 
-class ResponseProfile(StrEnum):
+class ResponseMode(StrEnum):
     ANSWER = "answer"
     BRIEF = "brief"
     REPORT = "report"
@@ -43,7 +43,7 @@ class ConversationIntent(StrEnum):
     CLARIFICATION = "clarification"
     RESEARCH = "research"
     INCREMENTAL_RESEARCH = "incremental_research"
-    SWITCH_PROFILE = "switch_profile"
+    SWITCH_MODE = "switch_mode"
     REPORT_REQUEST = "report_request"
     MEMORY_UPDATE = "memory_update"
 
@@ -101,7 +101,7 @@ class ResearchInput(BaseModel):
 
 
 class ResearchOutcome(BaseModel):
-    profile: ResearchProfile
+    mode: ResearchMode
     evidence_ids: list[str] = Field(default_factory=list)
     findings: list[Finding] = Field(default_factory=list)
     unresolved_gaps: list[str] = Field(default_factory=list)

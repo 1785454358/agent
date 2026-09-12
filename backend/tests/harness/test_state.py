@@ -15,8 +15,8 @@ from deeptrace.domain import (
     Finding,
     ResearchInput,
     ResearchOutcome,
-    ResearchProfile,
-    ResponseProfile,
+    ResearchMode,
+    ResponseMode,
     ToolName,
     ToolRequest,
     ToolResult,
@@ -36,7 +36,7 @@ class _UnregisteredCheckpointModel(BaseModel):
 
 
 def test_conversation_reducer_appends_messages_and_replaces_other_fields() -> None:
-    initial = new_conversation("thread-1", ResearchProfile.WORKFLOW)
+    initial = new_conversation("thread-1", ResearchMode.WORKFLOW)
     merged = merge_conversation(
         initial,
         {
@@ -45,12 +45,12 @@ def test_conversation_reducer_appends_messages_and_replaces_other_fields() -> No
         },
     )
     assert [message.content for message in merged["messages"]] == ["继续"]
-    assert merged["active_profile"] is ResearchProfile.WORKFLOW
+    assert merged["active_mode"] is ResearchMode.WORKFLOW
     assert merged["unresolved_gaps"] == ["国内情况"]
 
 
 def test_conversation_reducer_uses_message_ids_to_replace_updates() -> None:
-    initial = new_conversation("thread-1", ResearchProfile.WORKFLOW)
+    initial = new_conversation("thread-1", ResearchMode.WORKFLOW)
     initial["messages"] = [HumanMessage(content="old", id="message-1")]
 
     merged = merge_conversation(
@@ -68,8 +68,8 @@ def test_conversation_reducer_accepts_the_first_state_graph_write() -> None:
     builder.add_edge("noop", END)
     graph = builder.compile()
     initial = {
-        "conversation": new_conversation("thread-1", ResearchProfile.WORKFLOW),
-        "turn": new_turn("run-1", "研究 Harness", ResearchProfile.WORKFLOW),
+        "conversation": new_conversation("thread-1", ResearchMode.WORKFLOW),
+        "turn": new_turn("run-1", "研究 Harness", ResearchMode.WORKFLOW),
     }
 
     result = graph.invoke(initial)
@@ -78,24 +78,24 @@ def test_conversation_reducer_accepts_the_first_state_graph_write() -> None:
 
 
 def test_conversation_reducer_rejects_unknown_update_fields() -> None:
-    initial = new_conversation("thread-1", ResearchProfile.WORKFLOW)
+    initial = new_conversation("thread-1", ResearchMode.WORKFLOW)
 
     with pytest.raises(ValueError, match="unknown conversation fields"):
         merge_conversation(initial, {"unexpected": "value"})
 
 
 def test_new_turn_does_not_carry_previous_ephemeral_values() -> None:
-    turn = new_turn("run-2", "继续研究", ResearchProfile.PLAN_EXECUTE)
+    turn = new_turn("run-2", "继续研究", ResearchMode.PLAN_EXECUTE)
     assert turn["status"] is ExecutionStatus.PENDING
-    assert turn["response_profile"] is ResponseProfile.ANSWER
+    assert turn["response_mode"] is ResponseMode.ANSWER
     assert turn["research_outcome"] is None
     assert turn["recalled_memory_ids"] == []
 
 
 def test_new_state_is_checkpoint_serializable() -> None:
     state = {
-        "conversation": new_conversation("thread-1", ResearchProfile.MULTI_AGENT),
-        "turn": new_turn("run-1", "研究 Harness", ResearchProfile.MULTI_AGENT),
+        "conversation": new_conversation("thread-1", ResearchMode.MULTI_AGENT),
+        "turn": new_turn("run-1", "研究 Harness", ResearchMode.MULTI_AGENT),
     }
     state["conversation"]["messages"] = [HumanMessage(content="继续")]
     finding = Finding(
@@ -115,7 +115,7 @@ def test_new_state_is_checkpoint_serializable() -> None:
         timezone="Asia/Shanghai",
     )
     state["turn"]["research_outcome"] = ResearchOutcome(
-        profile=ResearchProfile.MULTI_AGENT,
+        mode=ResearchMode.MULTI_AGENT,
         evidence_ids=["evidence-1"],
         findings=[finding],
         unresolved_gaps=[],

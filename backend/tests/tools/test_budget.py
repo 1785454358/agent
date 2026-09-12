@@ -5,7 +5,7 @@ import asyncio
 import pytest
 from pydantic import ValidationError
 
-from deeptrace.domain.execution import BudgetSnapshot, ResearchProfile
+from deeptrace.domain.execution import BudgetSnapshot, ResearchMode
 from deeptrace.tools.budget import (
     BudgetScopeKey,
     BudgetUnits,
@@ -15,16 +15,16 @@ from deeptrace.tools.budget import (
 
 def _scope_limits() -> dict[BudgetScopeKey, BudgetUnits]:
     run = BudgetScopeKey.for_run("run-1")
-    workflow = BudgetScopeKey.for_profile("run-1", ResearchProfile.WORKFLOW)
+    workflow = BudgetScopeKey.for_mode("run-1", ResearchMode.WORKFLOW)
     researcher_a = BudgetScopeKey.for_agent(
-        "run-1", ResearchProfile.WORKFLOW, "researcher-a"
+        "run-1", ResearchMode.WORKFLOW, "researcher-a"
     )
     researcher_b = BudgetScopeKey.for_agent(
-        "run-1", ResearchProfile.WORKFLOW, "researcher-b"
+        "run-1", ResearchMode.WORKFLOW, "researcher-b"
     )
-    planner = BudgetScopeKey.for_profile("run-1", ResearchProfile.PLAN_EXECUTE)
+    planner = BudgetScopeKey.for_mode("run-1", ResearchMode.PLAN_EXECUTE)
     executor = BudgetScopeKey.for_agent(
-        "run-1", ResearchProfile.PLAN_EXECUTE, "executor"
+        "run-1", ResearchMode.PLAN_EXECUTE, "executor"
     )
     return {
         researcher_b: BudgetUnits(tool_calls=4),
@@ -36,26 +36,26 @@ def _scope_limits() -> dict[BudgetScopeKey, BudgetUnits]:
     }
 
 
-def test_scope_keys_require_canonical_profiles_and_valid_hierarchy() -> None:
+def test_scope_keys_require_canonical_modes_and_valid_hierarchy() -> None:
     with pytest.raises(ValidationError):
-        BudgetScopeKey.for_profile("run-1", "workflow")  # type: ignore[arg-type]
+        BudgetScopeKey.for_mode("run-1", "workflow")  # type: ignore[arg-type]
     with pytest.raises(ValidationError):
         BudgetScopeKey(run_id="run-1", agent_id="researcher-a")
     with pytest.raises(ValidationError):
-        BudgetScopeKey(run_id="run-1", profile=ResearchProfile.WORKFLOW, agent_id="")
+        BudgetScopeKey(run_id="run-1", mode=ResearchMode.WORKFLOW, agent_id="")
 
 
 @pytest.mark.asyncio
 async def test_concurrent_reservations_respect_child_and_ancestor_ceilings() -> None:
     manager = InMemoryBudgetManager(_scope_limits())
     researcher_a = BudgetScopeKey.for_agent(
-        "run-1", ResearchProfile.WORKFLOW, "researcher-a"
+        "run-1", ResearchMode.WORKFLOW, "researcher-a"
     )
     researcher_b = BudgetScopeKey.for_agent(
-        "run-1", ResearchProfile.WORKFLOW, "researcher-b"
+        "run-1", ResearchMode.WORKFLOW, "researcher-b"
     )
     executor = BudgetScopeKey.for_agent(
-        "run-1", ResearchProfile.PLAN_EXECUTE, "executor"
+        "run-1", ResearchMode.PLAN_EXECUTE, "executor"
     )
 
     a_results = await asyncio.gather(
@@ -75,29 +75,29 @@ async def test_concurrent_reservations_respect_child_and_ancestor_ceilings() -> 
     snapshot = await manager.snapshot()
     assert snapshot.for_scope(BudgetScopeKey.for_run("run-1")).reserved.tool_calls == 6
     assert snapshot.for_scope(
-        BudgetScopeKey.for_profile("run-1", ResearchProfile.WORKFLOW)
+        BudgetScopeKey.for_mode("run-1", ResearchMode.WORKFLOW)
     ).reserved.tool_calls == 5
     assert snapshot.for_scope(researcher_a).reserved.tool_calls == 4
     assert snapshot.for_scope(researcher_b).reserved.tool_calls == 1
 
 
 @pytest.mark.asyncio
-async def test_sibling_agents_and_profiles_race_shared_ancestors_atomically() -> None:
+async def test_sibling_agents_and_modes_race_shared_ancestors_atomically() -> None:
     run = BudgetScopeKey.for_run("run-race")
-    profiles = (
-        ResearchProfile.WORKFLOW,
-        ResearchProfile.PLAN_EXECUTE,
+    modes = (
+        ResearchMode.WORKFLOW,
+        ResearchMode.PLAN_EXECUTE,
     )
     agents = tuple(
-        BudgetScopeKey.for_agent("run-race", profile, agent_id)
-        for profile in profiles
+        BudgetScopeKey.for_agent("run-race", mode, agent_id)
+        for mode in modes
         for agent_id in ("agent-a", "agent-b")
     )
     limits: dict[BudgetScopeKey, BudgetUnits] = {
         run: BudgetUnits(network_requests=5)
     }
-    for profile in profiles:
-        limits[BudgetScopeKey.for_profile("run-race", profile)] = BudgetUnits(
+    for mode in modes:
+        limits[BudgetScopeKey.for_mode("run-race", mode)] = BudgetUnits(
             network_requests=3
         )
     for agent in agents:
@@ -122,39 +122,39 @@ async def test_sibling_agents_and_profiles_race_shared_ancestors_atomically() ->
     assert len(accepted) == 5
     snapshot = await manager.snapshot()
     assert snapshot.for_scope(run).reserved.network_requests == 5
-    profile_totals: list[int] = []
-    for profile in profiles:
-        profile_scope = BudgetScopeKey.for_profile("run-race", profile)
-        profile_receipts = [
-            receipt for receipt in accepted if receipt.scope.profile is profile
+    mode_totals: list[int] = []
+    for mode in modes:
+        mode_scope = BudgetScopeKey.for_mode("run-race", mode)
+        mode_receipts = [
+            receipt for receipt in accepted if receipt.scope.mode is mode
         ]
-        profile_total = len(profile_receipts)
-        profile_totals.append(profile_total)
-        assert profile_total <= 3
+        mode_total = len(mode_receipts)
+        mode_totals.append(mode_total)
+        assert mode_total <= 3
         assert (
-            snapshot.for_scope(profile_scope).reserved.network_requests
-            == profile_total
+            snapshot.for_scope(mode_scope).reserved.network_requests
+            == mode_total
         )
         agent_total = sum(
             snapshot.for_scope(agent).reserved.network_requests
             for agent in agents
-            if agent.profile is profile
+            if agent.mode is mode
         )
-        assert agent_total == profile_total
-    assert sorted(profile_totals) == [2, 3]
+        assert agent_total == mode_total
+    assert sorted(mode_totals) == [2, 3]
 
 
 @pytest.mark.asyncio
 async def test_rejected_reservation_does_not_change_any_scope_counter() -> None:
     run = BudgetScopeKey.for_run("run-1")
-    profile = BudgetScopeKey.for_profile("run-1", ResearchProfile.WORKFLOW)
+    mode = BudgetScopeKey.for_mode("run-1", ResearchMode.WORKFLOW)
     agent = BudgetScopeKey.for_agent(
-        "run-1", ResearchProfile.WORKFLOW, "researcher"
+        "run-1", ResearchMode.WORKFLOW, "researcher"
     )
     manager = InMemoryBudgetManager(
         {
             run: BudgetUnits(network_requests=1),
-            profile: BudgetUnits(network_requests=1),
+            mode: BudgetUnits(network_requests=1),
             agent: BudgetUnits(network_requests=1),
         }
     )
@@ -163,7 +163,7 @@ async def test_rejected_reservation_does_not_change_any_scope_counter() -> None:
 
     assert rejected is None
     snapshot = await manager.snapshot()
-    for scope in (run, profile, agent):
+    for scope in (run, mode, agent):
         item = snapshot.for_scope(scope)
         assert item.used == BudgetUnits()
         assert item.reserved == BudgetUnits()
@@ -172,12 +172,12 @@ async def test_rejected_reservation_does_not_change_any_scope_counter() -> None:
 @pytest.mark.asyncio
 async def test_commit_charges_actual_attempt_and_releases_unused_pages() -> None:
     run = BudgetScopeKey.for_run("run-1")
-    profile = BudgetScopeKey.for_profile("run-1", ResearchProfile.WORKFLOW)
+    mode = BudgetScopeKey.for_mode("run-1", ResearchMode.WORKFLOW)
     agent = BudgetScopeKey.for_agent(
-        "run-1", ResearchProfile.WORKFLOW, "researcher"
+        "run-1", ResearchMode.WORKFLOW, "researcher"
     )
     limit = BudgetUnits(tool_calls=3, network_requests=3, fetched_pages=5)
-    manager = InMemoryBudgetManager({run: limit, profile: limit, agent: limit})
+    manager = InMemoryBudgetManager({run: limit, mode: limit, agent: limit})
     reservation = await manager.reserve(
         agent,
         BudgetUnits(tool_calls=1, network_requests=1, fetched_pages=3),
@@ -191,7 +191,7 @@ async def test_commit_charges_actual_attempt_and_releases_unused_pages() -> None
 
     assert changed is True
     snapshot = await manager.snapshot()
-    for scope in (run, profile, agent):
+    for scope in (run, mode, agent):
         item = snapshot.for_scope(scope)
         assert item.used == BudgetUnits(
             tool_calls=1, network_requests=1, fetched_pages=1
@@ -287,11 +287,11 @@ async def test_snapshot_order_is_deterministic_and_contains_only_contract_data()
 async def test_snapshot_order_does_not_depend_on_ambiguous_display_paths() -> None:
     nested_run = BudgetScopeKey.for_run("shared/workflow")
     root_run = BudgetScopeKey.for_run("shared")
-    profile = BudgetScopeKey.for_profile("shared", ResearchProfile.WORKFLOW)
+    mode = BudgetScopeKey.for_mode("shared", ResearchMode.WORKFLOW)
     limits = {
         nested_run: BudgetUnits(tool_calls=1),
         root_run: BudgetUnits(tool_calls=1),
-        profile: BudgetUnits(tool_calls=1),
+        mode: BudgetUnits(tool_calls=1),
     }
     forward = InMemoryBudgetManager(limits)
     reverse = InMemoryBudgetManager(dict(reversed(tuple(limits.items()))))

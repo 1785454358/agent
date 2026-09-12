@@ -7,7 +7,7 @@ from enum import StrEnum
 from typing import Any, Mapping, Protocol
 from urllib.parse import urlsplit, urlunsplit
 
-from deeptrace.domain import ResearchProfile, ResponseProfile, ToolName
+from deeptrace.domain import ResearchMode, ResponseMode, ToolName
 from deeptrace.tools.contracts import ToolCapability, ToolSpec
 from deeptrace.tools.registry import ToolRegistry
 from deeptrace.tools.scraper.urls import normalize_url_before_fetch, validate_public_url
@@ -27,11 +27,11 @@ class CallerRole(StrEnum):
     MEMORY_CONSOLIDATION = "memory_consolidation"
 
 
-_ROLE_PROFILES: dict[CallerRole, ResearchProfile] = {
-    CallerRole.WORKFLOW_GRAPH: ResearchProfile.WORKFLOW,
-    CallerRole.PLAN_EXECUTE_EXECUTOR: ResearchProfile.PLAN_EXECUTE,
-    CallerRole.MULTI_AGENT_RESEARCHER: ResearchProfile.MULTI_AGENT,
-    CallerRole.MULTI_AGENT_SUPERVISOR: ResearchProfile.MULTI_AGENT,
+_ROLE_MODES: dict[CallerRole, ResearchMode] = {
+    CallerRole.WORKFLOW_GRAPH: ResearchMode.WORKFLOW,
+    CallerRole.PLAN_EXECUTE_EXECUTOR: ResearchMode.PLAN_EXECUTE,
+    CallerRole.MULTI_AGENT_RESEARCHER: ResearchMode.MULTI_AGENT,
+    CallerRole.MULTI_AGENT_SUPERVISOR: ResearchMode.MULTI_AGENT,
 }
 
 
@@ -39,8 +39,8 @@ _ROLE_PROFILES: dict[CallerRole, ResearchProfile] = {
 class ToolCaller:
     caller_id: str
     role: CallerRole
-    profile: ResearchProfile | None = None
-    response_profile: ResponseProfile | None = None
+    mode: ResearchMode | None = None
+    response_mode: ResponseMode | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.caller_id, str) or not self.caller_id.strip():
@@ -49,25 +49,25 @@ class ToolCaller:
             raise ValueError(f"caller_id exceeds {MAX_CALLER_ID_LENGTH} characters")
         if not isinstance(self.role, CallerRole):
             raise TypeError("role must be a CallerRole")
-        if self.profile is not None and not isinstance(self.profile, ResearchProfile):
-            raise TypeError("profile must be a ResearchProfile")
-        if self.response_profile is not None and not isinstance(
-            self.response_profile, ResponseProfile
+        if self.mode is not None and not isinstance(self.mode, ResearchMode):
+            raise TypeError("mode must be a ResearchMode")
+        if self.response_mode is not None and not isinstance(
+            self.response_mode, ResponseMode
         ):
-            raise TypeError("response_profile must be a ResponseProfile")
+            raise TypeError("response_mode must be a ResponseMode")
 
-        required_profile = _ROLE_PROFILES.get(self.role)
-        if required_profile is not None and self.profile is not required_profile:
-            raise ValueError(f"{self.role.value} requires profile {required_profile.value}")
+        required_mode = _ROLE_MODES.get(self.role)
+        if required_mode is not None and self.mode is not required_mode:
+            raise ValueError(f"{self.role.value} requires mode {required_mode.value}")
         if self.role is CallerRole.RESPONSE_GRAPH:
-            if self.profile is None:
-                raise ValueError("response_graph requires a research profile")
-            if self.response_profile is None:
-                raise ValueError("response_graph requires a response_profile")
-        elif self.response_profile is not None:
-            raise ValueError(f"{self.role.value} cannot set response_profile")
-        if self.role is CallerRole.MEMORY_CONSOLIDATION and self.profile is not None:
-            raise ValueError("memory_consolidation cannot set a research profile")
+            if self.mode is None:
+                raise ValueError("response_graph requires a research mode")
+            if self.response_mode is None:
+                raise ValueError("response_graph requires a response_mode")
+        elif self.response_mode is not None:
+            raise ValueError(f"{self.role.value} cannot set response_mode")
+        if self.role is CallerRole.MEMORY_CONSOLIDATION and self.mode is not None:
+            raise ValueError("memory_consolidation cannot set a research mode")
 
 
 class ToolAllowlistPolicy(Protocol):

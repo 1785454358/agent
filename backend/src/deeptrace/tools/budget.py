@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from deeptrace.domain.execution import BudgetSnapshot, ResearchProfile
+from deeptrace.domain.execution import BudgetSnapshot, ResearchMode
 
 
 class BudgetUnits(BaseModel):
@@ -70,18 +70,18 @@ class BudgetUnits(BaseModel):
 
 
 class BudgetScopeKey(BaseModel):
-    """Serializable identity for a Run, Profile, or Agent budget scope."""
+    """Serializable identity for a Run, Mode, or Agent budget scope."""
 
     model_config = ConfigDict(frozen=True, strict=True)
 
     run_id: str = Field(min_length=1)
-    profile: ResearchProfile | None = None
+    mode: ResearchMode | None = None
     agent_id: str | None = Field(default=None, min_length=1)
 
     @model_validator(mode="after")
     def validate_hierarchy(self) -> BudgetScopeKey:
-        if self.agent_id is not None and self.profile is None:
-            raise ValueError("agent scope requires a profile")
+        if self.agent_id is not None and self.mode is None:
+            raise ValueError("agent scope requires a mode")
         return self
 
     @classmethod
@@ -89,36 +89,36 @@ class BudgetScopeKey(BaseModel):
         return cls(run_id=run_id)
 
     @classmethod
-    def for_profile(
-        cls, run_id: str, profile: ResearchProfile
+    def for_mode(
+        cls, run_id: str, mode: ResearchMode
     ) -> BudgetScopeKey:
-        return cls(run_id=run_id, profile=profile)
+        return cls(run_id=run_id, mode=mode)
 
     @classmethod
     def for_agent(
         cls,
         run_id: str,
-        profile: ResearchProfile,
+        mode: ResearchMode,
         agent_id: str,
     ) -> BudgetScopeKey:
-        return cls(run_id=run_id, profile=profile, agent_id=agent_id)
+        return cls(run_id=run_id, mode=mode, agent_id=agent_id)
 
     @property
     def path(self) -> str:
         parts = [self.run_id]
-        if self.profile is not None:
-            parts.append(self.profile.value)
+        if self.mode is not None:
+            parts.append(self.mode.value)
         if self.agent_id is not None:
             parts.append(self.agent_id)
         return "/".join(parts)
 
     def lineage(self) -> tuple[BudgetScopeKey, ...]:
         scopes = [type(self).for_run(self.run_id)]
-        if self.profile is not None:
-            scopes.append(type(self).for_profile(self.run_id, self.profile))
+        if self.mode is not None:
+            scopes.append(type(self).for_mode(self.run_id, self.mode))
         if self.agent_id is not None:
             scopes.append(
-                type(self).for_agent(self.run_id, self.profile, self.agent_id)
+                type(self).for_agent(self.run_id, self.mode, self.agent_id)
             )
         return tuple(scopes)
 
@@ -269,7 +269,7 @@ class InMemoryBudgetManager:
                         self._limits,
                         key=lambda item: (
                             item.run_id,
-                            item.profile.value if item.profile is not None else "",
+                            item.mode.value if item.mode is not None else "",
                             item.agent_id or "",
                         ),
                     )

@@ -6,7 +6,7 @@ from typing import ClassVar
 import pytest
 from pydantic import BaseModel, Field, model_validator
 
-from deeptrace.domain import ResearchProfile, ResponseProfile, ToolName
+from deeptrace.domain import ResearchMode, ResponseMode, ToolName
 from deeptrace.tools.contracts import CachePolicy, ToolCapability, ToolSpec
 from deeptrace.tools.policy import (
     CallerRole,
@@ -48,14 +48,14 @@ def _spec(name: ToolName, capability: ToolCapability) -> ToolSpec:
 
 def _caller(
     role: CallerRole,
-    profile: ResearchProfile | None = None,
-    response_profile: ResponseProfile | None = None,
+    mode: ResearchMode | None = None,
+    response_mode: ResponseMode | None = None,
 ) -> ToolCaller:
     return ToolCaller(
         caller_id=f"caller-{role.value}",
         role=role,
-        profile=profile,
-        response_profile=response_profile,
+        mode=mode,
+        response_mode=response_mode,
     )
 
 
@@ -76,10 +76,10 @@ def registry() -> ToolRegistry:
 @pytest.mark.parametrize(
     ("caller", "tool"),
     [
-        (_caller(CallerRole.WORKFLOW_GRAPH, ResearchProfile.WORKFLOW), ToolName.SEARCH_WEB),
-        (_caller(CallerRole.WORKFLOW_GRAPH, ResearchProfile.WORKFLOW), ToolName.FETCH_PAGE),
-        (_caller(CallerRole.PLAN_EXECUTE_EXECUTOR, ResearchProfile.PLAN_EXECUTE), ToolName.SEARCH_MEMORY),
-        (_caller(CallerRole.MULTI_AGENT_RESEARCHER, ResearchProfile.MULTI_AGENT), ToolName.SEARCH_WEB),
+        (_caller(CallerRole.WORKFLOW_GRAPH, ResearchMode.WORKFLOW), ToolName.SEARCH_WEB),
+        (_caller(CallerRole.WORKFLOW_GRAPH, ResearchMode.WORKFLOW), ToolName.FETCH_PAGE),
+        (_caller(CallerRole.PLAN_EXECUTE_EXECUTOR, ResearchMode.PLAN_EXECUTE), ToolName.SEARCH_MEMORY),
+        (_caller(CallerRole.MULTI_AGENT_RESEARCHER, ResearchMode.MULTI_AGENT), ToolName.SEARCH_WEB),
     ],
 )
 def test_allowlist_resolves_research_tools_for_authorized_callers(
@@ -93,11 +93,11 @@ def test_allowlist_resolves_research_tools_for_authorized_callers(
 @pytest.mark.parametrize(
     "caller",
     [
-        _caller(CallerRole.MULTI_AGENT_SUPERVISOR, ResearchProfile.MULTI_AGENT),
+        _caller(CallerRole.MULTI_AGENT_SUPERVISOR, ResearchMode.MULTI_AGENT),
         _caller(
             CallerRole.RESPONSE_GRAPH,
-            ResearchProfile.WORKFLOW,
-            ResponseProfile.ANSWER,
+            ResearchMode.WORKFLOW,
+            ResponseMode.ANSWER,
         ),
     ],
 )
@@ -114,7 +114,7 @@ def test_disallowed_callers_fail_before_argument_validation(
 
 def test_unknown_tool_fails_before_argument_validation(registry: ToolRegistry) -> None:
     policy = StaticToolAllowlist()
-    caller = _caller(CallerRole.WORKFLOW_GRAPH, ResearchProfile.WORKFLOW)
+    caller = _caller(CallerRole.WORKFLOW_GRAPH, ResearchMode.WORKFLOW)
 
     with pytest.raises(KeyError, match="tool is not registered"):
         policy.resolve(ToolRegistry(), caller, ToolName.SEARCH_MEMORY)
@@ -123,27 +123,27 @@ def test_unknown_tool_fails_before_argument_validation(registry: ToolRegistry) -
 
 
 @pytest.mark.parametrize(
-    ("role", "profile", "response_profile", "message"),
+    ("role", "mode", "response_mode", "message"),
     [
-        ("workflow_graph", ResearchProfile.WORKFLOW, None, "role must be a CallerRole"),
-        (CallerRole.WORKFLOW_GRAPH, "workflow", None, "profile must be a ResearchProfile"),
-        (CallerRole.WORKFLOW_GRAPH, ResearchProfile.PLAN_EXECUTE, None, "requires profile workflow"),
-        (CallerRole.RESPONSE_GRAPH, ResearchProfile.WORKFLOW, None, "requires a response_profile"),
-        (CallerRole.MULTI_AGENT_SUPERVISOR, ResearchProfile.MULTI_AGENT, ResponseProfile.ANSWER, "cannot set response_profile"),
+        ("workflow_graph", ResearchMode.WORKFLOW, None, "role must be a CallerRole"),
+        (CallerRole.WORKFLOW_GRAPH, "workflow", None, "mode must be a ResearchMode"),
+        (CallerRole.WORKFLOW_GRAPH, ResearchMode.PLAN_EXECUTE, None, "requires mode workflow"),
+        (CallerRole.RESPONSE_GRAPH, ResearchMode.WORKFLOW, None, "requires a response_mode"),
+        (CallerRole.MULTI_AGENT_SUPERVISOR, ResearchMode.MULTI_AGENT, ResponseMode.ANSWER, "cannot set response_mode"),
     ],
 )
 def test_caller_identity_rejects_inconsistent_or_raw_enums(
     role: object,
-    profile: object,
-    response_profile: object,
+    mode: object,
+    response_mode: object,
     message: str,
 ) -> None:
     with pytest.raises((TypeError, ValueError), match=message):
         ToolCaller(
             caller_id="caller-1",
             role=role,  # type: ignore[arg-type]
-            profile=profile,  # type: ignore[arg-type]
-            response_profile=response_profile,  # type: ignore[arg-type]
+            mode=mode,  # type: ignore[arg-type]
+            response_mode=response_mode,  # type: ignore[arg-type]
         )
 
 
