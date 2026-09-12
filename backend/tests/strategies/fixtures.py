@@ -126,6 +126,7 @@ def build_gateway_fixture(
     search_fail: bool = False,
     pages: dict[str, str] | None = None,
     fetch_failures: dict[str, str] | None = None,
+    model_gateway: Any | None = None,
 ) -> GatewayFixture:
     search = ScriptedSearch(
         results_by_query=search_results,
@@ -156,7 +157,7 @@ def build_gateway_fixture(
     context = HarnessContext(
         user_id="user-1",
         workspace_id=TENANT_ID,
-        model_gateway=NoopModelGateway(),
+        model_gateway=model_gateway or NoopModelGateway(),
         tool_gateway=gateway,
         evidence_store=evidence_store,
         event_sink=events,
