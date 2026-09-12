@@ -87,11 +87,10 @@ uv run python bench_deep.py --output runs/deep-smoke.json
 ## 实现与验证
 
 - [后端配置与 API](backend/README.md)
-- [Deep 架构设计](docs/superpowers/specs/2026-09-05-deep-research-design.md)
-- [Supervisor Multi-Agent 架构设计](docs/superpowers/specs/2026-09-06-supervisor-multi-agent-design.md)
-- [MySQL、Redis 与异步 Worker 设计](docs/superpowers/specs/2026-09-07-mysql-redis-worker-design.md)
+- [Agent Harness 总体设计](docs/superpowers/specs/2026-09-10-langgraph-agent-harness-refactor-design.md)
+- [Agent Harness 交付路线图](docs/superpowers/plans/2026-09-10-langgraph-agent-harness-roadmap.md)
+- [当前阶段实施计划](docs/superpowers/plans/2026-09-12-workflow-response-vertical-slice.md)
 - [文档索引](docs/README.md)
 
-当前已实现单 Agent 的规划、执行和重规划循环。模式不涉及模型训练或内部
-推理展示；事件展示的是可核对的计划、工具选择和结果。研究质量仍取决于
-来源与模型判断，复杂问题的质量/成本对照评测尚待建立。
+项目正按路线图迁移到统一 Agent Harness。旧 Basic、Deep 和 Multi-Agent
+执行路径在对应策略子图完成前仍保持可运行，但不再作为目标架构文档。

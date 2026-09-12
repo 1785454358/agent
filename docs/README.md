@@ -1,21 +1,34 @@
-# ResearchPilot 文档
+# ResearchPilot 文档索引
 
-项目提供三个平级研究模式。Basic 是参考 GPT-Researcher 的快速工作流；Deep 采用单 Agent Plan-and-Execute、ReAct 和动态重规划；Multi-Agent 采用 LangGraph Supervisor Plan-and-Execute、隔离的 ReAct Researcher 和反馈驱动的定向补查。
+项目正在重构为基于 LangGraph 的模块化 Research Agent Harness。当前只保留仍然约束目标架构、后续实施或求职讲解的文档。
 
-当前有效文档：
+## Harness 重构必需文档
 
-- [默认 Basic 研究模式设计](superpowers/specs/2026-09-04-gpt-researcher-basic-flow-design.md)
-- [Deep 研究模式设计](superpowers/specs/2026-09-05-deep-research-design.md)
-- [Deep 实施与验证计划](superpowers/plans/2026-09-05-deep-research.md)
-- [Deep 首版验证记录](2026-09-05-deep-verification.md)
-- [LangGraph Supervisor Plan-and-Execute 设计](superpowers/specs/2026-09-06-langgraph-supervisor-plan-execute-design.md)
-- [LangGraph Supervisor Plan-and-Execute 实施计划](superpowers/plans/2026-09-06-langgraph-supervisor-plan-execute.md)
-- [Supervisor Multi-Agent 首版验证记录](2026-09-06-supervisor-multi-agent-verification.md)
-- [报告格式设计](../backend/docs/superpowers/specs/2026-09-05-report-format-and-run-summary-design.md)
-- [报告格式实施计划](../backend/docs/superpowers/plans/2026-09-05-report-format-and-run-summary.md)
-- [真实问题与修复记录](q.md)
-- [后端运行说明](../backend/README.md)
+建议按以下顺序阅读：
 
-旧阶段文档已经删除。`ResearchNote`、Evidence、Claim、Verifier 及旧覆盖率闭环不再属于目标架构。Deep 新增的是独立的规划与 ReAct 执行控制状态，并未恢复这些中间证据实体。
+1. [Harness 总体设计](superpowers/specs/2026-09-10-langgraph-agent-harness-refactor-design.md)
+   定义 Harness、LangGraph、顶层运行图、策略子图、State、Memory、Tool Gateway、Checkpoint 与三种研究模式的职责边界，是重构的唯一总体规格。
+2. [Harness 交付路线图](superpowers/plans/2026-09-10-langgraph-agent-harness-roadmap.md)
+   将完整重构拆成八个阶段，并定义各阶段的退出条件。
+3. [阶段 1：Harness Foundation](superpowers/plans/2026-09-10-agent-harness-foundation.md)
+   记录领域契约、Harness State、Runtime Context、Strategy Registry 和顶层运行图骨架的实现要求。该阶段已完成，保留用于解释基础契约。
+4. [阶段 2：Tool Gateway 与 Evidence Store](superpowers/plans/2026-09-10-tool-gateway-evidence-store.md)
+   记录统一工具管道、权限、安全、预算、幂等、缓存、Singleflight 和 Evidence 所有权。该阶段已完成，后续策略子图必须遵守这些契约。
+5. [阶段 3：Workflow 与 Response 纵向切片](superpowers/plans/2026-09-12-workflow-response-vertical-slice.md)
+   当前实施计划，覆盖 ResearchTopicGraph、Workflow 策略子图、Answer/Brief/Report 子图、引用校验和 Application Service 接入。
 
-Basic、Deep、Multi-Agent 使用独立流程模块，只共享 Writer、数据模型、观测、工具、上下文、记忆和配置等基础能力。文档和示例不得包含真实 API Key。
+阶段 4 至阶段 8 在开始实施时，依据总体设计和路线图分别创建新的详细计划。不要复用已经删除的 Basic、Deep 或旧 Supervisor 方案作为新架构规格。
+
+## 求职与面试材料
+
+- [简历项目材料](resume/researchpilot-project-experience.md)
+- [Harness 面试与学习指南](resume/researchpilot-harness-interview-guide.md)
+
+这两份文档描述项目最终形态。具体功能在代码和阶段退出测试完成前，不应当作已经交付的事实。
+
+## 运行说明
+
+- [项目入口与本地运行](../README.md)
+- [后端配置、API 与分布式运行](../backend/README.md)
+
+文档和示例不得包含真实 API Key、Cookie、访问令牌或其他凭据。
