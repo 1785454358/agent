@@ -145,3 +145,116 @@ async def test_local_runtime_rejects_blank_question(tmp_path) -> None:
 
     with pytest.raises(ValueError, match="问题不能为空"):
         await runtime.create("   ", "basic")
+
+
+def test_run_record_normalizes_legacy_modes_on_read() -> None:
+    from datetime import UTC, datetime
+
+    from deeptrace.runtime.models import RunRecord
+
+    record = RunRecord.model_validate(
+        {
+            "id": "run-1",
+            "question": "问题",
+            "mode": "basic",
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+    )
+    assert record.mode == "workflow"
+    record = RunRecord.model_validate(
+        {
+            "id": "run-2",
+            "question": "问题",
+            "mode": "deep",
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+    )
+    assert record.mode == "plan_execute"
+    with pytest.raises(ValueError):
+        RunRecord.model_validate(
+            {
+                "id": "run-3",
+                "question": "问题",
+                "mode": "agent",
+                "created_at": datetime.now(UTC).isoformat(),
+            }
+        )
+
+
+@pytest.mark.asyncio
+async def test_local_runtime_runs_through_application_service(tmp_path) -> None:
+    from datetime import UTC, datetime
+
+    from deeptrace.application.research import ApplicationResearchRequest
+    from deeptrace.domain import ResponseMode
+
+    class FakeOutcome:
+        response_mode = ResponseMode.ANSWER
+        content = "简洁回答 [1]"
+        partial_reason = None
+        cited_evidence_ids = ["evidence-1"]
+
+    class FakeEvidence:
+        canonical_url = "https://example.com/a"
+
+    class FakeEvidenceStore:
+        async def get_many(self, tenant_id, ids):
+            return [FakeEvidence() for _ in ids]
+
+    class FakeContext:
+        workspace_id = "workspace-1"
+        evidence_store = FakeEvidenceStore()
+
+    class FakeApplication:
+        def __init__(self) -> None:
+            self.requests = []
+
+        async def invoke(self, request, *, config, context):
+            self.requests.append((request, config, context))
+            return FakeOutcome()
+
+    application = FakeApplication()
+    runtime = LocalResearchRuntime(
+        object(),
+        tmp_path,
+        agent_factory=lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("legacy path must not run")
+        ),
+        application=application,
+        context_factory=FakeContext,
+    )
+    await runtime.start()
+
+    created = await runtime.create("研究问题", "workflow")
+    completed = await wait_for_terminal(runtime, created.id)
+
+    assert completed.status == "completed"
+    assert completed.termination_reason == "completed"
+    assert completed.answer == "简洁回答 [1]"
+    assert completed.sources == ["https://example.com/a"]
+    request, config, context = application.requests[0]
+    assert isinstance(request, ApplicationResearchRequest)
+    assert request.run_id == created.id
+    assert request.thread_id == created.id
+    assert request.mode == "workflow"
+    assert config["configurable"]["thread_id"] == created.id
+    await runtime.stop()
+
+
+@pytest.mark.asyncio
+async def test_local_runtime_maps_canonical_mode_for_legacy_factory(tmp_path) -> None:
+    seen_modes = []
+
+    def factory(settings, on_event=None, mode="basic"):
+        seen_modes.append(mode)
+        return FakeAgent(on_event)
+
+    runtime = LocalResearchRuntime(object(), tmp_path, factory)
+    await runtime.start()
+    run = await runtime.create("研究问题", "plan_execute")
+    await wait_for_terminal(runtime, run.id)
+
+    assert seen_modes == ["deep"]
+    persisted = json.loads((tmp_path / f"{run.id}.json").read_text("utf-8"))
+    assert persisted["mode"] == "plan_execute"
+    await runtime.stop()

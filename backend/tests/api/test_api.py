@@ -112,7 +112,7 @@ def test_api_delegates_creation_to_injected_runtime() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"id": "run-1", "status": "pending"}
-    assert runtime.created == [("研究问题", "deep")]
+    assert runtime.created == [("研究问题", "plan_execute")]
     assert runtime.started is True
     assert runtime.stopped is True
 
@@ -153,13 +153,13 @@ def test_api_routes_deep_mode_and_persists_selection(tmp_path):
             if data["status"] == "completed":
                 break
             asyncio.run(asyncio.sleep(0.01))
-        assert data["mode"] == "deep"
+        assert data["mode"] == "plan_execute"
         assert selected == ["deep"]
         assert (
             json.loads((tmp_path / f"{run_id}.json").read_text(encoding="utf-8"))[
                 "mode"
             ]
-            == "deep"
+            == "plan_execute"
         )
         assert (
             client.post(
@@ -192,3 +192,23 @@ def test_agent_construction_failure_is_terminal_and_persisted(tmp_path):
         assert (tmp_path / f"{run_id}.json").exists()
         assert "secret-test-key" not in json.dumps(data)
         assert "secret-test-key" not in (tmp_path / f"{run_id}.json").read_text(encoding="utf-8")
+
+
+def test_legacy_basic_record_reads_back_as_workflow(tmp_path) -> None:
+    from fastapi.testclient import TestClient
+
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir(parents=True)
+    runtime = LocalResearchRuntime(
+        SimpleNamespace(),
+        runs_dir,
+        lambda settings, on_event=None, mode="basic": FakeAgent(on_event),
+    )
+    client = TestClient(create_app(settings=SimpleNamespace(), runtime=runtime))
+
+    created = client.post(
+        "/researches", json={"question": "旧问题", "mode": "basic"}
+    ).json()["id"]
+    data = client.get(f"/researches/{created}").json()
+
+    assert data["mode"] == "workflow"

@@ -4,12 +4,22 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from deeptrace import build_real_agent
+from deeptrace.application.research import ApplicationResearchRequest
 from deeptrace.models import AgentResult, RunEvent
 from deeptrace.runtime.models import RunMode, RunRecord, StoredEvent
+
+
+_LEGACY_FACTORY_MODES = {
+    "workflow": "basic",
+    "plan_execute": "deep",
+    "multi_agent": "multi_agent",
+}
 
 
 class _LocalRunState:
@@ -26,11 +36,16 @@ class LocalResearchRuntime:
         settings,
         runs_dir: Path | str,
         agent_factory=build_real_agent,
+        *,
+        application=None,
+        context_factory: Callable[[], Any] | None = None,
     ) -> None:
         self._settings = settings
         self._runs_dir = Path(runs_dir)
         self._runs_dir.mkdir(parents=True, exist_ok=True)
         self._agent_factory = agent_factory
+        self._application = application
+        self._context_factory = context_factory
         self._registry: dict[str, _LocalRunState] = {}
         self._next_event_id = 1
 
@@ -116,8 +131,13 @@ class LocalResearchRuntime:
             self._append_event(state, event)
 
         try:
+            if self._application is not None and self._context_factory is not None:
+                await self._execute_through_harness(state)
+                return
             agent = self._agent_factory(
-                self._settings, on_event=on_event, mode=record.mode
+                self._settings,
+                on_event=on_event,
+                mode=_LEGACY_FACTORY_MODES.get(record.mode, record.mode),
             )
             result = await agent.arun(record.question)
             self._apply_result(record, result)
@@ -138,6 +158,36 @@ class LocalResearchRuntime:
             record.updated_at = datetime.now(UTC)
             self._persist(record)
             self._append_done(state)
+
+    async def _execute_through_harness(self, state: _LocalRunState) -> None:
+        record = state.record
+        context = self._context_factory()
+        request = ApplicationResearchRequest(
+            run_id=record.id,
+            thread_id=record.id,
+            question=record.question,
+            mode=record.mode,
+        )
+        outcome = await self._application.invoke(
+            request,
+            config={"configurable": {"thread_id": record.id}},
+            context=context,
+        )
+        record.answer = outcome.content
+        record.status = "completed" if outcome.partial_reason is None else "partial"
+        record.termination_reason = outcome.partial_reason or "completed"
+        record.finished_at = datetime.now(UTC)
+        evidence = await context.evidence_store.get_many(
+            context.workspace_id, outcome.cited_evidence_ids
+        )
+        record.sources = [item.canonical_url for item in evidence]
+        self._append_event(
+            state,
+            RunEvent(
+                event_type="response.completed",
+                message="研究已完成",
+            ),
+        )
 
     @staticmethod
     def _apply_result(record: RunRecord, result: AgentResult) -> None:

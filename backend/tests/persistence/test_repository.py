@@ -37,7 +37,7 @@ async def test_repository_creates_and_reads_run(repository) -> None:
     assert loaded is not None
     assert loaded.id == "run-1"
     assert loaded.question == "研究问题"
-    assert loaded.mode == "deep"
+    assert loaded.mode == "plan_execute"
     assert loaded.status == "pending"
     assert loaded.request_payload == {"question": "研究问题", "mode": "deep"}
 

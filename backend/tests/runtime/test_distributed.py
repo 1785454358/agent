@@ -45,7 +45,7 @@ async def test_distributed_runtime_persists_then_enqueues_without_agent(
     assert created.status == "pending"
     assert persisted is not None
     assert persisted.question == "研究问题"
-    assert persisted.mode == "deep"
+    assert persisted.mode == "plan_execute"
     assert persisted.created_at <= datetime.now(UTC)
     assert jobs == [JobMessage(message_id=jobs[0].message_id, run_id="run-1")]
 

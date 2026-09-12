@@ -10,10 +10,11 @@ from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from redis.asyncio import Redis
 
 from deeptrace.config import Settings
+from deeptrace.domain import normalize_research_mode
 from deeptrace.persistence.database import create_session_factory
 from deeptrace.persistence.repository import SqlAlchemyRunRepository
 from deeptrace.queue.redis_streams import RedisResearchBroker
@@ -27,7 +28,13 @@ class ResearchRequest(BaseModel):
     """Create-research request accepted by all runtime modes."""
 
     question: str = Field(min_length=1)
-    mode: RunMode = "basic"
+    mode: str = "workflow"
+
+    @field_validator("mode")
+    @classmethod
+    def normalize_mode(cls, value: str) -> str:
+        """Canonical values pass through; legacy aliases normalize at the boundary."""
+        return normalize_research_mode(value).value
 
 
 def _record_to_response(record: RunRecord) -> dict[str, Any]:

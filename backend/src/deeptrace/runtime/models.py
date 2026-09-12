@@ -5,9 +5,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
-RunMode = Literal["basic", "deep", "multi_agent"]
+from deeptrace.domain import normalize_research_mode
+
+RunMode = Literal["workflow", "plan_execute", "multi_agent", "basic", "deep"]
 RunStatus = Literal[
     "pending",
     "running",
@@ -24,7 +26,7 @@ class RunRecord(BaseModel):
 
     id: str
     question: str
-    mode: RunMode = "basic"
+    mode: RunMode = "workflow"
     status: RunStatus = "pending"
     termination_reason: str = ""
     created_at: datetime
@@ -43,6 +45,14 @@ class RunRecord(BaseModel):
     version: int = 0
     lease_owner: str | None = None
     lease_expires_at: datetime | None = None
+
+    @field_validator("mode", mode="before")
+    @classmethod
+    def normalize_legacy_mode(cls, value: object) -> object:
+        """Legacy persisted aliases read back as canonical values."""
+        if isinstance(value, str):
+            return normalize_research_mode(value).value
+        return value
 
 
 class StoredEvent(BaseModel):

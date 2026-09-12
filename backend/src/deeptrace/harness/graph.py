@@ -91,9 +91,17 @@ def _initialize_turn(state: HarnessState) -> dict[str, Any]:
     return {"turn": turn}
 
 
-def _select_response_mode(state: HarnessState) -> dict[str, Any]:
+def _select_response_mode(
+    state: HarnessState, config: RunnableConfig
+) -> dict[str, Any]:
     turn = dict(state["turn"])
-    turn["response_mode"] = select_response_mode(turn["user_input"])
+    override = (config.get("configurable") or {}).get("response_mode_override")
+    if override is None:
+        turn["response_mode"] = select_response_mode(turn["user_input"])
+    elif isinstance(override, ResponseMode):
+        turn["response_mode"] = override
+    else:
+        turn["response_mode"] = ResponseMode(str(override))
     return {"turn": turn}
 
 
