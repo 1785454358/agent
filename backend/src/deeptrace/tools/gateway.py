@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-from dataclasses import dataclass
 from time import perf_counter
 from typing import Any, Protocol
 
@@ -21,8 +20,13 @@ from deeptrace.tools.cache import (
     page_cache_key,
     search_cache_key,
 )
-from deeptrace.tools.contracts import CachePolicy, ToolCapability, ToolSpec
-from deeptrace.tools.evidence_store import EvidenceDraft, EvidenceStore
+from deeptrace.tools.contracts import (
+    CachePolicy,
+    ToolAdapterResult,
+    ToolCapability,
+    ToolSpec,
+)
+from deeptrace.tools.evidence_store import EvidenceStore
 from deeptrace.tools.execution_store import (
     ClaimDisposition,
     ExecutionAbandonedError,
@@ -35,23 +39,6 @@ from deeptrace.tools.policy import (
     UrlSecurityPolicy,
 )
 from deeptrace.tools.registry import ToolRegistry
-
-
-@dataclass(frozen=True)
-class ToolAdapterResult:
-    """Normalized adapter output before state-safe projection."""
-
-    preview: str = ""
-    data_ref: str | None = None
-    evidence: EvidenceDraft | None = None
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.preview, str):
-            raise TypeError("preview must be a string")
-        if self.data_ref is not None and not isinstance(self.data_ref, str):
-            raise TypeError("data_ref must be a string or None")
-        if self.evidence is not None and not isinstance(self.evidence, EvidenceDraft):
-            raise TypeError("evidence must be an EvidenceDraft or None")
 
 
 class EventSink(Protocol):
@@ -232,6 +219,9 @@ class AgentToolGateway:
         spec: ToolSpec,
         adapter_result: ToolAdapterResult,
     ) -> ToolResult:
+        if not adapter_result.ok:
+            assert adapter_result.error_code is not None
+            return _failure(request, adapter_result.error_code)
         evidence_ids: list[str] = []
         data_ref = adapter_result.data_ref
         if adapter_result.evidence is not None:

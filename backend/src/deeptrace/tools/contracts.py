@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from deeptrace.domain import ToolName
 from deeptrace.domain.tools import MAX_TOOL_PREVIEW_LENGTH
+from deeptrace.tools.evidence_store import EvidenceDraft
 
 
 class ToolCapability(StrEnum):
@@ -27,6 +28,37 @@ class CachePolicy(StrEnum):
 
 
 ToolHandler = Callable[[BaseModel], Awaitable[Any]]
+
+
+@dataclass(frozen=True)
+class ToolAdapterResult:
+    """Normalized adapter output before state-safe projection."""
+
+    ok: bool = True
+    error_code: str | None = None
+    preview: str = ""
+    data_ref: str | None = None
+    evidence: EvidenceDraft | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.ok, bool):
+            raise TypeError("ok must be a bool")
+        if self.ok == (self.error_code is not None):
+            raise ValueError("adapter success/error fields are inconsistent")
+        if not isinstance(self.preview, str):
+            raise TypeError("preview must be a string")
+        if self.data_ref is not None and not isinstance(self.data_ref, str):
+            raise TypeError("data_ref must be a string or None")
+        if self.evidence is not None and not isinstance(self.evidence, EvidenceDraft):
+            raise TypeError("evidence must be an EvidenceDraft or None")
+        if not self.ok and (self.preview or self.data_ref or self.evidence is not None):
+            raise ValueError("failed adapter results cannot carry payloads")
+
+    @classmethod
+    def failure(cls, error_code: str) -> ToolAdapterResult:
+        if not isinstance(error_code, str) or not error_code.strip():
+            raise ValueError("error_code must be a non-empty string")
+        return cls(ok=False, error_code=error_code.strip())
 
 
 @dataclass(frozen=True)

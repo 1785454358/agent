@@ -14,7 +14,15 @@ from deeptrace.models import RawDocument, RunEvent, TokenUsage, UsageBreakdown
 from deeptrace.multi_agent import SupervisorResearchAgent, build_multi_agent
 from deeptrace.observability import estimate_usage_cost, format_role_usage
 from deeptrace.prompts import build_planner_messages, build_writer_messages
-from deeptrace.tools import ToolContext
+from deeptrace.tools import (
+    AgentToolGateway,
+    FetchPageArguments,
+    SearchMemoryArguments,
+    SearchWebArguments,
+    ToolAdapterResult,
+    ToolContext,
+    build_research_tool_registry,
+)
 from deeptrace.tools.scraper import AsyncWebFetcher, normalize_url_before_fetch
 from deeptrace.tools.search import search_web
 
@@ -61,3 +69,14 @@ def test_prompts_and_tools_have_no_agent_loop_compatibility_exports() -> None:
     assert ToolContext.__name__ == "ToolContext"
     assert not hasattr(tools_package, "EXTERNAL_TOOL_SCHEMAS")
     assert not hasattr(tools_package, "RESEARCHER_TOOL_SCHEMAS")
+    assert not hasattr(tools_package, "ResearchToolbox")
+    assert not hasattr(tools_package, "ResearcherTools")
+
+
+def test_tools_expose_the_unified_gateway_and_atomic_adapter_contracts() -> None:
+    assert AgentToolGateway.__name__ == "AgentToolGateway"
+    assert ToolAdapterResult.__name__ == "ToolAdapterResult"
+    assert SearchWebArguments.__name__ == "SearchWebArguments"
+    assert FetchPageArguments.__name__ == "FetchPageArguments"
+    assert SearchMemoryArguments.__name__ == "SearchMemoryArguments"
+    assert callable(build_research_tool_registry)
