@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, TypedDict
 
-from deeptrace.domain import ResearchInput, ResearchOutcome
+from deeptrace.domain import ResearchOutcome
 from deeptrace.domain.evidence import Finding
 from deeptrace.domain.research import ResearchTopicOutcome
 from deeptrace.strategies.workflow.models import WorkflowEvaluation
@@ -41,12 +41,22 @@ def add_executed_steps(left: int | None, right: int | None) -> int:
 
 
 class WorkflowState(TypedDict, total=False):
-    research_input: ResearchInput
+    # Flat ResearchInput contract, matching the top-level runtime graph invocation.
+    run_id: str
+    thread_id: str
+    question: str
+    conversation_summary: dict
+    prior_evidence_ids: list[str]
+    unresolved_gaps: Annotated[list[str], merge_unique_strings]
+    budget: dict
+    current_date: str
+    timezone: str
+
+    # Workflow-internal channels.
     queries: list[str]
     topic_outcomes: Annotated[list[ResearchTopicOutcome], merge_topic_outcomes]
     evidence_ids: Annotated[list[str], merge_unique_strings]
     findings: list[Finding]
-    unresolved_gaps: Annotated[list[str], merge_unique_strings]
     executed_steps: Annotated[int, add_executed_steps]
     evaluation: WorkflowEvaluation | None
     outcome: ResearchOutcome | None

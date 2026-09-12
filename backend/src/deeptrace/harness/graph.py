@@ -11,10 +11,14 @@ from deeptrace.domain import (
     ResearchInput,
     ResearchOutcome,
     ResearchMode,
+    ResponseInput,
+    ResponseMode,
+    ResponseOutcome,
 )
 from deeptrace.harness.context import HarnessContext
-from deeptrace.harness.registry import StrategyRegistry
+from deeptrace.harness.registry import ResponseGraphRegistry, StrategyRegistry
 from deeptrace.harness.state import HarnessState
+from deeptrace.responses.citations import select_response_mode
 
 
 def _route_mode(state: HarnessState) -> str:
@@ -51,7 +55,7 @@ def _mode_node(registry: StrategyRegistry, mode: ResearchMode):
         raw = await registration.graph.ainvoke(
             request.model_dump(mode="json"), config=config
         )
-        outcome = ResearchOutcome.model_validate(raw)
+        outcome = ResearchOutcome.model_validate(raw["outcome"])
         if outcome.mode is not mode:
             raise ValueError(
                 "outcome mode does not match routed mode: "
@@ -87,22 +91,77 @@ def _initialize_turn(state: HarnessState) -> dict[str, Any]:
     return {"turn": turn}
 
 
-def _finalize_turn(state: HarnessState) -> dict[str, Any]:
+def _select_response_mode(state: HarnessState) -> dict[str, Any]:
     turn = dict(state["turn"])
-    outcome = turn["research_outcome"]
-    turn["status"] = (
-        ExecutionStatus.COMPLETED
-        if outcome is not None and outcome.termination_reason == "completed"
-        else ExecutionStatus.PARTIAL
-    )
+    turn["response_mode"] = select_response_mode(turn["user_input"])
     return {"turn": turn}
 
 
-def build_agent_runtime_graph(registry: StrategyRegistry, checkpointer=None):
+def _route_response(state: HarnessState) -> str:
+    turn = state["turn"]
+    if turn["research_outcome"] is None:
+        return "finalize_turn"
+    return turn["response_mode"].value
+
+
+def _response_node(response_registry: ResponseGraphRegistry, mode: ResponseMode):
+    async def invoke_response(
+        state: HarnessState,
+        runtime: Runtime[HarnessContext],
+        config: RunnableConfig,
+    ) -> dict[str, Any]:
+        registration = response_registry.resolve(mode)
+        turn = state["turn"]
+        response_input = ResponseInput(
+            question=turn["user_input"],
+            response_mode=mode,
+            research_outcome=turn["research_outcome"],
+            active_evidence_ids=list(turn["active_evidence_ids"]),
+        )
+        raw = await registration.graph.ainvoke(
+            {"response_input": response_input}, config=config
+        )
+        outcome = ResponseOutcome.model_validate(raw["outcome"])
+        if outcome.response_mode is not mode:
+            raise ValueError(
+                "outcome response_mode does not match routed response mode: "
+                f"expected {mode.value}, got {outcome.response_mode.value}"
+            )
+        turn = dict(state["turn"])
+        turn["response_outcome"] = outcome
+        return {"turn": turn}
+
+    return invoke_response
+
+
+def _finalize_turn(state: HarnessState) -> dict[str, Any]:
+    turn = dict(state["turn"])
+    research = turn["research_outcome"]
+    response = turn["response_outcome"]
+    research_usable = (
+        research is not None and research.termination_reason == "completed"
+    )
+    response_usable = response is not None and response.partial_reason is None
+    if research_usable and response_usable:
+        turn["status"] = ExecutionStatus.COMPLETED
+    else:
+        turn["status"] = ExecutionStatus.PARTIAL
+    return {"turn": turn}
+
+
+def build_agent_runtime_graph(
+    registry: StrategyRegistry,
+    response_registry: ResponseGraphRegistry,
+    checkpointer=None,
+):
     builder = StateGraph(HarnessState, context_schema=HarnessContext)
     builder.add_node("initialize_turn", _initialize_turn)
     for mode in ResearchMode:
         builder.add_node(mode.value, _mode_node(registry, mode))
+        builder.add_edge(mode.value, "select_response_mode")
+    builder.add_node("select_response_mode", _select_response_mode)
+    for mode in ResponseMode:
+        builder.add_node(mode.value, _response_node(response_registry, mode))
         builder.add_edge(mode.value, "finalize_turn")
     builder.add_node("finalize_turn", _finalize_turn)
     builder.add_edge(START, "initialize_turn")
@@ -110,6 +169,14 @@ def build_agent_runtime_graph(registry: StrategyRegistry, checkpointer=None):
         "initialize_turn",
         _route_mode,
         {mode.value: mode.value for mode in ResearchMode},
+    )
+    builder.add_conditional_edges(
+        "select_response_mode",
+        _route_response,
+        {
+            **{mode.value: mode.value for mode in ResponseMode},
+            "finalize_turn": "finalize_turn",
+        },
     )
     builder.add_edge("finalize_turn", END)
     return builder.compile(checkpointer=checkpointer)

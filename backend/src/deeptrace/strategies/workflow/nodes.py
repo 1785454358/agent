@@ -91,7 +91,19 @@ def topic_error_gaps(outcome: ResearchTopicOutcome) -> list[str]:
 
 
 def _research_input(state: WorkflowState) -> ResearchInput:
-    return ResearchInput.model_validate(state["research_input"])
+    return ResearchInput.model_validate(
+        {
+            "run_id": state["run_id"],
+            "thread_id": state["thread_id"],
+            "question": state["question"],
+            "conversation_summary": state.get("conversation_summary") or {},
+            "prior_evidence_ids": state.get("prior_evidence_ids") or [],
+            "unresolved_gaps": [],
+            "budget": state.get("budget") or {},
+            "current_date": state["current_date"],
+            "timezone": state["timezone"],
+        }
+    )
 
 
 def build_plan_queries_node(query_limit: int):

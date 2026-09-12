@@ -7,15 +7,28 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.runtime import Runtime
 
-from deeptrace.domain import ExecutionStatus, ResearchMode
+from deeptrace.domain import (
+    CitationRef,
+    ExecutionStatus,
+    ResearchMode,
+    ResponseInput,
+    ResponseMode,
+    ResponseOutcome,
+)
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
 from deeptrace.harness.context import HarnessContext
 from deeptrace.harness.graph import build_agent_runtime_graph
-from deeptrace.harness.registry import StrategyRegistration, StrategyRegistry
+from deeptrace.harness.registry import (
+    ResponseGraphRegistry,
+    ResponseRegistration,
+    StrategyRegistration,
+    StrategyRegistry,
+)
 from deeptrace.harness.state import new_conversation, new_turn
 
 
 class _ChildState(TypedDict, total=False):
+    outcome: dict[str, Any]
     run_id: str
     thread_id: str
     question: str
@@ -92,26 +105,28 @@ def _mode_graph(
     ) -> _ChildState:
         configurable = config["configurable"]
         return {
-            "mode": (outcome_mode or mode).value,
-            "evidence_ids": [f"ev-{mode.value}"],
-            "findings": [
-                {
-                    "id": f"finding-{mode.value}",
-                    "claim": (
-                        f"{state['run_id']}|{state['thread_id']}|"
-                        f"{state['current_date']}|{state['timezone']}"
-                    ),
-                    "evidence_ids": [f"ev-{mode.value}"],
-                    "confidence": 1.0,
-                }
-            ],
-            "unresolved_gaps": [],
-            "executed_steps": 1,
-            "termination_reason": "completed",
+            "outcome": {
+                "mode": (outcome_mode or mode).value,
+                "evidence_ids": [f"ev-{mode.value}"],
+                "findings": [
+                    {
+                        "id": f"finding-{mode.value}",
+                        "claim": (
+                            f"{state['run_id']}|{state['thread_id']}|"
+                            f"{state['current_date']}|{state['timezone']}"
+                        ),
+                        "evidence_ids": [f"ev-{mode.value}"],
+                        "confidence": 1.0,
+                    }
+                ],
+                "unresolved_gaps": [],
+                "executed_steps": 1,
+                "termination_reason": "completed",
+            },
             "_private_child_trace": f"trace-{mode.value}",
             "_private_child_user_id": runtime.context.user_id,
             "_private_child_thread_id": configurable["thread_id"],
-            "_private_child_custom": configurable["custom_marker"],
+            "_private_child_custom": configurable.get("custom_marker"),
         }
 
     builder = StateGraph(_ChildState, context_schema=HarnessContext)
@@ -119,6 +134,41 @@ def _mode_graph(
     builder.add_edge(START, "research")
     builder.add_edge("research", END)
     return builder.compile(checkpointer=True)
+
+
+class _ScriptedResponseGraph:
+    """Minimal child graph returning a valid ResponseOutcome from its input."""
+
+    def __init__(self, mode: ResponseMode) -> None:
+        self._mode = mode
+
+    async def ainvoke(self, input_data, config=None, **kwargs):
+        response_input = ResponseInput.model_validate(
+            input_data["response_input"]
+        )
+        citations = [
+            CitationRef(evidence_id=evidence_id, marker=f"[{index}]")
+            for index, evidence_id in enumerate(
+                response_input.active_evidence_ids, 1
+            )
+        ]
+        return {
+            "outcome": ResponseOutcome(
+                response_mode=self._mode,
+                content=f"scripted {self._mode.value} [1]",
+                citations=citations,
+                cited_evidence_ids=[
+                    citation.evidence_id for citation in citations
+                ],
+            )
+        }
+
+
+def _response_registry() -> ResponseGraphRegistry:
+    registry = ResponseGraphRegistry()
+    for mode in ResponseMode:
+        registry.register(ResponseRegistration(mode, _ScriptedResponseGraph(mode)))
+    return registry
 
 
 @pytest.mark.asyncio
@@ -130,7 +180,9 @@ async def test_harness_routes_to_each_registered_mode(
     for item in ResearchMode:
         registry.register(StrategyRegistration(item, _mode_graph(item)))
     checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
-    graph = build_agent_runtime_graph(registry, checkpointer=checkpointer)
+    graph = build_agent_runtime_graph(
+        registry, _response_registry(), checkpointer=checkpointer
+    )
     thread_id = f"thread-{mode.value}"
     initial = {
         "conversation": new_conversation(thread_id, mode),
@@ -149,6 +201,9 @@ async def test_harness_routes_to_each_registered_mode(
     )
 
     assert result["turn"]["status"] is ExecutionStatus.COMPLETED
+    assert result["turn"]["response_mode"] is ResponseMode.ANSWER
+    assert result["turn"]["response_outcome"].response_mode is ResponseMode.ANSWER
+    assert result["turn"]["response_outcome"].content == "scripted answer [1]"
     assert result["turn"]["research_request"].question == "研究 Harness"
     assert result["turn"]["research_request"].run_id == "run-1"
     assert result["turn"]["research_request"].thread_id == thread_id
@@ -206,6 +261,31 @@ async def test_harness_routes_to_each_registered_mode(
 
 
 @pytest.mark.asyncio
+async def test_explicit_report_request_routes_to_the_report_graph() -> None:
+    registry = StrategyRegistry()
+    registry.register(
+        StrategyRegistration(
+            ResearchMode.WORKFLOW, _mode_graph(ResearchMode.WORKFLOW)
+        )
+    )
+    graph = build_agent_runtime_graph(registry, _response_registry())
+    initial = {
+        "conversation": new_conversation("thread-1", ResearchMode.WORKFLOW),
+        "turn": new_turn("run-1", "生成报告", ResearchMode.WORKFLOW),
+    }
+
+    result = await graph.ainvoke(
+        initial,
+        config={"configurable": {"thread_id": "thread-1"}},
+        context=_context(),
+    )
+
+    assert result["turn"]["response_mode"] is ResponseMode.REPORT
+    assert result["turn"]["response_outcome"].response_mode is ResponseMode.REPORT
+    assert result["turn"]["response_outcome"].content == "scripted report [1]"
+
+
+@pytest.mark.asyncio
 async def test_harness_rejects_an_unregistered_selected_mode() -> None:
     registry = StrategyRegistry()
     registry.register(
@@ -214,7 +294,7 @@ async def test_harness_rejects_an_unregistered_selected_mode() -> None:
             _mode_graph(ResearchMode.WORKFLOW),
         )
     )
-    graph = build_agent_runtime_graph(registry)
+    graph = build_agent_runtime_graph(registry, _response_registry())
     initial = {
         "conversation": new_conversation(
             "thread-1", ResearchMode.MULTI_AGENT
@@ -240,7 +320,7 @@ async def test_harness_rejects_an_outcome_for_a_different_mode() -> None:
             ),
         )
     )
-    graph = build_agent_runtime_graph(registry)
+    graph = build_agent_runtime_graph(registry, _response_registry())
     initial = {
         "conversation": new_conversation(
             "thread-1", ResearchMode.WORKFLOW

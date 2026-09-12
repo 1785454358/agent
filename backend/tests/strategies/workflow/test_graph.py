@@ -80,9 +80,7 @@ async def _run_workflow(
         {"configurable": {"thread_id": "workflow-thread"}} if checkpointer else None
     )
     result = await graph.ainvoke(
-        {"research_input": _research_input(question)},
-        config=config,
-        context=fixture.context,
+        _research_input(question), config=config, context=fixture.context
     )
     return result
 
