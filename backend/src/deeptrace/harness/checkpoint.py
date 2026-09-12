@@ -14,12 +14,15 @@ from deeptrace.domain import (
     ResearchInput,
     ResearchOutcome,
     ResearchMode,
+    ResearchTopicInput,
+    ResearchTopicOutcome,
     ResponseInput,
     ResponseMode,
     ResponseOutcome,
     ToolName,
     ToolRequest,
     ToolResult,
+    TopicStepError,
 )
 
 
@@ -35,6 +38,9 @@ HARNESS_STATE_MSGPACK_TYPES = (
     ErrorRecord,
     ResearchInput,
     ResearchOutcome,
+    ResearchTopicInput,
+    ResearchTopicOutcome,
+    TopicStepError,
     CitationRef,
     ResponseInput,
     ResponseOutcome,

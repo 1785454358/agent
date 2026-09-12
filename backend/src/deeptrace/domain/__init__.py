@@ -13,6 +13,11 @@ from deeptrace.domain.execution import (
     normalize_research_mode,
 )
 from deeptrace.domain.response import CitationRef, ResponseInput, ResponseOutcome
+from deeptrace.domain.research import (
+    ResearchTopicInput,
+    ResearchTopicOutcome,
+    TopicStepError,
+)
 from deeptrace.domain.tools import ToolName, ToolRequest, ToolResult
 
 __all__ = [
@@ -29,11 +34,14 @@ __all__ = [
     "ResearchInput",
     "ResearchOutcome",
     "ResearchMode",
+    "ResearchTopicInput",
+    "ResearchTopicOutcome",
     "ResponseMode",
     "ResponseInput",
     "ResponseOutcome",
     "ToolName",
     "ToolRequest",
     "ToolResult",
+    "TopicStepError",
     "normalize_research_mode",
 ]
