@@ -63,6 +63,16 @@ _FlightOutcome = ToolResult | _FlightFailure
 ToolResultFactory = Callable[[], Awaitable[ToolResult]]
 
 
+class ToolExecutionCoordinator(Protocol):
+    async def get_or_execute(
+        self,
+        key: ToolCacheKey,
+        factory: ToolResultFactory,
+        *,
+        refresh: bool = False,
+    ) -> ToolResult: ...
+
+
 class SuccessCacheSingleflight:
     def __init__(self, cache: SuccessCache) -> None:
         if not isinstance(cache, InMemorySuccessCache) and not (

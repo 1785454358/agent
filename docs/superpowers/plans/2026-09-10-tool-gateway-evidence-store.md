@@ -2,9 +2,9 @@
 
 > **For agentic workers:** Execute task-by-task with strict red-green-refactor. Each task requires a fresh implementation pass, a specification review, and a code-quality review before commit.
 
-**Goal:** Replace Profile-specific tool wrappers with one typed, policy-enforced, replay-safe Tool Gateway and an Evidence Store that keeps large research payloads out of graph state and model context.
+**Goal:** Replace strategy-specific tool wrappers with one typed, policy-enforced, replay-safe Tool Gateway and an Evidence Store that keeps large research payloads out of graph state and model context.
 
-**Architecture:** Tool definitions and external capability adapters live behind a runtime `ToolRegistry`. Every invocation enters a single `ToolGateway` pipeline in the approved order: registry, allowlist, validation, security, idempotency, budget reservation, cache/singleflight, events, timeout/attempt, normalization, Evidence ingestion, budget commit, completion event. Serializable request/result contracts cross graph boundaries; clients, locks, futures, schemas, and handlers remain runtime-only. The first implementation uses in-memory ports so Plan 3 can consume it; PostgreSQL durability is added in Plan 7.
+**Architecture:** Tool definitions and external capability adapters live behind a runtime `ToolRegistry`. Every invocation enters a single `ToolGateway` pipeline in the approved order: registry, allowlist, validation, security, idempotency, budget reservation, cache/singleflight, events, timeout/attempt, normalization, Evidence ingestion, budget commit, completion event. Serializable request/result contracts cross graph boundaries; clients, locks, futures, schemas, and handlers remain runtime-only. The first implementation uses in-memory ports so Plan 3 can consume it; MySQL durability is added in Plan 7.
 
 **Tech Stack:** Python 3.11+, Pydantic 2, asyncio, hashlib, LangGraph-compatible runtime injection, pytest, pytest-asyncio.
 
@@ -19,7 +19,7 @@
 - The only atomic research tool names are `search_web`, `fetch_page`, and `search_memory`.
 - `research_topic`, `finish_task`, and `finish_research` are not registered tools. Later plans implement their behavior with LangGraph nodes and routes.
 - `ToolRequest` and `ToolResult` are serializable Pydantic contracts. They never contain clients, locks, futures, exception objects, or full page bodies.
-- The registry accepts canonical `ResearchProfile` values only. Raw strings and legacy aliases are normalized at application boundaries, never inside the Tool Gateway.
+- The Gateway accepts canonical `ResearchMode` values through `ToolCaller`. Raw strings and legacy aliases are normalized at application boundaries, never inside the Tool Gateway.
 - Validation and policy rejection consume no tool or network budget.
 - A cache follower and an idempotent replay consume no network budget.
 - A failed real network attempt is recorded and charged according to the reservation policy, but is not added to the success cache.
@@ -27,7 +27,7 @@
 - Large bodies are persisted as `Evidence`; the result returned to the graph/model contains a bounded preview plus `data_ref` and `evidence_ids`.
 - Provider exceptions are converted to stable public error codes. Credentials, headers, response bodies, and exception messages are not copied into `ToolResult` or events.
 - Retry ownership is singular. This plan performs at most one adapter call per gateway execution; later graph nodes may attach an explicit LangGraph `RetryPolicy` for transient provider failures.
-- Existing Deep and Multi-Agent execution paths remain runnable until their replacement Profiles are delivered. This plan adds the shared gateway but does not delete old wrappers.
+- Existing Deep and Multi-Agent execution paths remain runnable until their replacement strategy subgraphs are delivered. This plan adds the shared gateway but does not delete old wrappers.
 - Do not touch or stage `docs/resume/researchpilot-project-experience.md`.
 
 ## Target module layout
@@ -86,7 +86,7 @@ Cover:
 - [ ] Specification review, then quality review.
 - [ ] Commit: `feat: define tool and evidence contracts`
 
-### Task 2: Add runtime ToolSpec registry and Profile allowlists
+### Task 2: Add runtime ToolSpec registry and mode/caller allowlists
 
 **Files:**
 
@@ -127,7 +127,7 @@ Tests must prove that unknown tools and disallowed callers fail before argument 
 - Create: `backend/src/deeptrace/tools/budget.py`
 - Test: `backend/tests/tools/test_budget.py`
 
-- [ ] Write failing concurrent tests for Run → Profile → Agent budget scopes.
+- [ ] Write failing concurrent tests for Run → Mode → Agent budget scopes.
 
 The API must separate `reserve`, `commit`, and `release`. A reservation describes tool calls, network requests, and fetched pages; model/token/round counters may be represented in the snapshot but do not need provider integration in this plan.
 
@@ -161,7 +161,7 @@ Required behavior:
 
 - [ ] Write failing tests for content-addressed Evidence and replay ownership.
 
-Define protocols and concurrency-safe in-memory adapters with the same semantics expected from Plan 7's PostgreSQL implementations:
+Define protocols and concurrency-safe in-memory adapters with the same semantics expected from Plan 7's MySQL implementations:
 
 - Evidence identity derives from normalized source identity plus content hash, not random insertion order;
 - identical content upserts to one active record;
@@ -234,7 +234,7 @@ Required scenarios:
 - a successful small result stays inline as a bounded preview;
 - a successful large/page result persists Evidence and returns only preview + `data_ref` + Evidence ID;
 - handler exceptions and timeouts are sanitized, recorded, charged as real attempts, and emit a completion event;
-- events contain IDs, canonical tool/profile, cache/replay flags, duration, budget deltas, and stable error code, but no raw body or secret-bearing exception text;
+- events contain IDs, canonical tool/mode, cache/replay flags, duration, budget deltas, and stable error code, but no raw body or secret-bearing exception text;
 - cancellation propagates without writing a false success and leaves ledger ownership recoverable according to Task 4 semantics.
 
 Update `HarnessContext` protocols to use typed `ToolRequest`, `ToolResult`, and Evidence references while keeping runtime implementations out of graph state.
@@ -296,7 +296,7 @@ Before starting Plan 3, all of the following must be true:
 
 - [ ] All new Tool Gateway contracts are strict-checkpoint serializable.
 - [ ] The runtime registry contains exactly the three atomic tools.
-- [ ] Profile/caller allowlists prevent Supervisor and response graphs from using network tools.
+- [ ] Mode/caller allowlists prevent Supervisor and response graphs from using network tools.
 - [ ] Invalid and policy-rejected requests consume no budget.
 - [ ] Concurrent identical work is singleflight and only the leader consumes network budget.
 - [ ] Completed call IDs replay safely and conflicting reuse is rejected.
@@ -308,9 +308,9 @@ Before starting Plan 3, all of the following must be true:
 
 ## Deferred deliberately
 
-- `ResearchTopicGraph` orchestration: Plan 3 for Workflow, then reused by later Profiles.
-- Production PostgreSQL Evidence and execution-ledger adapters: Plan 7.
+- `ResearchTopicGraph` orchestration: Plan 3 for Workflow, then reused by later strategy subgraphs.
+- Production MySQL Evidence and execution-ledger adapters: Plan 7.
 - Redis cross-process singleflight/leases: Plan 7; this plan defines semantics with in-memory adapters.
 - Automatic long-term memory recall and consolidation: Plan 6.
-- Model/tool retry policies wired to graph nodes: the owning Profile plans.
+- Model/tool retry policies wired to graph nodes: the owning strategy-subgraph plans.
 - Removal of `deep.tools.ResearchToolbox`, `multi_agent.tools.ResearcherTools`, and `multi_agent.resources.SharedResearchResources`: Plans 4–5 after their consumers migrate.

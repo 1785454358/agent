@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, Protocol, Sequence
+
+from deeptrace.domain import Evidence, ToolRequest, ToolResult
+from deeptrace.tools.evidence_store import EvidenceDraft
+from deeptrace.tools.policy import ToolCaller, UrlAuthorization
 
 
 class ModelGateway(Protocol):
@@ -9,11 +13,26 @@ class ModelGateway(Protocol):
 
 
 class ToolGateway(Protocol):
-    async def execute(self, request: Any) -> Any: ...
+    async def execute(
+        self,
+        *,
+        tenant_id: str,
+        caller: ToolCaller,
+        request: ToolRequest,
+        authorization: UrlAuthorization | None = None,
+        provider_id: str = "default",
+        refresh: bool = False,
+    ) -> ToolResult: ...
 
 
 class EvidenceStore(Protocol):
-    async def get_many(self, evidence_ids: list[str]) -> list[Any]: ...
+    async def ingest(self, tenant_id: str, draft: EvidenceDraft) -> Evidence: ...
+
+    async def get_many(
+        self, tenant_id: str, evidence_ids: Sequence[str]
+    ) -> tuple[Evidence, ...]: ...
+
+    async def read_body(self, tenant_id: str, evidence_id: str) -> str: ...
 
 
 class EventSink(Protocol):

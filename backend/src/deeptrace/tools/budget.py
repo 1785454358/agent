@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import ClassVar, Mapping, Self
+from typing import ClassVar, Mapping, Protocol, Self
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -166,6 +166,18 @@ class BudgetManagerSnapshot(BaseModel):
             if item.scope == scope:
                 return item
         raise KeyError(f"budget scope is not configured: {scope.path}")
+
+
+class BudgetManager(Protocol):
+    async def reserve(
+        self, scope: BudgetScopeKey, requested: BudgetUnits
+    ) -> BudgetReservation | None: ...
+
+    async def commit(
+        self, reservation: BudgetReservation, used: BudgetUnits
+    ) -> bool: ...
+
+    async def release(self, reservation: BudgetReservation) -> bool: ...
 
 
 @dataclass
