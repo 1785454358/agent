@@ -461,3 +461,137 @@ async def test_switch_mode_updates_conversation_without_research() -> None:
     assert outcome.partial_reason == "mode_switched"
     assert fixture.gateway.calls == []
     assert model.calls == []
+
+
+@pytest.mark.asyncio
+async def test_memory_update_writes_preference_and_answers() -> None:
+    model = ScriptedModelGateway({"responder": "unused"})
+    fixture = build_gateway_fixture(model_gateway=model)
+    strategies, responses = _registries()
+    graph = build_agent_runtime_graph(strategies, responses)
+
+    outcome = await ResearchApplicationService(graph).invoke(
+        ApplicationResearchRequest(
+            run_id="run-1",
+            thread_id="thread-1",
+            question="记住我喜欢简洁的回答",
+            mode=ResearchMode.WORKFLOW,
+        ),
+        config={"configurable": {"thread_id": "thread-1"}},
+        context=fixture.context,
+    )
+
+    assert outcome.partial_reason == "memory_updated"
+    assert "简洁的回答" in outcome.content
+    assert fixture.gateway.calls == []
+    stored = await fixture.memory_store.list_namespace(
+        ("user", "user-1", "preferences")
+    )
+    assert len(stored) == 1
+    assert "简洁的回答" in stored[0].content
+
+
+@pytest.mark.asyncio
+async def test_research_recalls_memories_and_consolidates_findings() -> None:
+    from deeptrace.domain import MemoryRecord, MemoryType
+    from deeptrace.harness.memory.write import MemoryWritePolicy, remember
+
+    model = ScriptedModelGateway(
+        {
+            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
+                prompt, sufficient=True
+            ),
+            "responder": json.dumps({"content": "研究结论 [1]。"}),
+        }
+    )
+    fixture = _fixture(model)
+    # seed a user preference that should be recalled for research turns
+    now = fixture.context.clock.now()
+    await remember(
+        fixture.memory_store,
+        MemoryRecord(
+            type=MemoryType.PREFERENCE,
+            namespace=("user", "user-1", "preferences"),
+            subject="简洁回答",
+            content="用户偏好简洁的回答",
+            confidence=1.0,
+            created_at=now,
+            updated_at=now,
+        ),
+        MemoryWritePolicy(),
+    )
+    strategies, responses = _registries()
+    checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
+    graph = build_agent_runtime_graph(
+        strategies, responses, checkpointer=checkpointer
+    )
+    service = ResearchApplicationService(graph)
+
+    outcome = await service.invoke(
+        ApplicationResearchRequest(
+            run_id="run-1",
+            thread_id="thread-1",
+            question="研究 LangGraph Harness",
+            mode=ResearchMode.WORKFLOW,
+        ),
+        config={"configurable": {"thread_id": "thread-1"}},
+        context=fixture.context,
+    )
+
+    assert outcome.partial_reason is None
+    snapshot = await graph.aget_state(
+        {"configurable": {"thread_id": "thread-1"}}
+    )
+    recalled = snapshot.values["turn"]["recalled_memory_ids"]
+    assert recalled, "preference should be recalled for research turns"
+
+    facts = await fixture.memory_store.list_namespace(
+        ("workspace", "workspace-1", "facts")
+    )
+    assert facts, "findings should consolidate into workspace facts"
+
+
+@pytest.mark.asyncio
+async def test_follow_up_turns_do_not_recall_memory() -> None:
+    model = ScriptedModelGateway(
+        {
+            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
+                prompt, sufficient=True
+            ),
+            "responder": json.dumps({"content": "结论 [1]。"}),
+        }
+    )
+    fixture = _fixture(model)
+    strategies, responses = _registries()
+    checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
+    graph = build_agent_runtime_graph(
+        strategies, responses, checkpointer=checkpointer
+    )
+    service = ResearchApplicationService(graph)
+    config = {"configurable": {"thread_id": "thread-1"}}
+
+    await service.invoke(
+        ApplicationResearchRequest(
+            run_id="run-1",
+            thread_id="thread-1",
+            question="研究 LangGraph Harness",
+            mode=ResearchMode.WORKFLOW,
+        ),
+        config=config,
+        context=fixture.context,
+    )
+    await service.invoke(
+        ApplicationResearchRequest(
+            run_id="run-2",
+            thread_id="thread-1",
+            question="总结一下上面的要点",
+            mode=ResearchMode.WORKFLOW,
+        ),
+        config=config,
+        context=fixture.context,
+    )
+
+    snapshot = await graph.aget_state(config)
+    assert snapshot.values["turn"]["recalled_memory_ids"] == []

@@ -43,6 +43,18 @@ class Clock(Protocol):
     def now(self) -> Any: ...
 
 
+class MemoryStorePort(Protocol):
+    """Long-term memory port; implementations wrap a LangGraph Store."""
+
+    async def put(self, record: Any) -> Any: ...
+
+    async def get(self, namespace: Any, identity: str) -> Any | None: ...
+
+    async def list_namespace(
+        self, namespace: Any, *, include_inactive: bool = False
+    ) -> list[Any]: ...
+
+
 @dataclass(frozen=True)
 class HarnessContext:
     user_id: str
@@ -52,3 +64,4 @@ class HarnessContext:
     evidence_store: EvidenceStore
     event_sink: EventSink
     clock: Clock
+    memory_store: MemoryStorePort | None = None

@@ -8,6 +8,7 @@ from typing import Any
 
 from deeptrace.harness.context import HarnessContext
 from deeptrace.domain import ResearchMode
+from deeptrace.harness.memory.store import InMemoryMemoryStore
 from deeptrace.models import RawDocument, ScraperUsed
 from deeptrace.tools import AgentToolGateway, build_research_tool_registry
 from deeptrace.tools.budget import BudgetScopeKey, BudgetUnits, InMemoryBudgetManager
@@ -113,6 +114,7 @@ class GatewayFixture:
     fetcher: ScriptedFetcher
     budgets: InMemoryBudgetManager
     context: HarnessContext
+    memory_store: Any = None
 
     async def evidence_id_for(self, url: str) -> str:
         evidence = await self.evidence_store.latest_for_source(TENANT_ID, url)
@@ -153,6 +155,7 @@ def build_gateway_fixture(
                 scopes.append(BudgetScopeKey.for_agent(run_id, mode, caller_id))
     budgets = InMemoryBudgetManager({scope: limit for scope in scopes})
     evidence_store = evidence_store or InMemoryEvidenceStore()
+    memory_store = InMemoryMemoryStore()
     events = RecordingEventSink()
     inner = AgentToolGateway(
         registry=registry,
@@ -173,6 +176,7 @@ def build_gateway_fixture(
         evidence_store=evidence_store,
         event_sink=events,
         clock=FixedClock(),
+        memory_store=memory_store,
     )
     return GatewayFixture(
         gateway=gateway,
@@ -182,6 +186,7 @@ def build_gateway_fixture(
         fetcher=fetcher,
         budgets=budgets,
         context=context,
+        memory_store=memory_store,
     )
 
 

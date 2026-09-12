@@ -141,10 +141,12 @@ def build_research_topic_node(topic_graph):
                 {"topic_input": topic_input}, config=config
             )
             outcome = ResearchTopicOutcome.model_validate(raw["outcome"])
-        except Exception:
+        except Exception as exc:
             return {
                 "executed_steps": 1,
-                "unresolved_gaps": [f"topic_execution_failed:{state['query']}"[:500]],
+                "unresolved_gaps": [
+                    f"topic_execution_failed:{state['query']}:{type(exc).__name__}"[:500]
+                ],
             }
         gaps = topic_error_gaps(outcome)
         updates: dict[str, Any] = {

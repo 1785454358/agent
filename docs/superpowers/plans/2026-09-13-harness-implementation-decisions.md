@@ -142,9 +142,48 @@
 
 22. **测试基线：** Plan 5 完成时非真实套件 514 passed。
 
+## Plan 6：会话与记忆生命周期（2026-09-13 完成）
+
+分三个提交交付（791eac3 意图路由与多轮、3647942 记忆策略、本提交记忆接线）。
+
+23. **意图路由为确定性边界策略。**
+    `harness/policies/intent.py`：记忆更新/切换模式/增量研究/追问模式全部模式匹配，
+    报告/简报措辞复用 `select_response_mode`。追问（有会话证据时）→ conversation
+    直接走响应图，不触发研究；无证据时的报告措辞 → 先研究再报告。
+    `requires_research=False` 的轮次 finalize 只看响应可用性。
+
+24. **上下文滑动窗口。**
+    `plan_context_window(messages, soft=24, hard=60)` 保留最近窗口，溢出消息经
+    `RemoveMessage` 从会话状态移除；模型化结构压缩（summarizer 角色）留待 Plan 8
+    接入真实网关后启用，当前为确定性裁剪 + 既有结构化摘要字段。
+
+25. **记忆六问全部有可执行策略测试**（`tests/harness/memory/test_memory_policies.py`）：
+    何时存（来源白名单：user_request/consolidation/repeated_preference；fact 必须有
+    证据来源）、存什么（bounded 内容、唯一来源）、如何组织（scope/owner/kind 命名空间、
+    跨租户不可见）、何时召回（research/incremental/report 自动触发，追问不召回） +
+    排序（关键词重叠×10 + 新近度×5 + 置信度×3，状态门禁）、如何更新（同 subject
+    版本链 + supersedes，同内容幂等）、如何遗忘（TTL→expired、30 天→stale、逻辑删除、
+    物理删除）。
+
+26. **记忆 Store 以 LangGraph Store 为底。**
+    `InMemoryMemoryStore` 包装 `langgraph.store.memory.InMemoryStore`，键为
+    `identity|v{version}`，被替代版本保留可查（审计轨迹）；identity =
+    namespace|type|subject，id 由 identity+version 派生（确定性）。
+    Plan 7 将其映射到 MySQL 实现。
+
+27. **记忆接入顶层图。**
+    `HarnessContext` 新增可选 `memory_store` 端口（向后兼容，默认 None）。
+    图拓扑插入 `recall_memory`（classify_intent 之后、意图路由之前）与
+    `consolidate_memory`（研究完成之后、响应之前）；MEMORY_UPDATE 意图进入
+    `memory_update` 节点（"记住X"→偏好写入 + 部分响应 memory_updated）。
+    召回结果记入 `turn.recalled_memory_ids`；集成测试锁定：研究轮召回偏好、
+    证据沉淀为 workspace facts、追问轮不召回。
+
+28. **测试基线：** Plan 6 完成时非真实套件 535 passed。
+
 ## 后续 Plan 决策（待补充）
 
-- Plan 6（会话与记忆）：待实施。
+- Plan 7（MySQL 与分布式恢复）：待实施。
 - Plan 5（Multi-Agent）：待实施。
 - Plan 6（会话与记忆）：待实施。
 - Plan 7（MySQL 与分布式恢复）：待实施。
