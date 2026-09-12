@@ -19,7 +19,7 @@ ResearchPilot 当前提供 Basic、Deep 和 Multi-Agent 三种研究模式，也
 本次重构建立一套基于 LangGraph 的模块化 Research Agent Harness，并实现以下目标：
 
 1. 使用 LangGraph 统一所有 Agent 编排，不再保留手写研究循环。
-2. 通过 Agent Harness 主图和研究策略子图区分通用执行治理与研究策略。
+2. 通过顶层运行图和研究策略子图区分通用执行治理与研究策略。
 3. 保留三种显式研究模式，并统一更名为 Workflow、Plan-and-Execute 和 Multi-Agent。
 4. 支持同一会话持续追问、增量研究和模式切换。
 5. 默认输出简洁自然的回答，只有用户明确要求时才生成正式报告。
@@ -66,20 +66,20 @@ ResearchPilot 当前提供 Basic、Deep 和 Multi-Agent 三种研究模式，也
 
 ### 4.3 Harness、Mode 与 Strategy
 
-Agent Harness 负责每一次运行如何被治理，包括上下文、工具、资源、额度、事件、持久化、恢复和结果契约。`ResearchMode` 是用户与 API 选择的模式标识，`ResearchStrategyGraph` 是模式对应的策略子图接口。LangGraph 是 Harness 主图和各策略子图共同使用的状态编排内核。
+Agent Harness 负责每一次运行如何被治理，包括上下文、工具、资源、额度、事件、持久化、恢复和结果契约。`ResearchMode` 是用户与 API 选择的模式标识，`ResearchStrategyGraph` 是模式对应的策略子图接口。LangGraph 是顶层运行图和各策略子图共同使用的状态编排内核。
 
-`AgentHarnessGraph`、`ResearchMode`、`ResearchStrategyGraph` 和 `StrategyRegistry` 是本项目的架构命名，不宣称为 LangGraph 官方类型。LangGraph 官方提供的是 `StateGraph`、State、Runtime、Node、Edge、Subgraph 和 Checkpointer 等基础能力。
+Agent Harness 是本项目对运行治理能力的统称，不定义特殊的 Harness 图类型。`ResearchMode`、`ResearchStrategyGraph` 和 `StrategyRegistry` 是项目内契约；顶层运行图与各策略子图都由 LangGraph `StateGraph` 构建。LangGraph 官方提供的是 `StateGraph`、State、Runtime、Node、Edge、Subgraph 和 Checkpointer 等基础能力。
 
 ## 5. 总体架构
 
-系统采用 Agent Harness 主图加研究策略子图的结构：
+系统采用顶层运行图加研究策略子图的结构，Harness 治理能力贯穿这些图：
 
 ```text
 API / CLI / Worker
         ↓
 ResearchApplicationService
         ↓
-AgentHarnessGraph
+Top-level runtime graph (`StateGraph`)
   ├── load_session
   ├── initialize_turn
   ├── manage_short_term_context
@@ -100,7 +100,7 @@ AgentHarnessGraph
   └── persist_session
 ```
 
-只有 `AgentHarnessGraph` 对 Application 层公开。研究策略、Response 和 Memory Graph 通过注册机制成为 Harness 子图。
+Application 层只调用编译后的顶层运行图。研究策略、Response 和 Memory Graph 通过注册机制成为其子图，Agent Harness 则由这些图与 Runtime Context、Tool Gateway、Checkpoint、Memory 和观测策略共同构成。
 
 ## 6. 模块边界
 
@@ -254,6 +254,8 @@ class HarnessContext:
 
 ```python
 class ResearchInput(BaseModel):
+    run_id: str
+    thread_id: str
     question: str
     conversation_summary: ConversationSummary
     prior_evidence_ids: list[str]
@@ -537,7 +539,7 @@ Local 的目标是零外部服务依赖的开发与测试，不宣称跨进程�
 
 执行身份包括 `thread_id`、`run_id`、`checkpoint_id`、`attempt_id` 和 `tool_call_id`。
 
-Worker 获取数据库 Lease 后使用 `thread_id` 调用 `AgentHarnessGraph`。Graph 在节点边界保存 Checkpoint。Worker 崩溃后 Lease 过期，Recovery Scanner 重新投递任务，新 Worker 从最近 Checkpoint 恢复。
+Worker 获取数据库 Lease 后使用 `thread_id` 调用编译后的顶层运行图。Graph 在节点边界保存 Checkpoint。Worker 崩溃后 Lease 过期，Recovery Scanner 重新投递任务，新 Worker 从最近 Checkpoint 恢复。
 
 系统语义定义为：
 
@@ -624,7 +626,7 @@ At-least-once delivery
 1. 固化当前外部行为和评测基线。
 2. 建立 Domain Contracts。
 3. 引入 MySQL Checkpointer、Memory Store、Evidence Store 与 Repository。
-4. 建立 AgentHarnessGraph 和多轮会话入口。
+4. 建立顶层运行图和多轮会话入口。
 5. 建立 Tool Gateway、Evidence Store 和幂等 Ledger。
 6. 实现 WorkflowResearchGraph。
 7. 实现 PlanExecuteResearchGraph 并删除手写循环。
@@ -639,7 +641,7 @@ At-least-once delivery
 
 重构完成必须满足：
 
-1. 三种研究模式全部通过 AgentHarnessGraph 执行。
+1. 三种研究模式全部通过同一个顶层运行图执行。
 2. 不再存在手写 Agent 编排循环。
 3. 每种研究策略都是可独立测试的 LangGraph 子图。
 4. 同一 thread 支持连续追问、增量研究和模式切换。
