@@ -1,5 +1,6 @@
 from deeptrace.domain.conversation import ConversationSummary
 from deeptrace.domain.evidence import Evidence, EvidenceLifecycleStatus, Finding
+from deeptrace.domain.memory import MemoryRecord, MemoryStatus, MemoryType
 from deeptrace.domain.execution import (
     BudgetSnapshot,
     ConversationIntent,
@@ -31,6 +32,9 @@ __all__ = [
     "Evidence",
     "EvidenceLifecycleStatus",
     "Finding",
+    "MemoryRecord",
+    "MemoryStatus",
+    "MemoryType",
     "ResearchInput",
     "ResearchOutcome",
     "ResearchMode",
