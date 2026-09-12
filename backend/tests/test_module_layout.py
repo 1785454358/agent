@@ -80,3 +80,29 @@ def test_tools_expose_the_unified_gateway_and_atomic_adapter_contracts() -> None
     assert FetchPageArguments.__name__ == "FetchPageArguments"
     assert SearchMemoryArguments.__name__ == "SearchMemoryArguments"
     assert callable(build_research_tool_registry)
+
+
+def test_workflow_response_vertical_slice_public_contracts() -> None:
+    from deeptrace.application import (
+        ApplicationResearchRequest,
+        ResearchApplicationService,
+    )
+    from deeptrace.domain import CitationRef, ResponseOutcome
+    from deeptrace.harness import ResponseGraphRegistry, ResponseRegistration
+    from deeptrace.responses import (
+        build_answer_graph,
+        build_brief_graph,
+        build_report_graph,
+    )
+    from deeptrace.strategies import build_workflow_research_graph
+
+    assert callable(build_workflow_research_graph)
+    assert callable(build_answer_graph)
+    assert callable(build_brief_graph)
+    assert callable(build_report_graph)
+    assert CitationRef.__name__ == "CitationRef"
+    assert ResponseOutcome.__name__ == "ResponseOutcome"
+    assert ResponseGraphRegistry.__name__ == "ResponseGraphRegistry"
+    assert ResponseRegistration.__name__ == "ResponseRegistration"
+    assert ApplicationResearchRequest.__name__ == "ApplicationResearchRequest"
+    assert ResearchApplicationService.__name__ == "ResearchApplicationService"
