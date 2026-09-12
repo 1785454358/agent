@@ -1,11 +1,24 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
 from deeptrace.domain.conversation import ConversationSummary
 from deeptrace.domain.evidence import Finding
+
+
+MAX_EXECUTION_ID_LENGTH = 128
+
+ExecutionIdentifier = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=MAX_EXECUTION_ID_LENGTH,
+    ),
+]
 
 
 class ResearchMode(StrEnum):
@@ -89,6 +102,10 @@ class ErrorRecord(BaseModel):
 
 
 class ResearchInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    run_id: ExecutionIdentifier
+    thread_id: ExecutionIdentifier
     question: str = Field(min_length=1)
     conversation_summary: ConversationSummary = Field(
         default_factory=ConversationSummary

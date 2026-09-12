@@ -16,6 +16,8 @@ from deeptrace.harness.state import new_conversation, new_turn
 
 
 class _ChildState(TypedDict, total=False):
+    run_id: str
+    thread_id: str
     question: str
     conversation_summary: dict[str, Any]
     prior_evidence_ids: list[str]
@@ -95,7 +97,10 @@ def _mode_graph(
             "findings": [
                 {
                     "id": f"finding-{mode.value}",
-                    "claim": f"{state['current_date']}|{state['timezone']}",
+                    "claim": (
+                        f"{state['run_id']}|{state['thread_id']}|"
+                        f"{state['current_date']}|{state['timezone']}"
+                    ),
                     "evidence_ids": [f"ev-{mode.value}"],
                     "confidence": 1.0,
                 }
@@ -145,12 +150,14 @@ async def test_harness_routes_to_each_registered_mode(
 
     assert result["turn"]["status"] is ExecutionStatus.COMPLETED
     assert result["turn"]["research_request"].question == "研究 Harness"
+    assert result["turn"]["research_request"].run_id == "run-1"
+    assert result["turn"]["research_request"].thread_id == thread_id
     assert result["turn"]["research_request"].current_date == "2026-09-10"
     assert result["turn"]["research_request"].timezone == "Asia/Shanghai"
     assert result["turn"]["research_outcome"].mode is mode
     assert result["conversation"]["evidence_ids"] == [f"ev-{mode.value}"]
     assert result["conversation"]["established_findings"][0].claim == (
-        "2026-09-10|Asia/Shanghai"
+        f"run-1|{thread_id}|2026-09-10|Asia/Shanghai"
     )
     assert "_private_child_trace" not in result
     assert "_private_child_user_id" not in result

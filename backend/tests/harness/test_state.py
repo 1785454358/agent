@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from deeptrace.domain import (
     BudgetSnapshot,
+    CitationRef,
     ErrorCategory,
     ErrorRecord,
     ExecutionStatus,
@@ -17,6 +18,7 @@ from deeptrace.domain import (
     ResearchOutcome,
     ResearchMode,
     ResponseMode,
+    ResponseOutcome,
     ToolName,
     ToolRequest,
     ToolResult,
@@ -89,6 +91,7 @@ def test_new_turn_does_not_carry_previous_ephemeral_values() -> None:
     assert turn["status"] is ExecutionStatus.PENDING
     assert turn["response_mode"] is ResponseMode.ANSWER
     assert turn["research_outcome"] is None
+    assert turn["response_outcome"] is None
     assert turn["recalled_memory_ids"] == []
 
 
@@ -106,6 +109,8 @@ def test_new_state_is_checkpoint_serializable() -> None:
     )
     state["conversation"]["established_findings"] = [finding]
     state["turn"]["research_request"] = ResearchInput(
+        run_id="run-1",
+        thread_id="thread-1",
         question="研究 Harness",
         conversation_summary=state["conversation"]["summary"],
         prior_evidence_ids=["evidence-1"],
@@ -121,6 +126,12 @@ def test_new_state_is_checkpoint_serializable() -> None:
         unresolved_gaps=[],
         executed_steps=1,
         termination_reason="completed",
+    )
+    state["turn"]["response_outcome"] = ResponseOutcome(
+        response_mode=ResponseMode.ANSWER,
+        content="Harness state is checkpointable [1].",
+        citations=[CitationRef(evidence_id="evidence-1", marker="[1]")],
+        cited_evidence_ids=["evidence-1"],
     )
     state["turn"]["error"] = ErrorRecord(
         code="temporary_failure",

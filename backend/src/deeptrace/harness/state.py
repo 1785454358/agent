@@ -16,6 +16,7 @@ from deeptrace.domain import (
     ResearchInput,
     ResearchOutcome,
     ResearchMode,
+    ResponseOutcome,
     ResponseMode,
 )
 
@@ -77,6 +78,7 @@ class TurnState(TypedDict):
     requires_research: bool
     research_request: ResearchInput | None
     research_outcome: ResearchOutcome | None
+    response_outcome: ResponseOutcome | None
     recalled_memory_ids: list[str]
     active_evidence_ids: list[str]
     budget: BudgetSnapshot
@@ -136,6 +138,7 @@ def new_turn(run_id: str, user_input: str, mode: ResearchMode) -> TurnState:
         "requires_research": True,
         "research_request": None,
         "research_outcome": None,
+        "response_outcome": None,
         "recalled_memory_ids": [],
         "active_evidence_ids": [],
         "budget": BudgetSnapshot(),

@@ -5,6 +5,7 @@ from deeptrace.domain.execution import (
     BudgetSnapshot,
     ErrorCategory,
     ExecutionStatus,
+    ResearchInput,
     ResearchOutcome,
     ResearchMode,
     ResponseMode,
@@ -45,3 +46,21 @@ def test_execution_and_response_values_are_stable() -> None:
     assert ResponseMode.REPORT.value == "report"
     assert ErrorCategory.AGENT_RECOVERABLE.value == "agent_recoverable"
     assert ExecutionStatus.INTERRUPTED.value == "interrupted"
+
+
+def test_research_input_requires_bounded_execution_identity() -> None:
+    fields = {
+        "question": "Research Harness",
+        "current_date": "2026-09-12",
+        "timezone": "Asia/Shanghai",
+    }
+    with pytest.raises(ValidationError):
+        ResearchInput(**fields)
+    with pytest.raises(ValidationError):
+        ResearchInput(run_id="r" * 129, thread_id="thread-1", **fields)
+    with pytest.raises(ValidationError):
+        ResearchInput(run_id="run-1", thread_id=" ", **fields)
+
+    value = ResearchInput(run_id=" run-1 ", thread_id=" thread-1 ", **fields)
+    assert value.run_id == "run-1"
+    assert value.thread_id == "thread-1"

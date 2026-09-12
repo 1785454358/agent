@@ -2,6 +2,7 @@ from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 
 from deeptrace.domain import (
     BudgetSnapshot,
+    CitationRef,
     ConversationIntent,
     ConversationSummary,
     ErrorCategory,
@@ -13,7 +14,9 @@ from deeptrace.domain import (
     ResearchInput,
     ResearchOutcome,
     ResearchMode,
+    ResponseInput,
     ResponseMode,
+    ResponseOutcome,
     ToolName,
     ToolRequest,
     ToolResult,
@@ -32,6 +35,9 @@ HARNESS_STATE_MSGPACK_TYPES = (
     ErrorRecord,
     ResearchInput,
     ResearchOutcome,
+    CitationRef,
+    ResponseInput,
+    ResponseOutcome,
     ToolName,
     ToolRequest,
     ToolResult,

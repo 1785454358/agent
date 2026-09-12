@@ -28,6 +28,8 @@ def _research_input(
     turn = state["turn"]
     now = runtime.context.clock.now()
     return ResearchInput(
+        run_id=turn["run_id"],
+        thread_id=conversation["thread_id"],
         question=turn["user_input"],
         conversation_summary=conversation["summary"],
         prior_evidence_ids=conversation["evidence_ids"],
