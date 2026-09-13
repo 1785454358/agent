@@ -50,11 +50,15 @@ def build_plan_node(max_tasks: int):
         state: PlanExecuteState, runtime: Runtime[HarnessContext]
     ) -> dict[str, Any]:
         research_input = _research_input(state)
+        from deeptrace.strategies.model_io import conversation_background_lines
+
+        background = conversation_background_lines(research_input)
         prompt = (
             "你是一次研究任务的规划器。请把用户问题拆解为互不重复的研究任务查询，"
             f"数量不超过 {max_tasks} 条，并只输出 JSON：{{\"queries\": [\"...\"]}}。\n\n"
             f"用户问题：{research_input.question}\n"
-            f"今天日期：{research_input.current_date}"
+            + ("" if not background else "会话背景：\n" + "\n".join(background) + "\n")
+            + f"今天日期：{research_input.current_date}"
         )
         queries: list[str] = []
         try:
@@ -159,6 +163,9 @@ async def evaluate_node(
         for record in evidence_records
     )
     completed = ", ".join(state.get("completed_tasks") or [])
+    from deeptrace.strategies.model_io import conversation_background_lines
+
+    background_lines = conversation_background_lines(research_input)[:6]
     prompt = (
         "你是一次研究任务的评估器。基于已执行任务与收集的资料，决定下一步动作。\n"
         "action 只能是 complete（资料足够）、replan（需要补充新查询）或 block（无法继续）。\n"
@@ -166,7 +173,12 @@ async def evaluate_node(
         '只输出 JSON：{"action", "reason", "findings": [{"id", "claim", "evidence_ids", "confidence"}], '
         '"unresolved_gaps": ["..."]}。\n\n'
         f"用户问题：{research_input.question}\n已完成任务：{completed}\n\n"
-        f"可用资料：\n{evidence_lines}"
+        + (
+            ""
+            if not background_lines
+            else "会话背景：\n" + "\n".join(background_lines) + "\n\n"
+        )
+        + f"可用资料：\n{evidence_lines}"
     )
     try:
         response = await runtime.context.model_gateway.invoke(

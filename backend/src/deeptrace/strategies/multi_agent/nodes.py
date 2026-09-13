@@ -72,11 +72,15 @@ def build_supervisor_plan_node(max_researchers: int):
         state: MultiAgentState, runtime: Runtime[HarnessContext]
     ) -> dict[str, Any]:
         research_input = _research_input(state)
+        from deeptrace.strategies.model_io import conversation_background_lines
+
+        background = conversation_background_lines(research_input)
         prompt = (
             "你是一次研究的监督者。请把用户问题拆解为互不重叠的研究方向，"
             f"最多 {max_researchers} 条，并只输出 JSON：{{\"assignments\": [\"...\"]}}。\n\n"
             f"用户问题：{research_input.question}\n"
-            f"今天日期：{research_input.current_date}"
+            + ("" if not background else "会话背景：\n" + "\n".join(background) + "\n")
+            + f"今天日期：{research_input.current_date}"
         )
         assignments: list[str] = []
         try:
@@ -182,13 +186,22 @@ async def supervisor_evaluate_node(
         f"- [{record.id}] {record.title} {record.canonical_url}"
         for record in evidence_records
     )
+    from deeptrace.strategies.model_io import conversation_background_lines
+
+    background_lines = conversation_background_lines(research_input)[:6]
     prompt = (
         "你是一次多智能体研究的监督者。基于各研究员收集的资料，判断是否足够回答用户问题。\n"
         "action 只能是 complete（足够）或 follow_up（需要追加研究方向）。\n"
         "findings 中的 evidence_ids 必须逐字引用下方资料 ID。\n"
         '只输出 JSON：{"action", "reason", "findings": [{"id", "claim", "evidence_ids", "confidence"}], '
         '"unresolved_gaps": ["..."]}。\n\n'
-        f"用户问题：{research_input.question}\n\n可用资料：\n{evidence_lines}"
+        f"用户问题：{research_input.question}\n\n"
+        + (
+            ""
+            if not background_lines
+            else "会话背景：\n" + "\n".join(background_lines) + "\n\n"
+        )
+        + f"可用资料：\n{evidence_lines}"
     )
     try:
         response = await runtime.context.model_gateway.invoke(

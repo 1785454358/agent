@@ -82,6 +82,7 @@ class ResearchWorker:
                 f"任务超过最大重试次数（{self._settings.worker_max_attempts}）",
             )
             if failed is not None:
+                await self._release_thread_lease(run)
                 await self._append_done_and_ack(run.id, job.message_id)
             return
         if await self._broker.is_cancel_requested(run.id):
@@ -120,6 +121,7 @@ class ResearchWorker:
                 f"运行失败（{type(exc).__name__}），请检查服务与模型配置",
             )
             if failed is not None:
+                await self._release_thread_lease(run)
                 await self._append_done_and_ack(run.id, job.message_id)
             return
         execution_error: Exception | None = None
@@ -171,6 +173,7 @@ class ResearchWorker:
                 run.id, self._worker_id, "运行被用户取消"
             )
             if cancelled is not None:
+                await self._release_thread_lease(run)
                 await self._append_done_and_ack(run.id, job.message_id)
             return
         if control_outcome == "lease_lost":
@@ -184,6 +187,7 @@ class ResearchWorker:
                 "请检查服务与模型配置",
             )
             if failed is not None:
+                await self._release_thread_lease(run)
                 await self._append_done_and_ack(run.id, job.message_id)
             return
 
@@ -192,6 +196,7 @@ class ResearchWorker:
         )
         if completed is None:
             return
+        await self._release_thread_lease(run)
         await self._append_done_and_ack(run.id, job.message_id)
 
     async def _monitor(self, run_id: str) -> str:
@@ -206,6 +211,15 @@ class ResearchWorker:
             )
             if not renewed:
                 return "lease_lost"
+
+    async def _release_thread_lease(self, run: RunRecord) -> None:
+        if getattr(run, "thread_id", ""):
+            try:
+                await self._repository.release_thread_lease(
+                    run.thread_id, run.id
+                )
+            except Exception:
+                return
 
     async def _append_done_and_ack(self, run_id: str, message_id: str) -> None:
         done = await self._repository.append_event(
@@ -231,11 +245,17 @@ def build_worker(settings: Settings) -> ResearchWorker:
     async def dispose_engine() -> None:
         await engine.dispose()
 
+    runner = build_harness_runner(settings)
+
+    async def dispose_all() -> None:
+        await runner.aclose()
+        await dispose_engine()
+
     return ResearchWorker(
         SqlAlchemyRunRepository(sessions),
         broker,
         settings,
-        research_runner=build_harness_runner(settings),
+        research_runner=runner,
         worker_id=settings.redis_consumer_name,
-        close_callback=dispose_engine,
+        close_callback=dispose_all,
     )

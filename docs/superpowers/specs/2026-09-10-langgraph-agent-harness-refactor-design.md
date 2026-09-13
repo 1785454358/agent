@@ -1,5 +1,11 @@
 # ResearchPilot LangGraph Agent Harness 重构设计
 
+> **历史文档（2026-09-10 设计稿）。** 实施过程中的命名已演进：`Profile` → `ResearchMode`、
+> `HarnessGraph` → 顶层运行图（`build_agent_runtime_graph`）、Profile Registry →
+> `StrategyRegistry` + `ResponseGraphRegistry`；Checkpoint 采用自研 SQLAlchemy Saver
+> 而非社区 `langgraph-checkpoint-mysql[asyncmy]`。以
+> `docs/superpowers/plans/2026-09-13-harness-implementation-decisions.md` 为准。
+
 ## 1. 背景
 
 ResearchPilot 当前提供 Basic、Deep 和 Multi-Agent 三种研究模式，也提供 Local 与 Distributed 两种部署运行方式。部署层已经通过统一的运行接口隔离 API、Worker、MySQL 和 Redis，但研究层仍由三套相对独立的实现承担模型装配、资源生命周期、额度、事件、工具调用和结果收尾。

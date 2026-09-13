@@ -175,8 +175,10 @@ def build_generate_node(policy: ResponsePolicy):
             f"- {finding.claim}（{', '.join(finding.evidence_ids)}）"
             for finding in (response_input.research_outcome.findings if response_input.research_outcome else [])
         )
+        # context_notes are pre-bounded by the caller (24 entries, each
+        # truncated); do not re-trim here or recent messages get cut
         notes = "\n".join(
-            f"- {note}" for note in response_input.context_notes[:10]
+            f"- {note}" for note in response_input.context_notes
         )
         prompt = (
             f"{policy.instructions}\n\n"

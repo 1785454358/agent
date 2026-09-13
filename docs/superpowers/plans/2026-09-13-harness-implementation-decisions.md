@@ -322,3 +322,34 @@
     路由为 Brief，引用复用第一轮的 3 条持久化 Evidence（无新搜索），
     SQLite Evidence Store 的跨轮/重启持久化得到真实验证。
     回归基线：362 non-real passed + real 冒烟 + real 多轮验证通过。
+
+## 第四轮：外部审查修复（2026-09-13）
+
+第三轮外部审查确认第二轮修复有效，指出 4 个阻塞与 4 项应改进问题，本轮全部修复：
+
+59. **ThreadBusyError 导入缺失**：distributed.py 补上 `runtime.errors` 导入，
+    同 thread 并发创建现在返回 409 而不是 500。
+60. **原子 thread lease**：新增 `thread_leases` 表（thread_id 主键）+ 仓储
+    `acquire_thread_lease/release_thread_lease`（INSERT 唯一键原子抢占，
+    IntegrityError 视为占用）。分布式 create 以 lease 取代"遍历最近 100 条"的
+    非原子检查，跨 API 进程安全；dispatch 失败回滚释放。Worker 在 complete/
+    fail/cancel 四个终态路径释放 lease（lease_lost 不释放，保留给接管方）。
+61. **服务层恢复语义**：`ResearchApplicationService` 检查快照
+    `next` 非空且 turn.run_id 相同 → `ainvoke(None)` 续跑中断任务；
+    同 thread 的新 run（run_id 不同）仍为新 turn。新增
+    "Worker 链路崩溃 → 同身份请求 → 续跑完成且 planner 只跑一次"的集成测试。
+62. **Evidence 版本竞态**：ingest 全程单事务 + `with_for_update()`（MySQL 行锁，
+    SQLite 单写序列化）+ `(tenant, canonical_url, version)` 唯一约束；
+    IntegrityError 兜底返回已存记录。并发抓取同 URL 不会产生重复版本或双 active。
+63. **响应端二次裁剪移除**：context_notes 由调用方预算（24 条、单条截断），
+    响应图不再截断到 10 条。
+64. **近期消息进入全部策略**：抽取共享 `conversation_background_lines`，
+    Workflow 规划器、Plan-and-Execute 规划器与评估器、Multi-Agent Supervisor
+    规划器与评估器的提示词统一携带会话背景与最近对话。
+65. **资源生命周期**：`build_harness_runtime` 返回 `HarnessRuntimeBundle`
+    （service / context_factory / aclose），aclose 释放 SQL 引擎与抓取器
+    HTTP/浏览器客户端；API lifespan 与 Worker close_callback 统一托管。
+66. **文档**：设计稿与 Foundation 计划顶部加历史横幅（命名演进说明）；
+    README 顶部加架构状态横幅（声明流量已切换、旧章节仅历史参考、
+    Harness 记忆路径不使用 BGE-M3）；roadmap 基线更新为 364。
+    回归基线：364 non-real passed + real 冒烟通过（34s）。

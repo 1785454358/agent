@@ -5,11 +5,11 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from typing import Protocol
 
-from sqlalchemy import and_, or_, select, update
+from sqlalchemy import and_, delete as sa_delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from deeptrace.models import AgentResult, RunEvent
-from deeptrace.persistence.orm import ResearchRunRow, RunEventRow
+from deeptrace.persistence.orm import ResearchRunRow, RunEventRow, ThreadLeaseRow
 from deeptrace.runtime.models import RunRecord, StoredEvent
 
 
@@ -47,6 +47,10 @@ class RunRepository(Protocol):
     async def fail(
         self, run_id: str, worker_id: str, error: str
     ) -> RunRecord | None: ...
+
+    async def acquire_thread_lease(self, thread_id: str, run_id: str) -> bool: ...
+
+    async def release_thread_lease(self, thread_id: str, run_id: str) -> bool: ...
 
     async def cancel(
         self, run_id: str, worker_id: str, error: str
@@ -358,3 +362,33 @@ class SqlAlchemyRunRepository:
             payload=row.payload,
             created_at=created_at,
         )
+
+
+    async def acquire_thread_lease(self, thread_id: str, run_id: str) -> bool:
+        """Atomic INSERT-based claim; a duplicate thread raises IntegrityError."""
+        from sqlalchemy.exc import IntegrityError
+
+        try:
+            async with self._sessions() as session:
+                session.add(
+                    ThreadLeaseRow(
+                        thread_id=thread_id,
+                        run_id=run_id,
+                        created_at=datetime.now(UTC),
+                    )
+                )
+                await session.commit()
+            return True
+        except IntegrityError:
+            return False
+
+    async def release_thread_lease(self, thread_id: str, run_id: str) -> bool:
+        async with self._sessions() as session:
+            result = await session.execute(
+                sa_delete(ThreadLeaseRow).where(
+                    ThreadLeaseRow.thread_id == thread_id,
+                    ThreadLeaseRow.run_id == run_id,
+                )
+            )
+            await session.commit()
+        return bool(result.rowcount)

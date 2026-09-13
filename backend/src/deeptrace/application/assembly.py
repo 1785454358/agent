@@ -85,6 +85,7 @@ def _build_durable_stores(
     ToolExecutionStore,
     Any,
     EvidenceStore,
+    Any,
 ]:
     """Checkpoint saver, execution ledger, memory store, evidence store.
 
@@ -112,7 +113,7 @@ def _build_durable_stores(
         ledger: ToolExecutionStore = SqlAlchemyToolExecutionStore(sessions)
         memory_store: Any = SqlAlchemyMemoryStore(sessions)
         evidence = SqlAlchemyEvidenceStore(sessions)
-        return saver, ledger, memory_store, evidence
+        return saver, ledger, memory_store, evidence, engine
 
     runs = Path(runs_dir or "runs")
     runs.mkdir(parents=True, exist_ok=True)
@@ -124,7 +125,7 @@ def _build_durable_stores(
     ledger = InMemoryToolExecutionStore()
     memory_store = InMemoryMemoryStore()
     evidence = SqlAlchemyEvidenceStore(sessions)
-    return saver, ledger, memory_store, evidence
+    return saver, ledger, memory_store, evidence, engine
 
 
 def _ensure_sqlite_schema(db_path: Path) -> None:
@@ -163,20 +164,53 @@ def _ensure_sqlite_schema(db_path: Path) -> None:
         connection.close()
 
 
+class HarnessRuntimeBundle:
+    """The assembled runtime plus a lifecycle hook for its owned resources.
+
+    ``aclose()`` disposes the SQL engine/connection pool and the HTTP/browser
+    clients owned by the fetcher. API and Worker lifecycles must call it on
+    shutdown.
+    """
+
+    def __init__(
+        self,
+        service: ResearchApplicationService,
+        context_factory: Callable[[str], HarnessContext],
+        resources: list[Any],
+    ) -> None:
+        self.service = service
+        self.context_factory = context_factory
+        self._resources = [item for item in resources if item is not None]
+
+    async def aclose(self) -> None:
+        for resource in self._resources:
+            closer = getattr(resource, "aclose", None) or getattr(
+                resource, "dispose", None
+            )
+            if closer is None:
+                continue
+            try:
+                result = closer()
+                if asyncio.iscoroutine(result):
+                    await result
+            except Exception:
+                continue
+
+
 def build_harness_runtime(
     settings: Settings,
     *,
     runs_dir: Path | str | None = None,
     page_memory: ResearchMemory | None = None,
-) -> tuple[ResearchApplicationService, Callable[[str], HarnessContext]]:
+) -> HarnessRuntimeBundle:
     """Assemble the top-level runtime graph plus a per-run context factory.
 
     The graph is always compiled with a durable checkpointer (MySQL when a DSN
     is configured, otherwise a SQLite file under ``runs_dir``), so any run can
     resume node-by-node after a crash or restart.
     """
-    saver, ledger, memory_store, evidence_store = _build_durable_stores(
-        settings, runs_dir
+    saver, ledger, memory_store, evidence_store, engine = (
+        _build_durable_stores(settings, runs_dir)
     )
 
     model = ChatOpenAI(
@@ -262,4 +296,6 @@ def build_harness_runtime(
             memory_store=memory_store,
         )
 
-    return service, context_factory
+    return HarnessRuntimeBundle(
+        service, context_factory, [engine, fetcher]
+    )

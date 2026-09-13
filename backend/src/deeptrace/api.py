@@ -55,17 +55,15 @@ def _build_runtime(
     if getattr(settings, "runtime_mode", "local") == "local":
         from deeptrace.application.assembly import build_harness_runtime
 
-        application, context_factory = build_harness_runtime(
-            settings, runs_dir=runs_dir or "runs"
-        )
+        bundle = build_harness_runtime(settings, runs_dir=runs_dir or "runs")
         return (
             LocalResearchRuntime(
                 settings,
                 runs_dir or "runs",
-                application=application,
-                context_factory=context_factory,
+                application=bundle.service,
+                context_factory=bundle.context_factory,
             ),
-            None,
+            bundle.aclose,
         )
 
     engine, sessions = create_session_factory(settings.mysql_dsn)

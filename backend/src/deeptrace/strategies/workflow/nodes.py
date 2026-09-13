@@ -86,13 +86,9 @@ def build_plan_queries_node(query_limit: int):
         runtime: Runtime[HarnessContext],
     ) -> dict[str, Any]:
         research_input = _research_input(state)
-        summary = research_input.conversation_summary
-        summary_lines = (
-            ([f"主题：{summary.topic}"] if summary.topic else [])
-            + [f"约束：{c}" for c in summary.user_constraints[:5]]
-            + [f"已知：{f}" for f in summary.established_facts[:5]]
-            + [f"最近对话：{m}" for m in research_input.recent_messages[:4]]
-        )
+        from deeptrace.strategies.model_io import conversation_background_lines
+
+        summary_lines = conversation_background_lines(research_input)
         prompt = (
             "你是一次研究任务的查询规划器。请基于用户问题生成互不重复的搜索查询，"
             f"数量不超过 {query_limit} 条，并只输出 JSON：{{\"queries\": [\"...\"]}}。\n\n"

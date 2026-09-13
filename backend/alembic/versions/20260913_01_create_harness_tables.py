@@ -91,6 +91,13 @@ def upgrade() -> None:
     )
 
     op.create_table(
+        "thread_leases",
+        sa.Column("thread_id", sa.String(length=128), primary_key=True),
+        sa.Column("run_id", sa.String(length=64), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    )
+
+    op.create_table(
         "evidence_records",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("tenant_id", sa.String(length=128), nullable=False),
@@ -111,6 +118,12 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
             "tenant_id", "evidence_id", name="ux_evidence_records_identity"
+        ),
+        sa.UniqueConstraint(
+            "tenant_id",
+            "canonical_url",
+            "version",
+            name="ux_evidence_records_version",
         ),
     )
     op.create_index(
@@ -141,6 +154,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_column("research_runs", "thread_id")
+    op.drop_table("thread_leases")
     op.drop_index(
         "ix_evidence_records_source", table_name="evidence_records"
     )

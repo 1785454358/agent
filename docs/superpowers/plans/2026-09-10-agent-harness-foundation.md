@@ -1,5 +1,8 @@
 # Agent Harness Foundation Implementation Plan
 
+> **历史文档（已交付）。** 本文的 Profile/HarnessGraph 等命名在后续提交中演进为
+> ResearchMode/顶层运行图；以 `2026-09-13-harness-implementation-decisions.md` 为准。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the typed, checkpointable foundation of the LangGraph Harness without changing current API, CLI, Worker, or production research behavior.

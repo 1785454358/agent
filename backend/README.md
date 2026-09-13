@@ -1,5 +1,11 @@
 # ResearchPilot 后端
 
+> **架构状态（2026-09-13）**：全部研究流量已切换到基于 LangGraph 的统一 Harness
+> 顶层运行图（Workflow / Plan-and-Execute / Multi-Agent），旧 Basic/Deep/Multi-Agent
+> 编排实现已删除。本文以下描述旧三套模式的章节仅作历史参考；当前架构、持久化与
+> 多轮会话见 `docs/superpowers/plans/2026-09-13-harness-implementation-decisions.md`。
+> Harness 记忆路径不使用 BGE-M3 语义重排。
+
 ResearchPilot 提供 Basic、Deep 与 Multi-Agent 三种平级模式。Basic 参考 GPT-Researcher 的基础报告路径；Deep 使用 Plan-and-Execute、ReAct 原生工具调用与动态重规划；Multi-Agent 使用 LangGraph 编排 Supervisor Plan-and-Execute 和多个独立 ReAct Researcher。Python 包名、旧 CLI 命令和环境变量前缀继续兼容 DeepTrace。
 
 ## 两种运行方式

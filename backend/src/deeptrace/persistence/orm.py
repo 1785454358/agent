@@ -155,6 +155,13 @@ class EvidenceRecordRow(Base):
             unique=True,
         ),
         Index(
+            "ux_evidence_records_version",
+            "tenant_id",
+            "canonical_url",
+            "version",
+            unique=True,
+        ),
+        Index(
             "ix_evidence_records_source",
             "tenant_id",
             "canonical_url",
@@ -177,4 +184,12 @@ class EvidenceRecordRow(Base):
     version: Mapped[int] = mapped_column(Integer, default=1)
     supersedes: Mapped[str | None] = mapped_column(String(160))
     metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ThreadLeaseRow(Base):
+    __tablename__ = "thread_leases"
+
+    thread_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    run_id: Mapped[str] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

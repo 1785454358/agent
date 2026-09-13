@@ -283,3 +283,127 @@ async def test_crash_after_memory_commit_does_not_duplicate_facts(tmp_path) -> N
     )
     assert len(facts) == 1
     assert fixture.fetcher.calls == ["https://example.com/a"]
+
+
+@pytest.mark.asyncio
+async def test_checkpointer_supports_explicit_checkpoint_id_and_filtered_list(
+    tmp_path,
+) -> None:
+    saver, _ledger = await _setup(tmp_path)
+    model = CrashOnceModelGateway(
+        responses={
+            "planner": lambda prompt: json.dumps({"queries": ["研究问题"]}),
+            "evaluator": _evaluation,
+            "responder": lambda prompt: json.dumps({"content": "结论 [1]。"}),
+        },
+        crash_role="__never__",
+    )
+    fixture = build_gateway_fixture(
+        search_results={
+            "研究问题": [
+                {"url": "https://example.com/a", "title": "A", "snippet": "s"}
+            ]
+        },
+        pages={"https://example.com/a": "body-a"},
+        model_gateway=model,
+    )
+    strategies, responses = _registries()
+    graph = build_agent_runtime_graph(strategies, responses, checkpointer=saver)
+    config = {"configurable": {"thread_id": "thread-1"}}
+
+    await graph.ainvoke(
+        {
+            "conversation": _new_conversation("thread-1"),
+            "turn": _new_turn("run-1", "研究问题"),
+        },
+        config=config,
+        context=fixture.context,
+    )
+    checkpoints = [
+        item async for item in saver.alist(config, limit=100)
+    ]
+    assert len(checkpoints) >= 2
+
+    # explicit checkpoint_id reads that historical state (time travel / fork)
+    historical = checkpoints[2] if len(checkpoints) > 2 else checkpoints[0]
+    pointed = await saver.aget_tuple(
+        {
+            "configurable": {
+                "thread_id": "thread-1",
+                "checkpoint_id": historical.config["configurable"]["checkpoint_id"],
+            }
+        }
+    )
+    assert pointed is not None
+    assert (
+        pointed.config["configurable"]["checkpoint_id"]
+        == historical.config["configurable"]["checkpoint_id"]
+    )
+
+    # filtered + limited listing: filter selects nothing -> empty, not garbage
+    listed = [
+        item
+        async for item in saver.alist(
+            config, filter={"source": "no-such-value"}, limit=5
+        )
+    ]
+    assert listed == []
+
+
+@pytest.mark.asyncio
+async def test_service_resumes_an_interrupted_run_for_the_same_identity(
+    tmp_path,
+) -> None:
+    """Worker-chain crash: the same run request resumes instead of restarting."""
+    from deeptrace.application.research import (
+        ApplicationResearchRequest,
+        ResearchApplicationService,
+    )
+
+    saver, ledger = await _setup(tmp_path)
+    model = CrashOnceModelGateway(
+        responses={
+            "planner": lambda prompt: json.dumps({"queries": ["研究问题"]}),
+            "evaluator": _evaluation,
+            "responder": lambda prompt: json.dumps({"content": "结论 [1]。"}),
+        },
+        crash_role="__never__",
+    )
+    fixture = build_gateway_fixture(
+        search_results={
+            "研究问题": [
+                {"url": "https://example.com/a", "title": "A", "snippet": "s"}
+            ]
+        },
+        pages={"https://example.com/a": "service-resume-body"},
+        model_gateway=model,
+        execution_store=ledger,
+    )
+    crashing_topic = CrashProxy(
+        build_research_topic_graph(), after_completion=False
+    )
+    strategies, responses = _registries(topic_proxy=crashing_topic)
+    graph = build_agent_runtime_graph(strategies, responses, checkpointer=saver)
+    service = ResearchApplicationService(graph)
+    request = ApplicationResearchRequest(
+        run_id="run-1",
+        thread_id="thread-1",
+        question="研究问题",
+        mode=ResearchMode.WORKFLOW,
+    )
+    config = {"configurable": {"thread_id": "thread-1"}}
+
+    with pytest.raises(NodeCancelledError):
+        await service.invoke(request, config=config, context=fixture.context)
+
+    # same run identity again: the service resumes the interrupted run
+    outcome = await service.invoke(
+        request, config=config, context=fixture.context
+    )
+
+    assert outcome.partial_reason is None
+    assert outcome.cited_evidence_ids
+    # the planner ran exactly once across both attempts (no restart from zero)
+    assert model.calls.count("planner") == 1
+    assert fixture.search.calls == ["研究问题"]
+    assert fixture.fetcher.calls == ["https://example.com/a"]

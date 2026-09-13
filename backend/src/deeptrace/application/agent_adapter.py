@@ -20,21 +20,26 @@ class HarnessResearchRunner:
 
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
-        self._runtime: tuple[Any, Callable[[str], Any]] | None = None
+        self._bundle: Any | None = None
 
-    def _ensure_runtime(self):
-        if self._runtime is None:
+    def _ensure_bundle(self):
+        if self._bundle is None:
             from deeptrace.application.assembly import build_harness_runtime
 
-            self._runtime = build_harness_runtime(self._settings)
-        return self._runtime
+            self._bundle = build_harness_runtime(self._settings)
+        return self._bundle
+
+    async def aclose(self) -> None:
+        if self._bundle is not None:
+            await self._bundle.aclose()
+            self._bundle = None
 
     async def __call__(
         self,
         run: RunRecord,
         on_event: Callable[[RunEvent], None] | None = None,
     ) -> AgentResult:
-        service, context_factory = self._ensure_runtime()
+        bundle = self._ensure_bundle()
         thread_id = run.thread_id or run.id
 
         def emit(event_type: str, message: str) -> None:
@@ -48,7 +53,7 @@ class HarnessResearchRunner:
         def on_harness_event(event_type: str, payload: dict) -> None:
             emit(event_type, str(payload.get("error_code") or event_type))
 
-        context = context_factory(run.id, on_harness_event)
+        context = bundle.context_factory(run.id, on_harness_event)
         emit("planning.completed", "研究任务已进入统一运行图")
         outcome = await service.invoke(
             ApplicationResearchRequest(

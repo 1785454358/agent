@@ -37,6 +37,8 @@ class SqlAlchemyEvidenceStore:
         content_hash = _content_hash(draft.body)
         evidence_id = _evidence_id(canonical_url, content_hash)
 
+        from sqlalchemy.exc import IntegrityError
+
         async with self._sessions() as session:
             existing = (
                 await session.execute(
@@ -59,6 +61,7 @@ class SqlAlchemyEvidenceStore:
                     )
                     .order_by(EvidenceRecordRow.version.desc())
                     .limit(1)
+                    .with_for_update()
                 )
             ).scalar_one_or_none()
             version = 1
@@ -86,7 +89,34 @@ class SqlAlchemyEvidenceStore:
                 created_at=datetime.now(UTC),
             )
             session.add(record)
-            await session.commit()
+            try:
+                await session.commit()
+            except IntegrityError:
+                # A concurrent transaction won the version race (same content
+                # or same next version): serve the stored record instead.
+                await session.rollback()
+                winner = (
+                    await session.execute(
+                        select(EvidenceRecordRow).where(
+                            EvidenceRecordRow.tenant_id == tenant,
+                            EvidenceRecordRow.evidence_id == evidence_id,
+                        )
+                    )
+                ).scalar_one_or_none()
+                if winner is None:
+                    winner = (
+                        await session.execute(
+                            select(EvidenceRecordRow)
+                            .where(
+                                EvidenceRecordRow.tenant_id == tenant,
+                                EvidenceRecordRow.canonical_url == canonical_url,
+                                EvidenceRecordRow.status == "active",
+                            )
+                            .order_by(EvidenceRecordRow.version.desc())
+                            .limit(1)
+                        )
+                    ).scalar_one()
+                return _to_model(winner)
             return _to_model(record)
 
     async def get(self, tenant_id: str, evidence_id: str) -> Evidence:

@@ -88,6 +88,17 @@ class ResearchApplicationService:
                 snapshot = await aget_state(merged_config)
             except ValueError:
                 snapshot = None  # no checkpointer: always a fresh conversation
+
+        if snapshot is not None and snapshot.next:
+            # Interrupted run for THIS run_id: resume from the durable
+            # checkpoint instead of starting over (LangGraph resume semantics).
+            prior_turn = snapshot.values.get("turn") or {}
+            if prior_turn.get("run_id") == request.run_id:
+                result = await self._graph.ainvoke(
+                    None, config=merged_config, context=context
+                )
+                return self._extract_outcome(result)
+
         if snapshot is not None and snapshot.values.get("conversation"):
             # Multi-turn continuation: keep the persisted ConversationState.
             initial_state: dict[str, Any] = {"turn": turn}
@@ -99,6 +110,10 @@ class ResearchApplicationService:
         result = await self._graph.ainvoke(
             initial_state, config=merged_config, context=context
         )
+        return self._extract_outcome(result)
+
+    @staticmethod
+    def _extract_outcome(result: dict[str, Any]):
         turn = result["turn"]
         response_outcome = turn.get("response_outcome")
         if response_outcome is None:

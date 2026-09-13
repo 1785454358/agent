@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 
 from deeptrace.persistence.repository import RunRepository
 from deeptrace.queue.protocol import ResearchBroker
+from deeptrace.runtime.errors import ThreadBusyError
 from deeptrace.runtime.models import RunMode, RunRecord
 
 TERMINAL_STATUSES = {"completed", "partial", "failed", "cancelled"}
@@ -41,13 +42,6 @@ class DistributedResearchRuntime:
         if not clean_question:
             raise ValueError("问题不能为空")
         clean_thread = (thread_id or "").strip()
-        if clean_thread:
-            for existing in await self._repository.list():
-                if (
-                    existing.thread_id == clean_thread
-                    and existing.status in {"pending", "running", "cancel_requested"}
-                ):
-                    raise ThreadBusyError(clean_thread)
         now = datetime.now(UTC)
         run = RunRecord(
             id=self._id_factory(),
@@ -62,11 +56,22 @@ class DistributedResearchRuntime:
                 "thread_id": clean_thread or None,
             },
         )
-        await self._repository.create(run)
+        # Atomic thread claim: the INSERT-based lease guarantees one active run
+        # per thread even across API processes.
+        if not await self._repository.acquire_thread_lease(
+            run.thread_id, run.id
+        ):
+            raise ThreadBusyError(run.thread_id)
         try:
+            await self._repository.create(run)
             await self._broker.enqueue(run.id)
         except Exception as exc:
-            raise JobDispatchError(f"failed to enqueue run {run.id}") from exc
+            await self._repository.release_thread_lease(run.thread_id, run.id)
+            if isinstance(exc, JobDispatchError):
+                raise
+            raise JobDispatchError(
+                f"failed to dispatch run {run.id}"
+            ) from exc
         return run
 
     async def get(self, run_id: str) -> RunRecord | None:

@@ -32,3 +32,15 @@ def parse_json_object(text: str) -> dict[str, Any] | None:
     except (TypeError, ValueError):
         return None
     return payload if isinstance(payload, dict) else None
+
+
+def conversation_background_lines(research_input) -> list[str]:
+    """Bounded conversation background for strategy prompts."""
+    summary = research_input.conversation_summary
+    lines = (
+        ([f"主题：{summary.topic}"] if summary.topic else [])
+        + [f"约束：{c}" for c in summary.user_constraints[:5]]
+        + [f"已知：{f}" for f in summary.established_facts[:5]]
+        + [f"最近对话：{m}" for m in research_input.recent_messages[:4]]
+    )
+    return lines

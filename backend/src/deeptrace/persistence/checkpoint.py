@@ -37,18 +37,18 @@ class SqlAlchemyCheckpointSaver(BaseCheckpointSaver):
 
     async def aget_tuple(self, config: RunnableConfig) -> CheckpointTuple | None:
         thread_id, namespace = _config_parts(config)
+        requested_id = get_checkpoint_id(config)
         async with self._sessions() as session:
-            row = (
-                await session.execute(
-                    select(CheckpointRow)
-                    .where(
-                        CheckpointRow.thread_id == thread_id,
-                        CheckpointRow.checkpoint_ns == namespace,
-                    )
-                    .order_by(CheckpointRow.checkpoint_id.desc())
-                    .limit(1)
-                )
-            ).scalar_one_or_none()
+            query = select(CheckpointRow).where(
+                CheckpointRow.thread_id == thread_id,
+                CheckpointRow.checkpoint_ns == namespace,
+            )
+            if requested_id:
+                # explicit checkpoint_id: time travel / fork reads that state
+                query = query.where(CheckpointRow.checkpoint_id == requested_id)
+            else:
+                query = query.order_by(CheckpointRow.checkpoint_id.desc()).limit(1)
+            row = (await session.execute(query)).scalar_one_or_none()
             if row is None:
                 return None
             write_rows = (

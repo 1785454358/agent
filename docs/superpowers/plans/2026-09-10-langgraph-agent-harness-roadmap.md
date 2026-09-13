@@ -17,7 +17,7 @@
 > multi-turn, dynamic compression and memory injection are implemented, and transient
 > tool errors retry at node level. Plan docs: `2026-09-13-{plan-execute-strategy,
 > multi-agent-strategy,mysql-distributed-recovery}.md`; decisions in
-> `2026-09-13-harness-implementation-decisions.md`. Baseline: 359 non-real tests green
+> `2026-09-13-harness-implementation-decisions.md`. Baseline: 364 non-real tests green
 > (legacy suites removed with their modules) + real-API smoke test (`-m real`) passing.
 
 ## Global Constraints
