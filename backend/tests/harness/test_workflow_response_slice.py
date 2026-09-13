@@ -347,6 +347,12 @@ async def test_follow_up_in_same_thread_answers_without_new_research() -> None:
 
     assert second.response_mode is ResponseMode.BRIEF
     assert second.partial_reason is None
+    # the responder prompt now carries the recent conversation, including the
+    # previous turn's assistant reply and the injected summary
+    responder_prompt = [
+        prompt for role, prompt in model.calls if role == "responder"
+    ][-1]
+    assert "助手：" in responder_prompt
     assert second.cited_evidence_ids == first.cited_evidence_ids
     # no new research happened for the follow-up turn
     assert len(fixture.gateway.calls) == tool_calls_after_first_turn

@@ -91,6 +91,7 @@ def build_plan_queries_node(query_limit: int):
             ([f"主题：{summary.topic}"] if summary.topic else [])
             + [f"约束：{c}" for c in summary.user_constraints[:5]]
             + [f"已知：{f}" for f in summary.established_facts[:5]]
+            + [f"最近对话：{m}" for m in research_input.recent_messages[:4]]
         )
         prompt = (
             "你是一次研究任务的查询规划器。请基于用户问题生成互不重复的搜索查询，"

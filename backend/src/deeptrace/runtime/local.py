@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from deeptrace.application.research import ApplicationResearchRequest
+from deeptrace.runtime.errors import ThreadBusyError
 from deeptrace.models import RunEvent
 from deeptrace.runtime.models import RunMode, RunRecord, StoredEvent
 
@@ -20,6 +21,7 @@ class _LocalRunState:
         self.task: asyncio.Task[None] | None = None
         self.events: list[StoredEvent] = []
         self.changed = asyncio.Event()
+        self.thread_lock: asyncio.Lock | None = None
 
 
 class LocalResearchRuntime:
@@ -37,6 +39,7 @@ class LocalResearchRuntime:
         self._application = application
         self._context_factory = context_factory
         self._registry: dict[str, _LocalRunState] = {}
+        self._thread_locks: dict[str, asyncio.Lock] = {}
         self._next_event_id = 1
 
     async def start(self) -> None:
@@ -61,11 +64,16 @@ class LocalResearchRuntime:
             raise ValueError("问题不能为空")
         now = datetime.now(UTC)
         clean_thread = (thread_id or "").strip()
+        thread_key = clean_thread or uuid.uuid4().hex[:12]
+        lock = self._thread_locks.setdefault(thread_key, asyncio.Lock())
+        if lock.locked():
+            raise ThreadBusyError(thread_key)
+        await lock.acquire()
         record = RunRecord(
             id=uuid.uuid4().hex[:12],
             question=clean_question,
             mode=mode,
-            thread_id=clean_thread or uuid.uuid4().hex[:12],
+            thread_id=thread_key,
             created_at=now,
             updated_at=now,
             request_payload={
@@ -75,6 +83,7 @@ class LocalResearchRuntime:
             },
         )
         state = _LocalRunState(record)
+        state.thread_lock = lock
         self._registry[record.id] = state
         state.task = asyncio.create_task(self._execute(state))
         self._persist(record)
@@ -141,10 +150,22 @@ class LocalResearchRuntime:
             record.updated_at = datetime.now(UTC)
             self._persist(record)
             self._append_done(state)
+            if state.thread_lock is not None:
+                state.thread_lock.release()
 
     async def _execute_through_harness(self, state: _LocalRunState) -> None:
         record = state.record
-        context = self._context_factory(record.id)
+
+        def on_harness_event(event_type: str, payload: dict) -> None:
+            self._append_event(
+                state,
+                RunEvent(
+                    event_type=event_type,
+                    message=str(payload.get("error_code") or event_type),
+                ),
+            )
+
+        context = self._context_factory(record.id, on_harness_event)
         thread_id = record.thread_id or record.id
         request = ApplicationResearchRequest(
             run_id=record.id,

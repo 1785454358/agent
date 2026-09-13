@@ -291,3 +291,34 @@
     只走应用服务；API 本地模式无条件使用 Harness 装配（含 SQLite 文件 Checkpointer，
     建表改为同步 sqlite3 DDL 以兼容已运行的事件循环）。回归基线：359 non-real passed
     （旧套件随模块一并移除）+ real 冒烟通过（36s，覆盖持久化 Checkpointer 的新装配）。
+
+## 第三轮：外部审查修复（2026-09-13）
+
+第二轮外部审查确认旧实现清理、迁移、压缩、Memory 注入与 RetryPolicy 已修复，
+指出 4 个运行阻塞与 4 项契约问题，本轮修复：
+
+49. **分布式 create 支持 thread_id**，与本地/协议签名一致；同 thread 已有活跃 run
+    时拒绝创建（ThreadBusyError，API 映射 409）。
+50. **Worker 身份修正**：新增 HarnessResearchRunner，Worker 以数据库 run.id 与
+    run.thread_id 直接调用应用服务，废弃随机身份的旧形状 adapter；checkpoint、
+    工具台账与 SSE 事件共享同一权威身份。
+51. **持久 Evidence Store**：新增 SQL 版 Evidence Store（ingest 版本链/supersedes、
+    read_body、latest_for_source），生产走 MySQL、本地与 Checkpoint 同库（SQLite 文件、
+    同步 DDL 建表）；同一实例跨 run 共享，thread 续轮可读前轮证据，重启后正文仍在。
+52. **近期消息注入**：ResearchInput 新增 recent_messages（最近 8 条、单条截断），
+    进入规划提示词；响应提示词的 context_notes 扩展为摘要行 + 记忆 + 最近用户/助手
+    消息（合计 24 条上限）。
+53. **Checkpointer 契约补齐**：aget_tuple 支持 config 指定 checkpoint_id（time travel
+    /fork 前提）；alist 改为先过滤后限量，避免过滤后不足 limit。
+54. **thread 并发保护**：本地运行时按 thread 持锁（进行中再创建抛 ThreadBusyError，
+    完成后释放）；分布式 create 阶段按活跃 run 检查。
+55. **aiosqlite 移入正式依赖**（本地 Checkpointer/Evidence 依赖它，不再依赖 dev 组）。
+56. **事件进入运行记录**：context_factory 接收 on_event 回调，HarnessEventRecorder 的
+    网关事件经同步钩子写入 run 事件流（SSE 可见），本地运行时与 Worker runner 均接入。
+57. **文档纠偏**：面试指南移除社区 MySQL saver/BGE-M3 重排/MySQL 存 Evidence 的旧说法；
+    UI 下拉改为 workflow/plan_execute/multi_agent。
+
+58. **真实多轮验证**：真实 API 下同一 thread 两轮调用——第二轮"总结一下上面的要点"
+    路由为 Brief，引用复用第一轮的 3 条持久化 Evidence（无新搜索），
+    SQLite Evidence Store 的跨轮/重启持久化得到真实验证。
+    回归基线：362 non-real passed + real 冒烟 + real 多轮验证通过。

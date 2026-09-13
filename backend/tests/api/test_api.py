@@ -97,7 +97,7 @@ def build_local_runtime(tmp_path):
         SimpleNamespace(),
         tmp_path / "runs",
         application=FakeApplication(),
-        context_factory=lambda run_id: FakeContext(),
+        context_factory=lambda run_id, on_event=None: FakeContext(),
     )
 
 

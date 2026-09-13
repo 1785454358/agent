@@ -123,9 +123,8 @@ class SqlAlchemyCheckpointSaver(BaseCheckpointSaver):
             )
             if before_id:
                 query = query.where(CheckpointRow.checkpoint_id < before_id)
-            if limit is not None:
-                query = query.limit(limit)
             rows = (await session.execute(query)).scalars().all()
+        count = 0
         for row in rows:
             metadata = self.serde.loads_typed((row.metadata_type, row.metadata_blob))
             if filter and any(metadata.get(k) != v for k, v in filter.items()):
@@ -139,6 +138,9 @@ class SqlAlchemyCheckpointSaver(BaseCheckpointSaver):
             }
             checkpoint = self.serde.loads_typed((row.type, row.checkpoint_blob))
             yield CheckpointTuple(config_out, checkpoint, metadata, None, ())
+            count += 1
+            if limit is not None and count >= limit:
+                break
 
     async def aput(
         self,

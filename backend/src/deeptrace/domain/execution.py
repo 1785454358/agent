@@ -110,6 +110,7 @@ class ResearchInput(BaseModel):
     conversation_summary: ConversationSummary = Field(
         default_factory=ConversationSummary
     )
+    recent_messages: list[str] = Field(default_factory=list, max_length=8)
     prior_evidence_ids: list[str] = Field(default_factory=list)
     unresolved_gaps: list[str] = Field(default_factory=list)
     budget: BudgetSnapshot = Field(default_factory=BudgetSnapshot)

@@ -57,7 +57,7 @@ def build_runtime(tmp_path, application: FakeApplication) -> LocalResearchRuntim
         object(),
         tmp_path,
         application=application,
-        context_factory=lambda run_id: FakeContext(),
+        context_factory=lambda run_id, on_event=None: FakeContext(),
     )
 
 
@@ -167,10 +167,38 @@ async def test_local_runtime_continues_the_requested_thread(tmp_path) -> None:
     await runtime.start()
 
     first = await runtime.create("第一轮", "workflow")
+    await wait_for_terminal(runtime, first.id)
     second = await runtime.create("第二轮", "workflow", thread_id=first.thread_id)
     await wait_for_terminal(runtime, second.id)
 
     request, config, _context = application.requests[1]
     assert request.thread_id == first.thread_id
     assert config["configurable"]["thread_id"] == first.thread_id
+    await runtime.stop()
+
+
+@pytest.mark.asyncio
+async def test_local_runtime_rejects_concurrent_runs_on_same_thread(tmp_path) -> None:
+    from deeptrace.runtime.errors import ThreadBusyError
+
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def hook() -> None:
+        started.set()
+        await release.wait()
+
+    runtime = build_runtime(tmp_path, FakeApplication(invoke_hook=hook))
+    await runtime.start()
+    first = await runtime.create("第一轮", "workflow", thread_id="thread-shared")
+    await started.wait()
+
+    with pytest.raises(ThreadBusyError):
+        await runtime.create("第二轮", "workflow", thread_id="thread-shared")
+
+    release.set()
+    await wait_for_terminal(runtime, first.id)
+    # the lock releases on completion: the next run on the same thread succeeds
+    third = await runtime.create("第三轮", "workflow", thread_id="thread-shared")
+    await wait_for_terminal(runtime, third.id)
     await runtime.stop()

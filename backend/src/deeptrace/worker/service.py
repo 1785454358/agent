@@ -10,7 +10,7 @@ from datetime import UTC, datetime, timedelta
 
 from redis.asyncio import Redis
 
-from deeptrace.application.agent_adapter import build_harness_agent_factory
+from deeptrace.application.agent_adapter import build_harness_runner
 from deeptrace.config import Settings
 from deeptrace.models import RunEvent
 from deeptrace.persistence.database import create_session_factory
@@ -28,6 +28,7 @@ class ResearchWorker:
         settings,
         *,
         agent_factory: Callable[..., Any] | None = None,
+        research_runner: Callable[[RunRecord, Callable[[RunEvent], None]], Any] | None = None,
         worker_id: str,
         heartbeat_interval_seconds: float | None = None,
         close_callback: Callable[[], Awaitable[None]] | None = None,
@@ -35,7 +36,8 @@ class ResearchWorker:
         self._repository = repository
         self._broker = broker
         self._settings = settings
-        self._agent_factory = agent_factory or build_harness_agent_factory(settings)
+        self._agent_factory = agent_factory
+        self._research_runner = research_runner
         self._worker_id = worker_id
         self._close_callback = close_callback
         self._heartbeat_interval_seconds = heartbeat_interval_seconds or min(
@@ -102,9 +104,13 @@ class ResearchWorker:
 
         drain_task = asyncio.create_task(drain_events())
         try:
-            agent = self._agent_factory(
-                self._settings, on_event=on_event, mode=run.mode
-            )
+            if self._research_runner is not None:
+                research_coro = self._research_runner(run, on_event)
+            else:
+                agent = self._agent_factory(
+                    self._settings, on_event=on_event, mode=run.mode
+                )
+                research_coro = agent.arun(run.question)
         except Exception as exc:
             event_queue.put_nowait(None)
             await drain_task
@@ -118,7 +124,7 @@ class ResearchWorker:
             return
         execution_error: Exception | None = None
         control_outcome: str | None = None
-        research_task = asyncio.create_task(agent.arun(run.question))
+        research_task = asyncio.create_task(research_coro)
         monitor_task = asyncio.create_task(self._monitor(run.id))
         try:
             done, _ = await asyncio.wait(
@@ -151,14 +157,14 @@ class ResearchWorker:
             )
             raise
         finally:
-            try:
-                await agent.aclose()
-            except Exception as exc:
-                if execution_error is None:
-                    execution_error = exc
-            finally:
-                event_queue.put_nowait(None)
-                await drain_task
+            if self._research_runner is None:
+                try:
+                    await agent.aclose()
+                except Exception as exc:
+                    if execution_error is None:
+                        execution_error = exc
+            event_queue.put_nowait(None)
+            await drain_task
 
         if control_outcome == "cancelled":
             cancelled = await self._repository.cancel(
@@ -229,6 +235,7 @@ def build_worker(settings: Settings) -> ResearchWorker:
         SqlAlchemyRunRepository(sessions),
         broker,
         settings,
+        research_runner=build_harness_runner(settings),
         worker_id=settings.redis_consumer_name,
         close_callback=dispose_engine,
     )

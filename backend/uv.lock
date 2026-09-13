@@ -2076,6 +2076,7 @@ name = "researchpilot"
 version = "0.2.0"
 source = { editable = "." }
 dependencies = [
+    { name = "aiosqlite" },
     { name = "alembic" },
     { name = "asyncmy" },
     { name = "beautifulsoup4" },
@@ -2101,7 +2102,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "aiosqlite" },
     { name = "fakeredis" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -2110,6 +2110,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiosqlite", specifier = ">=0.20" },
     { name = "alembic", specifier = ">=1.13" },
     { name = "asyncmy", specifier = ">=0.2" },
     { name = "beautifulsoup4", specifier = ">=4.13" },
@@ -2135,7 +2136,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "aiosqlite", specifier = ">=0.20" },
     { name = "fakeredis", specifier = ">=2.26" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-asyncio", specifier = ">=0.24" },

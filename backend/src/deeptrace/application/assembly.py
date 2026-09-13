@@ -84,18 +84,20 @@ def _build_durable_stores(
     BaseCheckpointSaver,
     ToolExecutionStore,
     Any,
-    Callable[[], EvidenceStore],
+    EvidenceStore,
 ]:
-    """Checkpoint saver, execution ledger, memory store, evidence factory.
+    """Checkpoint saver, execution ledger, memory store, evidence store.
 
-    Distributed (MySQL DSN configured): the checkpointer, tool ledger and
-    memory store are SQL-backed and shared across processes. Local: the
-    checkpointer persists to a SQLite file under ``runs_dir`` while the ledger
-    and memory store stay process-local, matching the documented Local
-    runtime guarantees.
+    Distributed (MySQL DSN configured): the checkpointer, tool ledger, memory
+    store and Evidence store are SQL-backed and shared across processes.
+    Local: the checkpointer and Evidence store persist to a SQLite file under
+    ``runs_dir`` (one shared instance per process, so a thread's later turns
+    see earlier evidence and a restart keeps page bodies), while the ledger
+    and memory store stay process-local per the documented Local guarantees.
     """
     from deeptrace.persistence.checkpoint import SqlAlchemyCheckpointSaver
     from deeptrace.persistence.database import create_session_factory
+    from deeptrace.persistence.evidence_store import SqlAlchemyEvidenceStore
     from deeptrace.persistence.orm import Base
 
     dsn = getattr(settings, "mysql_dsn", "")
@@ -109,7 +111,8 @@ def _build_durable_stores(
         saver = SqlAlchemyCheckpointSaver(sessions)
         ledger: ToolExecutionStore = SqlAlchemyToolExecutionStore(sessions)
         memory_store: Any = SqlAlchemyMemoryStore(sessions)
-        return saver, ledger, memory_store, InMemoryEvidenceStore
+        evidence = SqlAlchemyEvidenceStore(sessions)
+        return saver, ledger, memory_store, evidence
 
     runs = Path(runs_dir or "runs")
     runs.mkdir(parents=True, exist_ok=True)
@@ -120,7 +123,8 @@ def _build_durable_stores(
     saver = SqlAlchemyCheckpointSaver(sessions)
     ledger = InMemoryToolExecutionStore()
     memory_store = InMemoryMemoryStore()
-    return saver, ledger, memory_store, InMemoryEvidenceStore
+    evidence = SqlAlchemyEvidenceStore(sessions)
+    return saver, ledger, memory_store, evidence
 
 
 def _ensure_sqlite_schema(db_path: Path) -> None:
@@ -130,23 +134,22 @@ def _ensure_sqlite_schema(db_path: Path) -> None:
     from sqlalchemy import create_engine
     from sqlalchemy.schema import CreateIndex, CreateTable
 
-    from deeptrace.persistence.orm import CheckpointRow, CheckpointWriteRow
+    from deeptrace.persistence.orm import (
+        CheckpointRow,
+        CheckpointWriteRow,
+        EvidenceRecordRow,
+    )
 
     sync_engine = create_engine("sqlite://")
-    statements = [
-        str(CreateTable(CheckpointRow.__table__).compile(sync_engine)),
-        str(CreateTable(CheckpointWriteRow.__table__).compile(sync_engine)),
-        str(
-            CreateIndex(
-                CheckpointRow.__table__.indexes.__iter__().__next__()
-            ).compile(sync_engine)
-        ),
-        str(
-            CreateIndex(
-                CheckpointWriteRow.__table__.indexes.__iter__().__next__()
-            ).compile(sync_engine)
-        ),
-    ]
+    statements: list[str] = []
+    for table in (
+        CheckpointRow.__table__,
+        CheckpointWriteRow.__table__,
+        EvidenceRecordRow.__table__,
+    ):
+        statements.append(str(CreateTable(table).compile(sync_engine)))
+        for index in table.indexes:
+            statements.append(str(CreateIndex(index).compile(sync_engine)))
     connection = sqlite3.connect(db_path)
     try:
         for statement in statements:
@@ -172,7 +175,7 @@ def build_harness_runtime(
     is configured, otherwise a SQLite file under ``runs_dir``), so any run can
     resume node-by-node after a crash or restart.
     """
-    saver, ledger, memory_store, evidence_factory = _build_durable_stores(
+    saver, ledger, memory_store, evidence_store = _build_durable_stores(
         settings, runs_dir
     )
 
@@ -222,9 +225,10 @@ def build_harness_runtime(
     graph = build_agent_runtime_graph(strategies, responses, checkpointer=saver)
     service = ResearchApplicationService(graph)
 
-    def context_factory(run_id: str) -> HarnessContext:
-        evidence_store = evidence_factory()
+    def context_factory(run_id: str, on_event=None) -> HarnessContext:
         recorder = HarnessEventRecorder(run_id=run_id)
+        if on_event is not None:
+            recorder.on_sync_event = on_event
         tool_context = ToolContext(
             tavily=TavilyClient(api_key=settings.tavily_api_key)
         )

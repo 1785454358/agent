@@ -126,7 +126,7 @@ Evidence Store 因此成为正文的唯一所有者。它负责 URL 规范化、
 
 如何组织。记忆按 user、workspace、thread 和 global 作用域隔离，再按类型建立 namespace。默认禁止跨用户或跨 workspace 召回。Global 只保存经过策略筛选且不含私人信息的研究经验。
 
-何时召回。Memory Router 根据当前意图判断是否需要历史信息。检索先按 namespace、所有者、状态和时间过滤，并限制候选数量，再用本地 BGE-M3 结合关键词、来源质量与置信度进行评分和重排。Agent 遇到具体信息缺口时也可以调用 `search_memory`。
+何时召回。Memory Router 根据当前意图判断是否需要历史信息。检索先按 namespace、所有者、状态和时间过滤并限制候选数量，再按关键词重叠、新近度与置信度进行确定性评分和排序（确定性策略可测试；语义向量重排是预留扩展，未接入）。Agent 遇到具体信息缺口时也可以调用 `search_memory`。
 
 如何更新。Fact、Preference 和 Episode 采用版本化追加，新记录用 `supersedes` 关联旧版本。Evidence 的重新抓取和正文版本由 Evidence Store 管理，长期记忆只更新引用。用户修正和置信度变化都会留下审计轨迹。
 
@@ -148,11 +148,11 @@ Checkpoint 保存图在节点边界的可恢复状态，工具执行账本保存
 
 ### 为什么选择 MySQL Checkpointer，它有哪些限制
 
-项目已有 MySQL 技术栈，业务状态、工具账本、长期记忆和 Checkpoint 可以由同一套权威数据库管理。LangGraph 提供 `BaseCheckpointSaver` 扩展接口，项目使用社区维护的 `langgraph-checkpoint-mysql[asyncmy]` 实现所需的异步 Checkpointer 能力。部署固定适配器版本，数据库使用 MySQL 8.0.19 及以上，并在启动阶段执行 `setup()`。
+项目已有 MySQL 技术栈，业务状态、工具账本、长期记忆和 Checkpoint 可以由同一套权威数据库管理。LangGraph 提供 `BaseCheckpointSaver` 扩展接口，项目自研了基于 SQLAlchemy 异步引擎的 Checkpointer（生产走 asyncmy/MySQL，测试走 aiosqlite/SQLite，同一套 ORM 与序列化代码），数据库通过 Alembic 迁移建表。
 
-社区实现需要项目自行验证兼容性。契约测试覆盖 State 序列化、`thread_id`、checkpoint namespace、pending writes 和异步并发行为。升级 LangGraph 或适配器前先运行回归测试。故障注入会在 Planner 后、工具成功后、部分 Researcher 完成后和 Report Writer 前中断 Worker，再检查恢复位置与重复调用。
+自研实现需要项目自行验证兼容性。契约测试覆盖 State 序列化、`thread_id`、checkpoint namespace、pending writes、指定 checkpoint 读取和异步并发行为。升级 LangGraph 前先运行回归测试。故障注入会在计划完成后、工具执行后和记忆沉淀后中断执行，再检查恢复位置与重复调用。
 
-这个依赖只提供 Checkpointer。长期记忆由项目自建的 MySQL Memory Store 与 Repository 管理。面试时只说明经过测试的能力，不宣称官方内置 MySQL 支持，也不宣称社区实现覆盖最新接口的全部行为。
+Checkpoint、工具执行账本、长期记忆与运行记录由同一套 SQL 存储（自建 Store 与 Repository）。面试时只说明经过测试的能力，不宣称官方内置 MySQL 支持；Evidence 正文当前在生产装配中以共享存储承载，SQL Evidence Store 适配器与内存实现语义一致。
 
 ### Redis 和 MySQL 怎样分工
 

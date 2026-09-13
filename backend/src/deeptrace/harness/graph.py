@@ -87,11 +87,17 @@ def _research_input(
     conversation = state["conversation"]
     turn = state["turn"]
     now = runtime.context.clock.now()
+    recent = [
+        str(message.content)[:400]
+        for message in conversation["messages"][-8:]
+        if str(message.content).strip()
+    ][-8:]
     return ResearchInput(
         run_id=turn["run_id"],
         thread_id=conversation["thread_id"],
         question=turn["user_input"],
         conversation_summary=_summary_with_memories(conversation, turn),
+        recent_messages=recent,
         prior_evidence_ids=conversation["evidence_ids"],
         unresolved_gaps=conversation["unresolved_gaps"],
         budget=turn["budget"],
@@ -450,10 +456,28 @@ def _response_node(response_registry: ResponseGraphRegistry, mode: ResponseMode)
     ) -> dict[str, Any]:
         registration = response_registry.resolve(mode)
         turn = state["turn"]
-        notes = [
-            memory["content"][:200]
-            for memory in (turn.get("recalled_memories") or [])
-        ][:10]
+        summary = state["conversation"]["summary"]
+        summary_notes = (
+            [f"会话主题：{summary.topic}"] if summary.topic else []
+        ) + [
+            f"已确认结论：{line}" for line in summary.previous_conclusions[:5]
+        ]
+        recent = [
+            "{}：{}".format(
+                "用户" if message.type == "human" else "助手",
+                str(message.content)[:400],
+            )
+            for message in state["conversation"]["messages"][-8:]
+            if str(message.content).strip()
+        ]
+        notes = (
+            summary_notes
+            + [
+                f"记忆：{memory['content'][:200]}"
+                for memory in (turn.get("recalled_memories") or [])
+            ]
+            + recent
+        )[:24]
         response_input = ResponseInput(
             question=turn["user_input"],
             response_mode=mode,

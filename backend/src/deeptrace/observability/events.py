@@ -18,6 +18,7 @@ class HarnessEventRecorder:
 
     run_id: str | None = None
     events: list[dict[str, Any]] = field(default_factory=list)
+    on_sync_event: Any = None
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
     async def emit(self, event_type: str, payload: dict[str, Any]) -> None:
@@ -30,6 +31,12 @@ class HarnessEventRecorder:
             self.events.append(record)
             if len(self.events) > 2_000:
                 del self.events[:1_000]
+        hook = self.on_sync_event
+        if hook is not None:
+            try:
+                hook(event_type, dict(payload))
+            except Exception:
+                return
 
     def metrics(self) -> dict[str, Any]:
         tool_started = 0

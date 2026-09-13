@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import uuid
 from collections.abc import Sequence
+from datetime import UTC, datetime
 
-from deeptrace.application.agent_adapter import build_harness_agent_factory
+from deeptrace.application.agent_adapter import HarnessResearchRunner
 from deeptrace.config import Settings
 from deeptrace.domain import normalize_research_mode
 from deeptrace.models import RunEvent
 from deeptrace.observability import format_role_usage
+from deeptrace.runtime.models import RunRecord
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -40,12 +43,16 @@ def _exit_code(status: str) -> int:
 
 async def _run(question: str, mode: str = "workflow") -> int:
     canonical = normalize_research_mode(mode)
-    factory = build_harness_agent_factory(Settings.from_env())
-    agent = factory(Settings.from_env(), on_event=_print_event, mode=canonical.value)
-    try:
-        result = await agent.arun(question)
-    finally:
-        await agent.aclose()
+    runner = HarnessResearchRunner(Settings.from_env())
+    run_id = uuid.uuid4().hex[:12]
+    run = RunRecord(
+        id=run_id,
+        question=question,
+        mode=canonical,
+        thread_id=run_id,
+        created_at=datetime.now(UTC),
+    )
+    result = await runner(run, on_event=_print_event)
     print("\n最终答案")
     print(result.answer)
     print("\n来源")

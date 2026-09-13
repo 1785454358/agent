@@ -20,6 +20,7 @@ from deeptrace.persistence.repository import SqlAlchemyRunRepository
 from deeptrace.queue.redis_streams import RedisResearchBroker
 from deeptrace.runtime.distributed import DistributedResearchRuntime
 from deeptrace.runtime.local import LocalResearchRuntime
+from deeptrace.runtime.errors import ThreadBusyError
 from deeptrace.runtime.models import RunMode, RunRecord
 from deeptrace.runtime.protocol import ResearchRuntime
 
@@ -121,6 +122,8 @@ def create_app(
             )
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
+        except ThreadBusyError as exc:
+            raise HTTPException(409, str(exc)) from exc
         return {
             "id": record.id,
             "status": record.status,

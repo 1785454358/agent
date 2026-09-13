@@ -34,18 +34,33 @@ class DistributedResearchRuntime:
     async def stop(self) -> None:
         await self._broker.aclose()
 
-    async def create(self, question: str, mode: RunMode) -> RunRecord:
+    async def create(
+        self, question: str, mode: RunMode, thread_id: str | None = None
+    ) -> RunRecord:
         clean_question = question.strip()
         if not clean_question:
             raise ValueError("问题不能为空")
+        clean_thread = (thread_id or "").strip()
+        if clean_thread:
+            for existing in await self._repository.list():
+                if (
+                    existing.thread_id == clean_thread
+                    and existing.status in {"pending", "running", "cancel_requested"}
+                ):
+                    raise ThreadBusyError(clean_thread)
         now = datetime.now(UTC)
         run = RunRecord(
             id=self._id_factory(),
             question=clean_question,
             mode=mode,
+            thread_id=clean_thread or self._id_factory(),
             created_at=now,
             updated_at=now,
-            request_payload={"question": clean_question, "mode": mode},
+            request_payload={
+                "question": clean_question,
+                "mode": mode,
+                "thread_id": clean_thread or None,
+            },
         )
         await self._repository.create(run)
         try:

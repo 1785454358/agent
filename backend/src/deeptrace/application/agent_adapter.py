@@ -1,65 +1,72 @@
-"""Agent-shaped adapter so Worker/CLI run on the top-level runtime graph."""
+"""Worker-shaped entry point that runs the top-level graph with real identity."""
 
 from __future__ import annotations
 
-import asyncio
-import uuid
 from typing import Any, Callable
 
 from deeptrace.application.research import ApplicationResearchRequest
 from deeptrace.config import Settings
 from deeptrace.models import AgentResult, RunEvent, TokenUsage, UsageBreakdown
+from deeptrace.runtime.models import RunRecord
 
 
-class HarnessRunAdapter:
-    """Same ``arun``/``aclose`` surface as the legacy agents, harness inside."""
+class HarnessResearchRunner:
+    """Runs one persisted run through the top-level graph.
 
-    def __init__(
+    The run's database identity (``run.id`` and ``run.thread_id``) is passed
+    unchanged into the application service, so checkpoints, the tool ledger
+    and SSE/run records all share one authoritative identity across retries.
+    """
+
+    def __init__(self, settings: Settings) -> None:
+        self._settings = settings
+        self._runtime: tuple[Any, Callable[[str], Any]] | None = None
+
+    def _ensure_runtime(self):
+        if self._runtime is None:
+            from deeptrace.application.assembly import build_harness_runtime
+
+            self._runtime = build_harness_runtime(self._settings)
+        return self._runtime
+
+    async def __call__(
         self,
-        service,
-        context_factory: Callable[[str], Any],
-        *,
-        run_id: str,
-        thread_id: str,
-        mode: str,
+        run: RunRecord,
         on_event: Callable[[RunEvent], None] | None = None,
-    ) -> None:
-        self._service = service
-        self._context_factory = context_factory
-        self._run_id = run_id
-        self._thread_id = thread_id
-        self._mode = mode
-        self._on_event = on_event
-        self._context: Any = None
+    ) -> AgentResult:
+        service, context_factory = self._ensure_runtime()
+        thread_id = run.thread_id or run.id
 
-    def _emit(self, event_type: str, message: str) -> None:
-        if self._on_event is None:
-            return
-        try:
-            self._on_event(RunEvent(event_type=event_type, message=message))
-        except Exception:
-            return
+        def emit(event_type: str, message: str) -> None:
+            if on_event is None:
+                return
+            try:
+                on_event(RunEvent(event_type=event_type, message=message))
+            except Exception:
+                return
 
-    async def arun(self, question: str) -> AgentResult:
-        self._context = self._context_factory(self._run_id)
-        self._emit("planning.completed", "研究任务已进入统一运行图")
-        outcome = await self._service.invoke(
+        def on_harness_event(event_type: str, payload: dict) -> None:
+            emit(event_type, str(payload.get("error_code") or event_type))
+
+        context = context_factory(run.id, on_harness_event)
+        emit("planning.completed", "研究任务已进入统一运行图")
+        outcome = await service.invoke(
             ApplicationResearchRequest(
-                run_id=self._run_id,
-                thread_id=self._thread_id,
-                question=question,
-                mode=self._mode,  # type: ignore[arg-type]
+                run_id=run.id,
+                thread_id=thread_id,
+                question=run.question,
+                mode=run.mode,
             ),
-            config={"configurable": {"thread_id": self._thread_id}},
-            context=self._context,
+            config={"configurable": {"thread_id": thread_id}},
+            context=context,
         )
         sources: list[str] = []
         if outcome.cited_evidence_ids:
-            evidence = await self._context.evidence_store.get_many(
-                self._context.workspace_id, outcome.cited_evidence_ids
+            evidence = await context.evidence_store.get_many(
+                context.workspace_id, outcome.cited_evidence_ids
             )
             sources = [item.canonical_url for item in evidence]
-        self._emit(
+        emit(
             "response.completed",
             "研究已完成" if outcome.partial_reason is None else "研究部分完成",
         )
@@ -79,33 +86,6 @@ class HarnessRunAdapter:
             unresolved_gaps=[],
         )
 
-    async def aclose(self) -> None:
-        return None
 
-
-class HarnessAgentFactory:
-    """Builds HarnessRunAdapter instances on one cached shared runtime."""
-
-    def __init__(self, settings: Settings) -> None:
-        self._settings = settings
-        self._runtime: tuple[Any, Callable[[str], Any]] | None = None
-
-    def __call__(self, settings: Settings, on_event=None, mode: str = "workflow"):
-        if self._runtime is None:
-            from deeptrace.application.assembly import build_harness_runtime
-
-            self._runtime = build_harness_runtime(settings)
-        service, context_factory = self._runtime
-        run_id = uuid.uuid4().hex[:12]
-        return HarnessRunAdapter(
-            service,
-            context_factory,
-            run_id=run_id,
-            thread_id=run_id,
-            mode=mode,
-            on_event=on_event,
-        )
-
-
-def build_harness_agent_factory(settings: Settings) -> HarnessAgentFactory:
-    return HarnessAgentFactory(settings)
+def build_harness_runner(settings: Settings) -> HarnessResearchRunner:
+    return HarnessResearchRunner(settings)
