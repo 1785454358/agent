@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from deeptrace.domain import ToolRequest, ToolResult
+from deeptrace.domain import TRANSIENT_TOOL_ERROR_CODES, ToolRequest, ToolResult
 from deeptrace.tools.execution_store import (
     canonical_request_fingerprint,
     ClaimDisposition,
@@ -84,6 +84,23 @@ class SqlAlchemyToolExecutionStore:
                 raise ExecutionConflictError(
                     "call_id was reused with a different fingerprint"
                 )
+            if row.status == "recoverable":
+                token = uuid.uuid4().hex
+                row.status = "running"
+                row.owner_token = token
+                row.generation = row.generation + 1
+                row.updated_at = _now()
+                await session.commit()
+                return ExecutionClaim(
+                    manager_id=self._manager_id,
+                    tenant_id=tenant_id,
+                    run_id=request.run_id,
+                    call_id=request.call_id,
+                    fingerprint=fingerprint,
+                    disposition=ClaimDisposition.OWNER,
+                    owner_token=token,
+                    generation=row.generation,
+                )
             if row.result_json is not None:
                 result = ToolResult.model_validate(row.result_json)
                 return ExecutionClaim(
@@ -122,6 +139,23 @@ class SqlAlchemyToolExecutionStore:
                 ).scalar_one_or_none()
             if row is None:
                 raise ExecutionAbandonedError("execution record disappeared")
+            if row.status == "recoverable":
+                token = uuid.uuid4().hex
+                row.status = "running"
+                row.owner_token = token
+                row.generation = row.generation + 1
+                row.updated_at = _now()
+                await session.commit()
+                return ExecutionClaim(
+                    manager_id=self._manager_id,
+                    tenant_id=tenant_id,
+                    run_id=request.run_id,
+                    call_id=request.call_id,
+                    fingerprint=fingerprint,
+                    disposition=ClaimDisposition.OWNER,
+                    owner_token=token,
+                    generation=row.generation,
+                )
             if row.result_json is not None:
                 return ToolResult.model_validate(row.result_json)
             if row.status == "abandoned":
@@ -142,6 +176,13 @@ class SqlAlchemyToolExecutionStore:
             ).scalar_one_or_none()
             if row is None or row.owner_token != claim.owner_token:
                 return False
+            if not result.ok and result.error_code in TRANSIENT_TOOL_ERROR_CODES:
+                # Transient failures stay recoverable for node-level retries.
+                row.status = "recoverable"
+                row.owner_token = None
+                row.updated_at = _now()
+                await session.commit()
+                return True
             row.result_json = result.model_dump(mode="json")
             row.status = "completed"
             row.updated_at = _now()

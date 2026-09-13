@@ -80,6 +80,7 @@ class TurnState(TypedDict):
     research_outcome: ResearchOutcome | None
     response_outcome: ResponseOutcome | None
     recalled_memory_ids: list[str]
+    recalled_memories: list[dict[str, str]]
     active_evidence_ids: list[str]
     budget: BudgetSnapshot
     status: ExecutionStatus
@@ -140,6 +141,7 @@ def new_turn(run_id: str, user_input: str, mode: ResearchMode) -> TurnState:
         "research_outcome": None,
         "response_outcome": None,
         "recalled_memory_ids": [],
+        "recalled_memories": [],
         "active_evidence_ids": [],
         "budget": BudgetSnapshot(),
         "status": ExecutionStatus.PENDING,

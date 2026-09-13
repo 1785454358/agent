@@ -123,3 +123,25 @@ def test_hard_limit_bounds_even_recent_messages() -> None:
 
     assert len(kept) == HARD_MESSAGE_LIMIT
     assert len(overflow) == 10
+
+
+def test_merge_summaries_are_bounded_across_rounds() -> None:
+    from deeptrace.domain import ConversationSummary
+    from deeptrace.harness.policies.context import (
+        SUMMARY_FACT_LIMIT,
+        SUMMARY_LIST_LIMIT,
+        merge_summaries,
+    )
+
+    left = ConversationSummary()
+    for round_index in range(10):
+        right = ConversationSummary(
+            topic=f"主题 {round_index}",
+            user_constraints=[f"约束 {round_index}-{i}" for i in range(10)],
+            established_facts=[f"事实 {round_index}-{i}" for i in range(10)],
+        )
+        left = merge_summaries(left, right)
+
+    assert len(left.user_constraints) == SUMMARY_LIST_LIMIT
+    assert len(left.established_facts) == SUMMARY_FACT_LIMIT
+    assert left.topic == "主题 9"

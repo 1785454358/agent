@@ -175,10 +175,14 @@ def build_generate_node(policy: ResponsePolicy):
             f"- {finding.claim}（{', '.join(finding.evidence_ids)}）"
             for finding in (response_input.research_outcome.findings if response_input.research_outcome else [])
         )
+        notes = "\n".join(
+            f"- {note}" for note in response_input.context_notes[:10]
+        )
         prompt = (
             f"{policy.instructions}\n\n"
             f"用户问题：{response_input.question}\n\n"
-            f"研究发现：\n{findings_lines or '（无）'}\n\n"
+            + ("" if not notes else f"背景记忆（用户偏好与已知结论）：\n{notes}\n\n")
+            + f"研究发现：\n{findings_lines or '（无）'}\n\n"
             "以下是本轮已加载的全部资料（编号即引用标记，禁止引用未列出的来源）：\n\n"
             + "\n\n".join(sources)
             + '\n\n只输出 JSON：{"content": "..."}。'

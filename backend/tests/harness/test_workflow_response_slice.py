@@ -595,3 +595,122 @@ async def test_follow_up_turns_do_not_recall_memory() -> None:
 
     snapshot = await graph.aget_state(config)
     assert snapshot.values["turn"]["recalled_memory_ids"] == []
+
+
+@pytest.mark.asyncio
+async def test_context_compression_updates_summary_and_trims_window() -> None:
+    from datetime import UTC, datetime, timedelta
+
+    from deeptrace.domain import ConversationSummary
+    from deeptrace.harness.state import new_turn
+
+    class CompressModelGateway(ScriptedModelGateway):
+        async def invoke(self, *, role: str, messages: list[Any]) -> Any:
+            prompt = str(messages[-1].content)
+            self.calls.append((role, prompt))
+            if role == "summarizer":
+                return json.dumps(
+                    {
+                        "topic": "LangGraph Harness",
+                        "user_constraints": ["用户偏好简洁回答"],
+                        "established_facts": ["checkpoint 支持 node 级恢复"],
+                        "referenced_entities": {"它": "checkpoint"},
+                        "unresolved_questions": ["MySQL 迁移细节"],
+                        "previous_conclusions": ["采用统一 Harness"],
+                    }
+                )
+            return json.dumps({"content": "已根据背景回答 [1]。"})
+
+    model = CompressModelGateway({})
+    fixture = build_gateway_fixture(model_gateway=model)
+    strategies, responses = _registries()
+    checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
+    graph = build_agent_runtime_graph(
+        strategies, responses, checkpointer=checkpointer
+    )
+
+    from deeptrace.domain import ConversationIntent, ResearchMode, ResponseMode
+    from langchain_core.messages import HumanMessage
+
+    messages = [
+        HumanMessage(content=f"历史消息 {index}", id=f"old-{index}")
+        for index in range(30)
+    ]
+    conversation = new_conversation("thread-1", ResearchMode.WORKFLOW)
+    conversation["messages"] = messages
+    conversation["evidence_ids"] = ["evidence-seed"]
+    turn = new_turn("run-1", "总结一下上面的要点", ResearchMode.WORKFLOW)
+    result = await graph.ainvoke(
+        {"conversation": conversation, "turn": turn},
+        config={"configurable": {"thread_id": "thread-1"}},
+        context=fixture.context,
+    )
+
+    assert result["turn"]["status"] is ExecutionStatus.PARTIAL or (
+        result["turn"]["status"] is ExecutionStatus.COMPLETED
+    )
+    kept = result["conversation"]["messages"]
+    assert len(kept) <= 25  # window + the assistant reply
+    summary = result["conversation"]["summary"]
+    assert isinstance(summary, ConversationSummary)
+    assert "checkpoint 支持 node 级恢复" in summary.established_facts
+    assert "用户偏好简洁回答" in summary.user_constraints
+    assert any(role == "summarizer" for role, _ in model.calls)
+
+
+@pytest.mark.asyncio
+async def test_recalled_memories_reach_planner_and_responder_prompts() -> None:
+    from datetime import UTC, datetime
+
+    from deeptrace.domain import MemoryRecord, MemoryType
+    from deeptrace.harness.memory.write import MemoryWritePolicy, remember
+
+    model = ScriptedModelGateway(
+        {
+            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
+                prompt, sufficient=True
+            ),
+            "responder": json.dumps({"content": "结合偏好的结论 [1]。"}),
+        }
+    )
+    fixture = _fixture(model)
+    now = datetime.now(UTC)
+    await remember(
+        fixture.memory_store,
+        MemoryRecord(
+            type=MemoryType.PREFERENCE,
+            namespace=("user", "user-1", "preferences"),
+            subject="简洁回答",
+            content="用户偏好简洁回答",
+            confidence=1.0,
+            created_at=now,
+            updated_at=now,
+        ),
+        MemoryWritePolicy(),
+    )
+    strategies, responses = _registries()
+    graph = build_agent_runtime_graph(strategies, responses)
+    service = ResearchApplicationService(graph)
+
+    outcome = await service.invoke(
+        ApplicationResearchRequest(
+            run_id="run-1",
+            thread_id="thread-1",
+            question="研究 LangGraph Harness",
+            mode=ResearchMode.WORKFLOW,
+        ),
+        config={"configurable": {"thread_id": "thread-1"}},
+        context=fixture.context,
+    )
+
+    assert outcome.partial_reason is None
+    planner_prompt = next(
+        prompt for role, prompt in model.calls if role == "planner"
+    )
+    responder_prompt = next(
+        prompt for role, prompt in model.calls if role == "responder"
+    )
+    assert "用户偏好简洁回答" in planner_prompt
+    assert "背景记忆" in responder_prompt
+    assert "用户偏好简洁回答" in responder_prompt

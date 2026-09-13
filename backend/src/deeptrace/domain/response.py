@@ -79,6 +79,7 @@ class ResponseInput(BaseModel):
         default_factory=list,
         max_length=MAX_ACTIVE_EVIDENCE_IDS,
     )
+    context_notes: list[str] = Field(default_factory=list, max_length=10)
 
     @field_validator("active_evidence_ids")
     @classmethod

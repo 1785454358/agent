@@ -25,10 +25,15 @@ from deeptrace.runtime.protocol import ResearchRuntime
 
 
 class ResearchRequest(BaseModel):
-    """Create-research request accepted by all runtime modes."""
+    """Create-research request accepted by all runtime modes.
+
+    ``thread_id`` continues an existing conversation thread; omit it to start
+    a new thread (a fresh identifier is assigned).
+    """
 
     question: str = Field(min_length=1)
     mode: str = "workflow"
+    thread_id: str | None = Field(default=None, max_length=128)
 
     @field_validator("mode")
     @classmethod
@@ -47,20 +52,20 @@ def _build_runtime(
     settings: Settings, runs_dir: Path | str | None
 ) -> tuple[ResearchRuntime, Callable[[], Awaitable[None]] | None]:
     if getattr(settings, "runtime_mode", "local") == "local":
-        if getattr(settings, "openai_api_key", ""):
-            from deeptrace.application.assembly import build_harness_runtime
+        from deeptrace.application.assembly import build_harness_runtime
 
-            application, context_factory = build_harness_runtime(settings)
-            return (
-                LocalResearchRuntime(
-                    settings,
-                    runs_dir or "runs",
-                    application=application,
-                    context_factory=context_factory,
-                ),
-                None,
-            )
-        return LocalResearchRuntime(settings, runs_dir or "runs"), None
+        application, context_factory = build_harness_runtime(
+            settings, runs_dir=runs_dir or "runs"
+        )
+        return (
+            LocalResearchRuntime(
+                settings,
+                runs_dir or "runs",
+                application=application,
+                context_factory=context_factory,
+            ),
+            None,
+        )
 
     engine, sessions = create_session_factory(settings.mysql_dsn)
     redis = Redis.from_url(settings.redis_url, decode_responses=True)
@@ -109,10 +114,18 @@ def create_app(
     @app.post("/researches")
     async def create_research(request: ResearchRequest) -> dict[str, Any]:
         try:
-            record = await selected_runtime.create(request.question.strip(), request.mode)
+            record = await selected_runtime.create(
+                request.question.strip(),
+                request.mode,
+                thread_id=request.thread_id,
+            )
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
-        return {"id": record.id, "status": record.status}
+        return {
+            "id": record.id,
+            "status": record.status,
+            "thread_id": record.thread_id,
+        }
 
     @app.get("/researches")
     async def list_researches() -> list[dict[str, Any]]:

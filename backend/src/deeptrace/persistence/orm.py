@@ -20,6 +20,7 @@ class ResearchRunRow(Base):
     question: Mapped[str] = mapped_column(Text)
     mode: Mapped[str] = mapped_column(String(32))
     status: Mapped[str] = mapped_column(String(32), index=True)
+    thread_id: Mapped[str] = mapped_column(String(128), default="")
     termination_reason: Mapped[str] = mapped_column(String(128), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -51,7 +52,15 @@ class RunEventRow(Base):
 
 class CheckpointRow(Base):
     __tablename__ = "graph_checkpoints"
-    __table_args__ = (Index("ix_graph_checkpoints_thread", "thread_id", "checkpoint_ns", "checkpoint_id"),)
+    __table_args__ = (
+        Index(
+            "ux_graph_checkpoints_identity",
+            "thread_id",
+            "checkpoint_ns",
+            "checkpoint_id",
+            unique=True,
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     thread_id: Mapped[str] = mapped_column(String(128), index=True)

@@ -3,13 +3,14 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from langchain_core.messages import HumanMessage, RemoveMessage
+from langchain_core.messages import AIMessage, HumanMessage, RemoveMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from langgraph.runtime import Runtime
 
 from deeptrace.domain import (
     ConversationIntent,
+    ConversationSummary,
     ExecutionStatus,
     MemoryRecord,
     MemoryType,
@@ -25,7 +26,12 @@ from deeptrace.harness.memory.forget import apply_lifecycle
 from deeptrace.harness.memory.recall import select_memories, should_recall
 from deeptrace.harness.memory.store import InMemoryMemoryStore
 from deeptrace.harness.memory.write import MemoryWritePolicy, remember
-from deeptrace.harness.policies.context import plan_context_window
+from deeptrace.harness.policies.context import (
+    SUMMARY_FACT_LIMIT,
+    SUMMARY_LIST_LIMIT,
+    merge_summaries,
+    plan_context_window,
+)
 from deeptrace.harness.policies.intent import (
     classify_intent,
     response_mode_for_intent,
@@ -35,6 +41,8 @@ from deeptrace.harness.state import HarnessState
 from deeptrace.responses.citations import select_response_mode
 
 
+SUMMARIZER_ROLE = "summarizer"
+
 _MODE_PATTERN = re.compile(
     r"(workflow|plan.?execute|multi.?agent|多智能体)", re.IGNORECASE
 )
@@ -42,6 +50,35 @@ _MODE_PATTERN = re.compile(
 
 def _route_mode(state: HarnessState) -> str:
     return state["turn"]["selected_mode"].value
+
+
+def _summary_with_memories(
+    conversation: dict[str, Any], turn: dict[str, Any]
+):
+    """Recalled memories are injected into a COPY of the conversation summary."""
+    from deeptrace.domain import ConversationSummary
+
+    summary = conversation["summary"]
+    memories = turn.get("recalled_memories") or []
+    if not memories:
+        return summary
+    preferences = [
+        memory["content"]
+        for memory in memories
+        if memory.get("type") == "preference"
+    ]
+    facts = [
+        memory["content"]
+        for memory in memories
+        if memory.get("type") in {"fact", "evidence"}
+    ]
+    return merge_summaries(
+        summary,
+        ConversationSummary(
+            user_constraints=preferences[:SUMMARY_LIST_LIMIT],
+            established_facts=facts[:SUMMARY_FACT_LIMIT],
+        ),
+    )
 
 
 def _research_input(
@@ -54,7 +91,7 @@ def _research_input(
         run_id=turn["run_id"],
         thread_id=conversation["thread_id"],
         question=turn["user_input"],
-        conversation_summary=conversation["summary"],
+        conversation_summary=_summary_with_memories(conversation, turn),
         prior_evidence_ids=conversation["evidence_ids"],
         unresolved_gaps=conversation["unresolved_gaps"],
         budget=turn["budget"],
@@ -113,17 +150,79 @@ def _initialize_turn(state: HarnessState) -> dict[str, Any]:
     return {"turn": turn, "conversation": {"messages": [user_message]}}
 
 
-def _manage_context(state: HarnessState) -> dict[str, Any]:
+async def _manage_context(
+    state: HarnessState, runtime: Runtime[HarnessContext]
+) -> dict[str, Any]:
+    """Sliding window plus structured dynamic compression.
+
+    Overflow messages are summarized by the model into the structured
+    ConversationSummary (bounded merge keeps size controlled across rounds);
+    on model failure the window still trims deterministically.
+    """
     conversation = state["conversation"]
     _kept, overflow = plan_context_window(conversation["messages"])
     if not overflow:
         return {}
-    removals = [
-        RemoveMessage(id=message.id) for message in overflow if message.id
-    ]
-    if not removals:
+    removals = [RemoveMessage(id=message.id) for message in overflow if message.id]
+    updates: dict[str, Any] = {}
+    if removals:
+        updates["messages"] = removals
+
+    context = runtime.context
+    gateway = context.model_gateway if context is not None else None
+    overflow_text = "\n".join(
+        f"- {message.type}: {str(message.content)[:400]}"
+        for message in overflow
+        if str(message.content).strip()
+    )
+    if gateway is not None and overflow_text:
+        try:
+            current = conversation["summary"]
+            response = await gateway.invoke(
+                role=SUMMARIZER_ROLE,
+                messages=[
+                    HumanMessage(
+                        content=(
+                            "你是一次会话上下文压缩器。请把以下较早的对话内容"
+                            "合并进当前会话摘要，保留用户约束、实体指代、"
+                            "未解决问题与已有结论。\n"
+                            '只输出 JSON：{"topic", "user_constraints": [], '
+                            '"established_facts": [], "referenced_entities": {}, '
+                            '"unresolved_questions": [], "previous_conclusions": []}。\n\n'
+                            f"当前摘要：{current.model_dump(mode='json')}\n\n"
+                            f"被压缩的对话：\n{overflow_text}"
+                        )
+                    )
+                ],
+            )
+            from deeptrace.strategies.model_io import payload_text
+
+            incoming = ConversationSummary.model_validate_json(
+                payload_text(response)
+            )
+            updates["summary"] = merge_summaries(current, incoming)
+        except Exception:
+            # deterministic fallback: window trimmed, summary unchanged
+            pass
+    if not updates:
         return {}
-    return {"conversation": {"messages": removals}}
+    return {"conversation": updates}
+
+
+def _finalize_answer_message(state: HarnessState) -> dict[str, Any] | None:
+    response = state["turn"].get("response_outcome")
+    if response is None or not str(response.content).strip():
+        return None
+    return {
+        "conversation": {
+            "messages": [
+                AIMessage(
+                    content=response.content,
+                    id=f"{state['turn']['run_id']}-assistant",
+                )
+            ]
+        }
+    }
 
 
 def _classify_intent(state: HarnessState) -> dict[str, Any]:
@@ -203,6 +302,14 @@ async def _recall_memory(
         records, query=turn["user_input"], now=now, limit=5
     )
     turn["recalled_memory_ids"] = [record.id for record in ranked]
+    turn["recalled_memories"] = [
+        {
+            "type": record.type.value,
+            "subject": record.subject[:200],
+            "content": record.content[:500],
+        }
+        for record in ranked
+    ]
     return {"turn": turn}
 
 
@@ -343,11 +450,16 @@ def _response_node(response_registry: ResponseGraphRegistry, mode: ResponseMode)
     ) -> dict[str, Any]:
         registration = response_registry.resolve(mode)
         turn = state["turn"]
+        notes = [
+            memory["content"][:200]
+            for memory in (turn.get("recalled_memories") or [])
+        ][:10]
         response_input = ResponseInput(
             question=turn["user_input"],
             response_mode=mode,
             research_outcome=turn["research_outcome"],
             active_evidence_ids=list(turn["active_evidence_ids"]),
+            context_notes=notes,
         )
         raw = await registration.graph.ainvoke(
             {"response_input": response_input}, config=config
@@ -380,7 +492,18 @@ def _finalize_turn(state: HarnessState) -> dict[str, Any]:
         turn["status"] = ExecutionStatus.COMPLETED
     else:
         turn["status"] = ExecutionStatus.PARTIAL
-    return {"turn": turn}
+    updates: dict[str, Any] = {"turn": turn}
+    response = turn.get("response_outcome")
+    if response is not None and str(response.content).strip():
+        updates["conversation"] = {
+            "messages": [
+                AIMessage(
+                    content=response.content,
+                    id=f"{turn['run_id']}-assistant",
+                )
+            ]
+        }
+    return updates
 
 
 def build_agent_runtime_graph(

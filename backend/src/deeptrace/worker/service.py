@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from typing import Any
 from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 
 from redis.asyncio import Redis
 
-from deeptrace import build_real_agent
+from deeptrace.application.agent_adapter import build_harness_agent_factory
 from deeptrace.config import Settings
 from deeptrace.models import RunEvent
 from deeptrace.persistence.database import create_session_factory
@@ -26,7 +27,7 @@ class ResearchWorker:
         broker: ResearchBroker,
         settings,
         *,
-        agent_factory=build_real_agent,
+        agent_factory: Callable[..., Any] | None = None,
         worker_id: str,
         heartbeat_interval_seconds: float | None = None,
         close_callback: Callable[[], Awaitable[None]] | None = None,
@@ -34,7 +35,7 @@ class ResearchWorker:
         self._repository = repository
         self._broker = broker
         self._settings = settings
-        self._agent_factory = agent_factory
+        self._agent_factory = agent_factory or build_harness_agent_factory(settings)
         self._worker_id = worker_id
         self._close_callback = close_callback
         self._heartbeat_interval_seconds = heartbeat_interval_seconds or min(

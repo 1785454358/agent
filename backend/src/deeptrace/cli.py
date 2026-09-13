@@ -6,8 +6,9 @@ import argparse
 import asyncio
 from collections.abc import Sequence
 
-from deeptrace import build_real_agent
+from deeptrace.application.agent_adapter import build_harness_agent_factory
 from deeptrace.config import Settings
+from deeptrace.domain import normalize_research_mode
 from deeptrace.models import RunEvent
 from deeptrace.observability import format_role_usage
 
@@ -20,11 +21,10 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("question", help="研究问题")
     parser.add_argument(
         "--mode",
-        choices=("basic", "deep", "multi_agent"),
-        default="basic",
+        default="workflow",
         help=(
-            "basic 一轮研究；deep 规划、ReAct 执行与重规划；"
-            "multi_agent 主管协调多个独立研究员"
+            "workflow 固定并行研究流程；plan_execute 规划、执行与有界重规划；"
+            "multi_agent 主管协调多个独立研究员（旧值 basic/deep 自动映射）"
         ),
     )
     return parser
@@ -38,8 +38,10 @@ def _exit_code(status: str) -> int:
     return 0 if status == "completed" else 2
 
 
-async def _run(question: str, mode: str = "basic") -> int:
-    agent = build_real_agent(Settings.from_env(), on_event=_print_event, mode=mode)
+async def _run(question: str, mode: str = "workflow") -> int:
+    canonical = normalize_research_mode(mode)
+    factory = build_harness_agent_factory(Settings.from_env())
+    agent = factory(Settings.from_env(), on_event=_print_event, mode=canonical.value)
     try:
         result = await agent.arun(question)
     finally:

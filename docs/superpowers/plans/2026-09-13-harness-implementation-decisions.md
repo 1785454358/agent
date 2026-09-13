@@ -251,9 +251,43 @@
 - 顶层运行图承载全部三种研究模式与响应模式；多轮会话、意图路由、滑动窗口、
   记忆六问生命周期、持久 checkpoint 恢复、分层预算、幂等台账、引用校验全部有
   可执行测试锁定。
-- 明确未做（诚实边界）：SQL 版记忆/Evidence Store 适配器（语义已在内存适配器固化）、
+- 明确未做（诚实边界）：SQL 版 Evidence Store 适配器（语义已在内存适配器固化）、
   Auto Mode（等评测基线积累）、UI 更名（前端资源未动）。
-- Plan 5（Multi-Agent）：待实施。
-- Plan 6（会话与记忆）：待实施。
-- Plan 7（MySQL 与分布式恢复）：待实施。
-- Plan 8（可观测性、评测与切换）：待实施。
+
+
+## 第二轮：外部审查修复（2026-09-13）
+
+外部审查指出"组件完成但生产接线未闭环"的 9 项问题，本轮全部修复：
+
+39. **生产入口统一**：Worker 默认工厂与 CLI 改为 HarnessAgentFactory（同一进程缓存
+    一份运行时），`build_real_agent` 不再被任何生产入口调用；CLI 接受规范模式并自动
+    映射 basic/deep。
+40. **Alembic 迁移**：`20260913_01` 创建 graph_checkpoints（含 thread/ns/id 唯一约束）、
+    graph_checkpoint_writes、tool_executions、memory_records，并为 research_runs 增加
+    thread_id 列。
+41. **生产装配接入持久化**：`build_harness_runtime` 无条件编译带 Checkpointer 的图——
+    配置 MySQL DSN 时 Checkpointer/工具台账/记忆 Store 全部走 SQL（跨进程共享），
+    否则 Checkpoint 落 runs 目录下的 SQLite 文件；运行上下文现在携带 memory_store。
+42. **thread API**：`POST /researches` 接受可选 thread_id 继续会话，响应携带 thread_id；
+    RunRecord 持久化 thread，本地运行时按 thread 调用应用服务，同一 thread 多轮生效。
+43. **真正的动态压缩**：窗口溢出时调用 summarizer 角色生成结构化摘要，经有界
+    `merge_summaries` 合并进 ConversationSummary（多轮压缩尺寸可控），模型失败时仍
+    确定性裁剪；最终回答作为 AIMessage 回写会话。
+44. **召回内容参与推理**：召回的记忆内容注入 ResearchInput 的会话摘要副本
+    （偏好→约束、事实→已知），并作为 context_notes 进入响应图提示词；新增测试锁定
+    规划器与回答提示词均包含记忆内容。
+45. **节点级 RetryPolicy**：search/fetch 节点配置 `RetryPolicy(max_attempts=3,
+    retry_on=TransientToolError)`；网关/台账语义同步修正——临时失败（provider_error/
+    provider_timeout）在台账中保持可回收，重试真正重新执行提供方；成功与永久失败
+    仍为终态重放。Plan 2 的"失败即终态"测试示例改为永久错误码。
+46. **Checkpointer 契约**：alist 改为查询层最新优先并实现 before/limit；checkpoint 表
+    增加唯一约束防并发重复。
+47. **文档纠偏**：简历材料全文重写（移除 HarnessGraph/Profile/社区 MySQL saver/
+    BGE-M3 重排等不实表述，压缩与召回表述对齐实现）；决策文档清除残留矛盾行。
+
+48. **删除旧实现**：`basic/`、`deep/`、`multi_agent/`、`writer/`、`prompts/`、`context/`
+    六个旧编排模块及其测试套件全部删除；`deeptrace/__init__` 只保留模型类型导出，
+    `build_real_agent` 不复存在（module-layout 测试锁定）。本地运行时删除旧执行分支，
+    只走应用服务；API 本地模式无条件使用 Harness 装配（含 SQLite 文件 Checkpointer，
+    建表改为同步 sqlite3 DDL 以兼容已运行的事件循环）。回归基线：359 non-real passed
+    （旧套件随模块一并移除）+ real 冒烟通过（36s，覆盖持久化 Checkpointer 的新装配）。

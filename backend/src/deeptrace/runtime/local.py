@@ -9,17 +9,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from deeptrace import build_real_agent
 from deeptrace.application.research import ApplicationResearchRequest
-from deeptrace.models import AgentResult, RunEvent
+from deeptrace.models import RunEvent
 from deeptrace.runtime.models import RunMode, RunRecord, StoredEvent
-
-
-_LEGACY_FACTORY_MODES = {
-    "workflow": "basic",
-    "plan_execute": "deep",
-    "multi_agent": "multi_agent",
-}
 
 
 class _LocalRunState:
@@ -35,15 +27,13 @@ class LocalResearchRuntime:
         self,
         settings,
         runs_dir: Path | str,
-        agent_factory=build_real_agent,
         *,
-        application=None,
-        context_factory: Callable[[str], Any] | None = None,
+        application,
+        context_factory: Callable[[str], Any],
     ) -> None:
         self._settings = settings
         self._runs_dir = Path(runs_dir)
         self._runs_dir.mkdir(parents=True, exist_ok=True)
-        self._agent_factory = agent_factory
         self._application = application
         self._context_factory = context_factory
         self._registry: dict[str, _LocalRunState] = {}
@@ -63,18 +53,26 @@ class LocalResearchRuntime:
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
 
-    async def create(self, question: str, mode: RunMode) -> RunRecord:
+    async def create(
+        self, question: str, mode: RunMode, thread_id: str | None = None
+    ) -> RunRecord:
         clean_question = question.strip()
         if not clean_question:
             raise ValueError("问题不能为空")
         now = datetime.now(UTC)
+        clean_thread = (thread_id or "").strip()
         record = RunRecord(
             id=uuid.uuid4().hex[:12],
             question=clean_question,
             mode=mode,
+            thread_id=clean_thread or uuid.uuid4().hex[:12],
             created_at=now,
             updated_at=now,
-            request_payload={"question": clean_question, "mode": mode},
+            request_payload={
+                "question": clean_question,
+                "mode": mode,
+                "thread_id": clean_thread or None,
+            },
         )
         state = _LocalRunState(record)
         self._registry[record.id] = state
@@ -125,22 +123,9 @@ class LocalResearchRuntime:
         record.status = "running"
         record.started_at = now
         record.updated_at = now
-        agent = None
-
-        def on_event(event: RunEvent) -> None:
-            self._append_event(state, event)
 
         try:
-            if self._application is not None and self._context_factory is not None:
-                await self._execute_through_harness(state)
-                return
-            agent = self._agent_factory(
-                self._settings,
-                on_event=on_event,
-                mode=_LEGACY_FACTORY_MODES.get(record.mode, record.mode),
-            )
-            result = await agent.arun(record.question)
-            self._apply_result(record, result)
+            await self._execute_through_harness(state)
         except asyncio.CancelledError:
             record.status = "cancelled"
             record.termination_reason = "cancelled"
@@ -153,8 +138,6 @@ class LocalResearchRuntime:
             record.finished_at = datetime.now(UTC)
             record.error = f"运行失败（{type(exc).__name__}），请检查服务与模型配置"
         finally:
-            if agent is not None:
-                await agent.aclose()
             record.updated_at = datetime.now(UTC)
             self._persist(record)
             self._append_done(state)
@@ -162,15 +145,16 @@ class LocalResearchRuntime:
     async def _execute_through_harness(self, state: _LocalRunState) -> None:
         record = state.record
         context = self._context_factory(record.id)
+        thread_id = record.thread_id or record.id
         request = ApplicationResearchRequest(
             run_id=record.id,
-            thread_id=record.id,
+            thread_id=thread_id,
             question=record.question,
             mode=record.mode,
         )
         outcome = await self._application.invoke(
             request,
-            config={"configurable": {"thread_id": record.id}},
+            config={"configurable": {"thread_id": thread_id}},
             context=context,
         )
         record.answer = outcome.content
@@ -188,29 +172,6 @@ class LocalResearchRuntime:
                 message="研究已完成",
             ),
         )
-
-    @staticmethod
-    def _apply_result(record: RunRecord, result: AgentResult) -> None:
-        record.status = result.status
-        record.termination_reason = result.termination_reason
-        record.finished_at = datetime.now(UTC)
-        record.answer = result.answer
-        record.sources = result.sources
-        record.search_queries = result.search_queries
-        record.unresolved_gaps = result.unresolved_gaps
-        record.usage = {
-            "total_tokens": result.provider_usage.total_tokens,
-            "input_tokens": result.provider_usage.input_tokens,
-            "output_tokens": result.provider_usage.output_tokens,
-            "role_usage": result.role_usage.model_dump(mode="json"),
-            "steps": result.steps,
-            "estimated_cost_usd": (
-                str(result.estimated_cost_usd)
-                if result.estimated_cost_usd is not None
-                else None
-            ),
-            "stage_seconds": result.stage_seconds,
-        }
 
     def _persist(self, record: RunRecord) -> None:
         path = self._runs_dir / f"{record.id}.json"

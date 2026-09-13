@@ -28,6 +28,7 @@ class RunRecord(BaseModel):
     question: str
     mode: RunMode = "workflow"
     status: RunStatus = "pending"
+    thread_id: str = ""
     termination_reason: str = ""
     created_at: datetime
     started_at: datetime | None = None

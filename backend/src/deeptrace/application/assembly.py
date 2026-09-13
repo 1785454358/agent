@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.base import BaseCheckpointSaver
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from tavily import TavilyClient
 
 from deeptrace.application.research import ResearchApplicationService
@@ -15,12 +18,14 @@ from deeptrace.domain import ResearchMode, ResponseMode
 from deeptrace.harness.context import HarnessContext
 from deeptrace.harness.graph import build_agent_runtime_graph
 from deeptrace.harness.model_gateway import ChatModelGateway
+from deeptrace.harness.memory.store import InMemoryMemoryStore
 from deeptrace.harness.registry import (
     ResponseGraphRegistry,
     ResponseRegistration,
     StrategyRegistration,
     StrategyRegistry,
 )
+from deeptrace.memory import ResearchMemory
 from deeptrace.observability.events import HarnessEventRecorder
 from deeptrace.responses import (
     build_answer_graph,
@@ -40,8 +45,11 @@ from deeptrace.tools.budget import (
     InMemoryBudgetManager,
 )
 from deeptrace.tools.cache import InMemorySuccessCache, SuccessCacheSingleflight
-from deeptrace.tools.evidence_store import InMemoryEvidenceStore
-from deeptrace.tools.execution_store import InMemoryToolExecutionStore
+from deeptrace.tools.evidence_store import EvidenceStore, InMemoryEvidenceStore
+from deeptrace.tools.execution_store import (
+    InMemoryToolExecutionStore,
+    ToolExecutionStore,
+)
 from deeptrace.tools.policy import (
     DeterministicUrlSecurityPolicy,
     StaticToolAllowlist,
@@ -49,6 +57,11 @@ from deeptrace.tools.policy import (
 from deeptrace.tools.search import ToolContext
 from deeptrace.tools.search.tavily import search_web
 from deeptrace.tools.scraper import AsyncWebFetcher
+
+
+class _SystemClock:
+    def now(self) -> datetime:
+        return datetime.now(UTC)
 
 
 def _budgets_for_run(run_id: str) -> InMemoryBudgetManager:
@@ -65,16 +78,104 @@ def _budgets_for_run(run_id: str) -> InMemoryBudgetManager:
     return InMemoryBudgetManager({scope: limit for scope in scopes})
 
 
+def _build_durable_stores(
+    settings: Settings, runs_dir: Path | str | None
+) -> tuple[
+    BaseCheckpointSaver,
+    ToolExecutionStore,
+    Any,
+    Callable[[], EvidenceStore],
+]:
+    """Checkpoint saver, execution ledger, memory store, evidence factory.
+
+    Distributed (MySQL DSN configured): the checkpointer, tool ledger and
+    memory store are SQL-backed and shared across processes. Local: the
+    checkpointer persists to a SQLite file under ``runs_dir`` while the ledger
+    and memory store stay process-local, matching the documented Local
+    runtime guarantees.
+    """
+    from deeptrace.persistence.checkpoint import SqlAlchemyCheckpointSaver
+    from deeptrace.persistence.database import create_session_factory
+    from deeptrace.persistence.orm import Base
+
+    dsn = getattr(settings, "mysql_dsn", "")
+    if dsn:
+        from deeptrace.persistence.execution_ledger import (
+            SqlAlchemyToolExecutionStore,
+        )
+        from deeptrace.persistence.memory_store import SqlAlchemyMemoryStore
+
+        engine, sessions = create_session_factory(dsn)
+        saver = SqlAlchemyCheckpointSaver(sessions)
+        ledger: ToolExecutionStore = SqlAlchemyToolExecutionStore(sessions)
+        memory_store: Any = SqlAlchemyMemoryStore(sessions)
+        return saver, ledger, memory_store, InMemoryEvidenceStore
+
+    runs = Path(runs_dir or "runs")
+    runs.mkdir(parents=True, exist_ok=True)
+    db_path = (runs / "harness_checkpoints.db").resolve()
+    engine, sessions = create_session_factory(f"sqlite+aiosqlite:///{db_path}")
+
+    _ensure_sqlite_schema(db_path)
+    saver = SqlAlchemyCheckpointSaver(sessions)
+    ledger = InMemoryToolExecutionStore()
+    memory_store = InMemoryMemoryStore()
+    return saver, ledger, memory_store, InMemoryEvidenceStore
+
+
+def _ensure_sqlite_schema(db_path: Path) -> None:
+    """Create the checkpoint tables synchronously (safe inside a running loop)."""
+    import sqlite3
+
+    from sqlalchemy import create_engine
+    from sqlalchemy.schema import CreateIndex, CreateTable
+
+    from deeptrace.persistence.orm import CheckpointRow, CheckpointWriteRow
+
+    sync_engine = create_engine("sqlite://")
+    statements = [
+        str(CreateTable(CheckpointRow.__table__).compile(sync_engine)),
+        str(CreateTable(CheckpointWriteRow.__table__).compile(sync_engine)),
+        str(
+            CreateIndex(
+                CheckpointRow.__table__.indexes.__iter__().__next__()
+            ).compile(sync_engine)
+        ),
+        str(
+            CreateIndex(
+                CheckpointWriteRow.__table__.indexes.__iter__().__next__()
+            ).compile(sync_engine)
+        ),
+    ]
+    connection = sqlite3.connect(db_path)
+    try:
+        for statement in statements:
+            connection.execute(
+                statement.replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS")
+                .replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS")
+                .replace("CREATE UNIQUE INDEX", "CREATE UNIQUE INDEX IF NOT EXISTS")
+            )
+        connection.commit()
+    finally:
+        connection.close()
+
+
 def build_harness_runtime(
     settings: Settings,
+    *,
+    runs_dir: Path | str | None = None,
+    page_memory: ResearchMemory | None = None,
 ) -> tuple[ResearchApplicationService, Callable[[str], HarnessContext]]:
     """Assemble the top-level runtime graph plus a per-run context factory.
 
-    ``context_factory(run_id)`` builds the runtime dependencies for one run:
-    page bodies live only in the Evidence Store; budgets, the execution ledger
-    and caches are process-local (MySQL-backed adapters slot in behind the same
-    ports in Plan 7's persistence layer).
+    The graph is always compiled with a durable checkpointer (MySQL when a DSN
+    is configured, otherwise a SQLite file under ``runs_dir``), so any run can
+    resume node-by-node after a crash or restart.
     """
+    saver, ledger, memory_store, evidence_factory = _build_durable_stores(
+        settings, runs_dir
+    )
+
     model = ChatOpenAI(
         api_key=settings.openai_api_key,
         base_url=settings.openai_base_url,
@@ -118,11 +219,11 @@ def build_harness_runtime(
     responses.register(
         ResponseRegistration(ResponseMode.REPORT, build_report_graph())
     )
-    graph = build_agent_runtime_graph(strategies, responses)
+    graph = build_agent_runtime_graph(strategies, responses, checkpointer=saver)
     service = ResearchApplicationService(graph)
 
     def context_factory(run_id: str) -> HarnessContext:
-        evidence_store = InMemoryEvidenceStore()
+        evidence_store = evidence_factory()
         recorder = HarnessEventRecorder(run_id=run_id)
         tool_context = ToolContext(
             tavily=TavilyClient(api_key=settings.tavily_api_key)
@@ -131,13 +232,17 @@ def build_harness_runtime(
         def run_search(query: str) -> Any:
             return search_web(tool_context, query, max_results=5)
 
-        registry = build_research_tool_registry(search=run_search, fetcher=fetcher)
+        registry = build_research_tool_registry(
+            search=run_search,
+            fetcher=fetcher,
+            memory=page_memory,
+        )
         tool_gateway = AgentToolGateway(
             registry=registry,
             allowlist=StaticToolAllowlist(),
             security=DeterministicUrlSecurityPolicy(),
             budgets=_budgets_for_run(run_id),
-            executions=InMemoryToolExecutionStore(),
+            executions=ledger,
             cache=SuccessCacheSingleflight(InMemorySuccessCache()),
             evidence_store=evidence_store,
             event_sink=recorder,
@@ -150,11 +255,7 @@ def build_harness_runtime(
             evidence_store=evidence_store,
             event_sink=recorder,
             clock=_SystemClock(),
+            memory_store=memory_store,
         )
 
     return service, context_factory
-
-
-class _SystemClock:
-    def now(self) -> datetime:
-        return datetime.now(UTC)

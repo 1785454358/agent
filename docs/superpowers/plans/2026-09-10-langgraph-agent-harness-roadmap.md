@@ -10,10 +10,15 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-10-langgraph-agent-harness-refactor-design.md`
 
-> **Delivery status (2026-09-13):** Plans 1–8 delivered. Plans 4–8 have plan docs at
-> `docs/superpowers/plans/2026-09-13-{plan-execute-strategy,multi-agent-strategy,mysql-distributed-recovery}.md`;
-> implementation decisions are recorded in `docs/superpowers/plans/2026-09-13-harness-implementation-decisions.md`.
-> Baseline: 539 non-real tests green + one real-API smoke test (`-m real`).
+> **Delivery status (2026-09-13, after external audit fixes):** Plans 1–8 delivered and
+> the cutover is closed: API / Worker / CLI all run through the top-level runtime graph,
+> the legacy Basic/Deep/Multi-Agent orchestration modules are deleted, MySQL migrations
+> exist for the checkpoint/ledger/memory tables, the API accepts `thread_id` for
+> multi-turn, dynamic compression and memory injection are implemented, and transient
+> tool errors retry at node level. Plan docs: `2026-09-13-{plan-execute-strategy,
+> multi-agent-strategy,mysql-distributed-recovery}.md`; decisions in
+> `2026-09-13-harness-implementation-decisions.md`. Baseline: 359 non-real tests green
+> (legacy suites removed with their modules) + real-API smoke test (`-m real`) passing.
 
 ## Global Constraints
 

@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from deeptrace.domain import ToolRequest, ToolResult
+from deeptrace.domain import TRANSIENT_TOOL_ERROR_CODES, ToolRequest, ToolResult
 
 
 class ExecutionConflictError(RuntimeError):
@@ -159,6 +159,17 @@ class InMemoryToolExecutionStore:
             if not self._owns(record, claim):
                 return False
             self._validate_result(record.request, result)
+            if (
+                not result.ok
+                and result.error_code in TRANSIENT_TOOL_ERROR_CODES
+            ):
+                # Transient failures stay recoverable: a node-level retry may
+                # claim the call again and truly re-execute the provider.
+                record.abandoned = True
+                signal = self._signals[(identity, record.generation)]
+                if not signal.done():
+                    signal.set_result(_ABANDONED)
+                return True
             record.terminal_result = result.model_copy(deep=True)
             signal = self._signals[(identity, record.generation)]
             if not signal.done():

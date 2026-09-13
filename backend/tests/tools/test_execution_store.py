@@ -31,7 +31,8 @@ def _result(request: ToolRequest, *, ok: bool = True) -> ToolResult:
         call_id=request.call_id,
         tool=request.tool,
         ok=ok,
-        error_code=None if ok else "provider_error",
+        # a permanent (non-transient) failure is terminal and replayed
+        error_code=None if ok else "invalid_adapter_result",
         preview="result" if ok else "",
     )
 

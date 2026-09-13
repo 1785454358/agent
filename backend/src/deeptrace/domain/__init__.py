@@ -19,7 +19,12 @@ from deeptrace.domain.research import (
     ResearchTopicOutcome,
     TopicStepError,
 )
-from deeptrace.domain.tools import ToolName, ToolRequest, ToolResult
+from deeptrace.domain.tools import (
+    TRANSIENT_TOOL_ERROR_CODES,
+    ToolName,
+    ToolRequest,
+    ToolResult,
+)
 
 __all__ = [
     "BudgetSnapshot",
@@ -46,6 +51,7 @@ __all__ = [
     "ToolName",
     "ToolRequest",
     "ToolResult",
+    "TRANSIENT_TOOL_ERROR_CODES",
     "TopicStepError",
     "normalize_research_mode",
 ]

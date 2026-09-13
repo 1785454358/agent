@@ -28,7 +28,7 @@ class FakeDistributedRuntime:
     async def stop(self) -> None:
         return None
 
-    async def create(self, question, mode):
+    async def create(self, question, mode, thread_id=None):
         self.created.append((question, mode))
         return self.run.model_copy(update={"question": question, "mode": mode})
 
@@ -77,7 +77,7 @@ def test_api_delegates_distributed_creation_without_running_agent() -> None:
             json={"question": "  研究问题  ", "mode": "multi_agent"},
         )
 
-    assert response.json() == {"id": "run-1", "status": "pending"}
+    assert response.json() == {"id": "run-1", "status": "pending", "thread_id": ""}
     assert runtime.created == [("研究问题", "multi_agent")]
 
 

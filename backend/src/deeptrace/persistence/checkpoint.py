@@ -11,7 +11,7 @@ from langgraph.checkpoint.base import (
     CheckpointMetadata,
     CheckpointTuple,
 )
-from langgraph.checkpoint.base import ChannelVersions
+from langgraph.checkpoint.base import ChannelVersions, get_checkpoint_id
 from langchain_core.runnables import RunnableConfig
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -111,23 +111,22 @@ class SqlAlchemyCheckpointSaver(BaseCheckpointSaver):
         if config is None:
             return
         thread_id, namespace = _config_parts(config)
+        before_id = get_checkpoint_id(before) if before is not None else None
         async with self._sessions() as session:
-            rows = (
-                (
-                    await session.execute(
-                        select(CheckpointRow)
-                        .where(
-                            CheckpointRow.thread_id == thread_id,
-                            CheckpointRow.checkpoint_ns == namespace,
-                        )
-                        .order_by(CheckpointRow.checkpoint_id.desc())
-                    )
+            query = (
+                select(CheckpointRow)
+                .where(
+                    CheckpointRow.thread_id == thread_id,
+                    CheckpointRow.checkpoint_ns == namespace,
                 )
-                .scalars()
-                .all()
+                .order_by(CheckpointRow.checkpoint_id.desc())
             )
-        count = 0
-        for row in reversed(rows):
+            if before_id:
+                query = query.where(CheckpointRow.checkpoint_id < before_id)
+            if limit is not None:
+                query = query.limit(limit)
+            rows = (await session.execute(query)).scalars().all()
+        for row in rows:
             metadata = self.serde.loads_typed((row.metadata_type, row.metadata_blob))
             if filter and any(metadata.get(k) != v for k, v in filter.items()):
                 continue
@@ -140,9 +139,6 @@ class SqlAlchemyCheckpointSaver(BaseCheckpointSaver):
             }
             checkpoint = self.serde.loads_typed((row.type, row.checkpoint_blob))
             yield CheckpointTuple(config_out, checkpoint, metadata, None, ())
-            count += 1
-            if limit is not None and count >= limit:
-                break
 
     async def aput(
         self,

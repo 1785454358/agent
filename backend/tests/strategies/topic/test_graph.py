@@ -210,42 +210,84 @@ async def test_empty_search_results_record_a_stable_error() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ("failure", "expected_code"),
-    [("empty", "empty_page"), ("raise", "provider_error")],
-)
-async def test_partial_fetch_failure_keeps_sibling_evidence(
-    failure: str, expected_code: str
-) -> None:
+async def test_partial_fetch_failure_keeps_sibling_evidence() -> None:
     fixture = build_gateway_fixture(
         default_search_results=[
             {"url": "https://example.com/a", "title": "A", "snippet": "s"},
             {"url": "https://example.com/b", "title": "B", "snippet": "s"},
         ],
         pages={"https://example.com/a": "body-a"},
-        fetch_failures={"https://example.com/b": failure},
+        fetch_failures={"https://example.com/b": "empty"},
     )
 
     outcome = await _run_topic(fixture)
 
     assert outcome.evidence_ids == [await fixture.evidence_id_for("https://example.com/a")]
     assert [(error.stage, error.target, error.code) for error in outcome.errors] == [
-        ("fetch", "https://example.com/b", expected_code)
+        ("fetch", "https://example.com/b", "empty_page")
     ]
     assert outcome.executed_steps == 3
 
 
 @pytest.mark.asyncio
-async def test_search_failure_skips_fetches_and_records_error() -> None:
+async def test_transient_fetch_errors_are_retried_at_node_level() -> None:
+    """provider_error retries 3x via RetryPolicy, then the topic graph raises."""
+    import pytest as _pytest
+
+    from deeptrace.strategies.topic.nodes import TransientToolError
+
+    fixture = build_gateway_fixture(
+        default_search_results=[
+            {"url": "https://example.com/a", "title": "A", "snippet": "s"},
+            {"url": "https://example.com/b", "title": "B", "snippet": "s"},
+        ],
+        pages={"https://example.com/a": "body-a"},
+        fetch_failures={"https://example.com/b": "raise"},
+    )
+    graph = build_research_topic_graph()
+    topic_input = ResearchTopicInput(
+        run_id="run-1",
+        thread_id="thread-1",
+        query="LangGraph harness",
+        max_pages=2,
+        mode=ResearchMode.WORKFLOW,
+        caller_id="workflow-graph",
+    )
+
+    with _pytest.raises(TransientToolError):
+        await graph.ainvoke(
+            {"topic_input": topic_input}, context=fixture.context
+        )
+
+    # every retry truly re-executed the provider (recoverable ledger semantics)
+    assert fixture.fetcher.calls.count("https://example.com/b") == 3
+    # sibling evidence from the successful branch is durable
+    assert fixture.evidence_store._records  # evidence ingested for url a
+
+
+@pytest.mark.asyncio
+async def test_search_transient_failure_is_retried_then_recorded() -> None:
+    import pytest as _pytest
+
+    from deeptrace.strategies.topic.nodes import TransientToolError
+
     fixture = build_gateway_fixture(search_fail=True)
+    graph = build_research_topic_graph()
+    topic_input = ResearchTopicInput(
+        run_id="run-1",
+        thread_id="thread-1",
+        query="LangGraph harness",
+        mode=ResearchMode.WORKFLOW,
+        caller_id="workflow-graph",
+    )
 
-    outcome = await _run_topic(fixture)
+    with _pytest.raises(TransientToolError):
+        await graph.ainvoke(
+            {"topic_input": topic_input}, context=fixture.context
+        )
 
-    assert fixture.fetcher.calls == []
-    assert [(error.stage, error.code) for error in outcome.errors] == [
-        ("search", "provider_error")
-    ]
-    assert outcome.executed_steps == 1
+    # the search provider was truly re-executed on every retry attempt
+    assert len(fixture.search.calls) == 3
 
 
 @pytest.mark.asyncio

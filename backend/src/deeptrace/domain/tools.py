@@ -48,6 +48,9 @@ DataReference = Annotated[
 ]
 
 
+TRANSIENT_TOOL_ERROR_CODES = frozenset({"provider_error", "provider_timeout"})
+
+
 class ToolName(StrEnum):
     SEARCH_WEB = "search_web"
     FETCH_PAGE = "fetch_page"
