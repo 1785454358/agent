@@ -23,17 +23,23 @@ async def test_real_workflow_run_returns_cited_answer() -> None:
     from deeptrace.application.research import ApplicationResearchRequest
     from deeptrace.domain import ResearchMode
 
+    import uuid
+
+    run_id = f"real-smoke-{uuid.uuid4().hex[:8]}"
+    # the context factory is keyed by RUN id (budget scopes are registered per
+    # run); the thread may differ when a caller continues a conversation
+    thread_id = f"real-thread-{uuid.uuid4().hex[:8]}"
     bundle = build_harness_runtime(settings, runs_dir="runs")
     try:
         outcome = await bundle.service.invoke(
             ApplicationResearchRequest(
-                run_id="real-smoke-1",
-                thread_id="real-smoke-1",
+                run_id=run_id,
+                thread_id=thread_id,
                 question="LangGraph 的 checkpoint 机制是什么？",
                 mode=ResearchMode.WORKFLOW,
             ),
-            config={"configurable": {"thread_id": "real-smoke-1"}},
-            context=bundle.context_factory("real-smoke-1"),
+            config={"configurable": {"thread_id": thread_id}},
+            context=bundle.context_factory(run_id),
         )
     finally:
         await bundle.aclose()

@@ -103,6 +103,7 @@ def upgrade() -> None:
         sa.Column("tenant_id", sa.String(length=128), nullable=False),
         sa.Column("evidence_id", sa.String(length=160), nullable=False),
         sa.Column("canonical_url", sa.String(length=2048), nullable=False),
+        sa.Column("canonical_url_hash", sa.String(length=64), nullable=False),
         sa.Column("title", sa.String(length=500), nullable=False),
         sa.Column("media_type", sa.String(length=255), nullable=False),
         sa.Column("content_hash", sa.String(length=128), nullable=False),
@@ -121,7 +122,7 @@ def upgrade() -> None:
         ),
         sa.UniqueConstraint(
             "tenant_id",
-            "canonical_url",
+            "canonical_url_hash",
             "version",
             name="ux_evidence_records_version",
         ),
@@ -129,7 +130,7 @@ def upgrade() -> None:
     op.create_index(
         "ix_evidence_records_source",
         "evidence_records",
-        ["tenant_id", "canonical_url", "status"],
+        ["tenant_id", "canonical_url_hash", "status"],
     )
 
     op.create_table(

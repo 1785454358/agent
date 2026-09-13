@@ -55,7 +55,7 @@ class HarnessResearchRunner:
 
         context = bundle.context_factory(run.id, on_harness_event)
         emit("planning.completed", "研究任务已进入统一运行图")
-        outcome = await service.invoke(
+        outcome = await bundle.service.invoke(
             ApplicationResearchRequest(
                 run_id=run.id,
                 thread_id=thread_id,

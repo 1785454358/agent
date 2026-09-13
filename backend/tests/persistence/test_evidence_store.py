@@ -58,3 +58,35 @@ async def test_evidence_bodies_survive_a_new_store_instance(tmp_path) -> None:
     body = await reopened.read_body("tenant-1", evidence.id)
 
     assert body == "重启后仍可读的正文"
+
+
+@pytest.mark.asyncio
+async def test_concurrent_different_bodies_keep_every_version(tmp_path) -> None:
+    import asyncio
+
+    store = await _make_store(tmp_path)
+    draft_a = EvidenceDraft(
+        canonical_url="https://example.com/race",
+        title="A",
+        media_type="text/html",
+        body="并发正文 A",
+        fetched_at=datetime(2026, 9, 13, tzinfo=UTC),
+        source_quality=0.9,
+    )
+    draft_b = EvidenceDraft(
+        canonical_url="https://example.com/race",
+        title="B",
+        media_type="text/html",
+        body="并发正文 B",
+        fetched_at=datetime(2026, 9, 13, tzinfo=UTC),
+        source_quality=0.9,
+    )
+
+    results = await asyncio.gather(
+        store.ingest("tenant-1", draft_a), store.ingest("tenant-1", draft_b)
+    )
+    bodies = {await store.read_body("tenant-1", item.id) for item in results}
+    # neither submitted body may be silently dropped
+    assert bodies == {"并发正文 A", "并发正文 B"}
+    latest = await store.latest_for_source("tenant-1", "https://example.com/race")
+    assert await store.read_body("tenant-1", latest.id) in bodies

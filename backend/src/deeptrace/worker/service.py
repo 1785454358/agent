@@ -90,6 +90,7 @@ class ResearchWorker:
                 run.id, self._worker_id, "运行被用户取消"
             )
             if cancelled is not None:
+                await self._release_thread_lease(run)
                 await self._append_done_and_ack(run.id, job.message_id)
             return
 

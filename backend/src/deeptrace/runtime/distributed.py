@@ -64,14 +64,15 @@ class DistributedResearchRuntime:
             raise ThreadBusyError(run.thread_id)
         try:
             await self._repository.create(run)
-            await self._broker.enqueue(run.id)
         except Exception as exc:
             await self._repository.release_thread_lease(run.thread_id, run.id)
-            if isinstance(exc, JobDispatchError):
-                raise
-            raise JobDispatchError(
-                f"failed to dispatch run {run.id}"
-            ) from exc
+            raise JobDispatchError(f"failed to persist run {run.id}") from exc
+        try:
+            await self._broker.enqueue(run.id)
+        except Exception as exc:
+            # The run is persisted as pending and will be recovered; keep the
+            # thread lease so no second run starts on this conversation.
+            raise JobDispatchError(f"failed to enqueue run {run.id}") from exc
         return run
 
     async def get(self, run_id: str) -> RunRecord | None:

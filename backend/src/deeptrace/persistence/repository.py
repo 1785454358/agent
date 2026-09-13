@@ -364,23 +364,75 @@ class SqlAlchemyRunRepository:
         )
 
 
-    async def acquire_thread_lease(self, thread_id: str, run_id: str) -> bool:
-        """Atomic INSERT-based claim; a duplicate thread raises IntegrityError."""
+    async def acquire_thread_lease(
+        self,
+        thread_id: str,
+        run_id: str,
+        *,
+        ttl_seconds: int = 1_800,
+    ) -> bool:
+        """Atomic INSERT-based claim.
+
+        A lease older than ``ttl_seconds`` is considered abandoned (its worker
+        died without release) and is reclaimed by this call.
+        """
+        import logging
+
+        from sqlalchemy import delete as sa_delete
+        from sqlalchemy import select as sa_select
         from sqlalchemy.exc import IntegrityError
 
-        try:
-            async with self._sessions() as session:
-                session.add(
-                    ThreadLeaseRow(
-                        thread_id=thread_id,
-                        run_id=run_id,
-                        created_at=datetime.now(UTC),
+        logger = logging.getLogger(__name__)
+        for _attempt in range(2):
+            try:
+                async with self._sessions() as session:
+                    session.add(
+                        ThreadLeaseRow(
+                            thread_id=thread_id,
+                            run_id=run_id,
+                            created_at=datetime.now(UTC),
+                        )
                     )
-                )
-                await session.commit()
-            return True
-        except IntegrityError:
-            return False
+                    await session.commit()
+                return True
+            except IntegrityError:
+                async with self._sessions() as session:
+                    row = (
+                        await session.execute(
+                            sa_select(ThreadLeaseRow).where(
+                                ThreadLeaseRow.thread_id == thread_id
+                            )
+                        )
+                    ).scalar_one_or_none()
+                    if row is None:
+                        continue  # released between attempts: retry insert
+                    created_at = row.created_at
+                    if created_at.tzinfo is None:
+                        created_at = created_at.replace(tzinfo=UTC)
+                    age = (datetime.now(UTC) - created_at).total_seconds()
+                    if age <= ttl_seconds:
+                        logger.warning(
+                            "thread lease busy: thread=%s holder=%s age=%.0fs",
+                            thread_id,
+                            row.run_id,
+                            age,
+                        )
+                        return False
+                    logger.warning(
+                        "reclaiming stale thread lease: thread=%s "
+                        "holder=%s age=%.0fs",
+                        thread_id,
+                        row.run_id,
+                        age,
+                    )
+                    await session.execute(
+                        sa_delete(ThreadLeaseRow).where(
+                            ThreadLeaseRow.thread_id == thread_id,
+                            ThreadLeaseRow.run_id == row.run_id,
+                        )
+                    )
+                    await session.commit()
+        return False
 
     async def release_thread_lease(self, thread_id: str, run_id: str) -> bool:
         async with self._sessions() as session:

@@ -46,6 +46,7 @@ class PlanExecuteState(TypedDict, total=False):
     thread_id: str
     question: str
     conversation_summary: dict
+    recent_messages: list[str]
     prior_evidence_ids: list[str]
     unresolved_gaps: Annotated[list[str], merge_unique_strings]
     budget: dict

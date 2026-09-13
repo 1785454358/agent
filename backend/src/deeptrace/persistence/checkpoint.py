@@ -111,6 +111,7 @@ class SqlAlchemyCheckpointSaver(BaseCheckpointSaver):
         if config is None:
             return
         thread_id, namespace = _config_parts(config)
+        requested_id = get_checkpoint_id(config)
         before_id = get_checkpoint_id(before) if before is not None else None
         async with self._sessions() as session:
             query = (
@@ -121,9 +122,38 @@ class SqlAlchemyCheckpointSaver(BaseCheckpointSaver):
                 )
                 .order_by(CheckpointRow.checkpoint_id.desc())
             )
+            if requested_id:
+                # list a specific checkpoint (time travel semantics)
+                query = query.where(CheckpointRow.checkpoint_id == requested_id)
             if before_id:
                 query = query.where(CheckpointRow.checkpoint_id < before_id)
             rows = (await session.execute(query)).scalars().all()
+
+            pending_by_checkpoint: dict[str, list[tuple[str, str, object]]] = {}
+            write_rows = (
+                (
+                    await session.execute(
+                        select(CheckpointWriteRow)
+                        .where(
+                            CheckpointWriteRow.thread_id == thread_id,
+                            CheckpointWriteRow.checkpoint_ns == namespace,
+                        )
+                        .order_by(CheckpointWriteRow.idx.asc())
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            for write_row in write_rows:
+                pending_by_checkpoint.setdefault(
+                    write_row.checkpoint_id, []
+                ).append(
+                    (
+                        write_row.task_id,
+                        write_row.channel,
+                        self._load(write_row.type, write_row.blob),
+                    )
+                )
         count = 0
         for row in rows:
             metadata = self.serde.loads_typed((row.metadata_type, row.metadata_blob))
@@ -136,8 +166,20 @@ class SqlAlchemyCheckpointSaver(BaseCheckpointSaver):
                     "checkpoint_id": row.checkpoint_id,
                 }
             }
+            parent_config = None
+            if row.parent_checkpoint_id:
+                parent_config = {
+                    "configurable": {
+                        "thread_id": thread_id,
+                        "checkpoint_ns": namespace,
+                        "checkpoint_id": row.parent_checkpoint_id,
+                    }
+                }
+            pending = pending_by_checkpoint.get(row.checkpoint_id, [])
             checkpoint = self.serde.loads_typed((row.type, row.checkpoint_blob))
-            yield CheckpointTuple(config_out, checkpoint, metadata, None, ())
+            yield CheckpointTuple(
+                config_out, checkpoint, metadata, parent_config, pending
+            )
             count += 1
             if limit is not None and count >= limit:
                 break

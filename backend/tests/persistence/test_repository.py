@@ -288,3 +288,25 @@ async def test_repository_finds_only_stale_pending_and_expired_running_runs(
         "stale-pending",
         "expired-running",
     }
+
+
+@pytest.mark.asyncio
+async def test_thread_lease_is_atomic_and_reclaims_stale_leases(repository) -> None:
+    from datetime import timedelta
+
+    from deeptrace.persistence.orm import ThreadLeaseRow
+
+    assert await repository.acquire_thread_lease("thread-1", "run-1") is True
+    # a live lease blocks other claims
+    assert await repository.acquire_thread_lease("thread-1", "run-2") is False
+
+    # a stale lease (older than the TTL) is reclaimed
+    async with repository._sessions() as session:
+        row = await session.get(ThreadLeaseRow, "thread-1")
+        row.created_at = datetime.now(UTC) - timedelta(hours=2)
+        await session.commit()
+
+    assert await repository.acquire_thread_lease("thread-1", "run-3") is True
+    released = await repository.release_thread_lease("thread-1", "run-3")
+    assert released is True
+    assert await repository.release_thread_lease("thread-1", "run-3") is False

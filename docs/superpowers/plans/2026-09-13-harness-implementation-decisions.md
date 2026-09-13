@@ -353,3 +353,33 @@
     README 顶部加架构状态横幅（声明流量已切换、旧章节仅历史参考、
     Harness 记忆路径不使用 BGE-M3）；roadmap 基线更新为 364。
     回归基线：364 non-real passed + real 冒烟通过（34s）。
+
+## 第五轮：外部审查修复（2026-09-13）
+
+第四轮外部审查指出两处会让真实 Worker 链路直接失败的 P0 与多项契约问题：
+
+67. **Runner NameError（P0）**：bundle 重构后 `HarnessResearchRunner` 仍调用不存在的
+    `service` 局部变量，已改为 `bundle.service.invoke`；新增 runner 路径测试锁定
+    "数据库 run 身份 → runner → 服务"链路（真实冒烟此前直接调 bundle.service，
+    未覆盖该路径）。
+68. **资源关闭静默失败（P0）**：assembly 缺 `asyncio` 导入导致 iscoroutine 判断抛错
+    被吞，引擎与抓取器从未关闭；已修复并对清理异常记录日志（不再静默）。
+69. **MySQL 索引键过长（P0）**：evidence_records 的 canonical_url（VARCHAR 2048）
+    移出索引，新增定长 `canonical_url_hash CHAR(64)`，唯一约束与查询全部走 hash；
+    迁移同步更新。本地 SQLite DDL 增加列迁移 + sha256 回填（兼容旧库文件）。
+70. **recent_messages 在策略边界丢失**：三个策略 State 补 `recent_messages` 通道，
+    三处 `_research_input` 重建复制该字段——此前共享 helper 读到的始终是空列表。
+71. **lease 生命周期**：dispatch 失败但 run 已落库时保留 lease（pending run 可恢复），
+    仅 run 落库失败才释放；Worker 领取后发现已取消的分支补释放；lease 增加
+    TTL（默认 30 分钟）过期回收与占用日志，释放异常记日志不静默。
+72. **Evidence 并发丢正文**：版本竞态改为整事务有限重试（3 次），不再返回其他
+    请求的正文；新增并发不同正文测试锁定"两个正文都保留"。
+73. **alist 契约补齐**：支持 config 指定 checkpoint_id、返回真实 parent_config 与
+    pending_writes，行为对齐 InMemorySaver.list。
+74. **单租户定位显式化**：assembly 注明当前 API 无认证边界、所有运行共享一个
+    workspace 命名空间，多租户需先注入可信身份；根 README 的 BGE-M3 长期记忆
+    表述改为确定性召回评分。
+75. **context_factory 契约澄清**：入参是 run_id（预算作用域按 run 注册），
+    thread 与 run 分离后冒烟测试曾把 thread 传入导致预算 KeyError 降级为
+    no_evidence——已在测试与注释中固化该契约。
+    回归基线：367 non-real passed + real 冒烟通过（39s）。

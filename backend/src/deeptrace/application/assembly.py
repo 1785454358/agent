@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -159,6 +161,40 @@ def _ensure_sqlite_schema(db_path: Path) -> None:
                 .replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS")
                 .replace("CREATE UNIQUE INDEX", "CREATE UNIQUE INDEX IF NOT EXISTS")
             )
+        # lightweight column migration for databases created by earlier builds
+        import hashlib
+
+        connection.create_function(
+            "deeptrace_sha256_hex", 1, lambda value: hashlib.sha256(
+                (value or "").encode("utf-8")
+            ).hexdigest()
+        )
+        columns = {
+            row[1]
+            for row in connection.execute(
+                "PRAGMA table_info(evidence_records)"
+            )
+        }
+        if "canonical_url_hash" in columns:
+            existing_hash_rows = connection.execute(
+                "SELECT COUNT(*) FROM evidence_records "
+                "WHERE canonical_url_hash IS NULL OR canonical_url_hash = ''"
+            ).fetchone()[0]
+            if existing_hash_rows:
+                connection.execute(
+                    "UPDATE evidence_records "
+                    "SET canonical_url_hash = deeptrace_sha256_hex(canonical_url) "
+                    "WHERE canonical_url_hash IS NULL OR canonical_url_hash = ''"
+                )
+        else:
+            connection.execute(
+                "ALTER TABLE evidence_records "
+                "ADD COLUMN canonical_url_hash VARCHAR(64)"
+            )
+            connection.execute(
+                "UPDATE evidence_records "
+                "SET canonical_url_hash = deeptrace_sha256_hex(canonical_url)"
+            )
         connection.commit()
     finally:
         connection.close()
@@ -183,6 +219,7 @@ class HarnessRuntimeBundle:
         self._resources = [item for item in resources if item is not None]
 
     async def aclose(self) -> None:
+        logger = logging.getLogger(__name__)
         for resource in self._resources:
             closer = getattr(resource, "aclose", None) or getattr(
                 resource, "dispose", None
@@ -194,7 +231,12 @@ class HarnessRuntimeBundle:
                 if asyncio.iscoroutine(result):
                     await result
             except Exception:
-                continue
+                # resource cleanup must never mask the original shutdown path,
+                # but it must be visible
+                logger.exception(
+                    "failed to close harness resource %s",
+                    type(resource).__name__,
+                )
 
 
 def build_harness_runtime(
@@ -285,6 +327,11 @@ def build_harness_runtime(
             evidence_store=evidence_store,
             event_sink=recorder,
         )
+        # Single-tenant deployment: the current API surface has no
+        # authentication boundary, so all runs share one workspace namespace.
+        # Multi-tenant isolation requires an authenticated identity injected
+        # here (user_id/workspace_id) before Memory/Evidence scoping claims
+        # can extend beyond this demo positioning.
         return HarnessContext(
             user_id="local-user",
             workspace_id="local-workspace",

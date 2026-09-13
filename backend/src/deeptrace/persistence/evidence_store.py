@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime
 from typing import Sequence
 
@@ -20,8 +21,11 @@ class SqlAlchemyEvidenceStore:
     Every record version keeps its own row; ``get``/``get_many`` return the
     record with its body available through ``read_body``. Identical content
     upserts to one active record; changed content supersedes the previous
-    version.
+    version. Version races retry the whole transaction instead of returning
+    another request's body.
     """
+
+    _INGEST_ATTEMPTS = 3
 
     def __init__(self, sessions: async_sessionmaker[AsyncSession]) -> None:
         self._sessions = sessions
@@ -34,68 +38,16 @@ class SqlAlchemyEvidenceStore:
             raise ValueError("body must be non-empty")
 
         canonical_url = normalize_url_before_fetch(draft.canonical_url)
+        canonical_url_hash = _sha256_hex(canonical_url)
         content_hash = _content_hash(draft.body)
         evidence_id = _evidence_id(canonical_url, content_hash)
 
         from sqlalchemy.exc import IntegrityError
 
-        async with self._sessions() as session:
-            existing = (
-                await session.execute(
-                    select(EvidenceRecordRow).where(
-                        EvidenceRecordRow.tenant_id == tenant,
-                        EvidenceRecordRow.evidence_id == evidence_id,
-                    )
-                )
-            ).scalar_one_or_none()
-            if existing is not None:
-                return _to_model(existing)
-
-            prior = (
-                await session.execute(
-                    select(EvidenceRecordRow)
-                    .where(
-                        EvidenceRecordRow.tenant_id == tenant,
-                        EvidenceRecordRow.canonical_url == canonical_url,
-                        EvidenceRecordRow.status == "active",
-                    )
-                    .order_by(EvidenceRecordRow.version.desc())
-                    .limit(1)
-                    .with_for_update()
-                )
-            ).scalar_one_or_none()
-            version = 1
-            supersedes = None
-            if prior is not None:
-                version = prior.version + 1
-                supersedes = prior.evidence_id
-                prior.status = "superseded"
-
-            record = EvidenceRecordRow(
-                tenant_id=tenant,
-                evidence_id=evidence_id,
-                canonical_url=canonical_url,
-                title=draft.title,
-                media_type=draft.media_type,
-                content_hash=content_hash,
-                body=draft.body,
-                fetched_at=draft.fetched_at,
-                published_at=draft.published_at,
-                source_quality=draft.source_quality,
-                status="active",
-                version=version,
-                supersedes=supersedes,
-                metadata_json=dict(draft.metadata),
-                created_at=datetime.now(UTC),
-            )
-            session.add(record)
-            try:
-                await session.commit()
-            except IntegrityError:
-                # A concurrent transaction won the version race (same content
-                # or same next version): serve the stored record instead.
-                await session.rollback()
-                winner = (
+        last_error: Exception | None = None
+        for _attempt in range(self._INGEST_ATTEMPTS):
+            async with self._sessions() as session:
+                existing = (
                     await session.execute(
                         select(EvidenceRecordRow).where(
                             EvidenceRecordRow.tenant_id == tenant,
@@ -103,29 +55,73 @@ class SqlAlchemyEvidenceStore:
                         )
                     )
                 ).scalar_one_or_none()
-                if winner is None:
-                    winner = (
-                        await session.execute(
-                            select(EvidenceRecordRow)
-                            .where(
-                                EvidenceRecordRow.tenant_id == tenant,
-                                EvidenceRecordRow.canonical_url == canonical_url,
-                                EvidenceRecordRow.status == "active",
-                            )
-                            .order_by(EvidenceRecordRow.version.desc())
-                            .limit(1)
+                if existing is not None:
+                    return _to_model(existing)
+
+                prior = (
+                    await session.execute(
+                        select(EvidenceRecordRow)
+                        .where(
+                            EvidenceRecordRow.tenant_id == tenant,
+                            EvidenceRecordRow.canonical_url_hash
+                            == canonical_url_hash,
+                            EvidenceRecordRow.status == "active",
                         )
-                    ).scalar_one()
-                return _to_model(winner)
-            return _to_model(record)
+                        .order_by(EvidenceRecordRow.version.desc())
+                        .limit(1)
+                        .with_for_update()
+                    )
+                ).scalar_one_or_none()
+                version = 1
+                supersedes = None
+                if prior is not None:
+                    version = prior.version + 1
+                    supersedes = prior.evidence_id
+                    prior.status = "superseded"
+
+                record = EvidenceRecordRow(
+                    tenant_id=tenant,
+                    evidence_id=evidence_id,
+                    canonical_url=canonical_url,
+                    canonical_url_hash=canonical_url_hash,
+                    title=draft.title,
+                    media_type=draft.media_type,
+                    content_hash=content_hash,
+                    body=draft.body,
+                    fetched_at=draft.fetched_at,
+                    published_at=draft.published_at,
+                    source_quality=draft.source_quality,
+                    status="active",
+                    version=version,
+                    supersedes=supersedes,
+                    metadata_json=dict(draft.metadata),
+                    created_at=datetime.now(UTC),
+                )
+                session.add(record)
+                try:
+                    await session.commit()
+                    return _to_model(record)
+                except IntegrityError as exc:
+                    # Same-content race or a concurrent next-version write:
+                    # retry the transaction against the winner's state so we
+                    # never return a body different from the submitted one.
+                    await session.rollback()
+                    last_error = exc
+
+        existing = await self.get(tenant_id, evidence_id)
+        if existing is not None:
+            return existing
+        raise RuntimeError("evidence ingest failed after retries") from last_error
 
     async def get(self, tenant_id: str, evidence_id: str) -> Evidence:
         async with self._sessions() as session:
             record = (
                 await session.execute(
                     select(EvidenceRecordRow).where(
-                        EvidenceRecordRow.tenant_id == _require_identifier("tenant_id", tenant_id),
-                        EvidenceRecordRow.evidence_id == _require_identifier("evidence_id", evidence_id),
+                        EvidenceRecordRow.tenant_id
+                        == _require_identifier("tenant_id", tenant_id),
+                        EvidenceRecordRow.evidence_id
+                        == _require_identifier("evidence_id", evidence_id),
                     )
                 )
             ).scalar_one_or_none()
@@ -136,11 +132,10 @@ class SqlAlchemyEvidenceStore:
     async def get_many(
         self, tenant_id: str, evidence_ids: Sequence[str]
     ) -> tuple[Evidence, ...]:
-        ids = list(evidence_ids)
         if isinstance(evidence_ids, (str, bytes)):
             raise TypeError("evidence_ids must be a sequence of identifiers")
         results: list[Evidence] = []
-        for evidence_id in ids:
+        for evidence_id in evidence_ids:
             results.append(await self.get(tenant_id, evidence_id))
         return tuple(results)
 
@@ -168,13 +163,14 @@ class SqlAlchemyEvidenceStore:
         self, tenant_id: str, canonical_url: str
     ) -> Evidence:
         normalized = normalize_url_before_fetch(canonical_url)
+        url_hash = _sha256_hex(normalized)
         async with self._sessions() as session:
             record = (
                 await session.execute(
                     select(EvidenceRecordRow)
                     .where(
                         EvidenceRecordRow.tenant_id == tenant_id,
-                        EvidenceRecordRow.canonical_url == normalized,
+                        EvidenceRecordRow.canonical_url_hash == url_hash,
                         EvidenceRecordRow.status == "active",
                     )
                     .order_by(EvidenceRecordRow.version.desc())
@@ -218,13 +214,13 @@ def _require_identifier(name: str, value: str) -> str:
 
 
 def _content_hash(body: str) -> str:
-    import hashlib
-
     return "sha256:" + hashlib.sha256(body.encode("utf-8")).hexdigest()
 
 
-def _evidence_id(canonical_url: str, content_hash: str) -> str:
-    import hashlib
+def _sha256_hex(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
+
+def _evidence_id(canonical_url: str, content_hash: str) -> str:
     payload = f"{canonical_url}\0{content_hash}".encode("utf-8")
     return "evidence-" + hashlib.sha256(payload).hexdigest()

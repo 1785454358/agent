@@ -148,6 +148,8 @@ class MemoryRecordRow(Base):
 class EvidenceRecordRow(Base):
     __tablename__ = "evidence_records"
     __table_args__ = (
+        # canonical_url itself is not indexed: VARCHAR(2048) exceeds the
+        # InnoDB key limit under utf8mb4; the fixed-length hash stands in.
         Index(
             "ux_evidence_records_identity",
             "tenant_id",
@@ -157,14 +159,14 @@ class EvidenceRecordRow(Base):
         Index(
             "ux_evidence_records_version",
             "tenant_id",
-            "canonical_url",
+            "canonical_url_hash",
             "version",
             unique=True,
         ),
         Index(
             "ix_evidence_records_source",
             "tenant_id",
-            "canonical_url",
+            "canonical_url_hash",
             "status",
         ),
     )
@@ -173,6 +175,7 @@ class EvidenceRecordRow(Base):
     tenant_id: Mapped[str] = mapped_column(String(128))
     evidence_id: Mapped[str] = mapped_column(String(160))
     canonical_url: Mapped[str] = mapped_column(String(2048))
+    canonical_url_hash: Mapped[str] = mapped_column(String(64))
     title: Mapped[str] = mapped_column(String(500))
     media_type: Mapped[str] = mapped_column(String(255))
     content_hash: Mapped[str] = mapped_column(String(128))

@@ -603,3 +603,49 @@ async def test_worker_drains_events_and_fails_when_agent_close_fails(repository)
     assert run.error == "运行失败（OSError），请检查服务与模型配置"
     assert [event.event_type for event in events] == ["planning.completed", "done"]
     assert broker.acked == ["1-0"]
+
+
+@pytest.mark.asyncio
+async def test_worker_runner_receives_database_run_identity(repository) -> None:
+    """The runner path must see the persisted run id and thread id."""
+    await repository.create(
+        RunRecord(
+            id="run-runner",
+            thread_id="thread-runner",
+            question="研究问题",
+            created_at=datetime.now(UTC),
+        )
+    )
+    seen: list[RunRecord] = []
+
+    async def runner(run: RunRecord, on_event=None):
+        seen.append(run)
+        return AgentResult(
+            status="completed",
+            answer="runner 回答",
+            sources=[],
+            steps=1,
+            events=[],
+            termination_reason="completed",
+            search_queries=[],
+            provider_usage=TokenUsage(),
+            role_usage=UsageBreakdown(),
+            estimated_cost_usd=None,
+            stage_seconds={},
+        )
+
+    worker = ResearchWorker(
+        repository,
+        RecordingBroker(),
+        SimpleNamespace(worker_lease_seconds=60, worker_max_attempts=3),
+        research_runner=runner,
+        worker_id="worker-1",
+    )
+    await worker.process(JobMessage(message_id="9-0", run_id="run-runner"))
+
+    run = await repository.get("run-runner")
+    assert run is not None
+    assert run.status == "completed"
+    assert run.answer == "runner 回答"
+    assert seen and seen[0].id == "run-runner"
+    assert seen[0].thread_id == "thread-runner"

@@ -36,6 +36,7 @@ def _research_input(state: PlanExecuteState) -> ResearchInput:
             "thread_id": state["thread_id"],
             "question": state["question"],
             "conversation_summary": state.get("conversation_summary") or {},
+            "recent_messages": state.get("recent_messages") or [],
             "prior_evidence_ids": state.get("prior_evidence_ids") or [],
             "unresolved_gaps": [],
             "budget": state.get("budget") or {},
