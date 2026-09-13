@@ -75,54 +75,41 @@ class _SeededBudgets:
         self._seed = seed
         self._run_id = run_id
         self._loaded = False
+        self._load_lock = asyncio.Lock()
 
     async def _ensure(self) -> None:
         if self._loaded:
             return
-        self._loaded = True
-        try:
-            consumed = await self._seed()
-        except Exception:
-            import logging
-
-            logging.getLogger(__name__).exception(
-                "failed to rebuild budget usage for run %s; "
-                "continuing with fresh counters",
-                self._run_id,
-            )
-            return
-        if not consumed:
-            return
-        # Expand per-(mode, caller) usage into the full scope lineage the
-        # manager checks: run scope, mode scopes and agent scopes.
-        expanded: dict[Any, Any] = {}
-        totals: dict[str, list[int]] = {}
-        mode_totals: dict[str, list[int]] = {}
-        for (mode, caller), units in consumed.items():
-            expanded[(mode, caller)] = units
-            values = [units.tool_calls, units.network_requests, units.fetched_pages]
-            totals[self._run_id] = [
-                a + b for a, b in zip(totals.get(self._run_id, [0, 0, 0]), values)
-            ]
-            mode_totals[mode] = [
-                a + b for a, b in zip(mode_totals.get(mode, [0, 0, 0]), values)
-            ]
-        from deeptrace.domain import ResearchMode
-        from deeptrace.tools.budget import BudgetScopeKey, BudgetUnits
-
-        expanded[BudgetScopeKey.for_run(self._run_id)] = BudgetUnits(
-            tool_calls=totals[self._run_id][0],
-            network_requests=totals[self._run_id][1],
-            fetched_pages=totals[self._run_id][2],
-        )
-        for mode in ResearchMode:
-            values = mode_totals.get(mode.value, [0, 0, 0])
-            expanded[BudgetScopeKey.for_mode(self._run_id, mode)] = BudgetUnits(
-                tool_calls=values[0],
-                network_requests=values[1],
-                fetched_pages=values[2],
-            )
-        self._inner.seed_consumed(expanded)
+        async with self._load_lock:
+            if self._loaded:
+                return
+            try:
+                consumed = await self._seed()
+                if consumed:
+                    expanded: dict[BudgetScopeKey, BudgetUnits] = {}
+                    run_total = BudgetUnits()
+                    mode_totals: dict[ResearchMode, BudgetUnits] = {}
+                    for (mode_value, caller), units in consumed.items():
+                        mode = ResearchMode(mode_value)
+                        expanded[
+                            BudgetScopeKey.for_agent(self._run_id, mode, caller)
+                        ] = units
+                        run_total = run_total.plus(units)
+                        mode_totals[mode] = mode_totals.get(
+                            mode, BudgetUnits()
+                        ).plus(units)
+                    expanded[BudgetScopeKey.for_run(self._run_id)] = run_total
+                    for mode, units in mode_totals.items():
+                        expanded[BudgetScopeKey.for_mode(self._run_id, mode)] = units
+                    await self._inner.seed_consumed(expanded)
+            except Exception:
+                logging.getLogger(__name__).exception(
+                    "failed to rebuild budget usage for run %s; "
+                    "continuing with fresh counters",
+                    self._run_id,
+                )
+            finally:
+                self._loaded = True
 
     async def reserve(self, scope, requested):
         await self._ensure()

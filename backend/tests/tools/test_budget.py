@@ -327,3 +327,39 @@ async def test_scope_snapshot_projects_committed_usage_to_execution_contract() -
         used_tool_calls=1,
         used_network_requests=1,
     )
+
+
+@pytest.mark.asyncio
+async def test_seed_consumed_updates_configured_hierarchy_before_reservation() -> None:
+    run = BudgetScopeKey.for_run("run-resumed")
+    mode = BudgetScopeKey.for_mode("run-resumed", ResearchMode.WORKFLOW)
+    agent = BudgetScopeKey.for_agent(
+        "run-resumed", ResearchMode.WORKFLOW, "researcher"
+    )
+    limit = BudgetUnits(tool_calls=2, network_requests=2)
+    manager = InMemoryBudgetManager({run: limit, mode: limit, agent: limit})
+
+    await manager.seed_consumed(
+        {
+            run: BudgetUnits(tool_calls=1, network_requests=1),
+            mode: BudgetUnits(tool_calls=1, network_requests=1),
+            agent: BudgetUnits(tool_calls=1, network_requests=1),
+        }
+    )
+    accepted = await manager.reserve(
+        agent, BudgetUnits(tool_calls=1, network_requests=1)
+    )
+    rejected = await manager.reserve(
+        agent, BudgetUnits(tool_calls=1, network_requests=1)
+    )
+
+    assert accepted is not None
+    assert rejected is None
+    snapshot = await manager.snapshot()
+    for scope in (run, mode, agent):
+        assert snapshot.for_scope(scope).used == BudgetUnits(
+            tool_calls=1, network_requests=1
+        )
+        assert snapshot.for_scope(scope).reserved == BudgetUnits(
+            tool_calls=1, network_requests=1
+        )

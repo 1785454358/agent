@@ -131,7 +131,7 @@ class AgentToolGateway:
         reservation = await self._budgets.reserve(scope, requested_units)
         if reservation is None:
             result = _failure(request, "budget_exhausted")
-            await self._executions.complete(claim, result)
+            await self._executions.complete(claim, result, consumed=BudgetUnits())
             return result
 
         started_at = perf_counter()
@@ -163,12 +163,14 @@ class AgentToolGateway:
             result = _rebind(result, request)
             if result.cached:
                 await self._budgets.release(reservation)
+                consumed = BudgetUnits()
             else:
                 await self._budgets.commit(reservation, requested_units)
+                consumed = requested_units
                 await self._emit_completed(
                     caller, result, requested_units, started_at
                 )
-            await self._executions.complete(claim, result)
+            await self._executions.complete(claim, result, consumed=consumed)
             return result
         except asyncio.CancelledError:
             await self._budgets.release(reservation)
@@ -181,13 +183,13 @@ class AgentToolGateway:
         except SingleflightExecutionError:
             await self._budgets.release(reservation)
             result = _failure(request, "shared_execution_failed")
-            await self._executions.complete(claim, result)
+            await self._executions.complete(claim, result, consumed=BudgetUnits())
             return result
         except Exception:
             # Infrastructure failures are sanitized at the gateway boundary.
             await self._budgets.release(reservation)
             result = _failure(request, "tool_internal_error")
-            await self._executions.complete(claim, result)
+            await self._executions.complete(claim, result, consumed=BudgetUnits())
             return result
 
     async def _invoke(

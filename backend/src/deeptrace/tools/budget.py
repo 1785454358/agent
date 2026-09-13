@@ -169,15 +169,9 @@ class BudgetManagerSnapshot(BaseModel):
 
 
 class BudgetManager(Protocol):
-    def seed_consumed(
+    async def seed_consumed(
         self, consumed: Mapping[BudgetScopeKey, BudgetUnits]
-    ) -> None:
-        """Add prior usage to the counters (crash-recovery reconstruction)."""
-        with self._lock:
-            for scope, units in consumed.items():
-                counters = self._counters.get(scope)
-                if counters is not None:
-                    counters.used = counters.used.plus(units)
+    ) -> None: ...
 
     async def reserve(
         self, scope: BudgetScopeKey, requested: BudgetUnits
@@ -229,12 +223,14 @@ class InMemoryBudgetManager:
         self._next_reservation = 1
         self._lock = asyncio.Lock()
 
-    def seed_consumed(
+    async def seed_consumed(
         self, consumed: Mapping[BudgetScopeKey, BudgetUnits]
     ) -> None:
         """Add prior usage to the counters (crash-recovery reconstruction)."""
-        with self._lock:
+        async with self._lock:
             for scope, units in consumed.items():
+                self._require_scope(scope)
+                self._require_units(units)
                 counters = self._counters.get(scope)
                 if counters is not None:
                     counters.used = counters.used.plus(units)

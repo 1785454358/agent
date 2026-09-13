@@ -7,6 +7,9 @@ import pytest
 from pydantic import BaseModel, Field
 
 from deeptrace.domain import ResearchMode, ToolName, ToolRequest
+from deeptrace.persistence.database import create_session_factory
+from deeptrace.persistence.execution_ledger import SqlAlchemyToolExecutionStore
+from deeptrace.persistence.orm import Base
 from deeptrace.tools.budget import BudgetScopeKey, BudgetUnits, InMemoryBudgetManager
 from deeptrace.tools.cache import InMemorySuccessCache, SuccessCacheSingleflight
 from deeptrace.tools.contracts import CachePolicy, ToolCapability, ToolSpec
@@ -101,6 +104,7 @@ def _gateway(
     budget: InMemoryBudgetManager | None = None,
     events: RecordingEventSink | None = None,
     evidence: InMemoryEvidenceStore | None = None,
+    executions=None,
 ) -> tuple[AgentToolGateway, InMemoryBudgetManager, RecordingEventSink, InMemoryEvidenceStore]:
     registry = ToolRegistry()
     registry.register(spec)
@@ -112,12 +116,41 @@ def _gateway(
         allowlist=StaticToolAllowlist(),
         security=DeterministicUrlSecurityPolicy(),
         budgets=budget,
-        executions=InMemoryToolExecutionStore(),
+        executions=executions or InMemoryToolExecutionStore(),
         cache=SuccessCacheSingleflight(InMemorySuccessCache()),
         evidence_store=evidence,
         event_sink=events,
     )
     return gateway, budget, events, evidence
+
+
+@pytest.mark.asyncio
+async def test_non_cached_execution_persists_committed_budget_units(tmp_path) -> None:
+    async def handler(_arguments: BaseModel) -> ToolAdapterResult:
+        return ToolAdapterResult(preview="answer")
+
+    database = (tmp_path / "gateway-ledger.db").as_posix()
+    engine, sessions = create_session_factory(f"sqlite+aiosqlite:///{database}")
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    ledger = SqlAlchemyToolExecutionStore(sessions)
+    gateway, _budget, _events, _evidence = _gateway(
+        _spec(handler), executions=ledger
+    )
+    try:
+        result = await gateway.execute(
+            tenant_id="tenant-a", caller=_caller(), request=_request()
+        )
+        usage = await ledger.tool_usage_for_run("run-1")
+    finally:
+        await engine.dispose()
+
+    assert result.ok
+    assert usage == {
+        ("workflow", "researcher"): BudgetUnits(
+            tool_calls=1, network_requests=1
+        )
+    }
 
 
 def _spec(

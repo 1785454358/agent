@@ -11,6 +11,7 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from deeptrace.domain import TRANSIENT_TOOL_ERROR_CODES, ToolRequest, ToolResult
+from deeptrace.tools.budget import BudgetUnits
 
 
 class ExecutionConflictError(RuntimeError):
@@ -67,7 +68,13 @@ class ToolExecutionStore(Protocol):
 
     async def wait(self, claim: ExecutionClaim) -> ToolResult: ...
 
-    async def complete(self, claim: ExecutionClaim, result: ToolResult) -> bool: ...
+    async def complete(
+        self,
+        claim: ExecutionClaim,
+        result: ToolResult,
+        *,
+        consumed: BudgetUnits | None = None,
+    ) -> bool: ...
 
     async def abandon(self, claim: ExecutionClaim) -> bool: ...
 
@@ -157,12 +164,20 @@ class InMemoryToolExecutionStore:
             raise RuntimeError("execution completed with an invalid result")
         return outcome.model_copy(deep=True)
 
-    async def complete(self, claim: ExecutionClaim, result: ToolResult) -> bool:
+    async def complete(
+        self,
+        claim: ExecutionClaim,
+        result: ToolResult,
+        *,
+        consumed: BudgetUnits | None = None,
+    ) -> bool:
         self._require_claim(claim)
         if claim.disposition is not ClaimDisposition.OWNER:
             raise ValueError("only owner claims can complete execution")
         if not isinstance(result, ToolResult):
             raise TypeError("result must be a ToolResult")
+        if consumed is not None and not isinstance(consumed, BudgetUnits):
+            raise TypeError("consumed must be BudgetUnits")
         identity = _identity_from_claim(claim)
         async with self._lock:
             record = self._records.get(identity)

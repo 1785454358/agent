@@ -30,10 +30,10 @@
 - Produces: `async seed_consumed(consumed: Mapping[BudgetScopeKey, BudgetUnits]) -> None`
 - Produces: `_SeededBudgets` initialization that blocks concurrent reserves until one seed attempt completes.
 
-- [ ] Write tests proving non-empty seeding updates all three scopes and concurrent reserves invoke the seed once.
-- [ ] Run the focused tests and verify the current lock misuse and scope-key behavior fail.
-- [ ] Make seeding asynchronous, add an initialization lock, and build actual agent `BudgetScopeKey` entries.
-- [ ] Run focused budget tests and verify they pass.
+- [x] Write tests proving non-empty seeding updates all three scopes and concurrent reserves invoke the seed once.
+- [x] Run the focused tests and verify the current lock misuse and scope-key behavior fail.
+- [x] Make seeding asynchronous, add an initialization lock, and build actual agent `BudgetScopeKey` entries.
+- [x] Run focused budget tests and verify they pass.
 
 ### Task 2: SQL Follower Recovery
 
@@ -45,11 +45,11 @@
 - Preserves: `wait(claim: ExecutionClaim) -> ToolResult`
 - Produces: recoverable follower behavior via `ExecutionAbandonedError` and subsequent `claim()` ownership.
 
-- [ ] Write a SQL-backed test where an owner records a transient failure while a follower waits.
-- [ ] Run it and verify the current undefined-variable path fails.
-- [ ] Keep `wait()` read-only and return a retry signal for recoverable generations.
-- [ ] Make initial claim/reclaim transitions transactional and safe against uniqueness races.
-- [ ] Run SQL execution-ledger tests and verify they pass.
+- [x] Write a SQL-backed test where an owner records a transient failure while a follower waits.
+- [x] Run it and verify the current undefined-variable path fails.
+- [x] Keep `wait()` read-only and return a retry signal for recoverable generations.
+- [x] Make initial claim/reclaim transitions transactional and safe against uniqueness races.
+- [x] Run SQL execution-ledger tests and verify they pass.
 
 ### Task 3: Exact Durable Tool Usage
 
@@ -66,9 +66,8 @@
 - Produces: `complete(claim, result, consumed: BudgetUnits = BudgetUnits()) -> bool`
 - Produces: `tool_usage_for_run(run_id) -> dict[tuple[str, str], BudgetUnits]` from stored counters.
 
-- [ ] Write tests for transient retries accumulating usage and zero-cost cached/blocked completions.
-- [ ] Run them and verify status-based inference fails.
-- [ ] Add cumulative usage columns and migration, then persist supplied committed units on completion.
-- [ ] Pass exact committed units from the gateway and aggregate the stored counters.
-- [ ] Run focused tests, the complete non-real suite, migration checks, and the real API smoke test.
-
+- [x] Write tests for transient retries accumulating usage and zero-cost cached/blocked completions.
+- [x] Run them and verify status-based inference fails.
+- [x] Add cumulative usage columns and migration, then persist supplied committed units on completion.
+- [x] Pass exact committed units from the gateway and aggregate the stored counters.
+- [x] Run focused tests, the complete non-real suite, migration checks, and the real API smoke test.

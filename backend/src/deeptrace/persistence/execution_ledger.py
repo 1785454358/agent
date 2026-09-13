@@ -13,10 +13,12 @@ from deeptrace.tools.execution_store import (
     ExecutionClaim,
     ExecutionConflictError,
 )
-from sqlalchemy import select
+from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from deeptrace.persistence.orm import ToolExecutionRow
+from deeptrace.tools.budget import BudgetUnits
 
 
 def _now() -> datetime:
@@ -78,38 +80,74 @@ class SqlAlchemyToolExecutionStore:
                         updated_at=_now(),
                     )
                 )
-                await session.commit()
-                return ExecutionClaim(
-                    manager_id=self._manager_id,
-                    tenant_id=tenant_id,
-                    run_id=request.run_id,
-                    call_id=request.call_id,
-                    fingerprint=fingerprint,
-                    disposition=ClaimDisposition.OWNER,
-                    owner_token=token,
-                    generation=1,
-                )
+                try:
+                    await session.commit()
+                except IntegrityError:
+                    # Another process inserted the same identity after our
+                    # initial read. Re-read it and become a follower/replay.
+                    await session.rollback()
+                    row = (
+                        await session.execute(
+                            select(ToolExecutionRow).where(
+                                ToolExecutionRow.tenant_id == tenant_id,
+                                ToolExecutionRow.run_id == request.run_id,
+                                ToolExecutionRow.call_id == request.call_id,
+                            )
+                        )
+                    ).scalar_one()
+                else:
+                    return ExecutionClaim(
+                        manager_id=self._manager_id,
+                        tenant_id=tenant_id,
+                        run_id=request.run_id,
+                        call_id=request.call_id,
+                        fingerprint=fingerprint,
+                        disposition=ClaimDisposition.OWNER,
+                        owner_token=token,
+                        generation=1,
+                    )
             if row.fingerprint != fingerprint:
                 raise ExecutionConflictError(
                     "call_id was reused with a different fingerprint"
                 )
-            if row.status == "recoverable":
+            if row.status in {"recoverable", "abandoned"}:
                 token = uuid.uuid4().hex
-                row.status = "running"
-                row.owner_token = token
-                row.generation = row.generation + 1
-                row.updated_at = _now()
-                await session.commit()
-                return ExecutionClaim(
-                    manager_id=self._manager_id,
-                    tenant_id=tenant_id,
-                    run_id=request.run_id,
-                    call_id=request.call_id,
-                    fingerprint=fingerprint,
-                    disposition=ClaimDisposition.OWNER,
-                    owner_token=token,
-                    generation=row.generation,
+                next_generation = row.generation + 1
+                changed = await session.execute(
+                    update(ToolExecutionRow)
+                    .where(
+                        ToolExecutionRow.id == row.id,
+                        ToolExecutionRow.status == row.status,
+                        ToolExecutionRow.generation == row.generation,
+                    )
+                    .values(
+                        status="running",
+                        owner_token=token,
+                        generation=next_generation,
+                        updated_at=_now(),
+                    )
                 )
+                await session.commit()
+                if changed.rowcount == 1:
+                    return ExecutionClaim(
+                        manager_id=self._manager_id,
+                        tenant_id=tenant_id,
+                        run_id=request.run_id,
+                        call_id=request.call_id,
+                        fingerprint=fingerprint,
+                        disposition=ClaimDisposition.OWNER,
+                        owner_token=token,
+                        generation=next_generation,
+                    )
+                row = (
+                    await session.execute(
+                        select(ToolExecutionRow).where(
+                            ToolExecutionRow.tenant_id == tenant_id,
+                            ToolExecutionRow.run_id == request.run_id,
+                            ToolExecutionRow.call_id == request.call_id,
+                        )
+                    )
+                ).scalar_one()
             if row.result_json is not None:
                 result = ToolResult.model_validate(row.result_json)
                 return ExecutionClaim(
@@ -148,23 +186,10 @@ class SqlAlchemyToolExecutionStore:
                 ).scalar_one_or_none()
             if row is None:
                 raise ExecutionAbandonedError("execution record disappeared")
+            if row.generation != claim.generation:
+                raise ExecutionAbandonedError("execution generation was replaced")
             if row.status == "recoverable":
-                token = uuid.uuid4().hex
-                row.status = "running"
-                row.owner_token = token
-                row.generation = row.generation + 1
-                row.updated_at = _now()
-                await session.commit()
-                return ExecutionClaim(
-                    manager_id=self._manager_id,
-                    tenant_id=tenant_id,
-                    run_id=request.run_id,
-                    call_id=request.call_id,
-                    fingerprint=fingerprint,
-                    disposition=ClaimDisposition.OWNER,
-                    owner_token=token,
-                    generation=row.generation,
-                )
+                raise ExecutionAbandonedError("execution can be retried")
             if row.result_json is not None:
                 return ToolResult.model_validate(row.result_json)
             if row.status == "abandoned":
@@ -172,7 +197,16 @@ class SqlAlchemyToolExecutionStore:
             await asyncio.sleep(self._poll_interval_seconds)
         raise ExecutionAbandonedError("owner did not complete in time")
 
-    async def complete(self, claim: ExecutionClaim, result: ToolResult) -> bool:
+    async def complete(
+        self,
+        claim: ExecutionClaim,
+        result: ToolResult,
+        *,
+        consumed: BudgetUnits | None = None,
+    ) -> bool:
+        units = consumed or BudgetUnits()
+        if not isinstance(units, BudgetUnits):
+            raise TypeError("consumed must be BudgetUnits")
         async with self._sessions() as session:
             row = (
                 await session.execute(
@@ -183,8 +217,17 @@ class SqlAlchemyToolExecutionStore:
                     )
                 )
             ).scalar_one_or_none()
-            if row is None or row.owner_token != claim.owner_token:
+            if (
+                row is None
+                or row.status != "running"
+                or row.owner_token != claim.owner_token
+            ):
                 return False
+            if row.generation != claim.generation:
+                return False
+            row.consumed_tool_calls += units.tool_calls
+            row.consumed_network_requests += units.network_requests
+            row.consumed_fetched_pages += units.fetched_pages
             if not result.ok and result.error_code in TRANSIENT_TOOL_ERROR_CODES:
                 # Transient failures stay recoverable for node-level retries.
                 row.status = "recoverable"
@@ -194,6 +237,7 @@ class SqlAlchemyToolExecutionStore:
                 return True
             row.result_json = result.model_dump(mode="json")
             row.status = "completed"
+            row.owner_token = None
             row.updated_at = _now()
             await session.commit()
             return True
@@ -218,16 +262,13 @@ class SqlAlchemyToolExecutionStore:
             return True
 
 
-    async def tool_usage_for_run(self, run_id: str) -> dict[tuple[str, str], Any]:
-        """Reconstruct consumed budget units from completed ledger entries.
+    async def tool_usage_for_run(self, run_id: str) -> dict[tuple[str, str], BudgetUnits]:
+        """Reconstruct consumed budget units from durable ledger counters.
 
         Used to seed budget counters after a crash so a resumed run cannot
         exceed its original allowance.
         """
         from collections import defaultdict
-
-        from deeptrace.domain import ToolName
-        from deeptrace.tools.budget import BudgetUnits
 
         usage: dict[tuple[str, str], list[int]] = defaultdict(lambda: [0, 0, 0])
         async with self._sessions() as session:
@@ -236,7 +277,6 @@ class SqlAlchemyToolExecutionStore:
                     await session.execute(
                         select(ToolExecutionRow).where(
                             ToolExecutionRow.run_id == run_id,
-                            ToolExecutionRow.status == "completed",
                         )
                     )
                 )
@@ -246,14 +286,10 @@ class SqlAlchemyToolExecutionStore:
         for row in rows:
             if row.mode is None or row.caller_id is None:
                 continue
-            result = row.result_json or {}
-            tool = str(result.get("tool") or "")
             counts = usage[(row.mode, row.caller_id)]
-            counts[0] += 1
-            if tool in (ToolName.SEARCH_WEB.value, ToolName.FETCH_PAGE.value):
-                counts[1] += 1
-            if tool == ToolName.FETCH_PAGE.value:
-                counts[2] += 1
+            counts[0] += row.consumed_tool_calls
+            counts[1] += row.consumed_network_requests
+            counts[2] += row.consumed_fetched_pages
         return {
             key: BudgetUnits(
                 tool_calls=value[0],
