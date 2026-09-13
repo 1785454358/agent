@@ -303,7 +303,7 @@ async def test_thread_lease_is_atomic_and_reclaims_stale_leases(repository) -> N
     # a stale lease (older than the TTL) is reclaimed
     async with repository._sessions() as session:
         row = await session.get(ThreadLeaseRow, "thread-1")
-        row.created_at = datetime.now(UTC) - timedelta(hours=2)
+        row.expires_at = datetime.now(UTC) - timedelta(hours=2)
         await session.commit()
 
     assert await repository.acquire_thread_lease("thread-1", "run-3") is True

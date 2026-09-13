@@ -110,7 +110,12 @@ class AgentToolGateway:
         except (TypeError, ValueError, ValidationError):
             return _failure(request, "unsafe_arguments")
 
-        claim = await self._executions.claim(tenant, request)
+        claim = await self._executions.claim(
+            tenant,
+            request,
+            mode=None if caller.mode is None else caller.mode.value,
+            caller_id=caller.caller_id,
+        )
         if claim.disposition is ClaimDisposition.REPLAY:
             assert claim.result is not None
             return claim.result.model_copy(update={"replayed": True}, deep=True)

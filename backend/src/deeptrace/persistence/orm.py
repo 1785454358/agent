@@ -115,6 +115,8 @@ class ToolExecutionRow(Base):
     run_id: Mapped[str] = mapped_column(String(128))
     call_id: Mapped[str] = mapped_column(String(160))
     fingerprint: Mapped[str] = mapped_column(String(256))
+    mode: Mapped[str | None] = mapped_column(String(32))
+    caller_id: Mapped[str | None] = mapped_column(String(128))
     status: Mapped[str] = mapped_column(String(32), default="running")
     generation: Mapped[int] = mapped_column(Integer, default=1)
     owner_token: Mapped[str | None] = mapped_column(String(64))
@@ -195,4 +197,5 @@ class ThreadLeaseRow(Base):
 
     thread_id: Mapped[str] = mapped_column(String(128), primary_key=True)
     run_id: Mapped[str] = mapped_column(String(64))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

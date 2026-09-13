@@ -109,6 +109,10 @@ class SqlAlchemyCheckpointSaver(BaseCheckpointSaver):
         limit: int | None = None,
     ) -> AsyncIterator[CheckpointTuple]:
         if config is None:
+            # Project limitation: this saver lists checkpoints per thread only
+            # (no global cross-thread listing).
+            return
+        if limit is not None and limit <= 0:
             return
         thread_id, namespace = _config_parts(config)
         requested_id = get_checkpoint_id(config)

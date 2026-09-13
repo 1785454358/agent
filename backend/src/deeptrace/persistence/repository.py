@@ -5,7 +5,14 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from typing import Protocol
 
-from sqlalchemy import and_, delete as sa_delete, or_, select, update
+from sqlalchemy import (
+    and_,
+    delete as sa_delete,
+    or_,
+    select,
+    update,
+    update as sa_update,
+)
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from deeptrace.models import AgentResult, RunEvent
@@ -48,7 +55,13 @@ class RunRepository(Protocol):
         self, run_id: str, worker_id: str, error: str
     ) -> RunRecord | None: ...
 
-    async def acquire_thread_lease(self, thread_id: str, run_id: str) -> bool: ...
+    async def acquire_thread_lease(
+        self, thread_id: str, run_id: str, *, ttl_seconds: int = 1_800
+    ) -> bool: ...
+
+    async def renew_thread_lease(
+        self, thread_id: str, run_id: str, *, ttl_seconds: int
+    ) -> bool: ...
 
     async def release_thread_lease(self, thread_id: str, run_id: str) -> bool: ...
 
@@ -371,10 +384,10 @@ class SqlAlchemyRunRepository:
         *,
         ttl_seconds: int = 1_800,
     ) -> bool:
-        """Atomic INSERT-based claim.
+        """Atomic INSERT-based claim with an expiry-based lease.
 
-        A lease older than ``ttl_seconds`` is considered abandoned (its worker
-        died without release) and is reclaimed by this call.
+        A lease whose ``expires_at`` has passed is considered abandoned (its
+        worker died without renewal or release) and is reclaimed here.
         """
         import logging
 
@@ -383,6 +396,7 @@ class SqlAlchemyRunRepository:
         from sqlalchemy.exc import IntegrityError
 
         logger = logging.getLogger(__name__)
+        now = datetime.now(UTC)
         for _attempt in range(2):
             try:
                 async with self._sessions() as session:
@@ -390,7 +404,8 @@ class SqlAlchemyRunRepository:
                         ThreadLeaseRow(
                             thread_id=thread_id,
                             run_id=run_id,
-                            created_at=datetime.now(UTC),
+                            expires_at=now + timedelta(seconds=ttl_seconds),
+                            created_at=now,
                         )
                     )
                     await session.commit()
@@ -406,24 +421,24 @@ class SqlAlchemyRunRepository:
                     ).scalar_one_or_none()
                     if row is None:
                         continue  # released between attempts: retry insert
-                    created_at = row.created_at
-                    if created_at.tzinfo is None:
-                        created_at = created_at.replace(tzinfo=UTC)
-                    age = (datetime.now(UTC) - created_at).total_seconds()
-                    if age <= ttl_seconds:
+                    expires_at = row.expires_at
+                    if expires_at.tzinfo is None:
+                        expires_at = expires_at.replace(tzinfo=UTC)
+                    if expires_at > now:
                         logger.warning(
-                            "thread lease busy: thread=%s holder=%s age=%.0fs",
+                            "thread lease busy: thread=%s holder=%s "
+                            "expires_at=%s",
                             thread_id,
                             row.run_id,
-                            age,
+                            expires_at.isoformat(),
                         )
                         return False
                     logger.warning(
-                        "reclaiming stale thread lease: thread=%s "
-                        "holder=%s age=%.0fs",
+                        "reclaiming expired thread lease: thread=%s "
+                        "holder=%s expired_at=%s",
                         thread_id,
                         row.run_id,
-                        age,
+                        expires_at.isoformat(),
                     )
                     await session.execute(
                         sa_delete(ThreadLeaseRow).where(
@@ -433,6 +448,22 @@ class SqlAlchemyRunRepository:
                     )
                     await session.commit()
         return False
+
+    async def renew_thread_lease(
+        self, thread_id: str, run_id: str, *, ttl_seconds: int
+    ) -> bool:
+        """Extend the lease expiry while the run is still executing."""
+        async with self._sessions() as session:
+            result = await session.execute(
+                sa_update(ThreadLeaseRow)
+                .where(
+                    ThreadLeaseRow.thread_id == thread_id,
+                    ThreadLeaseRow.run_id == run_id,
+                )
+                .values(expires_at=datetime.now(UTC) + timedelta(seconds=ttl_seconds))
+            )
+            await session.commit()
+        return bool(result.rowcount)
 
     async def release_thread_lease(self, thread_id: str, run_id: str) -> bool:
         async with self._sessions() as session:

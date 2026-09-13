@@ -24,10 +24,12 @@ class DistributedResearchRuntime:
         broker: ResearchBroker,
         *,
         id_factory=lambda: uuid.uuid4().hex[:12],
+        thread_lease_ttl_seconds: int = 1_800,
     ) -> None:
         self._repository = repository
         self._broker = broker
         self._id_factory = id_factory
+        self._thread_lease_ttl_seconds = thread_lease_ttl_seconds
 
     async def start(self) -> None:
         await self._broker.ensure_group()
@@ -59,7 +61,9 @@ class DistributedResearchRuntime:
         # Atomic thread claim: the INSERT-based lease guarantees one active run
         # per thread even across API processes.
         if not await self._repository.acquire_thread_lease(
-            run.thread_id, run.id
+            run.thread_id,
+            run.id,
+            ttl_seconds=self._thread_lease_ttl_seconds,
         ):
             raise ThreadBusyError(run.thread_id)
         try:

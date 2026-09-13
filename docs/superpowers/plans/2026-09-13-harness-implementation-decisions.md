@@ -383,3 +383,27 @@
     thread 与 run 分离后冒烟测试曾把 thread 传入导致预算 KeyError 降级为
     no_evidence——已在测试与注释中固化该契约。
     回归基线：367 non-real passed + real 冒烟通过（39s）。
+
+## 第六轮：外部审查修复（2026-09-13）
+
+第五轮外部审查指出 3 个阻塞、1 个必须修复与文档遗留：
+
+76. **已发布迁移还原**：`20260913_01` 按 git 历史恢复为发布时的内容
+    （research_runs.thread_id + checkpoint/writes/tool_executions/memory_records），
+    evidence_records、thread_leases 与 tool_executions 的 mode/caller 列拆入新迁移
+    `20260913_02`——已执行过 01 的 MySQL 现在能通过 02 获得新表新列。
+77. **SQLite 升级顺序**：本地建表改为"建表 → 检查/加列 → 回填 hash → 建索引"
+    （旧顺序先建引用新列的索引导致旧库升级报 no such column）；本地文件含
+    evidence_records 与 thread_leases，升级幂等，含旧库模拟测试。
+78. **thread lease 过期制**：lease 带 expires_at，Worker 心跳在续执行租约的同时
+    续 thread lease（长任务不会被 30 分钟误回收）；TTL 经
+    `thread_lease_seconds` 配置，Distributed 构造器注入；占用/回收均有日志。
+79. **恢复时预算重建**：tool_executions 增加 mode/caller_id 列（迁移 02），
+    网关在台账 claim 时写入归属；`tool_usage_for_run` 从台账重建已消耗量，
+    `_SeededBudgets` 门面在首次预留前把 run/mode/agent 三级作用域的已消耗量
+    播种进预算管理器——崩溃恢复后预算不再清零。种子失败记日志并 fail-open。
+80. **alist 边界**：limit=0 直接返回空；alist(None) 的"仅按 thread 列举"作为
+    项目限制写进 docstring。
+81. **文档**：根 README 模式表更新为 Workflow / Plan-and-Execute / Multi-Agent，
+    安装说明移除 BGE-M3；简历材料"跨租户不可见"改为单租户定位说明。
+    回归基线：367 non-real passed + real 冒烟通过（45s，覆盖预算重建路径）。

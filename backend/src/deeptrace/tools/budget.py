@@ -169,6 +169,16 @@ class BudgetManagerSnapshot(BaseModel):
 
 
 class BudgetManager(Protocol):
+    def seed_consumed(
+        self, consumed: Mapping[BudgetScopeKey, BudgetUnits]
+    ) -> None:
+        """Add prior usage to the counters (crash-recovery reconstruction)."""
+        with self._lock:
+            for scope, units in consumed.items():
+                counters = self._counters.get(scope)
+                if counters is not None:
+                    counters.used = counters.used.plus(units)
+
     async def reserve(
         self, scope: BudgetScopeKey, requested: BudgetUnits
     ) -> BudgetReservation | None: ...
@@ -195,19 +205,39 @@ class _ReservationState:
 class InMemoryBudgetManager:
     """Concurrency-safe runtime manager for hierarchical budget reservations."""
 
-    def __init__(self, limits: Mapping[BudgetScopeKey, BudgetUnits]) -> None:
+    def __init__(
+        self,
+        limits: Mapping[BudgetScopeKey, BudgetUnits],
+        *,
+        consumed: Mapping[BudgetScopeKey, BudgetUnits] | None = None,
+    ) -> None:
         if not limits:
             raise ValueError("at least one budget scope must be configured")
         self._limits = dict(limits)
         self._validate_limits()
+        # consumed seeds prior usage (e.g. reconstructed from the tool ledger
+        # after a crash) so a resumed run cannot exceed its original budget.
+        consumed = dict(consumed or {})
         self._counters = {
-            scope: _ScopeCounters(used=BudgetUnits(), reserved=BudgetUnits())
+            scope: _ScopeCounters(
+                used=consumed.get(scope, BudgetUnits()), reserved=BudgetUnits()
+            )
             for scope in self._limits
         }
         self._reservations: dict[str, _ReservationState] = {}
         self._manager_id = uuid4().hex
         self._next_reservation = 1
         self._lock = asyncio.Lock()
+
+    def seed_consumed(
+        self, consumed: Mapping[BudgetScopeKey, BudgetUnits]
+    ) -> None:
+        """Add prior usage to the counters (crash-recovery reconstruction)."""
+        with self._lock:
+            for scope, units in consumed.items():
+                counters = self._counters.get(scope)
+                if counters is not None:
+                    counters.used = counters.used.plus(units)
 
     async def reserve(
         self, scope: BudgetScopeKey, requested: BudgetUnits

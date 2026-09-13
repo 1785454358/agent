@@ -42,7 +42,14 @@ class SqlAlchemyToolExecutionStore:
         self._max_polls = max_polls
         self._manager_id = uuid.uuid4().hex
 
-    async def claim(self, tenant_id: str, request: ToolRequest) -> ExecutionClaim:
+    async def claim(
+        self,
+        tenant_id: str,
+        request: ToolRequest,
+        *,
+        mode: str | None = None,
+        caller_id: str | None = None,
+    ) -> ExecutionClaim:
         fingerprint = canonical_request_fingerprint(request)
         async with self._sessions() as session:
             row = (
@@ -62,6 +69,8 @@ class SqlAlchemyToolExecutionStore:
                         run_id=request.run_id,
                         call_id=request.call_id,
                         fingerprint=fingerprint,
+                        mode=mode,
+                        caller_id=caller_id,
                         status="running",
                         generation=1,
                         owner_token=token,
@@ -207,3 +216,49 @@ class SqlAlchemyToolExecutionStore:
             row.updated_at = _now()
             await session.commit()
             return True
+
+
+    async def tool_usage_for_run(self, run_id: str) -> dict[tuple[str, str], Any]:
+        """Reconstruct consumed budget units from completed ledger entries.
+
+        Used to seed budget counters after a crash so a resumed run cannot
+        exceed its original allowance.
+        """
+        from collections import defaultdict
+
+        from deeptrace.domain import ToolName
+        from deeptrace.tools.budget import BudgetUnits
+
+        usage: dict[tuple[str, str], list[int]] = defaultdict(lambda: [0, 0, 0])
+        async with self._sessions() as session:
+            rows = (
+                (
+                    await session.execute(
+                        select(ToolExecutionRow).where(
+                            ToolExecutionRow.run_id == run_id,
+                            ToolExecutionRow.status == "completed",
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
+        for row in rows:
+            if row.mode is None or row.caller_id is None:
+                continue
+            result = row.result_json or {}
+            tool = str(result.get("tool") or "")
+            counts = usage[(row.mode, row.caller_id)]
+            counts[0] += 1
+            if tool in (ToolName.SEARCH_WEB.value, ToolName.FETCH_PAGE.value):
+                counts[1] += 1
+            if tool == ToolName.FETCH_PAGE.value:
+                counts[2] += 1
+        return {
+            key: BudgetUnits(
+                tool_calls=value[0],
+                network_requests=value[1],
+                fetched_pages=value[2],
+            )
+            for key, value in usage.items()
+        }

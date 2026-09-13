@@ -91,49 +91,6 @@ def upgrade() -> None:
     )
 
     op.create_table(
-        "thread_leases",
-        sa.Column("thread_id", sa.String(length=128), primary_key=True),
-        sa.Column("run_id", sa.String(length=64), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
-    )
-
-    op.create_table(
-        "evidence_records",
-        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column("tenant_id", sa.String(length=128), nullable=False),
-        sa.Column("evidence_id", sa.String(length=160), nullable=False),
-        sa.Column("canonical_url", sa.String(length=2048), nullable=False),
-        sa.Column("canonical_url_hash", sa.String(length=64), nullable=False),
-        sa.Column("title", sa.String(length=500), nullable=False),
-        sa.Column("media_type", sa.String(length=255), nullable=False),
-        sa.Column("content_hash", sa.String(length=128), nullable=False),
-        sa.Column("body", sa.Text(), nullable=False),
-        sa.Column("fetched_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("published_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("source_quality", sa.Float(), nullable=False),
-        sa.Column("status", sa.String(length=32), nullable=False),
-        sa.Column("version", sa.Integer(), nullable=False),
-        sa.Column("supersedes", sa.String(length=160), nullable=True),
-        sa.Column("metadata_json", sa.JSON(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "evidence_id", name="ux_evidence_records_identity"
-        ),
-        sa.UniqueConstraint(
-            "tenant_id",
-            "canonical_url_hash",
-            "version",
-            name="ux_evidence_records_version",
-        ),
-    )
-    op.create_index(
-        "ix_evidence_records_source",
-        "evidence_records",
-        ["tenant_id", "canonical_url_hash", "status"],
-    )
-
-    op.create_table(
         "memory_records",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("namespace_scope", sa.String(length=32), nullable=False),
@@ -155,11 +112,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_column("research_runs", "thread_id")
-    op.drop_table("thread_leases")
-    op.drop_index(
-        "ix_evidence_records_source", table_name="evidence_records"
-    )
-    op.drop_table("evidence_records")
     op.drop_table("memory_records")
     op.drop_table("tool_executions")
     op.drop_index(

@@ -7,9 +7,9 @@
 
 | 模式 | 流程 | 用途 |
 | --- | --- | --- |
-| Basic | 一次规划 → 并行搜索抓取 → 原文筛选 → Writer | 快速的一轮研究；策略参考 GPT-Researcher |
-| Deep | 制定计划 → ReAct 工具执行 → 反馈重规划 → Writer | 多步骤研究、资料缺口补全与失败调整 |
-| Multi-Agent | LangGraph Plan → 并行 ReAct Researcher → Supervisor Replan → Writer | 多方向并行覆盖、定向补查与独立失败隔离 |
+| Workflow | 规划查询 → Send 并行 Topic 子图（搜索/抓取经 Tool Gateway）→ 评估 | 边界清晰、时效要求高的一轮研究 |
+| Plan-and-Execute | 规划任务 → 逐项执行 → 评估 → 有界重规划 | 多步骤研究、资料缺口补全 |
+| Multi-Agent | Supervisor 拆解 → Send 并发 Researcher 子图 → 聚合评估 | 多方向并行覆盖、独立失败隔离 |
 
 Multi-Agent 的顶层控制流由 LangGraph 显式编译为
 `Plan → Execute → Replan →（必要时再次 Execute）→ Writer`。默认首批最多派发
@@ -40,13 +40,13 @@ Deep 的 Planner 生成目标、完成条件与依赖；Executor 根据实际工
 
 ```powershell
 cd backend
-# 复制 .env.example 为 .env，并配置兼容原生 tools/tool_calls 的模型、Tavily 与本地 BGE-M3
+# 复制 .env.example 为 .env，并配置兼容原生 tools/tool_calls 的模型与 Tavily
 uv sync
 uv run playwright install chromium
 uv run python -m deeptrace.api
 ```
 
-打开 http://127.0.0.1:8000，在模式选择中切换 Basic / Deep / Multi-Agent。
+打开 http://127.0.0.1:8000，在模式选择中切换 Workflow / Plan-and-Execute / Multi-Agent。
 
 本地模式沿用进程内异步任务和 `runs/*.json`，无需安装 MySQL、Redis 或 Worker。
 

@@ -66,6 +66,75 @@ class _SystemClock:
         return datetime.now(UTC)
 
 
+class _SeededBudgets:
+    """Budget facade that seeds consumed units from the durable ledger once,
+    before the first reservation, so resumed runs keep their original budget."""
+
+    def __init__(self, inner, seed, run_id: str) -> None:
+        self._inner = inner
+        self._seed = seed
+        self._run_id = run_id
+        self._loaded = False
+
+    async def _ensure(self) -> None:
+        if self._loaded:
+            return
+        self._loaded = True
+        try:
+            consumed = await self._seed()
+        except Exception:
+            import logging
+
+            logging.getLogger(__name__).exception(
+                "failed to rebuild budget usage for run %s; "
+                "continuing with fresh counters",
+                self._run_id,
+            )
+            return
+        if not consumed:
+            return
+        # Expand per-(mode, caller) usage into the full scope lineage the
+        # manager checks: run scope, mode scopes and agent scopes.
+        expanded: dict[Any, Any] = {}
+        totals: dict[str, list[int]] = {}
+        mode_totals: dict[str, list[int]] = {}
+        for (mode, caller), units in consumed.items():
+            expanded[(mode, caller)] = units
+            values = [units.tool_calls, units.network_requests, units.fetched_pages]
+            totals[self._run_id] = [
+                a + b for a, b in zip(totals.get(self._run_id, [0, 0, 0]), values)
+            ]
+            mode_totals[mode] = [
+                a + b for a, b in zip(mode_totals.get(mode, [0, 0, 0]), values)
+            ]
+        from deeptrace.domain import ResearchMode
+        from deeptrace.tools.budget import BudgetScopeKey, BudgetUnits
+
+        expanded[BudgetScopeKey.for_run(self._run_id)] = BudgetUnits(
+            tool_calls=totals[self._run_id][0],
+            network_requests=totals[self._run_id][1],
+            fetched_pages=totals[self._run_id][2],
+        )
+        for mode in ResearchMode:
+            values = mode_totals.get(mode.value, [0, 0, 0])
+            expanded[BudgetScopeKey.for_mode(self._run_id, mode)] = BudgetUnits(
+                tool_calls=values[0],
+                network_requests=values[1],
+                fetched_pages=values[2],
+            )
+        self._inner.seed_consumed(expanded)
+
+    async def reserve(self, scope, requested):
+        await self._ensure()
+        return await self._inner.reserve(scope, requested)
+
+    async def commit(self, receipt, units):
+        return await self._inner.commit(receipt, units)
+
+    async def release(self, receipt):
+        return await self._inner.release(receipt)
+
+
 def _budgets_for_run(run_id: str) -> InMemoryBudgetManager:
     limit = BudgetUnits(tool_calls=60, network_requests=90, fetched_pages=60)
     scopes: list[BudgetScopeKey] = [BudgetScopeKey.for_run(run_id)]
@@ -131,7 +200,14 @@ def _build_durable_stores(
 
 
 def _ensure_sqlite_schema(db_path: Path) -> None:
-    """Create the checkpoint tables synchronously (safe inside a running loop)."""
+    """Create/migrate the local SQLite schema synchronously.
+
+    Order matters for databases created by earlier builds:
+    1. create tables (IF NOT EXISTS),
+    2. add missing columns and backfill them,
+    3. only then create indexes (they reference the new columns).
+    """
+    import hashlib
     import sqlite3
 
     from sqlalchemy import create_engine
@@ -141,52 +217,48 @@ def _ensure_sqlite_schema(db_path: Path) -> None:
         CheckpointRow,
         CheckpointWriteRow,
         EvidenceRecordRow,
+        ThreadLeaseRow,
     )
 
     sync_engine = create_engine("sqlite://")
-    statements: list[str] = []
-    for table in (
-        CheckpointRow.__table__,
-        CheckpointWriteRow.__table__,
-        EvidenceRecordRow.__table__,
-    ):
-        statements.append(str(CreateTable(table).compile(sync_engine)))
-        for index in table.indexes:
-            statements.append(str(CreateIndex(index).compile(sync_engine)))
+    table_statements = [
+        str(CreateTable(table).compile(sync_engine))
+        for table in (
+            CheckpointRow.__table__,
+            CheckpointWriteRow.__table__,
+            EvidenceRecordRow.__table__,
+            ThreadLeaseRow.__table__,
+        )
+    ]
+    index_statements = [
+        str(CreateIndex(index).compile(sync_engine))
+        for table in (
+            CheckpointRow.__table__,
+            CheckpointWriteRow.__table__,
+            EvidenceRecordRow.__table__,
+        )
+        for index in table.indexes
+    ]
+
     connection = sqlite3.connect(db_path)
     try:
-        for statement in statements:
-            connection.execute(
-                statement.replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS")
-                .replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS")
-                .replace("CREATE UNIQUE INDEX", "CREATE UNIQUE INDEX IF NOT EXISTS")
-            )
-        # lightweight column migration for databases created by earlier builds
-        import hashlib
+        connection.execute(
+            "PRAGMA table_info(evidence_records)"
+        )  # ensure the file exists before CREATE IF NOT EXISTS runs
+        for statement in table_statements:
+            connection.execute(statement.replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS"))
 
+        def _columns(table: str) -> set[str]:
+            return {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
+
+        # column migration + backfill BEFORE the version index exists
+        evidence_columns = _columns("evidence_records")
         connection.create_function(
-            "deeptrace_sha256_hex", 1, lambda value: hashlib.sha256(
-                (value or "").encode("utf-8")
-            ).hexdigest()
+            "deeptrace_sha256_hex",
+            1,
+            lambda value: hashlib.sha256((value or "").encode("utf-8")).hexdigest(),
         )
-        columns = {
-            row[1]
-            for row in connection.execute(
-                "PRAGMA table_info(evidence_records)"
-            )
-        }
-        if "canonical_url_hash" in columns:
-            existing_hash_rows = connection.execute(
-                "SELECT COUNT(*) FROM evidence_records "
-                "WHERE canonical_url_hash IS NULL OR canonical_url_hash = ''"
-            ).fetchone()[0]
-            if existing_hash_rows:
-                connection.execute(
-                    "UPDATE evidence_records "
-                    "SET canonical_url_hash = deeptrace_sha256_hex(canonical_url) "
-                    "WHERE canonical_url_hash IS NULL OR canonical_url_hash = ''"
-                )
-        else:
+        if "canonical_url_hash" not in evidence_columns:
             connection.execute(
                 "ALTER TABLE evidence_records "
                 "ADD COLUMN canonical_url_hash VARCHAR(64)"
@@ -194,6 +266,21 @@ def _ensure_sqlite_schema(db_path: Path) -> None:
             connection.execute(
                 "UPDATE evidence_records "
                 "SET canonical_url_hash = deeptrace_sha256_hex(canonical_url)"
+            )
+        elif connection.execute(
+            "SELECT COUNT(*) FROM evidence_records "
+            "WHERE canonical_url_hash IS NULL OR canonical_url_hash = ''"
+        ).fetchone()[0]:
+            connection.execute(
+                "UPDATE evidence_records "
+                "SET canonical_url_hash = deeptrace_sha256_hex(canonical_url) "
+                "WHERE canonical_url_hash IS NULL OR canonical_url_hash = ''"
+            )
+
+        for statement in index_statements:
+            connection.execute(
+                statement.replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS")
+                .replace("CREATE UNIQUE INDEX", "CREATE UNIQUE INDEX IF NOT EXISTS")
             )
         connection.commit()
     finally:
@@ -302,6 +389,10 @@ def build_harness_runtime(
     service = ResearchApplicationService(graph)
 
     def context_factory(run_id: str, on_event=None) -> HarnessContext:
+        from deeptrace.persistence.execution_ledger import (
+            SqlAlchemyToolExecutionStore,
+        )
+
         recorder = HarnessEventRecorder(run_id=run_id)
         if on_event is not None:
             recorder.on_sync_event = on_event
@@ -317,11 +408,21 @@ def build_harness_runtime(
             fetcher=fetcher,
             memory=page_memory,
         )
+        # Crash-safe budgeting: when the ledger is durable, consumed units are
+        # seeded from it once before the first reservation, so a resumed run
+        # cannot exceed its original allowance.
+        budgets: Any = _budgets_for_run(run_id)
+        if isinstance(ledger, SqlAlchemyToolExecutionStore):
+            budgets = _SeededBudgets(
+                budgets,
+                lambda: ledger.tool_usage_for_run(run_id),
+                run_id,
+            )
         tool_gateway = AgentToolGateway(
             registry=registry,
             allowlist=StaticToolAllowlist(),
             security=DeterministicUrlSecurityPolicy(),
-            budgets=_budgets_for_run(run_id),
+            budgets=budgets,
             executions=ledger,
             cache=SuccessCacheSingleflight(InMemorySuccessCache()),
             evidence_store=evidence_store,

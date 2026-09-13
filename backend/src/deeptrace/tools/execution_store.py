@@ -57,7 +57,12 @@ class ExecutionClaim(BaseModel):
 
 class ToolExecutionStore(Protocol):
     async def claim(
-        self, tenant_id: str, request: ToolRequest
+        self,
+        tenant_id: str,
+        request: ToolRequest,
+        *,
+        mode: str | None = None,
+        caller_id: str | None = None,
     ) -> ExecutionClaim: ...
 
     async def wait(self, claim: ExecutionClaim) -> ToolResult: ...
@@ -100,7 +105,12 @@ class InMemoryToolExecutionStore:
         self._lock = asyncio.Lock()
 
     async def claim(
-        self, tenant_id: str, request: ToolRequest
+        self,
+        tenant_id: str,
+        request: ToolRequest,
+        *,
+        mode: str | None = None,
+        caller_id: str | None = None,
     ) -> ExecutionClaim:
         tenant = _require_identifier("tenant_id", tenant_id)
         if not isinstance(request, ToolRequest):

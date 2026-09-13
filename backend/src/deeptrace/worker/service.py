@@ -38,6 +38,9 @@ class ResearchWorker:
         self._settings = settings
         self._agent_factory = agent_factory
         self._research_runner = research_runner
+        self._thread_lease_ttl_seconds = int(
+            getattr(settings, "thread_lease_seconds", 1_800) or 1_800
+        )
         self._worker_id = worker_id
         self._close_callback = close_callback
         self._heartbeat_interval_seconds = heartbeat_interval_seconds or min(
@@ -128,7 +131,9 @@ class ResearchWorker:
         execution_error: Exception | None = None
         control_outcome: str | None = None
         research_task = asyncio.create_task(research_coro)
-        monitor_task = asyncio.create_task(self._monitor(run.id))
+        monitor_task = asyncio.create_task(
+            self._monitor(run.id, run.thread_id or run.id)
+        )
         try:
             done, _ = await asyncio.wait(
                 {research_task, monitor_task},
@@ -200,7 +205,7 @@ class ResearchWorker:
         await self._release_thread_lease(run)
         await self._append_done_and_ack(run.id, job.message_id)
 
-    async def _monitor(self, run_id: str) -> str:
+    async def _monitor(self, run_id: str, thread_id: str | None = None) -> str:
         while True:
             await asyncio.sleep(self._heartbeat_interval_seconds)
             if await self._broker.is_cancel_requested(run_id):
@@ -212,6 +217,13 @@ class ResearchWorker:
             )
             if not renewed:
                 return "lease_lost"
+            if thread_id:
+                # keep the thread lease alive for long-running research
+                await self._repository.renew_thread_lease(
+                    thread_id,
+                    run_id,
+                    ttl_seconds=self._thread_lease_ttl_seconds,
+                )
 
     async def _release_thread_lease(self, run: RunRecord) -> None:
         if getattr(run, "thread_id", ""):
