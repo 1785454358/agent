@@ -9,4 +9,6 @@ __pycache__/
 backend/runs/
 backend/memory/
 backend/chroma/
+frontend/node_modules/
+frontend/dist/
 

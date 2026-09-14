@@ -10,6 +10,7 @@ from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 from redis.asyncio import Redis
 
@@ -47,6 +48,22 @@ def _record_to_response(record: RunRecord) -> dict[str, Any]:
     data = record.model_dump(mode="json")
     data["events"] = record.events[-200:]
     return data
+
+
+def _resolve_dashboard_dir() -> Path | None:
+    """定位已构建的前端产物目录。
+
+    Docker 镜像把 ``frontend/dist`` 拷贝到包内 static 目录；
+    本地构建产物留在仓库根目录的 ``frontend/dist``。
+    两处都没有时返回 None，根路由返回 503 引导构建。
+    """
+    packaged = Path(__file__).parent / "static"
+    if (packaged / "index.html").is_file():
+        return packaged
+    local = Path(__file__).parents[3] / "frontend" / "dist"
+    if (local / "index.html").is_file():
+        return local
+    return None
 
 
 def _build_runtime(
@@ -182,14 +199,27 @@ def create_app(
     async def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    dashboard_dir = _resolve_dashboard_dir()
+    if dashboard_dir is not None:
+        app.mount(
+            "/assets",
+            StaticFiles(directory=dashboard_dir / "assets"),
+            name="assets",
+        )
+
     @app.get("/", response_class=FileResponse)
     async def dashboard() -> FileResponse:
-        return FileResponse(Path(__file__).parent / "static" / "index.html")
+        if dashboard_dir is None:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "前端产物未构建：开发时使用 frontend/ 的 Vite dev server，"
+                    "或先执行 npm run build / docker compose --build 构建镜像。"
+                ),
+            )
+        return FileResponse(dashboard_dir / "index.html")
 
     return app
-
-
-app = create_app()
 
 
 def main() -> None:
@@ -197,7 +227,9 @@ def main() -> None:
 
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    # 工厂模式：避免模块导入时读取环境变量或初始化外部依赖，
+    # 测试可以在无 .env 的干净环境里安全 import create_app。
+    uvicorn.run(create_app(), host="127.0.0.1", port=8000)
 
 
 if __name__ == "__main__":

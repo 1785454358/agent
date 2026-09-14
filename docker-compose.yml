@@ -56,8 +56,10 @@ services:
     restart: unless-stopped
 
   api:
-    build: ./backend
-    command: ["sh", "-c", "alembic upgrade head && uvicorn deeptrace.api:app --host 0.0.0.0 --port 8000"]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["sh", "-c", "alembic upgrade head && uvicorn deeptrace.api:create_app --factory --host 0.0.0.0 --port 8000"]
     environment: *runtime-environment
     ports:
       - "8000:8000"
@@ -74,7 +76,9 @@ services:
     restart: unless-stopped
 
   worker:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     command: ["python", "-m", "deeptrace.worker"]
     environment:
       <<: *runtime-environment

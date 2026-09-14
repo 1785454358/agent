@@ -4,6 +4,8 @@ ResearchPilot 是一个面向复杂开放问题的多模式深度研究 Agent。
 
 默认返回适合对话阅读的普通回答。用户明确要求报告时，系统才进入 Report 响应图。Python 包名 `deeptrace` 与 `DEEPTRACE_*` 环境变量保留兼容。
 
+前端是 `frontend/` 目录下的 Vite + React 单页工作台（TypeScript + TanStack Query），Docker 构建时由多阶段镜像自动打包进后端。
+
 ## 架构
 
 ```mermaid
@@ -105,6 +107,8 @@ Chroma 只保存受限正文、embedding、memory_id 和检索元数据。MySQL 
 
 本地模式适合开发与功能体验。Checkpoint 和 Evidence 落在 SQLite，长期记忆结构化记录留在进程内，Chroma 使用本地持久目录。
 
+终端 1 启动后端。
+
 ```powershell
 cd backend
 Copy-Item .env.example .env
@@ -114,7 +118,15 @@ uv run playwright install chromium
 uv run python -m deeptrace.api
 ```
 
-浏览器打开 [http://127.0.0.1:8000](http://127.0.0.1:8000)。
+终端 2 启动前端开发服务器（Vite 会把 `/researches` 与 `/health` 代理到 8000）。
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+开发时浏览器打开 [http://127.0.0.1:5173](http://127.0.0.1:5173)。执行 `npm run build` 后，产物输出到 `frontend/dist`，也可以直接访问后端 [http://127.0.0.1:8000](http://127.0.0.1:8000) 使用构建后的页面。
 
 若只想运行不带语义召回的轻量开发环境，可以在 `.env` 中设置下面一项。
 
@@ -125,6 +137,8 @@ DEEPTRACE_MEMORY_RETRIEVAL=lexical
 ## 分布式运行
 
 分布式模式用于展示完整可靠性设计。MySQL 保存运行、事件、Checkpoint、Evidence、长期记忆、租约和工具账本；Redis Streams 负责任务投递，Pub/Sub 唤醒 SSE；Chroma 保存长期记忆语义索引；Worker 独占加载 BGE-M3 并执行 LangGraph。
+
+镜像采用多阶段构建：node 阶段执行 `npm ci && npm run build` 生成前端产物并拷贝进后端镜像，python 阶段安装锁定依赖，`test` 构建目标会在镜像内运行全部非真实测试。
 
 ```powershell
 Copy-Item .env.docker.example .env.docker
@@ -165,12 +179,19 @@ Invoke-RestMethod -Method Post `
 ## 验证
 
 ```powershell
+# 后端（不含真实 API 的确定性测试）
 cd backend
 uv run pytest -m "not real"
 uv run pytest -m real tests/real/test_real_smoke.py
+
+# 前端
+cd ../frontend
+npm run lint
+npm test
+npm run build
 ```
 
-非真实测试覆盖三种策略、记忆、工具预算、引用、Checkpoint、崩溃恢复、分布式租约与迁移兼容。真实测试需要有效 Provider 和 Tavily 凭据。
+非真实测试覆盖三种策略、记忆、工具预算、引用、Checkpoint、崩溃恢复、分布式租约与迁移兼容。真实测试需要有效 Provider 和 Tavily 凭据。前端测试覆盖 API 封装、轮询与 SSE 事件流、组件渲染。
 
 ## 文档
 

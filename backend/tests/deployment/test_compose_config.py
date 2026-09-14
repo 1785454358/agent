@@ -21,6 +21,10 @@ def test_compose_declares_required_services_and_health_dependencies() -> None:
     api = compose["services"]["api"]
     worker = compose["services"]["worker"]
     assert api["environment"]["DEEPTRACE_RUNTIME_MODE"] == "distributed"
+    assert api["build"] == {"context": ".", "dockerfile": "backend/Dockerfile"}
+    assert worker["build"] == {"context": ".", "dockerfile": "backend/Dockerfile"}
+    assert "deeptrace.api:create_app" in api["command"][2]
+    assert "--factory" in api["command"][2]
     assert api["depends_on"]["mysql"]["condition"] == "service_healthy"
     assert api["depends_on"]["redis"]["condition"] == "service_healthy"
     assert worker["depends_on"]["api"]["condition"] == "service_healthy"
@@ -58,3 +62,16 @@ def test_dockerfile_installs_locked_project_and_runs_as_non_root() -> None:
     assert "uv sync --frozen --no-dev" in dockerfile
     assert "playwright install --with-deps chromium" in dockerfile
     assert "USER app" in dockerfile
+
+
+def test_dockerfile_builds_frontend_and_tests_inside_the_image() -> None:
+    dockerfile = (BACKEND_ROOT / "Dockerfile").read_text(encoding="utf-8")
+
+    assert "FROM node:22-alpine AS frontend" in dockerfile
+    assert "npm ci --ignore-scripts" in dockerfile
+    assert "npm run build" in dockerfile
+    assert "AS test" in dockerfile
+    assert 'uv run pytest -m "not real"' in dockerfile
+    assert (
+        'CMD ["uvicorn", "deeptrace.api:create_app", "--factory"' in dockerfile
+    )
