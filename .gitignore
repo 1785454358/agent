@@ -1,8 +1,12 @@
 .superpowers/
 .env
+.env.docker
 .venv/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
 *.pyc
+backend/runs/
+backend/memory/
+backend/chroma/
 
