@@ -41,11 +41,13 @@ flowchart TB
     EVIDENCE --> MYSQL
     LEDGER --> MYSQL
     MEM --> MYSQL
+    MEM --> CHROMA[(Chroma 语义索引)]
+    CHROMA --> BGE[本地 BGE-M3]
     CP -.本地模式.-> SQLITE[(SQLite)]
     EVIDENCE -.本地模式.-> SQLITE
 ```
 
-讲图时从中间开始。顶层图管理公共生命周期，策略子图决定怎样研究，Gateway 管理外部调用，存储层管理可恢复事实。本地模式的 Checkpoint 和 Evidence 使用 SQLite，工具账本与长期记忆只在进程内保存。分布式模式才把四类数据统一持久化到 MySQL。
+讲图时从中间开始。顶层图管理公共生命周期，策略子图决定怎样研究，Gateway 管理外部调用，存储层管理可恢复事实。本地模式的 Checkpoint 和 Evidence 使用 SQLite，工具账本与长期记忆只在进程内保存，Chroma 可以使用本地持久目录。分布式模式把权威记录放入 MySQL，Chroma 只保存由 BGE-M3 生成的长期记忆语义索引。
 
 ## 单次请求时序图
 
@@ -70,6 +72,7 @@ sequenceDiagram
     S->>G: 新建 Turn 或恢复未完成运行
     G->>G: 初始化 管理上下文 识别意图
     G->>M: 按意图召回长期记忆
+    M->>M: MySQL 过滤候选 Chroma TopK MySQL 回查
     alt 需要研究
         G->>P: ResearchInput
         P->>T: 搜索与抓取
@@ -107,8 +110,9 @@ flowchart LR
     ST2 --> A3[意图 模式 本轮输入输出 状态]
     RC --> B1[ModelGateway Tool Gateway]
     RC --> B2[Store EventSink Clock]
-    LM --> C1[Preference]
-    LM --> C2[有来源的 Fact]
+    LM --> C1[MySQL 权威 Preference]
+    LM --> C2[MySQL 权威 Fact]
+    LM --> C3[Chroma content embedding memory_id]
     ES --> E1[正文 分块 哈希 版本 来源]
     ES -.Evidence ID.-> ST
     ES -.Evidence ID.-> LM

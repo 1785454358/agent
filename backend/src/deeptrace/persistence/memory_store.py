@@ -5,10 +5,11 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from deeptrace.domain import MemoryRecord
+from deeptrace.domain import MemoryRecord, MemoryStatus, MemoryType
+from deeptrace.domain.memory import MemoryNamespace
 from deeptrace.persistence.orm import MemoryRecordRow
 
 
@@ -46,11 +47,25 @@ class SqlAlchemyMemoryStore:
                         namespace_owner=owner,
                         namespace_kind=kind,
                         store_key=record.store_key(),
+                        memory_id=record.id,
+                        memory_type=record.type.value,
+                        status=record.status.value,
+                        importance=record.importance,
+                        confidence=record.confidence,
+                        created_at=record.created_at,
+                        expires_at=record.expires_at,
                         payload=payload,
                         updated_at=datetime.now(UTC),
                     )
                 )
             else:
+                row.memory_id = record.id
+                row.memory_type = record.type.value
+                row.status = record.status.value
+                row.importance = record.importance
+                row.confidence = record.confidence
+                row.created_at = record.created_at
+                row.expires_at = record.expires_at
                 row.payload = payload
                 row.updated_at = datetime.now(UTC)
             await session.commit()
@@ -107,6 +122,79 @@ class SqlAlchemyMemoryStore:
             )
             await session.commit()
         return bool(result.rowcount)
+
+    async def list_eligible(
+        self,
+        *,
+        namespaces: list[MemoryNamespace],
+        memory_types: set[MemoryType],
+        now: datetime,
+    ) -> list[MemoryRecord]:
+        if not namespaces or not memory_types:
+            return []
+        namespace_tuple = tuple_(
+            MemoryRecordRow.namespace_scope,
+            MemoryRecordRow.namespace_owner,
+            MemoryRecordRow.namespace_kind,
+        )
+        async with self._sessions() as session:
+            rows = (
+                (
+                    await session.execute(
+                        select(MemoryRecordRow).where(
+                            namespace_tuple.in_(namespaces),
+                            MemoryRecordRow.memory_type.in_(
+                                [memory_type.value for memory_type in memory_types]
+                            ),
+                            MemoryRecordRow.status.in_(
+                                [
+                                    MemoryStatus.ACTIVE.value,
+                                    MemoryStatus.STALE.value,
+                                ]
+                            ),
+                            or_(
+                                MemoryRecordRow.expires_at.is_(None),
+                                MemoryRecordRow.expires_at > now,
+                            ),
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
+        return sorted(
+            (MemoryRecord.model_validate(row.payload) for row in rows),
+            key=lambda record: record.store_key(),
+        )
+
+    async def get_many_by_ids(self, memory_ids: list[str]) -> list[MemoryRecord]:
+        if not memory_ids:
+            return []
+        async with self._sessions() as session:
+            rows = (
+                (
+                    await session.execute(
+                        select(MemoryRecordRow).where(
+                            MemoryRecordRow.memory_id.in_(memory_ids)
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
+        records: dict[str, MemoryRecord] = {}
+        for row in rows:
+            record = MemoryRecord.model_validate(row.payload)
+            current = records.get(record.id)
+            if current is None or (
+                record.status is MemoryStatus.ACTIVE,
+                record.version,
+            ) > (
+                current.status is MemoryStatus.ACTIVE,
+                current.version,
+            ):
+                records[record.id] = record
+        return [records[memory_id] for memory_id in memory_ids if memory_id in records]
 
     async def _versions(
         self, namespace, identity: str

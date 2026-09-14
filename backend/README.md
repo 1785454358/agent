@@ -1,213 +1,121 @@
 # ResearchPilot 后端
 
-> **架构状态（2026-09-13）**：全部研究流量已切换到基于 LangGraph 的统一 Harness
-> 顶层运行图（Workflow / Plan-and-Execute / Multi-Agent），旧 Basic/Deep/Multi-Agent
-> 编排实现已删除。本文以下描述旧三套模式的章节仅作历史参考；当前架构、持久化与
-> 多轮会话见 `docs/superpowers/plans/2026-09-13-harness-implementation-decisions.md`。
-> Harness 记忆路径不使用 BGE-M3 语义重排。
+后端已经统一到 LangGraph Agent Harness。旧 Basic、Deep 和手写 ReAct 目录不再参与执行。当前三个研究模式分别对应 Workflow、Plan-and-Execute 和 Multi-Agent 策略子图。
 
-ResearchPilot 提供 Basic、Deep 与 Multi-Agent 三种平级模式。Basic 参考 GPT-Researcher 的基础报告路径；Deep 使用 Plan-and-Execute、ReAct 原生工具调用与动态重规划；Multi-Agent 使用 LangGraph 编排 Supervisor Plan-and-Execute 和多个独立 ReAct Researcher。Python 包名、旧 CLI 命令和环境变量前缀继续兼容 DeepTrace。
+## 一次请求怎样执行
 
-## 两种运行方式
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as Application Service
+    participant H as 顶层运行图
+    participant S as 策略子图
+    participant G as Tool Gateway
+    participant E as Evidence Store
+    participant M as Memory
 
-Local 适合开发和单机测试。API 在进程内执行研究任务，并把记录保存到
-`runs/*.json`。它不连接 MySQL 和 Redis。
-
-Distributed 适合演示服务拆分与故障恢复。API 只创建和查询任务，MySQL 保存运行
-状态、报告、用量和有序事件。Redis Stream 把任务交给独立 Worker，Pub/Sub 只负责
-唤醒 SSE 连接，断线后的事件仍从 MySQL 补发。Worker 使用数据库租约和条件更新
-避免旧进程覆盖新结果，并在启动时恢复 Redis pending 消息、长时间未领取的 pending
-运行和租约过期的 running 运行。
-
-## Multi-Agent 协作研究模式
-
-```text
-START → Plan（Supervisor 建立持久任务表）
-      → Execute（限并发运行多个隔离的 ReAct Researcher）
-      → Replan（按叶子任务缺口补充任务或结束）
-      ↘ 有就绪任务时回到 Execute
-      → Writer（汇总实际读取并经 BGE 筛选的原文）→ END
+    C->>A: question + mode + thread_id
+    A->>H: Harness State + Runtime Context
+    H->>H: 裁剪上下文并识别意图
+    H->>M: 按需召回长期记忆
+    H->>S: ResearchInput
+    S->>G: ToolRequest
+    G->>G: 权限、安全、Ledger、预算
+    G->>E: 保存正文并返回 Evidence ID
+    G-->>S: ToolResult
+    S-->>H: ResearchOutcome
+    H->>E: 按 ID 装载允许引用的证据
+    H-->>A: ResponseOutcome
+    A-->>C: 普通回答或按需报告
 ```
 
-Multi-Agent 是独立的第三种执行策略，不替换也不调用 Deep 的流程代码。它自己的顶层也是 Plan-and-Execute，但由 LangGraph 状态图持久保存 r1、r2 等任务及父子关系。默认最多创建 6 个研究员任务，单批最多 3 个并同时执行 3 个；Supervisor 最多决策 3 轮。每个 Researcher 总共最多决策 3 轮，前两轮各最多执行一个研究工具，最后一轮只允许结构化收尾。整次运行仍只有 30 次实际网络搜索/抓取额度，首批执行前预留 20% 给定向补查，单个研究员最多使用 10 次。
+顶层图位于 `src/deeptrace/harness/graph.py`。`build_agent_runtime_graph()` 注册公共节点和路由，`_recall_memory()` 负责长期记忆召回，`_consolidate_memory()` 把带来源 Finding 沉淀为长期事实。
 
-相同搜索和 URL 在同次运行内采用单飞与缓存复用，只有实际发起网络请求的一方扣额度；失败尝试也计数。模型不直接调用 `search_web`，而是通过一次 `research_topic` 完成导航搜索和少量原文读取。搜索观察最多返回 3 条结果，标题和摘要分别限制为 200、300 字符；Researcher 每个来源最多看到 1,200 字符，Writer 可使用每来源最多 3,000 字符、整次最多 30,000 字符的 BGE 筛选原文。
-
-每个 Researcher 的消息、已知 URL、已读来源和本地额度相互隔离，一个任务失败不会取消同批任务。`researcher.queued` 表示等待并发槽，`researcher.started` 才表示实际开始执行；单轮请求多个工具时只执行第一个并产生 `tool.batch_limited`。Supervisor 无效结构最多修复一次；调用超时不再重试，会打开本次运行的主管熔断并按叶子缺口生成确定性补查。一个具体叶子缺口生成一个补查任务，子任务只覆盖其 `required_outputs` 精确承接的父缺口；Supervisor 的宽泛描述只能影响父任务优先级，不能替换具体缺口。每次 Researcher 可见的 `research_topic`、`fetch_page` 和 `search_memory` 调用都必须携带与 Assignment 完全对应的 `target_output`。初始任务允许围绕选定检查项建立资料基础，补查任务必须直接检索唯一缺口；未知检查项在执行网络工具和扣减额度前产生 `tool.rejected`。只要仍有叶子缺口和执行容量，任何结束决策都会产生 `plan.finish_rejected`，不会提前写报告。任务已无缺口，或研究员、网络额度、主管轮次已经形成硬边界时，系统直接进入 Writer，不再调用无法改变路由结果的 Supervisor。补查没有新增来源时以 `stagnant` 收尾，避免重复消耗。应用当前日期与时区会明确传入 Supervisor、Researcher 和 Writer。任务摘要只供 Supervisor 协调，Writer 的事实输入仍是网页正文或 BGE 筛选的原文片段，不建立 `ResearchNote`、Claim、Evidence 或 Verifier 对象。
-
-```powershell
-uv run researchpilot --mode multi_agent "研究问题"
-```
-
-API 请求 mode 使用 `multi_agent`。耗时、Token 与估算费用只作观测，不作为停止条件；停止边界仍是 Supervisor/Researcher 循环数、全局/局部工具调用数和单次调用超时。各角色调用耗时是累计值，并发时相加后可能大于整次运行的墙钟耗时。
-
-## Deep 研究模式
-
-```text
-Planner（任务、完成条件、依赖）
-  → 按依赖选择任务
-  → Executor：模型选工具 → 工具结果 → 再次决策
-  → 任务结束/受阻/存在缺口 → Replanner 检查已读原文和执行反馈
-  → 替换剩余计划继续执行，或进入 Writer
-```
-
-工具包括 `search_web(query)`、`fetch_page(url, refresh=false)`、
-`search_memory(query)` 与 `finish_task(status, gaps)`。支持读取用户明确给出的
-URL，或搜索/记忆返回的 URL；请求仍经过现有抓取器的地址校验。
-每轮最多三个独立读工具并行，任务本身按依赖顺序执行。
-
-默认上限为 6 个已执行任务、每任务 4 轮、全局 12 轮 Executor、2 次重规划、
-30 次研究工具调用。使用 `DEEPTRACE_DEEP_*` 调整（见 `.env.example`）。
-搜索、阅读和记忆检索共用工具配额，包括缓存命中及失败调用；并行调用不会超额。
-`submit_plan` 和 `finish_task` 属于控制决策，由规划/执行轮次限制，不扣研究工具配额。
-不设总时长、累计 Token 或费用预算，达到次数上限后仍正常生成报告。
-单次请求保留故障超时；耗时和 Provider 已返回的 Token 按角色统计，超时未返回的用量无法准确统计。
-
-`DEEPTRACE_USE_MEMORY=true` 启用跨运行语义资料检索。Deep 默认只检索 7 天内
-抓取的页面，在最近 100 页中用 BGE 排序，取相似度至少 0.42 的前三页。
-`fetch_page(refresh=true)` 可绕过历史缓存核验最新事实。工作记忆始终可用。
-
-```powershell
-uv run researchpilot --mode deep "研究问题"
-```
-
-API 请求 `POST /researches` 的 JSON 可使用 `{"question":"研究问题","mode":"deep"}` 或 `mode: "multi_agent"`；
-省略 mode 时仍使用 Basic。事件保留任务计划、工具结果状态、重规划及最终统计。
-失败或次数上限终止可返回 partial 报告，不代表研究目标全部完成。
-
-## Basic 流程
-
-```text
-用户问题
-  → 首次搜索
-  → Planner 生成 3 个扁平搜索词，并追加原问题去重
-  → 所有搜索词并行搜索
-  → URL 全局去重，最多 15 路并发抓取
-  → 小文本直接使用，大文本由本地 BGE-M3 筛选相关原文
-  → 拼成 Source / Title / Content 文本
-  → Writer 一次生成报告
-```
-
-运行图固定为 `START → plan → parallel_research → writer → END`。系统不建立任务树，不执行多轮研究循环，也不保存中间证据实体。搜索、抓取和本地向量筛选不调用 LLM，Provider Token 只统计 Planner 和 Writer。
-
-## 输入 Writer 的内容
-
-每段资料使用以下格式。
-
-```text
-Source: https://example.com/article
-Title: 页面标题
-Content: 网页正文或 BGE-M3 筛选出的相关原文
-```
-
-`Content` 是源网页文本，不是 LLM 摘要。总正文小于 8000 字符且来源数不超过上限时直接传入；较大内容按 1000 字符切分、重叠 100 字符，以 0.42 相似度阈值筛选，每个搜索词最多保留 10 段。Writer 在正文中使用按首次出现顺序生成的 `[1]` 编号引用，正文不显示 URL，文末统一列入“参考内容”。中文报告依次包含总述、带自然承接的主题分析、存在实质缺口时的研究局限和正文最后的综合结论；仍只调用一次 Writer。报告标题使用 `1`、`1.1`、`1.1.1` 数字层级，不使用 `#`。最后一条研究事件汇总本次运行总耗时与 Planner、Writer 的 Provider Token 用量。
-
-## Local 运行
-
-复制 `.env.example` 为 `.env`，填写 OpenAI-compatible Provider 和 Tavily 凭据后运行。
-
-```powershell
-uv sync
-uv run playwright install chromium
-uv run deeptrace "今天 AI Agent 领域有哪些热点新闻？"
-```
-
-按下面的命令启动 Web 界面。
-
-```powershell
-uv run python -m deeptrace.api
-```
-
-浏览器访问 `http://127.0.0.1:8000/`。API 提供以下接口。
-
-- `POST /researches` 创建后台研究运行
-- `GET /researches/{id}` 获取状态、搜索词、报告、来源与用量
-- `GET /researches/{id}/events` 订阅 SSE 进度事件，可携带 `Last-Event-ID` 补发
-- `POST /researches/{id}/cancel` 取消运行
-- `GET /health` 查看 API 健康状态
-
-运行记录保存到 `runs/<id>.json`。开启 `DEEPTRACE_USE_MEMORY=true` 后，成功抓取的完整页面可跨运行复用；缓存命中不占网络抓取页数。
-
-## Distributed 运行
-
-在项目根目录执行以下命令。
-
-```powershell
-Copy-Item .env.docker.example .env.docker
-# 编辑 .env.docker，填写真实 Provider、Tavily 凭据和 BGE-M3 宿主机路径
-docker compose --env-file .env.docker up --build
-```
-
-Compose 启动 MySQL 8、Redis 7、API 和 Worker。API 会先运行 Alembic 迁移，Worker
-等待 API 健康后再读取队列。MySQL 与 Redis 默认不向宿主机暴露端口。
-
-```powershell
-docker compose --env-file .env.docker exec mysql mysql -uresearchpilot -p researchpilot -e "SELECT id, mode, status, attempt_count FROM research_runs ORDER BY created_at DESC LIMIT 20;"
-docker compose --env-file .env.docker exec redis redis-cli XLEN deeptrace:research:jobs
-docker compose --env-file .env.docker down
-```
-
-最后一条命令保留数据卷。确认要清空本地运行记录和队列时，再使用
-`docker compose --env-file .env.docker down -v`。
-
-## 主要配置
-
-```text
-DEEPTRACE_SEARCH_QUERY_COUNT=3
-DEEPTRACE_MAX_SEARCH_RESULTS_PER_QUERY=5
-DEEPTRACE_SCRAPER_CONCURRENCY=15
-DEEPTRACE_CONTEXT_MAX_RESULTS=10
-DEEPTRACE_CONTEXT_DIRECT_THRESHOLD_CHARS=8000
-DEEPTRACE_CONTEXT_CHUNK_CHARS=1000
-DEEPTRACE_CONTEXT_CHUNK_OVERLAP_CHARS=100
-DEEPTRACE_CONTEXT_SIMILARITY_THRESHOLD=0.42
-DEEPTRACE_PLANNER_TIMEOUT_SECONDS=60
-DEEPTRACE_WRITER_TIMEOUT_SECONDS=60
-DEEPTRACE_MAX_FETCHED_PAGES=20
-DEEPTRACE_MAX_TOOL_CALLS=30
-DEEPTRACE_TOOL_TIMEOUT_SECONDS=45
-DEEPTRACE_RUNTIME_MODE=local
-DEEPTRACE_MYSQL_DSN=mysql+asyncmy://researchpilot:researchpilot@mysql:3306/researchpilot
-DEEPTRACE_REDIS_URL=redis://redis:6379/0
-DEEPTRACE_WORKER_LEASE_SECONDS=120
-DEEPTRACE_WORKER_MAX_ATTEMPTS=3
-```
-
-`DEEPTRACE_EMBEDDING_MODEL_PATH` 指向本地 BGE-M3 目录。`DEEPTRACE_INPUT_COST_PER_MILLION` 和 `DEEPTRACE_OUTPUT_COST_PER_MILLION` 只用于费用估算。
-
-旧的 `DEEPTRACE_MAX_RUNTIME_SECONDS`、`DEEPTRACE_MAX_COST_USD`、`DEEPTRACE_DEEP_MAX_TOKENS` 已不再生效，不必为了取消预算修改现有 `.env`。`OPENAI_MAX_TOKENS` 仍控制模型单次最大输出长度，与累计预算无关。
-Basic 搜索与网络抓取共用 30 次工具配额，并保留最多 20 次网络抓取的子上限；复用缓存不发起网络调用。
-
-## 代码结构
+## 主要目录
 
 ```text
 src/deeptrace/
-├── basic/             # Basic：LangGraph 一轮研究管线
-├── deep/              # Deep：Plan-and-Execute、ReAct 与动态重规划
-├── multi_agent/       # LangGraph Supervisor Plan/Execute/Replan 与多 Researcher
-├── writer/            # 三种模式共用的 Writer 与报告渲染
-├── config/            # 环境配置与校验
-├── context/           # BGE-M3 与直接原文筛选
-├── models/            # 页面、事件和 Provider 用量模型
-├── observability/     # 费用估算与各角色用量展示
-├── persistence/       # SQLAlchemy 运行记录、事件与租约仓储
-├── queue/             # Redis Stream、Pub/Sub 与取消信号
-├── prompts/           # Planner 与 Writer 提示词
-├── runtime/           # Local 和 Distributed 运行时适配器
-├── tools/             # Tavily 搜索与网页抓取
-├── worker/            # 独立研究任务消费者与恢复逻辑
-├── memory.py          # 页面级 JSONL 缓存
-├── api.py             # FastAPI、SSE 和 Web 仪表盘
-└── cli.py             # 命令行入口
+├── application/        # 组合根、应用服务、Worker 适配
+├── config/             # 环境变量读取与边界校验
+├── domain/             # Research、Evidence、Memory、Tool 等领域契约
+├── harness/            # 顶层运行图、State、Context、记忆与公共策略
+│   └── memory/         # 写入、召回、遗忘、BGE 与语义检索协调
+├── strategies/         # 三种研究策略子图及共享 Topic 子图
+├── tools/              # Tool Gateway、预算、缓存、安全与工具注册
+├── responses/          # Answer、Brief、Report 子图和引用校验
+├── persistence/        # SQL Checkpointer、MySQL Store、Chroma 适配器
+├── queue/              # Redis Streams 与 Pub/Sub 适配
+├── runtime/            # Local 与 Distributed 运行时
+└── worker/             # 分布式任务消费、租约和恢复
 ```
 
-## 验证
+阅读源码时可以沿着下面的顺序走。
+
+1. `application/research.py` 中的 `ResearchApplicationService.invoke()` 校验 run/thread 身份并调用顶层图。
+2. `harness/graph.py` 中的 `build_agent_runtime_graph()` 展示一次请求的公共生命周期。
+3. `harness/registry.py` 展示策略与响应子图怎样通过统一契约注册。
+4. `strategies/*/graph.py` 展示三种执行行为。
+5. `tools/gateway.py` 中的 `AgentToolGateway.execute()` 展示外部调用治理管道。
+6. `persistence/checkpoint.py` 与 `persistence/execution_ledger.py` 展示恢复和幂等的分工。
+7. `harness/memory/retriever.py` 展示 MySQL、BGE-M3 与 Chroma 怎样协作。
+
+## 长期记忆链路
+
+`MemoryRecord` 带有 namespace、type、status、importance、confidence、版本、TTL 与 Evidence 引用。分布式环境中的 `SqlAlchemyMemoryStore.list_eligible()` 先在 MySQL 执行结构化过滤。
+
+`SemanticMemoryRetriever` 随后检查候选记录的内容哈希。缺失或变化的记录由 `BgeM3EmbeddingGateway` 生成 1024 维归一化向量，再交给 `ChromaMemoryVectorIndex` upsert。查询时 Chroma 只能在 MySQL 给出的 candidate_ids 内返回 TopK，结果必须经 `get_many_by_ids()` 回查 MySQL。最终排序综合余弦距离、importance、confidence 与 recency。
+
+这条链路保留两个降级点。MySQL 写入成功而 Chroma 写入失败时，记忆仍然存在；下一次召回会尝试修复。Chroma 查询失败时，召回退回 `select_memories()` 的确定性排序。
+
+## 运行与存储
+
+| 能力 | Local | Distributed |
+| --- | --- | --- |
+| API 执行 | 进程内异步任务 | API 入队，Worker 执行 |
+| Checkpoint | SQLite | MySQL |
+| Evidence | SQLite | MySQL |
+| 长期记忆权威记录 | 进程内 Store | MySQL |
+| 语义索引 | 本地 Chroma | Chroma 服务 |
+| 任务队列 | 无 | Redis Streams |
+| 恢复边界 | 单进程重启 | Worker 接管、租约、Ledger |
+
+分布式任务使用 at-least-once 投递。run lease 防止同一 run 并发执行，thread lease 防止同一会话同时推进两个 Turn。Checkpoint 保存图位置，Tool Ledger 保存外部调用身份和消耗，两者一起降低恢复后的重复副作用。
+
+## 配置
+
+本地配置从 `.env.example` 开始。
 
 ```powershell
-uv lock --check
-uv run pytest -m "not real"
-uv run python -m compileall -q src tests
-uv run deeptrace --help
+Copy-Item .env.example .env
+uv sync
+uv run playwright install chromium
+uv run python -m deeptrace.api
 ```
 
-普通测试不调用外部 API。真实冒烟可运行 `uv run python bench_run.py`（Basic）或 `uv run python bench_deep.py --output runs/deep-smoke.json`（Deep）。Multi-Agent 可通过 Web 或 CLI 的 `multi_agent` 模式验证。不设总运行时间或 Token 预算，真实调用会产生 Provider 费用。
+长期记忆相关配置如下。
+
+```text
+DEEPTRACE_MEMORY_RETRIEVAL=semantic
+DEEPTRACE_EMBEDDING_MODEL_PATH=D:\Dev\Models\bge-m3
+DEEPTRACE_EMBEDDING_BATCH_SIZE=8
+DEEPTRACE_CHROMA_URL=
+DEEPTRACE_CHROMA_PERSIST_PATH=chroma
+DEEPTRACE_CHROMA_COLLECTION=deeptrace-long-term-memory
+DEEPTRACE_MEMORY_TOP_K=5
+```
+
+Local 留空 `DEEPTRACE_CHROMA_URL` 后使用 PersistentClient。Distributed 必须设置 Chroma URL，Compose 已配置为 `http://chroma:8000`。`lexical` 模式不会创建 Chroma 客户端，也不要求 BGE-M3 路径存在。
+
+## 测试
+
+```powershell
+uv run pytest -m "not real"
+```
+
+真实 API 冒烟单独运行。
+
+```powershell
+uv run pytest -m real tests/real/test_real_smoke.py
+```
+
+Alembic 只通过新增迁移向前演进。不要修改已经发布的迁移文件。`20260914_01` 为长期记忆补充结构化召回列，并兼容升级前 JSON payload 中没有 importance 的记录。

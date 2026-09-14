@@ -106,6 +106,11 @@ class Settings:
     max_page_chars: int = 20_000
     embedding_model_path: Path = Path(r"D:\Dev\Models\bge-m3")
     embedding_batch_size: int = 8
+    memory_retrieval: str = "semantic"
+    chroma_url: str = ""
+    chroma_collection: str = "deeptrace-long-term-memory"
+    chroma_persist_path: Path = Path("chroma")
+    memory_top_k: int = 5
     min_extracted_chars: int = 500
     min_extracted_tokens: int = 200
     allow_benchmark_dns_proxy: bool = False
@@ -160,6 +165,10 @@ class Settings:
         )
         mysql_dsn = os.getenv("DEEPTRACE_MYSQL_DSN", "").strip()
         redis_url = os.getenv("DEEPTRACE_REDIS_URL", "").strip()
+        memory_retrieval = _choice(
+            "DEEPTRACE_MEMORY_RETRIEVAL", "semantic", {"lexical", "semantic"}
+        )
+        chroma_url = os.getenv("DEEPTRACE_CHROMA_URL", "").strip().rstrip("/")
         if runtime_mode == "distributed":
             if not mysql_dsn:
                 raise RuntimeError(
@@ -169,14 +178,14 @@ class Settings:
                 raise RuntimeError(
                     "DEEPTRACE_REDIS_URL is required in distributed mode"
                 )
+            if memory_retrieval == "semantic" and not chroma_url:
+                raise RuntimeError(
+                    "DEEPTRACE_CHROMA_URL is required for semantic memory "
+                    "in distributed mode"
+                )
         embedding_model_path = Path(
             os.getenv("DEEPTRACE_EMBEDDING_MODEL_PATH", r"D:\Dev\Models\bge-m3").strip()
         )
-        if not embedding_model_path.is_dir():
-            raise RuntimeError(
-                f"Embedding 模型目录不存在：{embedding_model_path}。"
-                "请设置 DEEPTRACE_EMBEDDING_MODEL_PATH。"
-            )
 
         chunk_chars = _bounded_int("DEEPTRACE_CONTEXT_CHUNK_CHARS", 1_000, 100, 20_000)
         overlap_chars = _bounded_int(
@@ -247,6 +256,15 @@ class Settings:
             embedding_batch_size=_bounded_int(
                 "DEEPTRACE_EMBEDDING_BATCH_SIZE", 8, 1, 256
             ),
+            memory_retrieval=memory_retrieval,
+            chroma_url=chroma_url,
+            chroma_collection=os.getenv(
+                "DEEPTRACE_CHROMA_COLLECTION", "deeptrace-long-term-memory"
+            ).strip(),
+            chroma_persist_path=Path(
+                os.getenv("DEEPTRACE_CHROMA_PERSIST_PATH", "chroma").strip()
+            ),
+            memory_top_k=_bounded_int("DEEPTRACE_MEMORY_TOP_K", 5, 1, 50),
             min_extracted_chars=_bounded_int(
                 "DEEPTRACE_MIN_EXTRACTED_CHARS", 500, 1, 1_000_000
             ),

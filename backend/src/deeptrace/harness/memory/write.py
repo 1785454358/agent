@@ -38,13 +38,14 @@ async def remember(store, record: MemoryRecord, policy: MemoryWritePolicy) -> Me
     if existing.status is not MemoryStatus.ACTIVE:
         # re-activate a new version over a non-active predecessor
         pass
-    new_version = record.model_copy(
-        update={
+    new_version = MemoryRecord.model_validate(
+        {
+            **record.model_dump(),
+            "id": "",
             "version": existing.version + 1,
             "supersedes": existing.id,
             "created_at": record.created_at,
-        },
-        deep=True,
+        }
     )
     superseded = existing.model_copy(
         update={"status": MemoryStatus.SUPERSEDED}, deep=True

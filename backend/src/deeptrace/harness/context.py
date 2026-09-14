@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Protocol, Sequence
+from typing import Any, Protocol
 
-from deeptrace.domain import Evidence, ToolRequest, ToolResult
+from deeptrace.domain import Evidence, MemoryRecord, MemoryType, ToolRequest, ToolResult
+from deeptrace.domain.memory import MemoryNamespace
 from deeptrace.tools.evidence_store import EvidenceDraft
 from deeptrace.tools.policy import ToolCaller, UrlAuthorization
 
@@ -46,13 +48,41 @@ class Clock(Protocol):
 class MemoryStorePort(Protocol):
     """Long-term memory port; implementations wrap a LangGraph Store."""
 
-    async def put(self, record: Any) -> Any: ...
+    async def put(self, record: MemoryRecord) -> MemoryRecord: ...
 
-    async def get(self, namespace: Any, identity: str) -> Any | None: ...
+    async def get(
+        self, namespace: MemoryNamespace, identity: str
+    ) -> MemoryRecord | None: ...
 
     async def list_namespace(
-        self, namespace: Any, *, include_inactive: bool = False
-    ) -> list[Any]: ...
+        self, namespace: MemoryNamespace, *, include_inactive: bool = False
+    ) -> list[MemoryRecord]: ...
+
+    async def list_eligible(
+        self,
+        *,
+        namespaces: list[MemoryNamespace],
+        memory_types: set[MemoryType],
+        now: Any,
+    ) -> list[MemoryRecord]: ...
+
+    async def get_many_by_ids(
+        self, memory_ids: list[str]
+    ) -> list[MemoryRecord]: ...
+
+
+class MemoryRetrieverPort(Protocol):
+    async def recall(
+        self,
+        *,
+        namespaces: list[MemoryNamespace],
+        memory_types: set[MemoryType],
+        query: str,
+        now: Any,
+        limit: int,
+    ) -> list[MemoryRecord]: ...
+
+    async def index(self, records: Sequence[MemoryRecord]) -> None: ...
 
 
 @dataclass(frozen=True)
@@ -65,3 +95,5 @@ class HarnessContext:
     event_sink: EventSink
     clock: Clock
     memory_store: MemoryStorePort | None = None
+    memory_retriever: MemoryRetrieverPort | None = None
+    memory_recall_limit: int = 5

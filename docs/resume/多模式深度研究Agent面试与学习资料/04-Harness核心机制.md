@@ -24,7 +24,7 @@ Checkpoint 保存图状态和下一执行位置。Execution Ledger 保存工具�
 
 ## MySQL、Redis 与租约
 
-MySQL 保存运行、事件、Checkpoint、Evidence、Memory、租约和工具账本，是分布式模式的权威事实来源。Redis Streams 投递任务，取消键传递取消信号，Pub/Sub 唤醒 SSE。最终状态写入 MySQL 后，Worker 才 ACK 消息。
+MySQL 保存运行、事件、Checkpoint、Evidence、Memory、租约和工具账本，是分布式模式的权威事实来源。Chroma 只保存长期记忆的向量索引。Redis Streams 投递任务，取消键传递取消信号，Pub/Sub 唤醒 SSE。最终状态写入 MySQL 后，Worker 才 ACK 消息。
 
 run lease 防止两个 Worker 执行同一个 run，thread lease 防止同一会话同时启动两个 Turn。Worker 心跳会续期两种租约。任务采用 at-least-once 投递，Provider 成功但 Ledger 尚未提交的窗口仍可能重复调用。外部写操作还需要 Provider 幂等键或补偿。
 
@@ -53,6 +53,8 @@ run lease 防止两个 Worker 执行同一个 run，thread lease 防止同一会
 
 系统不会把所有聊天直接存入长期记忆。聊天包含临时要求、错误信息、过时结论和敏感内容，全量保存会提高召回噪声、成本与隐私风险。
 
+召回时，MySQL 先按 namespace、memory_type、status 和 expires_at 过滤候选。BGE-M3 生成查询向量，Chroma 只在 candidate_ids 内执行 TopK。命中 ID 必须回查 MySQL，最终排序再加入 importance、confidence 与 recency。Chroma 不是权威存储，写入或查询失败时不会破坏 MySQL 中的记忆，系统会尝试修复索引或降级到关键词排序。
+
 ### 六个生命周期问题
 
 | 问题 | 当前实现 |
@@ -60,7 +62,7 @@ run lease 防止两个 Worker 执行同一个 run，thread lease 防止同一会
 | 何时存 | 用户明确要求记住，或研究结束后整理有来源的 Finding |
 | 存什么 | 稳定偏好、有 Evidence 支持的事实，不存完整聊天、正文和隐藏推理 |
 | 如何组织 | `("user", user_id, "preferences")` 与 `("workspace", workspace_id, "facts")` |
-| 何时召回 | Research、Incremental Research、Report Request 等需要历史信息的意图 |
+| 何时召回 | Research、Incremental Research、Report Request 等需要历史信息的意图，先结构化过滤再语义 TopK |
 | 如何更新 | 相同内容幂等复用，变化内容生成新版本并 supersedes 旧版本 |
 | 如何遗忘 | expires、stale、逻辑删除和物理删除，自动清扫尚待接入 |
 

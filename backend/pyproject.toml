@@ -1,7 +1,7 @@
 [project]
 name = "researchpilot"
 version = "0.2.0"
-description = "Multi-mode research agent with workflows, ReAct, and Supervisor collaboration"
+description = "LangGraph Agent Harness with Workflow, Plan-and-Execute, and Multi-Agent research strategies"
 requires-python = ">=3.11"
 dependencies = [
     "beautifulsoup4>=4.13",
@@ -26,6 +26,7 @@ dependencies = [
     "asyncmy>=0.2",
     "alembic>=1.13",
     "redis>=5.0",
+    "chromadb>=1.5.9,<2",
 ]
 
 # torch 走 PyTorch 官方 CUDA 索引（PyPI 的 Windows wheel 是 CPU-only 版本）；

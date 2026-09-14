@@ -8,10 +8,10 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.base import BaseCheckpointSaver
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from tavily import TavilyClient
 
 from deeptrace.application.research import ResearchApplicationService
@@ -19,8 +19,8 @@ from deeptrace.config import Settings
 from deeptrace.domain import ResearchMode, ResponseMode
 from deeptrace.harness.context import HarnessContext
 from deeptrace.harness.graph import build_agent_runtime_graph
-from deeptrace.harness.model_gateway import ChatModelGateway
 from deeptrace.harness.memory.store import InMemoryMemoryStore
+from deeptrace.harness.model_gateway import ChatModelGateway
 from deeptrace.harness.registry import (
     ResponseGraphRegistry,
     ResponseRegistration,
@@ -47,7 +47,7 @@ from deeptrace.tools.budget import (
     InMemoryBudgetManager,
 )
 from deeptrace.tools.cache import InMemorySuccessCache, SuccessCacheSingleflight
-from deeptrace.tools.evidence_store import EvidenceStore, InMemoryEvidenceStore
+from deeptrace.tools.evidence_store import EvidenceStore
 from deeptrace.tools.execution_store import (
     InMemoryToolExecutionStore,
     ToolExecutionStore,
@@ -56,9 +56,9 @@ from deeptrace.tools.policy import (
     DeterministicUrlSecurityPolicy,
     StaticToolAllowlist,
 )
+from deeptrace.tools.scraper import AsyncWebFetcher
 from deeptrace.tools.search import ToolContext
 from deeptrace.tools.search.tavily import search_web
-from deeptrace.tools.scraper import AsyncWebFetcher
 
 
 class _SystemClock:
@@ -157,7 +157,6 @@ def _build_durable_stores(
     from deeptrace.persistence.checkpoint import SqlAlchemyCheckpointSaver
     from deeptrace.persistence.database import create_session_factory
     from deeptrace.persistence.evidence_store import SqlAlchemyEvidenceStore
-    from deeptrace.persistence.orm import Base
 
     dsn = getattr(settings, "mysql_dsn", "")
     if dsn:
@@ -184,6 +183,50 @@ def _build_durable_stores(
     memory_store = InMemoryMemoryStore()
     evidence = SqlAlchemyEvidenceStore(sessions)
     return saver, ledger, memory_store, evidence, engine
+
+
+def _build_memory_retriever(
+    settings: Settings,
+    memory_store: Any,
+    *,
+    runs_dir: Path | str | None,
+) -> Any | None:
+    if settings.memory_retrieval != "semantic":
+        return None
+
+    import chromadb
+    from chromadb.config import Settings as ChromaSettings
+
+    from deeptrace.harness.memory.embedding import BgeM3EmbeddingGateway
+    from deeptrace.harness.memory.retriever import SemanticMemoryRetriever
+    from deeptrace.persistence.chroma_memory import ChromaMemoryVectorIndex
+
+    if settings.chroma_url:
+        parsed = urlparse(settings.chroma_url)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            raise RuntimeError("DEEPTRACE_CHROMA_URL must be an http(s) URL")
+        client = chromadb.HttpClient(
+            host=parsed.hostname,
+            port=parsed.port or (443 if parsed.scheme == "https" else 80),
+            ssl=parsed.scheme == "https",
+            settings=ChromaSettings(anonymized_telemetry=False),
+        )
+    else:
+        persist_path = settings.chroma_persist_path
+        if not persist_path.is_absolute() and runs_dir is not None:
+            persist_path = Path(runs_dir) / persist_path
+        persist_path.mkdir(parents=True, exist_ok=True)
+        client = chromadb.PersistentClient(
+            path=str(persist_path.resolve()),
+            settings=ChromaSettings(anonymized_telemetry=False),
+        )
+
+    embeddings = BgeM3EmbeddingGateway(
+        settings.embedding_model_path,
+        batch_size=settings.embedding_batch_size,
+    )
+    index = ChromaMemoryVectorIndex(client, settings.chroma_collection)
+    return SemanticMemoryRetriever(memory_store, embeddings, index)
 
 
 def _ensure_sqlite_schema(db_path: Path) -> None:
@@ -328,6 +371,9 @@ def build_harness_runtime(
     saver, ledger, memory_store, evidence_store, engine = (
         _build_durable_stores(settings, runs_dir)
     )
+    memory_retriever = _build_memory_retriever(
+        settings, memory_store, runs_dir=runs_dir
+    )
 
     model = ChatOpenAI(
         api_key=settings.openai_api_key,
@@ -429,6 +475,8 @@ def build_harness_runtime(
             event_sink=recorder,
             clock=_SystemClock(),
             memory_store=memory_store,
+            memory_retriever=memory_retriever,
+            memory_recall_limit=settings.memory_top_k,
         )
 
     return HarnessRuntimeBundle(

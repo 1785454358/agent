@@ -6,11 +6,11 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import (
+    JSON,
     DateTime,
     Float,
     Index,
     Integer,
-    JSON,
     LargeBinary,
     String,
     Text,
@@ -139,13 +139,39 @@ class ToolExecutionRow(Base):
 
 class MemoryRecordRow(Base):
     __tablename__ = "memory_records"
-    __table_args__ = (Index("ux_memory_records_key", "namespace_scope", "namespace_owner", "namespace_kind", "store_key", unique=True),)
+    __table_args__ = (
+        Index(
+            "ux_memory_records_key",
+            "namespace_scope",
+            "namespace_owner",
+            "namespace_kind",
+            "store_key",
+            unique=True,
+        ),
+        Index("ix_memory_records_memory_id", "memory_id"),
+        Index(
+            "ix_memory_records_recall",
+            "namespace_scope",
+            "namespace_owner",
+            "namespace_kind",
+            "memory_type",
+            "status",
+            "expires_at",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     namespace_scope: Mapped[str] = mapped_column(String(32))
     namespace_owner: Mapped[str] = mapped_column(String(128))
     namespace_kind: Mapped[str] = mapped_column(String(64))
     store_key: Mapped[str] = mapped_column(String(512))
+    memory_id: Mapped[str] = mapped_column(String(128))
+    memory_type: Mapped[str] = mapped_column(String(32))
+    status: Mapped[str] = mapped_column(String(32))
+    importance: Mapped[float] = mapped_column(Float, default=0.5)
+    confidence: Mapped[float] = mapped_column(Float, default=0.8)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     payload: Mapped[dict[str, Any]] = mapped_column(JSON)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 

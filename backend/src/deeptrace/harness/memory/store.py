@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 
 from langgraph.store.memory import InMemoryStore
 
-from deeptrace.domain import MemoryRecord, MemoryStatus
+from deeptrace.domain import MemoryRecord, MemoryStatus, MemoryType
 from deeptrace.domain.memory import MemoryNamespace
 
 
@@ -77,6 +78,39 @@ class InMemoryMemoryStore:
             for item in targets:
                 self._inner.delete(namespace, item.key)
         return bool(targets)
+
+    async def list_eligible(
+        self,
+        *,
+        namespaces: list[MemoryNamespace],
+        memory_types: set[MemoryType],
+        now: datetime,
+    ) -> list[MemoryRecord]:
+        records: list[MemoryRecord] = []
+        for namespace in namespaces:
+            records.extend(await self.list_namespace(namespace))
+        return sorted(
+            (
+                record
+                for record in records
+                if record.type in memory_types
+                and record.status
+                in {MemoryStatus.ACTIVE, MemoryStatus.STALE}
+                and (record.expires_at is None or record.expires_at > now)
+            ),
+            key=lambda record: record.store_key(),
+        )
+
+    async def get_many_by_ids(self, memory_ids: list[str]) -> list[MemoryRecord]:
+        wanted = set(memory_ids)
+        async with self._lock:
+            items = self._inner.search(())
+        records = {
+            record.id: record
+            for item in items
+            if (record := MemoryRecord.model_validate(item.value)).id in wanted
+        }
+        return [records[memory_id] for memory_id in memory_ids if memory_id in records]
 
     async def _versions(
         self, namespace: MemoryNamespace, identity: str

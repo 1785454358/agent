@@ -1,97 +1,138 @@
 # ResearchPilot
 
-面向复杂问题的自主研究 Agent，支持快速工作流、Plan-and-Execute 和 Supervisor Multi-Agent 协作研究。
-原项目名 DeepTrace；Python 包 `deeptrace`、旧命令与 `DEEPTRACE_*` 配置继续兼容。
+ResearchPilot 是一个面向复杂开放问题的多模式深度研究 Agent。项目基于 LangGraph 实现统一 Agent Harness，让 Workflow、Plan-and-Execute 和 Multi-Agent 三种研究策略共用模型入口、工具治理、记忆、证据、预算、恢复与响应规则。
+
+默认返回适合对话阅读的普通回答。用户明确要求报告时，系统才进入 Report 响应图。Python 包名 `deeptrace` 与 `DEEPTRACE_*` 环境变量保留兼容。
+
+## 架构
+
+```mermaid
+flowchart TB
+    Client[Web / API / CLI] --> App[Application Service]
+    App --> Runtime[LangGraph 顶层运行图]
+    Runtime --> Context[上下文裁剪与意图识别]
+    Context --> Recall[长期记忆召回]
+    Recall --> Registry{研究策略注册表}
+    Registry --> W[Workflow 子图]
+    Registry --> P[Plan-and-Execute 子图]
+    Registry --> M[Multi-Agent 子图]
+    W --> Topic[Research Topic 子图]
+    P --> Topic
+    M --> Topic
+    Topic --> Gateway[Tool Gateway]
+    Gateway --> Search[Search / Fetch]
+    Gateway --> Evidence[(Evidence Store)]
+    W --> Response{响应注册表}
+    P --> Response
+    M --> Response
+    Response --> Answer[Answer / Brief / Report]
+    Runtime --> Checkpoint[(LangGraph Checkpoint)]
+    Runtime --> Memory[(MySQL 长期记忆)]
+    Memory --> Vector[(Chroma 语义索引)]
+    Vector --> BGE[本地 BAAI/bge-m3]
+```
+
+Harness 是这些运行规则和模块边界的总和，不对应某个名为 HarnessGraph 的类。LangGraph 提供 State、节点、条件边、`Send` 并发、子图和 Checkpoint；项目在它之上规定三种策略怎样共享外部调用、状态所有权和恢复语义。
 
 ## 三种研究模式
 
-| 模式 | 流程 | 用途 |
+| 模式 | 执行方式 | 适合场景 |
 | --- | --- | --- |
-| Workflow | 规划查询 → Send 并行 Topic 子图（搜索/抓取经 Tool Gateway）→ 评估 | 边界清晰、时效要求高的一轮研究 |
-| Plan-and-Execute | 规划任务 → 逐项执行 → 评估 → 有界重规划 | 多步骤研究、资料缺口补全 |
-| Multi-Agent | Supervisor 拆解 → Send 并发 Researcher 子图 → 聚合评估 | 多方向并行覆盖、独立失败隔离 |
+| Workflow | 查询规划、并行 Topic 研究、证据评估 | 边界清楚、希望快速获得可靠答案 |
+| Plan-and-Execute | 任务拆解、逐项执行、评估、有界重规划 | 有依赖关系且需要补查的复杂问题 |
+| Multi-Agent | Supervisor 拆解和评估，多个 Researcher 并发研究 | 多个方向可以独立调查的问题 |
 
-Multi-Agent 的顶层控制流由 LangGraph 显式编译为
-`Plan → Execute → Replan →（必要时再次 Execute）→ Writer`。默认首批最多派发
-3 个任务并同时执行。每个 Researcher 只有两次研究工具决策和一次强制收尾决策，
-单次决策最多执行一个研究工具。只要仍有具体缺口、研究员名额、至少两次网络额度
-和后续主管轮次，任何仍带有未解决叶子缺口的结束建议都会被拒绝并转为定向补查。
-当任务表已经无缺口，或研究员、网络额度、主管轮次形成硬终止边界时，系统直接
-进入 Writer，不再调用一次无法改变结果的 Supervisor。可行动阶段的无效结构修复
-和确定性缺口补查仍然保留。补查以一个具体叶子缺口生成一个 Researcher 任务，
-子任务只覆盖它实际承接的父缺口。每次研究工具调用都必须声明对应的检查项；
-初始任务可围绕该项建立资料基础，补查任务则直接检索具体缺口，不重新宽搜主题。
-无效检查项会在网络请求和额度扣减前被拒绝。
+三种模式都以 `ResearchInput` 接收请求，以 `ResearchOutcome` 返回 Evidence、Finding、缺口和终止原因。策略子图只决定怎样研究，公共治理留在顶层运行图和 Tool Gateway。
 
-Deep 的 Planner 生成目标、完成条件与依赖；Executor 根据实际工具结果决定
-搜索、阅读网页、检索历史资料或结束任务。任务受阻、产生缺口或计划执行结束
-时触发重规划，调整剩余任务。第一版按依赖顺序执行任务，单轮独立工具可并行。
+## 记忆与证据
 
-工作记忆包含任务进度、已读原文及查询记录。长期记忆按 user/workspace
-命名空间组织并带版本与遗忘生命周期；召回采用确定性的关键词 + 时效 + 置信度
-评分（不使用 BGE-M3 语义重排，向量检索是预留扩展）。
-研究过程只以循环次数和工具调用次数限制执行；耗时与 Token 只作统计。
-达到研究次数上限后仍正常调用 Writer。单次请求保留故障超时。
-报告采用数字层级标题和按正文首次出现排序的引用。中文报告包含开头总述、带承接
-内容的主题分析、必要时的研究局限和正文末尾的综合结论；URL 统一放在“参考内容”。
-该调整仍使用一次 Writer 调用，没有增加 Critic 或润色 Agent。
+工作记忆保存计划、任务状态、Finding、Evidence ID 和未解决缺口，属于可恢复的 LangGraph State。短期会话记忆保留近期消息，旧消息经过有界结构化压缩进入 `ConversationSummary`。
 
-## 本地模式
+长期记忆只接收用户明确要求保存的偏好，以及绑定 Evidence ID 的研究事实。分布式模式采用三段式召回。
+
+1. MySQL 按 user/workspace 作用域、记忆类型、状态和有效期筛选候选记录。
+2. 本地 BAAI/bge-m3 生成查询向量，Chroma 在候选 memory_id 内执行 TopK。
+3. 命中的 memory_id 回查 MySQL，完整权威记录经过重要度、置信度和时效排序后进入上下文。
+
+Chroma 只保存受限正文、embedding、memory_id 和检索元数据。MySQL 是长期记忆的权威数据源。索引失败不会阻断保存，后续召回会用内容哈希修复索引；Chroma 不可用时系统降级到确定性关键词排序。
+
+网页正文属于 Evidence Store。Graph State 与长期记忆只携带 Evidence ID 或受限片段，避免 Checkpoint 和模型上下文随正文增长。
+
+## 本地运行
+
+本地模式适合开发与功能体验。Checkpoint 和 Evidence 落在 SQLite，长期记忆结构化记录留在进程内，Chroma 使用本地持久目录。
 
 ```powershell
 cd backend
-# 复制 .env.example 为 .env，并配置兼容原生 tools/tool_calls 的模型与 Tavily
+Copy-Item .env.example .env
+# 填写 OpenAI-compatible 模型、Tavily 和本地 BGE-M3 路径
 uv sync
 uv run playwright install chromium
 uv run python -m deeptrace.api
 ```
 
-打开 http://127.0.0.1:8000，在模式选择中切换 Workflow / Plan-and-Execute / Multi-Agent。
+浏览器打开 [http://127.0.0.1:8000](http://127.0.0.1:8000)。
 
-本地模式沿用进程内异步任务和 `runs/*.json`，无需安装 MySQL、Redis 或 Worker。
+若只想运行不带语义召回的轻量开发环境，可以在 `.env` 中设置下面一项。
 
-## 分布式模式
+```text
+DEEPTRACE_MEMORY_RETRIEVAL=lexical
+```
+
+## 分布式运行
+
+分布式模式用于展示完整可靠性设计。MySQL 保存运行、事件、Checkpoint、Evidence、长期记忆、租约和工具账本；Redis Streams 负责任务投递，Pub/Sub 唤醒 SSE；Chroma 保存长期记忆语义索引；Worker 独占加载 BGE-M3 并执行 LangGraph。
 
 ```powershell
 Copy-Item .env.docker.example .env.docker
-# 填写模型、Tavily 和 BGE-M3 的宿主机路径后启动
+# 填写 Provider、Tavily 与 DEEPTRACE_EMBEDDING_MODEL_HOST_PATH
 docker compose --env-file .env.docker up --build
 ```
 
-分布式模式把 API 与研究执行分开。API 将运行记录写入 MySQL，再把任务投递到
-Redis Stream。独立 Worker 消费任务，持续保存研究事件和最终报告。MySQL 保存
-权威状态，Redis 负责任务投递、取消信号和 SSE 实时唤醒。Worker 使用租约、条件
-更新和有限重试处理重复投递，浏览器断线后可通过事件 ID 补收进度。
+API 健康检查可从下面的地址访问。
 
-下面两条命令可分别查看运行记录与队列长度。
-
-```powershell
-docker compose --env-file .env.docker exec mysql mysql -uresearchpilot -p researchpilot -e "SELECT id, mode, status, attempt_count FROM research_runs ORDER BY created_at DESC LIMIT 20;"
-docker compose --env-file .env.docker exec redis redis-cli XLEN deeptrace:research:jobs
+```text
+http://127.0.0.1:8000/health
 ```
 
-普通停止不会删除 MySQL 和 Redis 数据。
+停止服务会保留 MySQL、Redis 和 Chroma 数据卷。
 
 ```powershell
 docker compose --env-file .env.docker down
 ```
 
-只有确认需要清空本地数据库和队列时才执行 `docker compose --env-file .env.docker down -v`。
+`down -v` 会删除本地数据卷，只应在确认需要清空演示数据时使用。
+
+## API 示例
 
 ```powershell
-uv run researchpilot --mode deep "比较几种 Agent 架构，并说明各自适用场景与局限"
-uv run researchpilot --mode multi_agent "梳理 2025 年 AI 热点，并区分技术、产业与监管方向"
-uv run pytest -m "not real"
-uv run python bench_deep.py --output runs/deep-smoke.json
+$body = @{
+  question = "比较 LangGraph Checkpoint 与工具执行账本各自解决的问题"
+  mode = "plan_execute"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Method Post `
+  -Uri http://127.0.0.1:8000/researches `
+  -ContentType application/json `
+  -Body $body
 ```
 
-## 实现与验证
+后续请求携带第一次返回的 `thread_id` 即可延续同一会话。问题中明确写出“生成报告”会选择 Report 响应图，普通研究请求仍返回 Answer。
 
-- [后端配置与 API](backend/README.md)
-- [Agent Harness 总体设计](docs/superpowers/specs/2026-09-10-langgraph-agent-harness-refactor-design.md)
-- [Agent Harness 交付路线图](docs/superpowers/plans/2026-09-10-langgraph-agent-harness-roadmap.md)
-- [当前阶段实施计划](docs/superpowers/plans/2026-09-12-workflow-response-vertical-slice.md)
+## 验证
+
+```powershell
+cd backend
+uv run pytest -m "not real"
+uv run pytest -m real tests/real/test_real_smoke.py
+```
+
+非真实测试覆盖三种策略、记忆、工具预算、引用、Checkpoint、崩溃恢复、分布式租约与迁移兼容。真实测试需要有效 Provider 和 Tavily 凭据。
+
+## 文档
+
+- [后端模块与配置](backend/README.md)
+- [Harness 总体设计](docs/superpowers/specs/2026-09-10-langgraph-agent-harness-refactor-design.md)
 - [文档索引](docs/README.md)
-
-项目正按路线图迁移到统一 Agent Harness。旧 Basic、Deep 和 Multi-Agent
-执行路径在对应策略子图完成前仍保持可运行，但不再作为目标架构文档。
+- [面试学习资料](docs/resume/多模式深度研究Agent面试与学习资料/00-阅读目录.md)
+- [作品展示制作指南](docs/resume/作品展示制作指南.md)

@@ -2,7 +2,6 @@ from pathlib import Path
 
 import yaml
 
-
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 PROJECT_ROOT = BACKEND_ROOT.parent
 
@@ -12,18 +11,30 @@ def test_compose_declares_required_services_and_health_dependencies() -> None:
         (PROJECT_ROOT / "docker-compose.yml").read_text(encoding="utf-8")
     )
 
-    assert set(compose["services"]) == {"mysql", "redis", "api", "worker"}
+    assert set(compose["services"]) == {
+        "mysql",
+        "redis",
+        "chroma",
+        "api",
+        "worker",
+    }
     api = compose["services"]["api"]
     worker = compose["services"]["worker"]
     assert api["environment"]["DEEPTRACE_RUNTIME_MODE"] == "distributed"
     assert api["depends_on"]["mysql"]["condition"] == "service_healthy"
     assert api["depends_on"]["redis"]["condition"] == "service_healthy"
     assert worker["depends_on"]["api"]["condition"] == "service_healthy"
+    assert worker["depends_on"]["chroma"]["condition"] == "service_healthy"
+    assert worker["environment"]["DEEPTRACE_CHROMA_URL"] == "http://chroma:8000"
     assert worker["command"] == ["python", "-m", "deeptrace.worker"]
     assert "ports" not in compose["services"]["mysql"]
     assert "ports" not in compose["services"]["redis"]
-    assert any(volume.endswith(":/models/bge-m3:ro") for volume in api["volumes"])
+    assert "volumes" not in api
     assert any(volume.endswith(":/models/bge-m3:ro") for volume in worker["volumes"])
+    chroma = compose["services"]["chroma"]
+    assert chroma["image"] == "chromadb/chroma:1.5.9"
+    assert chroma["healthcheck"]
+    assert "chroma-data:/data" in chroma["volumes"]
 
 
 def test_migration_contains_runtime_tables_and_indexes() -> None:

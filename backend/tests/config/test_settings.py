@@ -40,6 +40,10 @@ def test_basic_defaults(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     assert settings.writer_timeout_seconds == 60
     assert settings.max_runtime_seconds is None
     assert settings.openai_max_tokens is None
+    assert settings.memory_retrieval == "semantic"
+    assert settings.chroma_collection == "deeptrace-long-term-memory"
+    assert settings.chroma_persist_path == Path("chroma")
+    assert settings.memory_top_k == 5
     assert not hasattr(settings, "max_task_rounds")
     assert not hasattr(settings, "task_concurrency")
     assert not hasattr(settings, "query_loop_threshold")
@@ -54,6 +58,7 @@ def test_distributed_runtime_settings(
         "DEEPTRACE_MYSQL_DSN", "mysql+asyncmy://app:pw@mysql/researchpilot"
     )
     monkeypatch.setenv("DEEPTRACE_REDIS_URL", "redis://redis:6379/0")
+    monkeypatch.setenv("DEEPTRACE_CHROMA_URL", "http://chroma:8000")
     monkeypatch.setenv("DEEPTRACE_WORKER_LEASE_SECONDS", "180")
 
     settings = Settings.from_env()
@@ -65,6 +70,7 @@ def test_distributed_runtime_settings(
     assert settings.redis_consumer_group == "research-workers"
     assert settings.worker_lease_seconds == 180
     assert settings.worker_max_attempts == 3
+    assert settings.chroma_url == "http://chroma:8000"
 
 
 def test_invalid_runtime_mode_is_rejected(
@@ -108,8 +114,20 @@ def test_missing_embedding_model_directory_is_rejected(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     _set_required_environment(monkeypatch, tmp_path / "missing-bge-m3")
+    monkeypatch.setenv("DEEPTRACE_MEMORY_RETRIEVAL", "lexical")
 
-    with pytest.raises(RuntimeError, match="Embedding 模型目录不存在"):
+    assert Settings.from_env().memory_retrieval == "lexical"
+
+
+def test_distributed_semantic_memory_requires_chroma_url(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv("DEEPTRACE_RUNTIME_MODE", "distributed")
+    monkeypatch.setenv("DEEPTRACE_MYSQL_DSN", "mysql+asyncmy://app:pw@mysql/db")
+    monkeypatch.setenv("DEEPTRACE_REDIS_URL", "redis://redis:6379/0")
+
+    with pytest.raises(RuntimeError, match="DEEPTRACE_CHROMA_URL"):
         Settings.from_env()
 
 

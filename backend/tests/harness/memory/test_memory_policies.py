@@ -80,6 +80,9 @@ def test_q2_what_to_store_bounded_content_and_known_types() -> None:
         _record(source_evidence_ids=["evidence-1", "evidence-1"])
     with pytest.raises(ValidationError):
         _record(confidence=1.5)
+    with pytest.raises(ValidationError):
+        _record(importance=-0.1)
+    assert _record(importance=0.75).importance == 0.75
 
 
 # ── Q3: how to organize ──────────────────────────────────────────────────────
@@ -159,7 +162,7 @@ def test_q4_recall_ranks_by_relevance_recency_and_confidence() -> None:
         records, query="checkpoint recovery 在哪里", now=NOW, limit=3
     )
 
-    assert [record.subject for record in ranked][0] == "langgraph-checkpoint"
+    assert next(record.subject for record in ranked) == "langgraph-checkpoint"
     assert ranked[0].content.startswith("checkpoint 在 MySQL，含 recovery")
     assert all(record.subject != "stale-entry" for record in ranked)
 
@@ -187,6 +190,7 @@ def test_q5_updates_are_versioned_with_supersedes_chain() -> None:
 
     assert updated.version == first.version + 1
     assert updated.supersedes == first.id
+    assert updated.id != first.id
     # the superseded version remains queryable for the audit trail
     history = asyncio.run(
         store.list_namespace(("workspace", "workspace-1", "facts"), include_inactive=True)

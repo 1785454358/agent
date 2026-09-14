@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any
 
@@ -15,16 +16,14 @@ from deeptrace.domain import (
     MemoryRecord,
     MemoryType,
     ResearchInput,
-    ResearchOutcome,
     ResearchMode,
+    ResearchOutcome,
     ResponseInput,
     ResponseMode,
     ResponseOutcome,
 )
 from deeptrace.harness.context import HarnessContext
-from deeptrace.harness.memory.forget import apply_lifecycle
 from deeptrace.harness.memory.recall import select_memories, should_recall
-from deeptrace.harness.memory.store import InMemoryMemoryStore
 from deeptrace.harness.memory.write import MemoryWritePolicy, remember
 from deeptrace.harness.policies.context import (
     SUMMARY_FACT_LIMIT,
@@ -39,7 +38,6 @@ from deeptrace.harness.policies.intent import (
 from deeptrace.harness.registry import ResponseGraphRegistry, StrategyRegistry
 from deeptrace.harness.state import HarnessState
 from deeptrace.responses.citations import select_response_mode
-
 
 SUMMARIZER_ROLE = "summarizer"
 
@@ -209,7 +207,10 @@ async def _manage_context(
             updates["summary"] = merge_summaries(current, incoming)
         except Exception:
             # deterministic fallback: window trimmed, summary unchanged
-            pass
+            logging.getLogger(__name__).warning(
+                "conversation summary compression failed; keeping prior summary",
+                exc_info=True,
+            )
     if not updates:
         return {}
     return {"conversation": updates}
@@ -294,19 +295,31 @@ async def _recall_memory(
         return {"turn": turn}
     now = runtime.context.clock.now()
     records: list[Any] = []
-    records.extend(
-        await memory_store.list_namespace(
-            ("user", runtime.context.user_id, "preferences")
+    namespaces = [
+        ("user", runtime.context.user_id, "preferences"),
+        ("workspace", runtime.context.workspace_id, "facts"),
+    ]
+    retriever = runtime.context.memory_retriever
+    if retriever is not None:
+        ranked = await retriever.recall(
+            namespaces=namespaces,
+            memory_types={MemoryType.PREFERENCE, MemoryType.FACT},
+            query=turn["user_input"],
+            now=now,
+            limit=runtime.context.memory_recall_limit,
         )
-    )
-    records.extend(
-        await memory_store.list_namespace(
-            ("workspace", runtime.context.workspace_id, "facts")
+    else:
+        records = await memory_store.list_eligible(
+            namespaces=namespaces,
+            memory_types={MemoryType.PREFERENCE, MemoryType.FACT},
+            now=now,
         )
-    )
-    ranked = select_memories(
-        records, query=turn["user_input"], now=now, limit=5
-    )
+        ranked = select_memories(
+            records,
+            query=turn["user_input"],
+            now=now,
+            limit=runtime.context.memory_recall_limit,
+        )
     turn["recalled_memory_ids"] = [record.id for record in ranked]
     turn["recalled_memories"] = [
         {
@@ -355,7 +368,8 @@ async def _memory_update_node(
             partial_reason="memory_rejected",
         )
         return {"turn": turn}
-    await remember(memory_store, record, policy)
+    stored = await remember(memory_store, record, policy)
+    await _index_memory_best_effort(runtime.context, [stored])
     turn["response_outcome"] = ResponseOutcome(
         response_mode=ResponseMode.ANSWER,
         content=f"已记住：{content}",
@@ -379,6 +393,7 @@ async def _consolidate_memory(
         return {}
     now = runtime.context.clock.now()
     policy = MemoryWritePolicy()
+    stored_records: list[MemoryRecord] = []
     for finding in outcome.findings[:20]:
         record = MemoryRecord(
             type=MemoryType.FACT,
@@ -391,8 +406,23 @@ async def _consolidate_memory(
             updated_at=now,
         )
         if policy.can_store(record, source="consolidation"):
-            await remember(memory_store, record, policy)
+            stored = await remember(memory_store, record, policy)
+            stored_records.append(stored)
+    await _index_memory_best_effort(runtime.context, stored_records)
     return {}
+
+
+async def _index_memory_best_effort(
+    context: HarnessContext, records: list[MemoryRecord]
+) -> None:
+    if context.memory_retriever is None or not records:
+        return
+    try:
+        await context.memory_retriever.index(records)
+    except Exception:
+        logging.getLogger(__name__).exception(
+            "memory stored in authoritative store but Chroma indexing failed"
+        )
 
 
 def _switch_mode_node(state: HarnessState) -> dict[str, Any]:

@@ -11,7 +11,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from deeptrace.domain.evidence import EvidenceIdentifier
 
-
 MAX_MEMORY_CONTENT_LENGTH = 2_000
 MAX_MEMORY_SUBJECT_LENGTH = 200
 MAX_MEMORY_SOURCES = 20
@@ -58,6 +57,7 @@ class MemoryRecord(BaseModel):
         max_length=MAX_MEMORY_SOURCES,
     )
     confidence: float = Field(default=0.8, ge=0.0, le=1.0)
+    importance: float = Field(default=0.5, ge=0.0, le=1.0)
     status: MemoryStatus = MemoryStatus.ACTIVE
     created_at: datetime
     updated_at: datetime
@@ -73,10 +73,10 @@ class MemoryRecord(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def derive_stable_id(self) -> "MemoryRecord":
+    def derive_stable_id(self) -> MemoryRecord:
         if not self.id:
             digest = hashlib.sha256(
-                f"{self.identity()}|v{self.version}".encode("utf-8")
+                f"{self.identity()}|v{self.version}".encode()
             ).hexdigest()[:32]
             self.id = f"mem-{digest}"
         return self

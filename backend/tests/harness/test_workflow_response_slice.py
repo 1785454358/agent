@@ -8,7 +8,12 @@ from typing import Any
 
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
+from strategies.fixtures import build_gateway_fixture
 
+from deeptrace.application.research import (
+    ApplicationResearchRequest,
+    ResearchApplicationService,
+)
 from deeptrace.domain import ExecutionStatus, ResearchMode, ResponseMode
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
 from deeptrace.harness.graph import build_agent_runtime_graph
@@ -30,12 +35,6 @@ from deeptrace.strategies import (
     build_research_topic_graph,
     build_workflow_research_graph,
 )
-from deeptrace.application.research import (
-    ApplicationResearchRequest,
-    ResearchApplicationService,
-)
-
-from strategies.fixtures import build_gateway_fixture
 
 
 class ScriptedModelGateway:
@@ -298,7 +297,7 @@ async def test_multi_agent_mode_routes_through_application_service() -> None:
 
     assert outcome.partial_reason is None
     assert outcome.content == "多智能体结论 [1]。"
-    assert [role for role, _ in model.calls][0] == "supervisor"
+    assert next(role for role, _ in model.calls) == "supervisor"
 
 
 @pytest.mark.asyncio
@@ -559,6 +558,96 @@ async def test_research_recalls_memories_and_consolidates_findings() -> None:
 
 
 @pytest.mark.asyncio
+async def test_harness_uses_semantic_retriever_and_indexes_consolidated_memory() -> None:
+    from dataclasses import replace
+
+    from deeptrace.domain import MemoryRecord, MemoryType
+
+    class RecordingRetriever:
+        def __init__(self, recalled):
+            self.recalled = recalled
+            self.recall_calls = []
+            self.indexed = []
+            self.index_calls = 0
+
+        async def recall(self, **kwargs):
+            self.recall_calls.append(kwargs)
+            return [self.recalled]
+
+        async def index(self, records):
+            self.index_calls += 1
+            self.indexed.extend(records)
+
+    def two_findings(prompt: str) -> str:
+        evidence_ids = sorted(set(re.findall(r"evidence-[0-9a-f]+", prompt)))
+        return json.dumps(
+            {
+                "findings": [
+                    {
+                        "id": "finding-1",
+                        "claim": "第一条有来源结论",
+                        "evidence_ids": evidence_ids[:1],
+                        "confidence": 0.9,
+                    },
+                    {
+                        "id": "finding-2",
+                        "claim": "第二条有来源结论",
+                        "evidence_ids": evidence_ids[:1],
+                        "confidence": 0.8,
+                    },
+                ],
+                "unresolved_gaps": [],
+                "sufficient": True,
+            }
+        )
+
+    model = ScriptedModelGateway(
+        {
+            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "evaluator": two_findings,
+            "responder": json.dumps({"content": "研究结论 [1]。"}),
+        }
+    )
+    fixture = _fixture(model)
+    now = fixture.context.clock.now()
+    preference = MemoryRecord(
+        type=MemoryType.PREFERENCE,
+        namespace=("user", "user-1", "preferences"),
+        subject="回答风格",
+        content="用户偏好简洁回答",
+        confidence=1.0,
+        importance=1.0,
+        created_at=now,
+        updated_at=now,
+    )
+    retriever = RecordingRetriever(preference)
+    fixture.context = replace(
+        fixture.context, memory_retriever=retriever, memory_recall_limit=2
+    )
+    strategies, responses = _registries()
+    graph = build_agent_runtime_graph(
+        strategies,
+        responses,
+        checkpointer=InMemorySaver(serde=create_harness_checkpoint_serializer()),
+    )
+
+    result = await graph.ainvoke(
+        _initial_state("研究 LangGraph Harness"),
+        config={"configurable": {"thread_id": "thread-1"}},
+        context=fixture.context,
+    )
+
+    assert result["turn"]["recalled_memory_ids"] == [preference.id]
+    assert retriever.recall_calls[0]["namespaces"] == [
+        ("user", "user-1", "preferences"),
+        ("workspace", "workspace-1", "facts"),
+    ]
+    assert retriever.recall_calls[0]["limit"] == 2
+    assert any(record.type is MemoryType.FACT for record in retriever.indexed)
+    assert retriever.index_calls == 1
+
+
+@pytest.mark.asyncio
 async def test_follow_up_turns_do_not_recall_memory() -> None:
     model = ScriptedModelGateway(
         {
@@ -605,7 +694,6 @@ async def test_follow_up_turns_do_not_recall_memory() -> None:
 
 @pytest.mark.asyncio
 async def test_context_compression_updates_summary_and_trims_window() -> None:
-    from datetime import UTC, datetime, timedelta
 
     from deeptrace.domain import ConversationSummary
     from deeptrace.harness.state import new_turn
@@ -635,8 +723,9 @@ async def test_context_compression_updates_summary_and_trims_window() -> None:
         strategies, responses, checkpointer=checkpointer
     )
 
-    from deeptrace.domain import ConversationIntent, ResearchMode, ResponseMode
     from langchain_core.messages import HumanMessage
+
+    from deeptrace.domain import ResearchMode
 
     messages = [
         HumanMessage(content=f"历史消息 {index}", id=f"old-{index}")
