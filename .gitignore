@@ -12,3 +12,4 @@ backend/chroma/
 frontend/node_modules/
 frontend/dist/
 
+*.tsbuildinfo
