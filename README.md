@@ -1,5 +1,7 @@
 # ResearchPilot
 
+[![CI](https://github.com/1785454358/agent/actions/workflows/ci.yml/badge.svg)](https://github.com/1785454358/agent/actions/workflows/ci.yml)
+
 ResearchPilot 是一个面向复杂开放问题的多模式深度研究 Agent。项目基于 LangGraph 实现统一 Agent Harness，让 Workflow、Plan-and-Execute 和 Multi-Agent 三种研究策略共用模型入口、工具治理、记忆、证据、预算、恢复与响应规则。
 
 默认返回适合对话阅读的普通回答。用户明确要求报告时，系统才进入 Report 响应图。Python 包名 `deeptrace` 与 `DEEPTRACE_*` 环境变量保留兼容。
