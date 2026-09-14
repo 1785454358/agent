@@ -28,7 +28,7 @@
 - Provider exceptions are converted to stable public error codes. Credentials, headers, response bodies, and exception messages are not copied into `ToolResult` or events.
 - Retry ownership is singular. This plan performs at most one adapter call per gateway execution; later graph nodes may attach an explicit LangGraph `RetryPolicy` for transient provider failures.
 - Existing Deep and Multi-Agent execution paths remain runnable until their replacement strategy subgraphs are delivered. This plan adds the shared gateway but does not delete old wrappers.
-- Do not touch or stage `docs/resume/researchpilot-project-experience.md`.
+- Do not touch or stage `docs/resume/多模式深度研究Agent简历项目材料.md`.
 
 ## Target module layout
 
