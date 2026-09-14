@@ -8,29 +8,70 @@ ResearchPilot 是一个面向复杂开放问题的多模式深度研究 Agent。
 
 ```mermaid
 flowchart TB
-    Client[Web / API / CLI] --> App[Application Service]
-    App --> Runtime[LangGraph 顶层运行图]
-    Runtime --> Context[上下文裁剪与意图识别]
-    Context --> Recall[长期记忆召回]
-    Recall --> Registry{研究策略注册表}
-    Registry --> W[Workflow 子图]
-    Registry --> P[Plan-and-Execute 子图]
-    Registry --> M[Multi-Agent 子图]
-    W --> Topic[Research Topic 子图]
-    P --> Topic
-    M --> Topic
-    Topic --> Gateway[Tool Gateway]
-    Gateway --> Search[Search / Fetch]
-    Gateway --> Evidence[(Evidence Store)]
-    W --> Response{响应注册表}
-    P --> Response
-    M --> Response
-    Response --> Answer[Answer / Brief / Report]
-    Runtime --> Checkpoint[(LangGraph Checkpoint)]
-    Runtime --> Memory[(MySQL 长期记忆)]
-    Memory --> Vector[(Chroma 语义索引)]
-    Vector --> BGE[本地 BAAI/bge-m3]
+    subgraph Entry[入口层]
+        Web[Web]
+        Api["API / CLI"]
+        App[Application Service]
+    end
+
+    subgraph Orchestration[编排层]
+        Runtime[顶层运行图]
+        Strategies["策略子图<br/>Workflow · Plan-and-Execute · Multi-Agent"]
+        Response["响应子图<br/>Answer · Brief · Report"]
+    end
+
+    subgraph Governance[治理层]
+        ModelGateway[Model Gateway]
+        ToolGateway["Tool Gateway<br/>权限 · 安全 · 预算 · 缓存 · 幂等"]
+        Evidence[(Evidence Store)]
+        Memory[Memory 长期记忆]
+        Ledger[Execution Ledger]
+    end
+
+    subgraph Infrastructure[基础设施层]
+        MySQL[(MySQL)]
+        Redis["Redis Streams / Pub-Sub"]
+        Chroma[(Chroma)]
+        Bge[BGE-M3]
+        Provider["OpenAI 兼容模型"]
+        Search[外部搜索与抓取]
+    end
+
+    Web --> Api --> App
+    App -->|ResearchInput| Runtime
+    App -->|任务投递| Redis
+    Redis -->|研究任务| Runtime
+    Redis -.->|事件唤醒| App
+    Runtime -->|ResearchInput| Strategies
+    Strategies -->|ResearchOutcome| Runtime
+    Runtime --> Response
+    Strategies -->|ToolRequest| ToolGateway
+    Strategies --> ModelGateway
+    Response --> ModelGateway
+    ModelGateway --> Provider
+    ToolGateway --> Search
+    ToolGateway --> Ledger
+    ToolGateway -->|Evidence ID| Evidence
+    Response -->|Evidence ID| Evidence
+    Runtime <-->|memory_id| Memory
+    Memory --> MySQL
+    Memory --> Bge
+    Bge -->|向量| Chroma
+    Runtime -->|Checkpoint| MySQL
+    Evidence --> MySQL
+    Ledger --> MySQL
+
+    classDef entry fill:#F5F5F5,stroke:#9E9E9E,color:#000000
+    classDef orchestration fill:#E3F2FD,stroke:#1E88E5,color:#000000
+    classDef governance fill:#FFF3E0,stroke:#FB8C00,color:#000000
+    classDef infra fill:#E8F5E9,stroke:#43A047,color:#000000
+    class Web,Api,App entry
+    class Runtime,Strategies,Response orchestration
+    class ModelGateway,ToolGateway,Evidence,Memory,Ledger governance
+    class MySQL,Redis,Chroma,Bge,Provider,Search infra
 ```
+
+图中展示分布式完整形态：MySQL 保存运行、事件、Checkpoint、Evidence、长期记忆、租约与工具账本，Redis Streams 投递任务，Pub/Sub 唤醒 SSE，Worker 消费任务并执行顶层运行图。本地模式中 Checkpoint 与 Evidence 落在 SQLite，任务在进程内执行，Chroma 使用本地持久目录。颜色只表达所有权：编排、公共治理与数据存储各用一种颜色。
 
 Harness 是这些运行规则和模块边界的总和，不对应某个名为 HarnessGraph 的类。LangGraph 提供 State、节点、条件边、`Send` 并发、子图和 Checkpoint；项目在它之上规定三种策略怎样共享外部调用、状态所有权和恢复语义。
 
@@ -44,7 +85,7 @@ Harness 是这些运行规则和模块边界的总和，不对应某个名为 Ha
 
 三种模式都以 `ResearchInput` 接收请求，以 `ResearchOutcome` 返回 Evidence、Finding、缺口和终止原因。策略子图只决定怎样研究，公共治理留在顶层运行图和 Tool Gateway。
 
-## 记忆与证据
+## 记忆与可靠性
 
 工作记忆保存计划、任务状态、Finding、Evidence ID 和未解决缺口，属于可恢复的 LangGraph State。短期会话记忆保留近期消息，旧消息经过有界结构化压缩进入 `ConversationSummary`。
 
@@ -57,6 +98,8 @@ Harness 是这些运行规则和模块边界的总和，不对应某个名为 Ha
 Chroma 只保存受限正文、embedding、memory_id 和检索元数据。MySQL 是长期记忆的权威数据源。索引失败不会阻断保存，后续召回会用内容哈希修复索引；Chroma 不可用时系统降级到确定性关键词排序。
 
 网页正文属于 Evidence Store。Graph State 与长期记忆只携带 Evidence ID 或受限片段，避免 Checkpoint 和模型上下文随正文增长。
+
+工具调用统一经过 Tool Gateway 的权限、安全、预算、缓存与幂等管道，每次外部调用写入 Execution Ledger。分布式任务采用 at-least-once 投递：run lease 与 thread lease 防止同一运行并发推进，Checkpoint 保存图位置，Ledger 保存调用身份与消耗，两者在恢复后共同抑制重复副作用。
 
 ## 本地运行
 
