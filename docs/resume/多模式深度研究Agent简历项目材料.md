@@ -6,13 +6,13 @@
 
 **技术栈**　Python、LangGraph、LangChain、FastAPI、Pydantic、SQLAlchemy、MySQL、Redis Streams、Chroma、BAAI/bge-m3、Tavily、Docker、Pytest
 
-**项目描述**　面向复杂开放问题构建可多轮追问的深度研究 Agent，以基于 LangGraph 的顶层运行图承载 Workflow、Plan-and-Execute、Multi-Agent 三种研究策略子图，完成检索、查证、回答及按需报告生成。
+**项目描述**　面向复杂开放问题构建深度研究 Agent，以基于 LangGraph 的顶层运行图承载 Workflow、Plan-and-Execute、Multi-Agent 三种研究策略子图，完成检索、查证、回答及按需报告生成。
 
 - **统一运行图**　基于 LangGraph 构建顶层运行图，用可序列化 Harness State、Runtime Context 与策略/响应双注册表编排意图路由、上下文管理、工具、记忆、响应与恢复，三种策略共享运行协议并隔离子图状态。
 - **三种研究模式**　将 Workflow、Plan-and-Execute、Multi-Agent 实现为固定流程、有界重规划、主管并发调度三类 LangGraph 子图，通过 API 显式选择模式，并为 Auto 路由预留注册扩展点。
 - **Tool Gateway 与 Evidence**　模型调用与工具调用分别经过 ModelGateway 和 Tool Gateway；网关处理白名单、参数、安全校验、预算、幂等、超时与错误分类，临时错误由节点级 RetryPolicy 重放并真实重执行，永久失败按任务局部语义记录；Evidence Store 统一保存正文，图状态只保留证据引用。
 - **记忆与上下文管理**　短期记忆使用滑动窗口与有界结构化摘要；长期记忆由 MySQL 保存作用域、类型、重要度、置信度、版本和 Evidence 引用，先做结构化候选过滤，再用本地 BGE-M3 与 Chroma 执行候选内 TopK，命中 ID 回查 MySQL 后注入上下文，并保留索引修复与关键词降级。
-- **持久化与可靠性**　MySQL 保存运行记录、事件、Checkpoint、工具执行账本与长期记忆（自研 SQLAlchemy Checkpointer，生产 asyncmy、测试 aiosqlite 同一套 SQL）；本地运行时 Checkpoint 落 SQLite 文件；Redis Streams 负责投递与唤醒，at-least-once 投递 + Checkpoint 恢复 + 幂等账本保证恢复不重复已完成副作用。
+- **持久化与可靠性**　MySQL 保存运行记录、事件、Checkpoint、工具执行账本与长期记忆（自研 SQLAlchemy Checkpointer，生产 asyncmy、测试 aiosqlite 同一套 SQL）；本地运行时 Checkpoint 落 SQLite 文件；Redis Streams 负责任务投递与回收，Pub/Sub 唤醒 SSE，取消键传播取消信号；Checkpoint 与执行账本重放已提交结果并降低重复副作用。
 
 ## 可选项目要点库
 
@@ -44,7 +44,7 @@
 
 ### 长期记忆
 
-- **记忆六问生命周期**　何时存（来源白名单：用户显式请求或带证据的研究沉淀）、存什么（有界内容、唯一来源）、如何组织（scope/owner/kind 命名空间；当前为单租户部署，跨租户隔离需先接入认证身份）、何时召回（新研究/增量/报告自动触发，追问不召回）、如何更新（同主题版本链 + supersedes，同内容幂等）、如何遗忘（TTL 过期、陈旧降权、逻辑与物理删除），每一问都有可执行策略测试。
+- **记忆六问生命周期**　何时存（用户显式请求或带证据的研究沉淀）、存什么（有界内容与受控 Evidence 引用）、如何组织（scope/owner/kind 命名空间；当前为单租户部署，跨租户隔离需先接入认证身份）、何时召回（研究、增量研究和报告请求自动触发）、如何更新（相同 namespace/type/subject 下同内容幂等、内容变化生成 supersedes 版本链）、如何遗忘（TTL 过期、陈旧降权、逻辑与物理删除），每一问都有可执行策略测试。
 - **混合语义召回**　MySQL 先按 user/workspace、memory_type、status 和 expires_at 过滤，Chroma 只在候选 memory_id 内执行 BGE-M3 向量 TopK，随后回查 MySQL 获取权威记录，并结合相似度、importance、confidence 与 recency 排序；Chroma 故障时降级到确定性检索。
 
 ### 对话与输出
@@ -55,8 +55,8 @@
 
 ### 持久化与可靠性
 
-- **自研 SQL Checkpointer**　基于 SQLAlchemy 实现的 LangGraph Checkpoint Saver（生产 asyncmy/MySQL，测试 aiosqlite/SQLite 同一套 SQL），配合子图命名空间使恢复只重跑失败节点：强制崩溃后计划不重跑、已完成子图直接复用结果、Evidence 与工具调用恰好一次。
-- **Redis 与 MySQL 分工**　Redis Streams 承担任务投递、消费者恢复、唤醒和取消通知，MySQL 保存权威状态；采用 at-least-once 投递，账本对成功与永久失败结果重放，临时失败保持可回收以支持节点级重试。
+- **自研 SQL Checkpointer**　基于 SQLAlchemy 实现 LangGraph Checkpoint Saver（生产 asyncmy/MySQL，测试 aiosqlite/SQLite 同一套 SQL），配合子图命名空间恢复图状态；执行账本按稳定 call_id 重放已提交工具结果，降低节点重放造成的重复调用，Provider 成功但账本未提交的窗口仍可能重复。
+- **Redis 与 MySQL 分工**　Redis Streams 承担任务投递、消费与回收，Pub/Sub 唤醒 SSE，取消键传播取消信号，MySQL 保存权威状态；系统采用 at-least-once 投递，账本重放成功与永久失败结果，临时失败保持可回收以支持节点级重试。
 - **分层预算控制**　在工具调用前按 Run/Mode/Agent 三级预留调用次数、网络请求与抓取页数预算，并发请求通过预留、提交和释放避免额度竞争；校验类拒绝不消耗预算。
 - **Checkpoint 与事件**　关键节点提交可恢复 State 和单调递增事件，客户端按事件 ID 续传进度；节点失败后从最近 Checkpoint 恢复，通过执行账本和调用键识别并降低 at-least-once 投递造成的重复影响。
 

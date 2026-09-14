@@ -53,7 +53,7 @@ run lease 防止两个 Worker 执行同一个 run，thread lease 防止同一会
 
 系统不会把所有聊天直接存入长期记忆。聊天包含临时要求、错误信息、过时结论和敏感内容，全量保存会提高召回噪声、成本与隐私风险。
 
-召回时，MySQL 先按 namespace、memory_type、status 和 expires_at 过滤候选。BGE-M3 生成查询向量，Chroma 只在 candidate_ids 内执行 TopK。命中 ID 必须回查 MySQL，最终排序再加入 importance、confidence 与 recency。Chroma 不是权威存储，写入或查询失败时不会破坏 MySQL 中的记忆，系统会尝试修复索引或降级到关键词排序。
+Distributed 召回时，MySQL 先按 namespace、memory_type、status 和 expires_at 过滤候选。BGE-M3 生成查询向量，Chroma 只在 candidate_ids 内执行 TopK。命中 ID 必须回查 MySQL，最终排序再加入 importance、confidence 与 recency。Local 使用进程内 Memory Store 完成同样的候选过滤与回查，结构化记忆不会跨 API 重启。Chroma 不拥有权威数据，写入或查询失败时不会破坏权威 Store 中的记忆，系统会尝试修复索引或降级到关键词排序。
 
 ### 六个生命周期问题
 
@@ -63,7 +63,7 @@ run lease 防止两个 Worker 执行同一个 run，thread lease 防止同一会
 | 存什么 | 稳定偏好、有 Evidence 支持的事实，不存完整聊天、正文和隐藏推理 |
 | 如何组织 | `("user", user_id, "preferences")` 与 `("workspace", workspace_id, "facts")` |
 | 何时召回 | Research、Incremental Research、Report Request 等需要历史信息的意图，先结构化过滤再语义 TopK |
-| 如何更新 | 相同内容幂等复用，变化内容生成新版本并 supersedes 旧版本 |
+| 如何更新 | 相同 namespace/type/subject 身份下，同内容幂等复用，内容变化生成新版本并 supersedes 旧版本；语义相近但 subject 不同的记录暂不自动合并 |
 | 如何遗忘 | expires、stale、逻辑删除和物理删除，自动清扫尚待接入 |
 
 当前 API 组合根注入固定的 `local-user` 与 `local-workspace`，所以部署仍是单租户。数据结构预留了 namespace，真正的多租户隔离需要先接入认证身份。
