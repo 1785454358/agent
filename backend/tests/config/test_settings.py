@@ -38,7 +38,6 @@ def test_basic_defaults(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     assert settings.context_similarity_threshold == 0.42
     assert settings.planner_timeout_seconds == 60
     assert settings.writer_timeout_seconds == 60
-    assert settings.max_runtime_seconds is None
     assert settings.openai_max_tokens is None
     assert settings.memory_retrieval == "semantic"
     assert settings.chroma_collection == "deeptrace-long-term-memory"
@@ -110,7 +109,7 @@ def test_distributed_mode_requires_both_connections(
         Settings.from_env()
 
 
-def test_missing_embedding_model_directory_is_rejected(
+def test_lexical_mode_does_not_require_embedding_model(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     _set_required_environment(monkeypatch, tmp_path / "missing-bge-m3")
@@ -139,29 +138,4 @@ def test_chunk_overlap_must_be_smaller_than_chunk(
     monkeypatch.setenv("DEEPTRACE_CONTEXT_CHUNK_OVERLAP_CHARS", "100")
 
     with pytest.raises(RuntimeError, match="overlap"):
-        Settings.from_env()
-
-
-def test_legacy_total_limits_are_ignored(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    _set_required_environment(monkeypatch, tmp_path)
-    monkeypatch.setenv("DEEPTRACE_MAX_COST_USD", "1.00")
-    monkeypatch.delenv("DEEPTRACE_INPUT_COST_PER_MILLION", raising=False)
-    monkeypatch.delenv("DEEPTRACE_OUTPUT_COST_PER_MILLION", raising=False)
-
-    monkeypatch.setenv("DEEPTRACE_MAX_RUNTIME_SECONDS", "1")
-    monkeypatch.setenv("DEEPTRACE_DEEP_MAX_TOKENS", "1")
-    settings = Settings.from_env()
-    assert settings.max_runtime_seconds is None
-    assert settings.max_cost_usd is None
-    assert settings.deep_max_tool_calls == 30
-
-
-def test_deep_settings_are_bounded(monkeypatch, tmp_path):
-    _set_required_environment(monkeypatch, tmp_path)
-    monkeypatch.setenv("DEEPTRACE_DEEP_MAX_STEPS", "8")
-    assert Settings.from_env().deep_max_steps == 8
-    monkeypatch.setenv("DEEPTRACE_DEEP_MAX_STEPS", "0")
-    with pytest.raises(RuntimeError, match="DEEP_MAX_STEPS"):
         Settings.from_env()

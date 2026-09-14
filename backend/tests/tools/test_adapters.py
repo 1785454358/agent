@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from deeptrace.domain import ToolName
-from deeptrace.memory import MemoryEntry
 from deeptrace.models import RawDocument, ScraperUsed
 from deeptrace.tools.adapters import (
     FetchPageArguments,
@@ -29,11 +29,20 @@ class FetcherStub:
         return self.document
 
 
+@dataclass
+class MemoryEntryStub:
+    """PageMemory 契约的最小鸭子类型实现。"""
+
+    url: str
+    title: str
+    fetched_at: datetime
+
+
 class MemoryStub:
-    def __init__(self, entries: list[MemoryEntry]) -> None:
+    def __init__(self, entries: list[MemoryEntryStub]) -> None:
         self._entries = entries
 
-    def entries(self) -> list[MemoryEntry]:
+    def entries(self) -> list[MemoryEntryStub]:
         return list(self._entries)
 
 
@@ -56,13 +65,10 @@ def _document(*, body: str = "full page body") -> RawDocument:
 
 def _memory_entry(
     *, title: str, age_days: int, url: str
-) -> MemoryEntry:
-    return MemoryEntry(
+) -> MemoryEntryStub:
+    return MemoryEntryStub(
         url=url,
         title=title,
-        content="memory body " * 100,
-        content_hash=f"hash-{age_days}",
-        published_at=None,
         fetched_at=NOW - timedelta(days=age_days),
     )
 
@@ -170,7 +176,13 @@ async def test_memory_adapter_filters_expired_entries_and_never_returns_body() -
     assert [item["url"] for item in payload["results"]] == [
         "https://example.com/fresh"
     ]
-    assert "memory body " * 2 not in result.preview
+    # 预览只包含 url、标题、时间和提示，不携带正文
+    assert set(payload["results"][0]) == {
+        "url",
+        "title",
+        "fetched_at",
+        "notice",
+    }
 
 
 @pytest.mark.asyncio

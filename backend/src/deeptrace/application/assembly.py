@@ -27,7 +27,6 @@ from deeptrace.harness.registry import (
     StrategyRegistration,
     StrategyRegistry,
 )
-from deeptrace.memory import ResearchMemory
 from deeptrace.observability.events import HarnessEventRecorder
 from deeptrace.responses import (
     build_answer_graph,
@@ -360,7 +359,6 @@ def build_harness_runtime(
     settings: Settings,
     *,
     runs_dir: Path | str | None = None,
-    page_memory: ResearchMemory | None = None,
 ) -> HarnessRuntimeBundle:
     """Assemble the top-level runtime graph plus a per-run context factory.
 
@@ -439,7 +437,6 @@ def build_harness_runtime(
         registry = build_research_tool_registry(
             search=run_search,
             fetcher=fetcher,
-            memory=page_memory,
         )
         # Crash-safe budgeting: when the ledger is durable, consumed units are
         # seeded from it once before the first reservation, so a resumed run

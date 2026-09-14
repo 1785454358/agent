@@ -127,30 +127,8 @@ class Settings:
     max_fetched_pages: int = 20
     max_tool_calls: int = 30
     tool_timeout_seconds: float = 45.0
-    # Accepted by older callers, but no longer used as a stopping condition.
-    max_runtime_seconds: int | None = None
-    deep_call_timeout_seconds: float = 45.0
-    deep_max_tasks: int = 6
-    deep_max_rounds_per_task: int = 4
-    deep_max_steps: int = 12
-    deep_max_replans: int = 2
-    deep_max_tool_calls: int = 30
-    deep_memory_max_age_days: int = 7
-    multi_agent_max_researchers: int = 6
-    multi_agent_max_batch_size: int = 3
-    multi_agent_concurrency: int = 3
-    multi_agent_max_supervisor_rounds: int = 3
-    multi_agent_max_researcher_rounds: int = 3
-    multi_agent_max_tool_calls: int = 30
-    multi_agent_max_tools_per_researcher: int = 10
-    multi_agent_call_timeout_seconds: float = 45.0
-    multi_agent_memory_max_age_days: int = 7
-    multi_agent_memory_path: Path = Path("memory/multi-agent-pages.jsonl")
-    use_memory: bool = False
-    memory_path: Path = Path("memory/pages.jsonl")
     input_cost_per_million: Decimal | None = None
     output_cost_per_million: Decimal | None = None
-    max_cost_usd: Decimal | None = None
     openai_max_tokens: int | None = None
     # 开发模式：run.completed 事件输出各角色 Token/耗时明细表。
     show_usage_report: bool = False
@@ -183,8 +161,9 @@ class Settings:
                     "DEEPTRACE_CHROMA_URL is required for semantic memory "
                     "in distributed mode"
                 )
+        # 语义召回必须显式配置本地 BGE-M3 模型目录；留空时 lexical 模式不受影响。
         embedding_model_path = Path(
-            os.getenv("DEEPTRACE_EMBEDDING_MODEL_PATH", r"D:\Dev\Models\bge-m3").strip()
+            os.getenv("DEEPTRACE_EMBEDDING_MODEL_PATH", "").strip()
         )
 
         chunk_chars = _bounded_int("DEEPTRACE_CONTEXT_CHUNK_CHARS", 1_000, 100, 20_000)
@@ -198,27 +177,6 @@ class Settings:
 
         input_cost = _optional_decimal("DEEPTRACE_INPUT_COST_PER_MILLION")
         output_cost = _optional_decimal("DEEPTRACE_OUTPUT_COST_PER_MILLION")
-        memory_path = Path(os.getenv("DEEPTRACE_MEMORY_PATH", "memory/pages.jsonl"))
-        multi_agent_memory_path = Path(
-            os.getenv(
-                "DEEPTRACE_MULTI_AGENT_MEMORY_PATH",
-                "memory/multi-agent-pages.jsonl",
-            )
-        )
-        if memory_path.resolve() == multi_agent_memory_path.resolve():
-            raise RuntimeError(
-                "DEEPTRACE_MULTI_AGENT_MEMORY_PATH must differ from DEEPTRACE_MEMORY_PATH"
-            )
-        multi_agent_max_batch_size = _bounded_int(
-            "DEEPTRACE_MULTI_AGENT_MAX_BATCH_SIZE", 3, 1, 6
-        )
-        multi_agent_concurrency = _bounded_int(
-            "DEEPTRACE_MULTI_AGENT_CONCURRENCY", 3, 1, 6
-        )
-        if multi_agent_concurrency > multi_agent_max_batch_size:
-            raise RuntimeError(
-                "DEEPTRACE_MULTI_AGENT_CONCURRENCY cannot exceed MAX_BATCH_SIZE"
-            )
 
         return cls(
             openai_api_key=_required("OPENAI_API_KEY"),
@@ -306,47 +264,6 @@ class Settings:
             tool_timeout_seconds=_bounded_float(
                 "DEEPTRACE_TOOL_TIMEOUT_SECONDS", 45, 0.1, 600
             ),
-            use_memory=_boolean("DEEPTRACE_USE_MEMORY", False),
-            deep_call_timeout_seconds=_bounded_float(
-                "DEEPTRACE_DEEP_CALL_TIMEOUT_SECONDS", 45, 0.1, 300
-            ),
-            deep_max_tasks=_bounded_int("DEEPTRACE_DEEP_MAX_TASKS", 6, 1, 6),
-            deep_max_rounds_per_task=_bounded_int(
-                "DEEPTRACE_DEEP_MAX_ROUNDS_PER_TASK", 4, 1, 12
-            ),
-            deep_max_steps=_bounded_int("DEEPTRACE_DEEP_MAX_STEPS", 12, 1, 50),
-            deep_max_replans=_bounded_int("DEEPTRACE_DEEP_MAX_REPLANS", 2, 0, 5),
-            deep_max_tool_calls=_bounded_int(
-                "DEEPTRACE_DEEP_MAX_TOOL_CALLS", 30, 1, 200
-            ),
-            deep_memory_max_age_days=_bounded_int(
-                "DEEPTRACE_DEEP_MEMORY_MAX_AGE_DAYS", 7, 1, 365
-            ),
-            multi_agent_max_researchers=_bounded_int(
-                "DEEPTRACE_MULTI_AGENT_MAX_RESEARCHERS", 6, 1, 20
-            ),
-            multi_agent_max_batch_size=multi_agent_max_batch_size,
-            multi_agent_concurrency=multi_agent_concurrency,
-            multi_agent_max_supervisor_rounds=_bounded_int(
-                "DEEPTRACE_MULTI_AGENT_MAX_SUPERVISOR_ROUNDS", 3, 2, 10
-            ),
-            multi_agent_max_researcher_rounds=_bounded_int(
-                "DEEPTRACE_MULTI_AGENT_MAX_RESEARCHER_ROUNDS", 3, 2, 20
-            ),
-            multi_agent_max_tool_calls=_bounded_int(
-                "DEEPTRACE_MULTI_AGENT_MAX_TOOL_CALLS", 30, 2, 500
-            ),
-            multi_agent_max_tools_per_researcher=_bounded_int(
-                "DEEPTRACE_MULTI_AGENT_MAX_TOOLS_PER_RESEARCHER", 10, 2, 100
-            ),
-            multi_agent_call_timeout_seconds=_bounded_float(
-                "DEEPTRACE_MULTI_AGENT_CALL_TIMEOUT_SECONDS", 45, 0.1, 600
-            ),
-            multi_agent_memory_max_age_days=_bounded_int(
-                "DEEPTRACE_MULTI_AGENT_MEMORY_MAX_AGE_DAYS", 7, 1, 365
-            ),
-            multi_agent_memory_path=multi_agent_memory_path,
-            memory_path=memory_path,
             input_cost_per_million=input_cost,
             output_cost_per_million=output_cost,
             openai_max_tokens=_optional_int("OPENAI_MAX_TOKENS"),
