@@ -47,6 +47,8 @@ ANSWER_POLICY = ResponsePolicy(
     mode=ResponseMode.ANSWER,
     instructions=(
         "用简洁自然的中文直接回答用户问题，不要分节标题，不要复述问题。"
+        "正文必须分行分段：每 2 到 4 句构成一段，段落之间用空行分隔；"
+        "涉及列举、对比或时间线时逐条换行，禁止把全部内容压成一个大段落。"
         "引用资料时使用方括号标记，例如 [1]。"
     ),
     max_content_chars=MAX_ANSWER_CONTENT,
