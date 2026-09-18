@@ -56,18 +56,18 @@ export const SHOWCASE_SCENARIOS: Record<ResearchMode, ShowcaseScenario> = {
   },
   plan_execute: {
     mode: "plan_execute",
-    question: "上下文、错误和恢复如何协作？",
-    summary: "用有界计划串起上下文治理、语义修复与崩溃恢复。",
+    question: "长时运行 Agent 如何避免恢复时重复执行外部工具？",
+    summary: "Planner 拆分研究 todo，Executor 逐项执行，Evaluator 按证据决定补查或结束。",
     events: [
       {
         id: 1,
-        event_type: "run.started",
-        message: "Plan-and-Execute 已载入原始任务与当前约束",
+        event_type: "planning.completed",
+        message: "Planner 根据原始任务与当前约束拆分 3 项可执行研究 todo",
       },
       {
         id: 2,
-        event_type: "planning.completed",
-        message: "Planner 生成上下文、错误、恢复三个验证步骤",
+        event_type: "task.started",
+        message: "Executor 选取下一个 todo，交给 Shared Agent Loop 执行",
       },
       {
         id: 3,
@@ -77,26 +77,27 @@ export const SHOWCASE_SCENARIOS: Record<ResearchMode, ShowcaseScenario> = {
       },
       {
         id: 4,
-        event_type: "tool.completed",
-        tool: "fetch_page",
-        message: "依赖抓取等待 URL 授权并按原调用顺序闭合",
+        event_type: "replanning.completed",
+        message: "Evaluator 根据证据缺口决定完成或生成补查 todo",
       },
       {
         id: 5,
-        event_type: "replanning.completed",
-        message: "Execution Policy 根据证据与未完成计划决定继续",
+        event_type: "run.recovered",
+        message: "Checkpoint 恢复 Agent State，Ledger 恢复工具执行与幂等记录",
       },
       {
         id: 6,
-        event_type: "run.completed",
-        message: "Checkpoint 与 Ledger 恢复后生成 AgentOutcome",
+        event_type: "research.completed",
+        message:
+          "Execution Policy 根据恢复后的状态生成 AgentOutcome；Finalize 汇总为 ResearchOutcome",
       },
     ],
     answer:
-      "上下文由 Context Policy 按完整工具交换裁剪，原始任务与当前约束始终固定保留。临时网络问题由 Gateway 做 transport retry，参数或查询问题通过 ToolMessage 交给 Agent Loop 做 semantic repair，崩溃后则由 Checkpoint、Worker 与 Ledger 执行 recovery replay。Execution Policy 最终把状态、证据、错误、预算和未完成计划写入 AgentOutcome。",
+      "Planner 只根据原始任务、当前约束和会话背景拆分可执行研究 todo，Executor 再逐项交给 Shared Agent Loop。恢复时，Checkpoint 还原 Agent State，Ledger 提供已执行工具与幂等记录；它们都不负责产出结果。Agent Loop 恢复推进后，由 Execution Policy 根据 todo、证据、错误与预算生成 AgentOutcome，最后由 Plan-and-Execute Finalize 汇总各子任务为 ResearchOutcome。",
     sources: [
       `${REPOSITORY}/blob/main/backend/src/deeptrace/harness/policies/agent_context.py`,
       `${REPOSITORY}/blob/main/backend/src/deeptrace/harness/policies/execution.py`,
+      `${REPOSITORY}/blob/main/backend/src/deeptrace/harness/checkpoint.py`,
       `${REPOSITORY}/blob/main/backend/src/deeptrace/persistence/execution_ledger.py`,
     ],
     sourceCodeUrl: `${REPOSITORY}/blob/main/backend/src/deeptrace/strategies/plan_execute`,

@@ -94,7 +94,7 @@ npm run build
 npm run build:showcase
 ```
 
-展示包当前验证基线（2026-09-18）：后端 `464 passed, 1 deselected`，前端 `25 passed`，Production 与 Showcase 两种构建均通过。
+展示包当前验证基线（2026-09-18）：后端 `464 passed, 1 deselected`，前端 `26 passed`，Production 与 Showcase 两种构建均通过。
 
 真实 Provider 与搜索服务测试需要有效凭据，因此与确定性测试分开执行。当前测试覆盖三种策略、Gateway 边界、上下文不变量、ToolMessage 配对、AgentOutcome、Checkpoint 恢复、记忆、预算、引用和分布式租约。
 
