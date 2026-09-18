@@ -117,16 +117,22 @@ class Settings:
     search_query_count: int = 3
     max_search_results_per_query: int = 5
     scraper_concurrency: int = 15
-    context_max_results: int = 10
-    context_direct_threshold_chars: int = 8_000
-    context_chunk_chars: int = 1_000
-    context_chunk_overlap_chars: int = 100
-    context_similarity_threshold: float = 0.42
+    # Token budget for every model call. Local models are large-window; the
+    # budget is a safety net, not an always-on compressor.
+    model_context_tokens: int = 256_000
+    context_safety_tokens: int = 4_096
     planner_timeout_seconds: float = 60.0
     writer_timeout_seconds: float = 60.0
     max_fetched_pages: int = 20
     max_tool_calls: int = 30
     tool_timeout_seconds: float = 45.0
+    # Agentic execution loop and tool error recovery.
+    agent_max_iterations: int = 8
+    agent_tool_retry_attempts: int = 3
+    agent_tool_retry_base_seconds: float = 0.5
+    agent_max_discovered_urls: int = 200
+    agent_consecutive_error_limit: int = 3
+    agent_completion_nudge_limit: int = 2
     input_cost_per_million: Decimal | None = None
     output_cost_per_million: Decimal | None = None
     openai_max_tokens: int | None = None
@@ -165,15 +171,6 @@ class Settings:
         embedding_model_path = Path(
             os.getenv("DEEPTRACE_EMBEDDING_MODEL_PATH", "").strip()
         )
-
-        chunk_chars = _bounded_int("DEEPTRACE_CONTEXT_CHUNK_CHARS", 1_000, 100, 20_000)
-        overlap_chars = _bounded_int(
-            "DEEPTRACE_CONTEXT_CHUNK_OVERLAP_CHARS", 100, 0, 19_999
-        )
-        if overlap_chars >= chunk_chars:
-            raise RuntimeError(
-                "DEEPTRACE_CONTEXT_CHUNK_OVERLAP_CHARS overlap 必须小于 chunk"
-            )
 
         input_cost = _optional_decimal("DEEPTRACE_INPUT_COST_PER_MILLION")
         output_cost = _optional_decimal("DEEPTRACE_OUTPUT_COST_PER_MILLION")
@@ -239,19 +236,11 @@ class Settings:
             scraper_concurrency=_bounded_int(
                 "DEEPTRACE_SCRAPER_CONCURRENCY", 15, 1, 100
             ),
-            context_max_results=_bounded_int(
-                "DEEPTRACE_CONTEXT_MAX_RESULTS", 10, 1, 10
+            model_context_tokens=_bounded_int(
+                "DEEPTRACE_MODEL_CONTEXT_TOKENS", 256_000, 8_000, 2_000_000
             ),
-            context_direct_threshold_chars=_bounded_int(
-                "DEEPTRACE_CONTEXT_DIRECT_THRESHOLD_CHARS",
-                8_000,
-                0,
-                1_000_000,
-            ),
-            context_chunk_chars=chunk_chars,
-            context_chunk_overlap_chars=overlap_chars,
-            context_similarity_threshold=_bounded_float(
-                "DEEPTRACE_CONTEXT_SIMILARITY_THRESHOLD", 0.42, -1.0, 1.0
+            context_safety_tokens=_bounded_int(
+                "DEEPTRACE_CONTEXT_SAFETY_TOKENS", 4_096, 0, 100_000
             ),
             planner_timeout_seconds=_bounded_float(
                 "DEEPTRACE_PLANNER_TIMEOUT_SECONDS", 60.0, 0.1, 600.0
@@ -263,6 +252,24 @@ class Settings:
             max_tool_calls=_bounded_int("DEEPTRACE_MAX_TOOL_CALLS", 30, 1, 200),
             tool_timeout_seconds=_bounded_float(
                 "DEEPTRACE_TOOL_TIMEOUT_SECONDS", 45, 0.1, 600
+            ),
+            agent_max_iterations=_bounded_int(
+                "DEEPTRACE_AGENT_MAX_ITERATIONS", 8, 1, 50
+            ),
+            agent_tool_retry_attempts=_bounded_int(
+                "DEEPTRACE_AGENT_TOOL_RETRY_ATTEMPTS", 3, 1, 10
+            ),
+            agent_tool_retry_base_seconds=_bounded_float(
+                "DEEPTRACE_AGENT_TOOL_RETRY_BASE_SECONDS", 0.5, 0.0, 60.0
+            ),
+            agent_max_discovered_urls=_bounded_int(
+                "DEEPTRACE_AGENT_MAX_DISCOVERED_URLS", 200, 1, 5_000
+            ),
+            agent_consecutive_error_limit=_bounded_int(
+                "DEEPTRACE_AGENT_CONSECUTIVE_ERROR_LIMIT", 3, 1, 20
+            ),
+            agent_completion_nudge_limit=_bounded_int(
+                "DEEPTRACE_AGENT_COMPLETION_NUDGE_LIMIT", 2, 0, 10
             ),
             input_cost_per_million=input_cost,
             output_cost_per_million=output_cost,

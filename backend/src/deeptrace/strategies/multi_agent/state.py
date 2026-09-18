@@ -71,5 +71,8 @@ class ResearcherBranchState(TypedDict):
     run_id: str
     thread_id: str
     query: str
+    original_task: str
+    constraints: list[str]
+    context_notes: list[str]
     researcher_index: int
     round_number: int

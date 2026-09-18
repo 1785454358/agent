@@ -357,3 +357,47 @@ async def test_workflow_state_keeps_references_and_topic_privacy() -> None:
     assert "search_result" not in snapshot.values
     serialized = json.dumps(snapshot.values, default=str, ensure_ascii=False)
     assert "unique-private-body-marker" not in serialized
+
+
+class _UnfinishedPlanTopicGraph:
+    """Delegates to the real topic graph but reports an open plan item."""
+
+    def __init__(self, inner) -> None:
+        self._inner = inner
+
+    async def ainvoke(self, input_data, config=None, **kwargs):
+        raw = await self._inner.ainvoke(input_data, config=config, **kwargs)
+        outcome = raw["outcome"].model_copy(
+            update={
+                "plan_total": 2,
+                "plan_completed": 1,
+                "unfinished_todos": ["尚未完成的步骤"],
+            }
+        )
+        return {"outcome": outcome}
+
+
+@pytest.mark.asyncio
+async def test_unfinished_executor_plan_downgrades_completed_to_incomplete() -> None:
+    model = ScriptedModelGateway(
+        {
+            "planner": json.dumps({"queries": ["q1"]}),
+            "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
+                prompt, sufficient=True
+            ),
+        }
+    )
+    fixture = build_gateway_fixture(
+        search_results={
+            "q1": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}]
+        },
+        pages={"https://example.com/a": "body-a"},
+        model_gateway=model,
+    )
+    topic = _UnfinishedPlanTopicGraph(build_research_topic_graph())
+
+    result = await _run_workflow(model, fixture, topic_graph=topic)
+    outcome = result["outcome"]
+
+    assert outcome.evidence_ids
+    assert outcome.termination_reason == "incomplete_plan"

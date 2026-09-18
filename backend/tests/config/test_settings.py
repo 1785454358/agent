@@ -31,11 +31,8 @@ def test_basic_defaults(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     assert settings.search_query_count == 3
     assert settings.max_search_results_per_query == 5
     assert settings.scraper_concurrency == 15
-    assert settings.context_max_results == 10
-    assert settings.context_direct_threshold_chars == 8_000
-    assert settings.context_chunk_chars == 1_000
-    assert settings.context_chunk_overlap_chars == 100
-    assert settings.context_similarity_threshold == 0.42
+    assert settings.model_context_tokens == 256_000
+    assert settings.context_safety_tokens == 4_096
     assert settings.planner_timeout_seconds == 60
     assert settings.writer_timeout_seconds == 60
     assert settings.openai_max_tokens is None
@@ -54,7 +51,7 @@ def test_distributed_runtime_settings(
     _set_required_environment(monkeypatch, tmp_path)
     monkeypatch.setenv("DEEPTRACE_RUNTIME_MODE", "distributed")
     monkeypatch.setenv(
-        "DEEPTRACE_MYSQL_DSN", "mysql+asyncmy://app:pw@mysql/researchpilot"
+        "DEEPTRACE_MYSQL_DSN", "mysql+asyncmy://app:pw@mysql/deepresearch"
     )
     monkeypatch.setenv("DEEPTRACE_REDIS_URL", "redis://redis:6379/0")
     monkeypatch.setenv("DEEPTRACE_CHROMA_URL", "http://chroma:8000")
@@ -63,7 +60,7 @@ def test_distributed_runtime_settings(
     settings = Settings.from_env()
 
     assert settings.runtime_mode == "distributed"
-    assert settings.mysql_dsn == "mysql+asyncmy://app:pw@mysql/researchpilot"
+    assert settings.mysql_dsn == "mysql+asyncmy://app:pw@mysql/deepresearch"
     assert settings.redis_url == "redis://redis:6379/0"
     assert settings.redis_job_stream == "deeptrace:research:jobs"
     assert settings.redis_consumer_group == "research-workers"
@@ -89,7 +86,7 @@ def test_invalid_runtime_mode_is_rejected(
         (
             "DEEPTRACE_REDIS_URL",
             "DEEPTRACE_MYSQL_DSN",
-            "mysql+asyncmy://app:pw@mysql/researchpilot",
+            "mysql+asyncmy://app:pw@mysql/deepresearch",
         ),
     ],
 )
@@ -130,12 +127,14 @@ def test_distributed_semantic_memory_requires_chroma_url(
         Settings.from_env()
 
 
-def test_chunk_overlap_must_be_smaller_than_chunk(
+def test_model_context_window_is_configurable(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     _set_required_environment(monkeypatch, tmp_path)
-    monkeypatch.setenv("DEEPTRACE_CONTEXT_CHUNK_CHARS", "100")
-    monkeypatch.setenv("DEEPTRACE_CONTEXT_CHUNK_OVERLAP_CHARS", "100")
+    monkeypatch.setenv("DEEPTRACE_MODEL_CONTEXT_TOKENS", "64000")
+    monkeypatch.setenv("DEEPTRACE_CONTEXT_SAFETY_TOKENS", "1024")
 
-    with pytest.raises(RuntimeError, match="overlap"):
-        Settings.from_env()
+    settings = Settings.from_env()
+
+    assert settings.model_context_tokens == 64_000
+    assert settings.context_safety_tokens == 1_024

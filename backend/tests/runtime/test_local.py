@@ -1,11 +1,13 @@
 import asyncio
 import json
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
 
 from deeptrace.domain import ResponseMode
 from deeptrace.runtime.local import LocalResearchRuntime
+from deeptrace.runtime.models import RunRecord
 
 
 class FakeOutcome:
@@ -130,6 +132,57 @@ async def test_local_runtime_cancels_running_research(tmp_path) -> None:
     persisted = json.loads((tmp_path / f"{run.id}.json").read_text("utf-8"))
     assert persisted["status"] == "cancelled"
     await runtime.stop()
+
+
+@pytest.mark.asyncio
+async def test_local_runtime_reloads_history_after_restart(tmp_path) -> None:
+    runtime = build_runtime(tmp_path, FakeApplication())
+    await runtime.start()
+    created = await runtime.create("历史问题", "workflow")
+    await wait_for_terminal(runtime, created.id)
+    await runtime.stop()
+
+    restarted = build_runtime(tmp_path, FakeApplication())
+    await restarted.start()
+    try:
+        runs = await restarted.list()
+        assert [run.id for run in runs] == [created.id]
+        reloaded = await restarted.get(created.id)
+        assert reloaded is not None
+        assert reloaded.status == "completed"
+        assert reloaded.answer == "简洁回答 [1]"
+        assert reloaded.thread_id == created.thread_id
+        # SSE replay for a historical run terminates on the rebuilt done event
+        events = [event async for event in restarted.events(created.id)]
+        assert events[-1].event_type == "done"
+    finally:
+        await restarted.stop()
+
+
+@pytest.mark.asyncio
+async def test_local_runtime_marks_interrupted_run_failed_on_restart(tmp_path) -> None:
+    record = RunRecord(
+        id="interrupted1",
+        question="中途断开的研究",
+        mode="workflow",
+        status="running",
+        thread_id="thread-interrupted",
+        created_at=datetime(2026, 9, 15, tzinfo=UTC),
+    )
+    (tmp_path / f"{record.id}.json").write_text(
+        record.model_dump_json(), encoding="utf-8"
+    )
+
+    runtime = build_runtime(tmp_path, FakeApplication())
+    await runtime.start()
+    try:
+        reloaded = await runtime.get("interrupted1")
+        assert reloaded is not None
+        assert reloaded.status == "failed"
+        assert reloaded.termination_reason == "interrupted"
+        assert reloaded.error
+    finally:
+        await runtime.stop()
 
 
 @pytest.mark.asyncio

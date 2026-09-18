@@ -1,3 +1,4 @@
+from deeptrace.domain.agent import AgentOutcome
 from deeptrace.domain.conversation import ConversationSummary
 from deeptrace.domain.evidence import Evidence, EvidenceLifecycleStatus, Finding
 from deeptrace.domain.memory import MemoryRecord, MemoryStatus, MemoryType
@@ -13,22 +14,32 @@ from deeptrace.domain.execution import (
     ResponseMode,
     normalize_research_mode,
 )
+from deeptrace.domain.errors import (
+    classify_error_code,
+    error_message_for,
+    is_retryable,
+)
 from deeptrace.domain.response import CitationRef, ResponseInput, ResponseOutcome
 from deeptrace.domain.research import (
+    INCOMPLETE_PLAN_REASON,
     ResearchTopicInput,
     ResearchTopicOutcome,
     TopicStepError,
+    unfinished_plan_items,
 )
 from deeptrace.domain.tools import (
-    TRANSIENT_TOOL_ERROR_CODES,
     ToolName,
     ToolRequest,
     ToolResult,
 )
 
 __all__ = [
+    "AgentOutcome",
     "BudgetSnapshot",
     "CitationRef",
+    "classify_error_code",
+    "error_message_for",
+    "is_retryable",
     "ConversationIntent",
     "ConversationSummary",
     "ErrorCategory",
@@ -37,6 +48,7 @@ __all__ = [
     "Evidence",
     "EvidenceLifecycleStatus",
     "Finding",
+    "INCOMPLETE_PLAN_REASON",
     "MemoryRecord",
     "MemoryStatus",
     "MemoryType",
@@ -51,7 +63,7 @@ __all__ = [
     "ToolName",
     "ToolRequest",
     "ToolResult",
-    "TRANSIENT_TOOL_ERROR_CODES",
     "TopicStepError",
     "normalize_research_mode",
+    "unfinished_plan_items",
 ]

@@ -36,6 +36,7 @@ class ToolAdapterResult:
 
     ok: bool = True
     error_code: str | None = None
+    message: str | None = None
     preview: str = ""
     data_ref: str | None = None
     evidence: EvidenceDraft | None = None
@@ -45,6 +46,10 @@ class ToolAdapterResult:
             raise TypeError("ok must be a bool")
         if self.ok == (self.error_code is not None):
             raise ValueError("adapter success/error fields are inconsistent")
+        if self.message is not None and not isinstance(self.message, str):
+            raise TypeError("message must be a string or None")
+        if self.ok and self.message is not None:
+            raise ValueError("successful adapter results cannot carry a message")
         if not isinstance(self.preview, str):
             raise TypeError("preview must be a string")
         if self.data_ref is not None and not isinstance(self.data_ref, str):
@@ -55,10 +60,14 @@ class ToolAdapterResult:
             raise ValueError("failed adapter results cannot carry payloads")
 
     @classmethod
-    def failure(cls, error_code: str) -> ToolAdapterResult:
+    def failure(
+        cls, error_code: str, *, message: str | None = None
+    ) -> ToolAdapterResult:
         if not isinstance(error_code, str) or not error_code.strip():
             raise ValueError("error_code must be a non-empty string")
-        return cls(ok=False, error_code=error_code.strip())
+        if message is not None and not isinstance(message, str):
+            raise TypeError("message must be a string or None")
+        return cls(ok=False, error_code=error_code.strip(), message=message)
 
 
 @dataclass(frozen=True)

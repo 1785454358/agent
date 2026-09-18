@@ -3,21 +3,23 @@
 from __future__ import annotations
 
 from typing import Any
+import asyncio
 
-from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.runtime import Runtime
 from pydantic import ValidationError
 
 from deeptrace.domain import (
+    INCOMPLETE_PLAN_REASON,
     ResearchInput,
     ResearchOutcome,
     ResearchMode,
     ResearchTopicInput,
     ResearchTopicOutcome,
+    unfinished_plan_items,
 )
 from deeptrace.harness.context import HarnessContext
-from deeptrace.strategies.model_io import parse_json_object, payload_text
+from deeptrace.strategies.model_io import parse_json_object, payload_text, branch_context, research_messages
 from deeptrace.strategies.plan_execute.models import ExecutorDecision, TaskPlan
 from deeptrace.strategies.workflow.nodes import filter_findings, topic_error_gaps
 from deeptrace.strategies.plan_execute.state import PlanExecuteState
@@ -64,7 +66,7 @@ def build_plan_node(max_tasks: int):
         queries: list[str] = []
         try:
             response = await runtime.context.model_gateway.invoke(
-                role=PLANNER_ROLE, messages=[HumanMessage(content=prompt)]
+                role=PLANNER_ROLE, messages=research_messages(research_input, prompt)
             )
             payload = parse_json_object(payload_text(response))
             if payload is not None and isinstance(payload.get("queries"), list):
@@ -117,12 +119,15 @@ def build_execute_task_node(topic_graph):
             query=query,
             mode=ResearchMode.PLAN_EXECUTE,
             caller_id=PLAN_EXECUTE_CALLER_ID,
+            **branch_context(state),
         )
         try:
             raw = await topic_graph.ainvoke(
                 {"topic_input": topic_input}, config=config
             )
             outcome = ResearchTopicOutcome.model_validate(raw["outcome"])
+            if outcome.agent_outcome and outcome.agent_outcome.status == "cancelled":
+                raise asyncio.CancelledError()
         except Exception:
             return {
                 "completed_tasks": [query],
@@ -183,7 +188,7 @@ async def evaluate_node(
     )
     try:
         response = await runtime.context.model_gateway.invoke(
-            role=EVALUATOR_ROLE, messages=[HumanMessage(content=prompt)]
+            role=EVALUATOR_ROLE, messages=research_messages(research_input, prompt)
         )
         decision = ExecutorDecision.model_validate_json(payload_text(response))
     except (ValidationError, ValueError, TypeError):
@@ -236,7 +241,7 @@ def build_replan_node(max_tasks: int):
         new_queries: list[str] = []
         try:
             response = await runtime.context.model_gateway.invoke(
-                role=REPLANNER_ROLE, messages=[HumanMessage(content=prompt)]
+                role=REPLANNER_ROLE, messages=research_messages(research_input, prompt)
             )
             payload = parse_json_object(payload_text(response))
             if payload is not None and isinstance(payload.get("queries"), list):
@@ -275,10 +280,15 @@ def build_finalize_node(max_replans: int):
         decision = state.get("decision")
         gaps = list(dict.fromkeys(state.get("unresolved_gaps") or []))
         replan_count = state.get("replan_count") or 0
+        unfinished = unfinished_plan_items(
+            list(state.get("topic_outcomes") or [])
+        )
         if not evidence_ids:
             termination_reason = "no_sources"
         elif decision is not None and decision.action == "complete":
-            termination_reason = "completed"
+            termination_reason = (
+                INCOMPLETE_PLAN_REASON if unfinished else "completed"
+            )
         elif decision is not None and decision.action == "replan":
             if replan_count >= max_replans or "no_new_tasks_to_plan" in gaps:
                 termination_reason = "max_replans_reached"
@@ -286,6 +296,9 @@ def build_finalize_node(max_replans: int):
                 termination_reason = "insufficient_evidence"
         else:
             termination_reason = "insufficient_evidence"
+        agent_results = [o.agent_outcome for o in state.get("topic_outcomes", []) if o.agent_outcome is not None]
+        if termination_reason == "completed" and any(o.status != "completed" for o in agent_results):
+            termination_reason = next(o.stop_reason for o in agent_results if o.status != "completed")
         outcome = ResearchOutcome(
             mode=ResearchMode.PLAN_EXECUTE,
             evidence_ids=evidence_ids,

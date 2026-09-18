@@ -143,6 +143,172 @@ async def test_brief_and_report_prompts_differ_by_policy() -> None:
         assert result["outcome"].response_mode is expected_mode
 
 
+def test_strip_markdown_headings_keeps_non_heading_hashes() -> None:
+    from deeptrace.responses.graph import strip_markdown_headings
+
+    text = "## 标题\nC# 是语言\n编号 #1 保留\n**加粗**文字"
+    assert strip_markdown_headings(text) == "标题\nC# 是语言\n编号 #1 保留\n加粗文字"
+
+
+@pytest.mark.asyncio
+async def test_report_markdown_headings_are_stripped_to_plain_text() -> None:
+    model = ScriptedModelGateway(
+        {
+            "responder": json.dumps(
+                {
+                    "content": (
+                        "# 2026 年报告\n\n"
+                        "## 一、概述\n"
+                        "结论一 [1]。\n\n"
+                        "### （一）子节\n"
+                        "**重点**：结论二 [1]。"
+                    )
+                }
+            )
+        }
+    )
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(
+        store, [("https://example.com/a", "来源 A", "unique-body-a")]
+    )
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+
+    result = await _run_response(
+        build_report_graph(),
+        model,
+        _response_input(ids, mode=ResponseMode.REPORT),
+        fixture,
+    )
+    outcome = result["outcome"]
+
+    assert "#" not in outcome.content
+    assert "**" not in outcome.content
+    assert "一、概述" in outcome.content
+    assert "重点：结论二 [1]。" in outcome.content
+    # the prompt itself also forbids markdown so the model is nudged up front
+    assert "禁止使用 Markdown" in model.calls[0][1]
+
+
+@pytest.mark.asyncio
+async def test_response_budget_reserves_output_and_reports_trimming() -> None:
+    from deeptrace.harness.token_budget import TokenBudgetConfig
+
+    model = ScriptedModelGateway(
+        {"responder": json.dumps({"content": "结论 [1]。"})}
+    )
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(
+        store, [("https://example.com/big", "Big", "word " * 2000)]
+    )
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+    # a tiny input budget must trim elastic evidence but keep pinned blocks
+    config = TokenBudgetConfig(
+        context_tokens=800, output_reserve_tokens=600, safety_tokens=0
+    )
+
+    result = await _run_response(
+        build_answer_graph(config), model, _response_input(ids), fixture
+    )
+
+    prompt = model.calls[0][1]
+    assert "只输出 JSON" in prompt
+    assert "用户问题" in prompt
+    assert result["outcome"].content == "结论 [1]。"
+    assert any(
+        event_type == "response.budget"
+        for event_type, _payload in fixture.events.events
+    )
+
+
+def test_incomplete_and_sentence_cut_helpers() -> None:
+    from deeptrace.responses.graph import _cut_at_sentence, _looks_incomplete
+
+    assert _looks_incomplete("这是一个没有结尾的句子 [1]，")
+    assert _looks_incomplete("列举如下：")
+    assert not _looks_incomplete("结论已经给出 [1]。")
+    assert not _looks_incomplete("结论已经给出 [1]")
+
+    text = "第一句。" * 300
+    cut = _cut_at_sentence(text, 50)
+    assert len(cut) <= 50
+    assert cut.endswith("。")
+
+
+@pytest.mark.asyncio
+async def test_over_length_output_is_rewritten_within_the_cap() -> None:
+    long_body = "这是一段很长的正文内容 [1]。" * 400
+
+    def responder(prompt: str) -> str:
+        if "超过篇幅上限" in prompt:
+            return json.dumps({"content": "精简后的完整回答 [1]。"})
+        return json.dumps({"content": long_body})
+
+    model = ScriptedModelGateway({"responder": responder})
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(
+        store, [("https://example.com/a", "来源 A", "unique-body-a")]
+    )
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+
+    result = await _run_response(
+        build_answer_graph(), model, _response_input(ids), fixture
+    )
+
+    assert result["outcome"].content == "精简后的完整回答 [1]。"
+    assert not any(
+        event_type == "response.truncated"
+        for event_type, _payload in fixture.events.events
+    )
+
+
+@pytest.mark.asyncio
+async def test_output_that_stays_too_long_is_cut_at_a_sentence_and_flagged() -> None:
+    model = ScriptedModelGateway(
+        {"responder": json.dumps({"content": "一段过长的正文内容 [1]。" * 400})}
+    )
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(
+        store, [("https://example.com/a", "来源 A", "unique-body-a")]
+    )
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+
+    result = await _run_response(
+        build_answer_graph(), model, _response_input(ids), fixture
+    )
+    content = result["outcome"].content
+
+    assert len(content) <= 2000
+    assert content.endswith("。")
+    details = [
+        payload
+        for event_type, payload in fixture.events.events
+        if event_type == "response.truncated"
+    ]
+    assert details and details[0]["output_truncated"] is True
+
+
+@pytest.mark.asyncio
+async def test_dangling_output_triggers_one_completion_retry() -> None:
+    def responder(prompt: str) -> str:
+        if "不完整" in prompt:
+            return json.dumps({"content": "补全后的回答 [1]。"})
+        return json.dumps({"content": "这是一个没有结尾的句子 [1]，"})
+
+    model = ScriptedModelGateway({"responder": responder})
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(
+        store, [("https://example.com/a", "来源 A", "unique-body-a")]
+    )
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+
+    result = await _run_response(
+        build_answer_graph(), model, _response_input(ids), fixture
+    )
+
+    assert result["outcome"].content == "补全后的回答 [1]。"
+    assert len(model.calls) == 2
+
+
 @pytest.mark.asyncio
 async def test_unknown_citation_markers_are_dropped_never_invented() -> None:
     model = ScriptedModelGateway(
@@ -184,6 +350,73 @@ async def test_generation_failure_returns_evidence_backed_partial() -> None:
 
     assert outcome.partial_reason == "generation_failed"
     assert ids[0] in outcome.cited_evidence_ids
+    assert "来源 A" in outcome.content
+
+
+@pytest.mark.asyncio
+async def test_zero_marker_first_draft_triggers_one_corrective_retry() -> None:
+    def responder(prompt: str) -> str:
+        if "上一版输出未通过校验" in prompt:
+            return json.dumps({"content": "纠正后的结论 [1]。"})
+        return json.dumps({"content": "没有任何角标的初稿。"})
+
+    model = ScriptedModelGateway({"responder": responder})
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(
+        store, [("https://example.com/a", "来源 A", "unique-body-a")]
+    )
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+
+    result = await _run_response(
+        build_answer_graph(), model, _response_input(ids), fixture
+    )
+    outcome = result["outcome"]
+
+    assert len(model.calls) == 2
+    assert outcome.partial_reason is None
+    assert outcome.content == "纠正后的结论 [1]。"
+    assert outcome.citations[0].evidence_id == ids[0]
+
+
+@pytest.mark.asyncio
+async def test_prose_wrapped_json_envelope_is_recovered() -> None:
+    model = ScriptedModelGateway(
+        {"responder": '结果如下：{"content": "包裹在散文里的结论 [1]。"}以上。'}
+    )
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(
+        store, [("https://example.com/a", "来源 A", "unique-body-a")]
+    )
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+
+    result = await _run_response(
+        build_answer_graph(), model, _response_input(ids), fixture
+    )
+    outcome = result["outcome"]
+
+    assert len(model.calls) == 1
+    assert outcome.partial_reason is None
+    assert outcome.content == "包裹在散文里的结论 [1]。"
+
+
+@pytest.mark.asyncio
+async def test_persistent_markerless_draft_still_falls_back() -> None:
+    model = ScriptedModelGateway(
+        {"responder": json.dumps({"content": "始终不带角标的内容。"})}
+    )
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(
+        store, [("https://example.com/a", "来源 A", "unique-body-a")]
+    )
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+
+    result = await _run_response(
+        build_answer_graph(), model, _response_input(ids), fixture
+    )
+    outcome = result["outcome"]
+
+    assert len(model.calls) == 2
+    assert outcome.partial_reason == "no_supported_citations"
     assert "来源 A" in outcome.content
 
 

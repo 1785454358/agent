@@ -6,7 +6,12 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import BaseModel, Field
 
-from deeptrace.domain import ResearchMode, ToolName, ToolRequest
+from deeptrace.domain import (
+    ErrorCategory,
+    ResearchMode,
+    ToolName,
+    ToolRequest,
+)
 from deeptrace.persistence.database import create_session_factory
 from deeptrace.persistence.execution_ledger import SqlAlchemyToolExecutionStore
 from deeptrace.persistence.orm import Base
@@ -471,6 +476,85 @@ async def test_telemetry_failure_does_not_change_tool_outcome() -> None:
 
     assert result.ok and result.preview == "answer"
     assert calls == 1
+
+
+@pytest.mark.asyncio
+async def test_transient_failure_is_retried_once_inside_the_gateway() -> None:
+    calls = 0
+
+    async def handler(_arguments: BaseModel) -> ToolAdapterResult:
+        nonlocal calls
+        calls += 1
+        return ToolAdapterResult.failure("provider_timeout")
+
+    registry = ToolRegistry()
+    registry.register(_spec(handler))
+    events = RecordingEventSink()
+    gateway = AgentToolGateway(
+        registry=registry,
+        allowlist=StaticToolAllowlist(),
+        security=DeterministicUrlSecurityPolicy(),
+        budgets=_budget(),
+        executions=InMemoryToolExecutionStore(),
+        cache=SuccessCacheSingleflight(InMemorySuccessCache()),
+        evidence_store=InMemoryEvidenceStore(),
+        event_sink=events,
+        retry_attempts=3,
+        retry_base_seconds=0.0,
+    )
+
+    result = await gateway.execute(
+        tenant_id="tenant-a", caller=_caller(), request=_request()
+    )
+
+    assert not result.ok and result.error_code == "provider_timeout"
+    assert result.error_category is ErrorCategory.TRANSIENT
+    assert result.retryable is True
+    assert calls == 3
+    assert [name for name, _payload in events.events] == [
+        "tool.started",
+        "tool.retry",
+        "tool.retry",
+        "tool.completed",
+    ]
+    completed = events.events[-1][1]
+    assert completed["error_category"] == "transient"
+    assert completed["retryable"] is True
+
+
+@pytest.mark.asyncio
+async def test_unhandled_tool_exception_is_fatal_and_never_retried() -> None:
+    calls = 0
+
+    async def handler(_arguments: BaseModel) -> ToolAdapterResult:
+        nonlocal calls
+        calls += 1
+        raise RuntimeError("secret-token")
+
+    registry = ToolRegistry()
+    registry.register(_spec(handler))
+    gateway = AgentToolGateway(
+        registry=registry,
+        allowlist=StaticToolAllowlist(),
+        security=DeterministicUrlSecurityPolicy(),
+        budgets=_budget(),
+        executions=InMemoryToolExecutionStore(),
+        cache=SuccessCacheSingleflight(InMemorySuccessCache()),
+        evidence_store=InMemoryEvidenceStore(),
+        event_sink=RecordingEventSink(),
+        retry_attempts=3,
+        retry_base_seconds=0.0,
+    )
+
+    result = await gateway.execute(
+        tenant_id="tenant-a", caller=_caller(), request=_request()
+    )
+
+    assert not result.ok and result.error_code == "tool_internal_error"
+    assert result.error_category is ErrorCategory.FATAL
+    assert result.retryable is False
+    assert calls == 1
+    assert "secret" not in result.model_dump_json()
 
 
 @pytest.mark.asyncio

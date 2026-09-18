@@ -1,4 +1,4 @@
-"""ResearchPilot: one top-level LangGraph runtime graph, three research modes.
+"""DeepResearch: one top-level LangGraph runtime graph, three research modes.
 
 All research traffic (API, Worker, CLI) runs through
 ``deeptrace.application`` — the top-level runtime graph with the Workflow,

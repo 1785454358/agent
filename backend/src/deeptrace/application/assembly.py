@@ -19,7 +19,7 @@ from deeptrace.config import Settings
 from deeptrace.domain import ResearchMode, ResponseMode
 from deeptrace.harness.context import HarnessContext
 from deeptrace.harness.graph import build_agent_runtime_graph
-from deeptrace.harness.memory.store import InMemoryMemoryStore
+from deeptrace.persistence.memory_store import SqlAlchemyMemoryStore
 from deeptrace.harness.model_gateway import ChatModelGateway
 from deeptrace.harness.registry import (
     ResponseGraphRegistry,
@@ -33,10 +33,11 @@ from deeptrace.responses import (
     build_brief_graph,
     build_report_graph,
 )
+from deeptrace.harness.agent_executor import build_research_agent_graph
+from deeptrace.harness.token_budget import TokenBudgetConfig
 from deeptrace.strategies import (
     build_multi_agent_research_graph,
     build_plan_execute_research_graph,
-    build_research_topic_graph,
     build_workflow_research_graph,
 )
 from deeptrace.tools import AgentToolGateway, build_research_tool_registry
@@ -148,10 +149,11 @@ def _build_durable_stores(
 
     Distributed (MySQL DSN configured): the checkpointer, tool ledger, memory
     store and Evidence store are SQL-backed and shared across processes.
-    Local: the checkpointer and Evidence store persist to a SQLite file under
-    ``runs_dir`` (one shared instance per process, so a thread's later turns
-    see earlier evidence and a restart keeps page bodies), while the ledger
-    and memory store stay process-local per the documented Local guarantees.
+    Local: the checkpointer, Evidence store and long-term memory store persist
+    to a SQLite file under ``runs_dir`` (one shared instance per process, so a
+    thread's later turns see earlier evidence/memory and a restart keeps them),
+    while the tool ledger stays process-local per the documented Local
+    guarantees.
     """
     from deeptrace.persistence.checkpoint import SqlAlchemyCheckpointSaver
     from deeptrace.persistence.database import create_session_factory
@@ -162,7 +164,6 @@ def _build_durable_stores(
         from deeptrace.persistence.execution_ledger import (
             SqlAlchemyToolExecutionStore,
         )
-        from deeptrace.persistence.memory_store import SqlAlchemyMemoryStore
 
         engine, sessions = create_session_factory(dsn)
         saver = SqlAlchemyCheckpointSaver(sessions)
@@ -179,7 +180,7 @@ def _build_durable_stores(
     _ensure_sqlite_schema(db_path)
     saver = SqlAlchemyCheckpointSaver(sessions)
     ledger = InMemoryToolExecutionStore()
-    memory_store = InMemoryMemoryStore()
+    memory_store = SqlAlchemyMemoryStore(sessions)
     evidence = SqlAlchemyEvidenceStore(sessions)
     return saver, ledger, memory_store, evidence, engine
 
@@ -237,6 +238,7 @@ def _ensure_sqlite_schema(db_path: Path) -> None:
     3. only then create indexes (they reference the new columns).
     """
     import hashlib
+    import json
     import sqlite3
 
     from sqlalchemy import create_engine
@@ -246,6 +248,7 @@ def _ensure_sqlite_schema(db_path: Path) -> None:
         CheckpointRow,
         CheckpointWriteRow,
         EvidenceRecordRow,
+        MemoryRecordRow,
         ThreadLeaseRow,
     )
 
@@ -256,6 +259,7 @@ def _ensure_sqlite_schema(db_path: Path) -> None:
             CheckpointRow.__table__,
             CheckpointWriteRow.__table__,
             EvidenceRecordRow.__table__,
+            MemoryRecordRow.__table__,
             ThreadLeaseRow.__table__,
         )
     ]
@@ -265,6 +269,7 @@ def _ensure_sqlite_schema(db_path: Path) -> None:
             CheckpointRow.__table__,
             CheckpointWriteRow.__table__,
             EvidenceRecordRow.__table__,
+            MemoryRecordRow.__table__,
         )
         for index in table.indexes
     ]
@@ -304,6 +309,50 @@ def _ensure_sqlite_schema(db_path: Path) -> None:
                 "UPDATE evidence_records "
                 "SET canonical_url_hash = deeptrace_sha256_hex(canonical_url) "
                 "WHERE canonical_url_hash IS NULL OR canonical_url_hash = ''"
+            )
+
+        # Older local databases shipped a payload-only memory_records table.
+        # Add the authoritative query columns and backfill them from payload
+        # before the recall index (which references memory_type) is created.
+        memory_columns = _columns("memory_records")
+        memory_required = {
+            "memory_id": "VARCHAR(128)",
+            "memory_type": "VARCHAR(32)",
+            "status": "VARCHAR(32)",
+            "importance": "FLOAT",
+            "confidence": "FLOAT",
+            "created_at": "DATETIME",
+            "expires_at": "DATETIME",
+        }
+        if any(name not in memory_columns for name in memory_required):
+
+            def _memory_field(payload: str | None, key: str) -> object:
+                if not payload:
+                    return None
+                try:
+                    data = json.loads(payload) if isinstance(payload, str) else payload
+                except (TypeError, ValueError):
+                    return None
+                if not isinstance(data, dict):
+                    return None
+                value = data.get(key)
+                return value if isinstance(value, (str, int, float)) else None
+
+            for name, ddl in memory_required.items():
+                if name not in memory_columns:
+                    connection.execute(
+                        f"ALTER TABLE memory_records ADD COLUMN {name} {ddl}"
+                    )
+            connection.create_function("deeptrace_memory_field", 2, _memory_field)
+            connection.execute(
+                "UPDATE memory_records SET "
+                "memory_id = COALESCE(memory_id, deeptrace_memory_field(payload, 'id')), "
+                "memory_type = COALESCE(memory_type, deeptrace_memory_field(payload, 'type')), "
+                "status = COALESCE(status, deeptrace_memory_field(payload, 'status')), "
+                "importance = COALESCE(importance, deeptrace_memory_field(payload, 'importance')), "
+                "confidence = COALESCE(confidence, deeptrace_memory_field(payload, 'confidence')), "
+                "created_at = COALESCE(created_at, deeptrace_memory_field(payload, 'created_at')), "
+                "expires_at = COALESCE(expires_at, deeptrace_memory_field(payload, 'expires_at'))"
             )
 
         for statement in index_statements:
@@ -378,9 +427,10 @@ def build_harness_runtime(
         base_url=settings.openai_base_url,
         model=settings.openai_model,
         temperature=0,
+        max_retries=0,
         max_tokens=settings.openai_max_tokens,
     )
-    model_gateway = ChatModelGateway(model)
+    model_gateway = ChatModelGateway(model, timeout_seconds=settings.planner_timeout_seconds)
 
     fetcher = AsyncWebFetcher(
         min_chars=settings.min_extracted_chars,
@@ -390,31 +440,53 @@ def build_harness_runtime(
     )
 
     strategies = StrategyRegistry()
-    topic = build_research_topic_graph()
+    executor = build_research_agent_graph(
+        token_budget=TokenBudgetConfig(context_tokens=settings.model_context_tokens,
+                                       output_reserve_tokens=settings.openai_max_tokens or 4096,
+                                       safety_tokens=settings.context_safety_tokens),
+        max_iterations=settings.agent_max_iterations,
+        consecutive_error_limit=settings.agent_consecutive_error_limit,
+        completion_nudge_limit=settings.agent_completion_nudge_limit,
+        max_discovered_urls=settings.agent_max_discovered_urls,
+    )
     strategies.register(
         StrategyRegistration(
-            ResearchMode.WORKFLOW, build_workflow_research_graph(topic)
+            ResearchMode.WORKFLOW, build_workflow_research_graph(executor)
         )
     )
     strategies.register(
         StrategyRegistration(
-            ResearchMode.PLAN_EXECUTE, build_plan_execute_research_graph(topic)
+            ResearchMode.PLAN_EXECUTE, build_plan_execute_research_graph(executor)
         )
     )
     strategies.register(
         StrategyRegistration(
-            ResearchMode.MULTI_AGENT, build_multi_agent_research_graph(topic)
+            ResearchMode.MULTI_AGENT, build_multi_agent_research_graph(executor)
         )
+    )
+    # Budget is a guardrail, not a compressor: reserve output tokens first so
+    # generation always has room, and only trim elastic segments when an input
+    # actually approaches the model window.
+    response_budget = TokenBudgetConfig(
+        context_tokens=settings.model_context_tokens,
+        output_reserve_tokens=settings.openai_max_tokens or 4_096,
+        safety_tokens=settings.context_safety_tokens,
     )
     responses = ResponseGraphRegistry()
     responses.register(
-        ResponseRegistration(ResponseMode.ANSWER, build_answer_graph())
+        ResponseRegistration(
+            ResponseMode.ANSWER, build_answer_graph(response_budget)
+        )
     )
     responses.register(
-        ResponseRegistration(ResponseMode.BRIEF, build_brief_graph())
+        ResponseRegistration(
+            ResponseMode.BRIEF, build_brief_graph(response_budget)
+        )
     )
     responses.register(
-        ResponseRegistration(ResponseMode.REPORT, build_report_graph())
+        ResponseRegistration(
+            ResponseMode.REPORT, build_report_graph(response_budget)
+        )
     )
     graph = build_agent_runtime_graph(strategies, responses, checkpointer=saver)
     service = ResearchApplicationService(graph)
@@ -457,6 +529,8 @@ def build_harness_runtime(
             cache=SuccessCacheSingleflight(InMemorySuccessCache()),
             evidence_store=evidence_store,
             event_sink=recorder,
+            retry_attempts=settings.agent_tool_retry_attempts,
+            retry_base_seconds=settings.agent_tool_retry_base_seconds,
         )
         # Single-tenant deployment: the current API surface has no
         # authentication boundary, so all runs share one workspace namespace.

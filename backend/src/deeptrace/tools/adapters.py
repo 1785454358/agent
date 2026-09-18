@@ -20,7 +20,7 @@ from deeptrace.tools.contracts import (
 )
 from deeptrace.tools.evidence_store import EvidenceDraft
 from deeptrace.tools.registry import ToolRegistry
-from deeptrace.tools.scraper import normalize_url_before_fetch
+from deeptrace.tools.scraper import WebFetchError, normalize_url_before_fetch
 
 
 class SearchWebArguments(BaseModel):
@@ -77,7 +77,15 @@ class _ResearchToolAdapters:
         query = arguments.query.strip()
         response = await _call_search(self._search, query)
         if not isinstance(response, dict) or not response.get("ok"):
-            return ToolAdapterResult.failure("search_failed")
+            error = response.get("error") if isinstance(response, dict) else None
+            code = "search_failed"
+            message: str | None = None
+            if isinstance(error, dict):
+                if isinstance(error.get("code"), str) and error["code"].strip():
+                    code = error["code"].strip()
+                if isinstance(error.get("message"), str):
+                    message = error["message"]
+            return ToolAdapterResult.failure(code, message=message)
 
         results: list[dict[str, Any]] = []
         for item in response.get("results", []):
@@ -103,7 +111,10 @@ class _ResearchToolAdapters:
     async def fetch_page(self, arguments: BaseModel) -> ToolAdapterResult:
         if not isinstance(arguments, FetchPageArguments):
             raise TypeError("fetch arguments have the wrong type")
-        document = await self._fetcher.fetch(arguments.url)
+        try:
+            document = await self._fetcher.fetch(arguments.url)
+        except WebFetchError as exc:
+            return ToolAdapterResult.failure(exc.code, message=str(exc))
         if document.status != "success" or not document.content.strip():
             return ToolAdapterResult.failure("empty_page")
         source_url = (

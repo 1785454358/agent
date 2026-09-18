@@ -30,7 +30,11 @@ from deeptrace.strategies.multi_agent.models import SupervisorEvaluation
 from deeptrace.responses.models import ResponseDraft
 
 
+from deeptrace.domain.agent import AgentOutcome
+from deeptrace.harness.agent_state import AgentTodo, TodoStatus
+
 HARNESS_STATE_MSGPACK_TYPES = (
+    AgentOutcome, AgentTodo, TodoStatus,
     ConversationSummary,
     Finding,
     ResearchMode,

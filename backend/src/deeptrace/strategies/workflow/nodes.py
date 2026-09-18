@@ -4,23 +4,25 @@ from __future__ import annotations
 
 import json
 from typing import Any
+import asyncio
 
-from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.runtime import Runtime
 from langgraph.types import Send
 from pydantic import ValidationError
 
 from deeptrace.domain import (
+    INCOMPLETE_PLAN_REASON,
     ResearchInput,
     ResearchOutcome,
     ResearchMode,
     ResearchTopicInput,
     ResearchTopicOutcome,
+    unfinished_plan_items,
 )
 from deeptrace.domain.evidence import Finding
 from deeptrace.harness.context import HarnessContext
-from deeptrace.strategies.model_io import parse_json_object, payload_text
+from deeptrace.strategies.model_io import parse_json_object, payload_text, branch_context, research_messages
 from deeptrace.strategies.workflow.models import QueryPlan, WorkflowEvaluation
 from deeptrace.strategies.workflow.state import TopicBranchState, WorkflowState
 
@@ -58,7 +60,9 @@ def filter_findings(
 
 
 def topic_error_gaps(outcome: ResearchTopicOutcome) -> list[str]:
-    return [
+    agent = outcome.agent_outcome
+    extra = [f"agent_exit:{agent.stop_reason}"] if agent and agent.status != "completed" else []
+    return extra + [
         f"topic[{outcome.query}] {error.stage}:{error.target}:{error.code}"
         for error in outcome.errors
     ]
@@ -100,7 +104,7 @@ def build_plan_queries_node(query_limit: int):
         queries: list[str]
         try:
             response = await runtime.context.model_gateway.invoke(
-                role=PLANNER_ROLE, messages=[HumanMessage(content=prompt)]
+                role=PLANNER_ROLE, messages=research_messages(research_input, prompt)
             )
             queries = parse_query_plan(
                 str(response), limit=query_limit, fallback=research_input.question
@@ -122,6 +126,7 @@ def route_topics(state: WorkflowState) -> list[Send]:
                 run_id=research_input.run_id,
                 thread_id=research_input.thread_id,
                 query=query,
+                **branch_context(state),
             ),
         )
         for query in queries
@@ -140,12 +145,16 @@ def build_research_topic_node(topic_graph):
             query=state["query"],
             mode=ResearchMode.WORKFLOW,
             caller_id=WORKFLOW_CALLER_ID,
+            original_task=state.get("original_task", state["query"]),
+            constraints=state.get("constraints", []), context_notes=state.get("context_notes", []),
         )
         try:
             raw = await topic_graph.ainvoke(
                 {"topic_input": topic_input}, config=config
             )
             outcome = ResearchTopicOutcome.model_validate(raw["outcome"])
+            if outcome.agent_outcome and outcome.agent_outcome.status == "cancelled":
+                raise asyncio.CancelledError()
         except Exception as exc:
             return {
                 "executed_steps": 1,
@@ -207,7 +216,7 @@ async def evaluate_node(
     )
     try:
         response = await runtime.context.model_gateway.invoke(
-            role=EVALUATOR_ROLE, messages=[HumanMessage(content=prompt)]
+            role=EVALUATOR_ROLE, messages=research_messages(research_input, prompt)
         )
         evaluation = WorkflowEvaluation.model_validate_json(payload_text(response))
     except (ValidationError, ValueError, TypeError):
@@ -233,12 +242,18 @@ def finalize_node(state: WorkflowState) -> dict[str, Any]:
     evidence_ids = sorted(set(state.get("evidence_ids") or []))
     evaluation = state.get("evaluation")
     gaps = list(dict.fromkeys(state.get("unresolved_gaps") or []))
+    unfinished = unfinished_plan_items(list(state.get("topic_outcomes") or []))
     if not evidence_ids:
         termination_reason = "no_sources"
     elif evaluation is not None and evaluation.sufficient:
-        termination_reason = "completed"
+        termination_reason = (
+            INCOMPLETE_PLAN_REASON if unfinished else "completed"
+        )
     else:
         termination_reason = "insufficient_evidence"
+    agent_results = [o.agent_outcome for o in state.get("topic_outcomes", []) if o.agent_outcome is not None]
+    if termination_reason == "completed" and any(o.status != "completed" for o in agent_results):
+        termination_reason = next(o.stop_reason for o in agent_results if o.status != "completed")
     outcome = ResearchOutcome(
         mode=ResearchMode.WORKFLOW,
         evidence_ids=evidence_ids,

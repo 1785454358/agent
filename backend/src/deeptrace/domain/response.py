@@ -72,6 +72,7 @@ class CitationRef(BaseModel):
 class ResponseInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    constraints: list[str] = Field(default_factory=list)
     question: Question
     response_mode: ResponseMode
     research_outcome: ResearchOutcome | None = None

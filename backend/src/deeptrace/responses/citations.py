@@ -37,11 +37,20 @@ def select_response_mode(user_input: str) -> ResponseMode:
 
 
 _MARKER_PATTERN = re.compile(r"\[(\d{1,3})\]")
+# 中文模型常见的异体角标：【1】、［1］ 统一按半角 [1] 处理。
+_ALT_MARKER_PATTERN = re.compile(r"[［【]\s*(\d{1,3})\s*[】］]")
+
+
+def normalize_citation_brackets(content: str) -> str:
+    """Normalize full-width / lenticular citation brackets to ASCII [n]."""
+    if not content:
+        return content or ""
+    return _ALT_MARKER_PATTERN.sub(lambda match: f"[{match.group(1)}]", content)
 
 
 def extract_citation_markers(content: str) -> list[str]:
     markers: list[str] = []
-    for match in _MARKER_PATTERN.finditer(content or ""):
+    for match in _MARKER_PATTERN.finditer(normalize_citation_brackets(content or "")):
         marker = f"[{match.group(1)}]"
         if marker not in markers:
             markers.append(marker)
@@ -58,10 +67,10 @@ def validate_citations(
 ) -> ResponseOutcome:
     """Keep only citations whose Evidence was loaded; never invent replacements."""
     known = {index + 1: evidence_id for index, evidence_id in enumerate(loaded_evidence_ids)}
-    markers = extract_citation_markers(draft.content)
+    cleaned = normalize_citation_brackets(draft.content)
+    markers = extract_citation_markers(cleaned)
 
     citations: list[CitationRef] = []
-    cleaned = draft.content
     for marker in markers:
         number = int(marker[1:-1])
         evidence_id = known.get(number)

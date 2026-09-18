@@ -7,6 +7,7 @@ from typing import Any, Callable
 from deeptrace.application.research import ApplicationResearchRequest
 from deeptrace.config import Settings
 from deeptrace.models import AgentResult, RunEvent, TokenUsage, UsageBreakdown
+from deeptrace.observability.messages import humanize_event_message
 from deeptrace.runtime.models import RunRecord
 
 
@@ -51,7 +52,22 @@ class HarnessResearchRunner:
                 return
 
         def on_harness_event(event_type: str, payload: dict) -> None:
-            emit(event_type, str(payload.get("error_code") or event_type))
+            details: dict[str, str | int | float | bool | None] = {}
+            tool = payload.get("tool")
+            if isinstance(tool, str) and tool:
+                details["tool"] = tool
+            if on_event is None:
+                return
+            try:
+                on_event(
+                    RunEvent(
+                        event_type=event_type,
+                        message=humanize_event_message(event_type, payload),
+                        details=details,
+                    )
+                )
+            except Exception:
+                return
 
         context = bundle.context_factory(run.id, on_harness_event)
         emit("planning.completed", "研究任务已进入统一运行图")

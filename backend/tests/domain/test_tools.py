@@ -3,6 +3,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
+from deeptrace.domain import ErrorCategory
 from deeptrace.domain.tools import (
     MAX_TOOL_ARGUMENTS_BYTES,
     MAX_TOOL_PREVIEW_LENGTH,
@@ -125,6 +126,47 @@ def test_tool_result_rejects_invalid_success_error_combinations(
             ok=ok,
             error_code=error_code,
             preview="",
+        )
+
+
+@pytest.mark.parametrize(
+    ("error_code", "category", "retryable"),
+    [
+        ("provider_timeout", ErrorCategory.TRANSIENT, True),
+        ("http_failed", ErrorCategory.TRANSIENT, True),
+        ("insufficient_content", ErrorCategory.AGENT_RECOVERABLE, False),
+        ("browser_failed", ErrorCategory.AGENT_RECOVERABLE, False),
+        ("browser_unavailable", ErrorCategory.FATAL, False),
+        ("invalid_arguments", ErrorCategory.VALIDATION, False),
+        ("invalid_query", ErrorCategory.VALIDATION, False),
+        ("budget_exhausted", ErrorCategory.POLICY, False),
+        ("tool_internal_error", ErrorCategory.FATAL, False),
+        ("provider_error", ErrorCategory.FATAL, False),
+        ("some_unknown_code", ErrorCategory.FATAL, False),
+    ],
+)
+def test_tool_result_derives_error_category_and_retryability(
+    error_code: str, category: ErrorCategory, retryable: bool
+) -> None:
+    result = ToolResult(
+        **_IDS,
+        tool=ToolName.FETCH_PAGE,
+        ok=False,
+        error_code=error_code,
+    )
+
+    assert result.error_category is category
+    assert result.retryable is retryable
+    assert result.message
+
+
+def test_tool_result_rejects_error_fields_on_success() -> None:
+    with pytest.raises(ValidationError):
+        ToolResult(
+            **_IDS,
+            tool=ToolName.SEARCH_WEB,
+            ok=True,
+            error_category=ErrorCategory.FATAL,
         )
 
 

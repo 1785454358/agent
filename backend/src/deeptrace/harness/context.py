@@ -11,7 +11,13 @@ from deeptrace.tools.policy import ToolCaller, UrlAuthorization
 
 
 class ModelGateway(Protocol):
-    async def invoke(self, *, role: str, messages: list[Any]) -> Any: ...
+    async def invoke(
+        self,
+        *,
+        role: str,
+        messages: list[Any],
+        tools: Sequence[Any] | None = None,
+    ) -> Any: ...
 
 
 class ToolGateway(Protocol):

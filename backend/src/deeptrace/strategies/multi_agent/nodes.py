@@ -3,22 +3,24 @@
 from __future__ import annotations
 
 from typing import Any
+import asyncio
 
-from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.runtime import Runtime
 from langgraph.types import Send
 from pydantic import ValidationError
 
 from deeptrace.domain import (
+    INCOMPLETE_PLAN_REASON,
     ResearchInput,
     ResearchOutcome,
     ResearchMode,
     ResearchTopicInput,
     ResearchTopicOutcome,
+    unfinished_plan_items,
 )
 from deeptrace.harness.context import HarnessContext
-from deeptrace.strategies.model_io import parse_json_object, payload_text
+from deeptrace.strategies.model_io import parse_json_object, payload_text, branch_context, research_messages
 from deeptrace.strategies.multi_agent.models import SupervisorEvaluation
 from deeptrace.strategies.multi_agent.state import (
     MultiAgentState,
@@ -86,7 +88,7 @@ def build_supervisor_plan_node(max_researchers: int):
         assignments: list[str] = []
         try:
             response = await runtime.context.model_gateway.invoke(
-                role=SUPERVISOR_ROLE, messages=[HumanMessage(content=prompt)]
+                role=SUPERVISOR_ROLE, messages=research_messages(research_input, prompt)
             )
             assignments = _queries_from_payload(
                 response, limit=max_researchers, exclude=set()
@@ -113,6 +115,7 @@ def route_researchers(state: MultiAgentState) -> list[Send]:
                 run_id=state["run_id"],
                 thread_id=state["thread_id"],
                 query=query,
+                **branch_context(state),
                 researcher_index=index,
                 round_number=round_number,
             ),
@@ -133,12 +136,16 @@ def build_researcher_node(topic_graph):
             query=state["query"],
             mode=ResearchMode.MULTI_AGENT,
             caller_id=f"researcher-{state['researcher_index']}",
+            original_task=state.get("original_task", state["query"]),
+            constraints=state.get("constraints", []), context_notes=state.get("context_notes", []),
         )
         try:
             raw = await topic_graph.ainvoke(
                 {"topic_input": topic_input}, config=config
             )
             outcome = ResearchTopicOutcome.model_validate(raw["outcome"])
+            if outcome.agent_outcome and outcome.agent_outcome.status == "cancelled":
+                raise asyncio.CancelledError()
         except Exception:
             return {
                 "executed_steps": 1,
@@ -206,7 +213,7 @@ async def supervisor_evaluate_node(
     )
     try:
         response = await runtime.context.model_gateway.invoke(
-            role=EVALUATOR_ROLE, messages=[HumanMessage(content=prompt)]
+            role=EVALUATOR_ROLE, messages=research_messages(research_input, prompt)
         )
         evaluation = SupervisorEvaluation.model_validate_json(
             payload_text(response)
@@ -259,7 +266,7 @@ def build_follow_up_node(max_researchers: int):
         assignments: list[str] = []
         try:
             response = await runtime.context.model_gateway.invoke(
-                role=FOLLOW_UP_ROLE, messages=[HumanMessage(content=prompt)]
+                role=FOLLOW_UP_ROLE, messages=research_messages(research_input, prompt)
             )
             assignments = _queries_from_payload(
                 response, limit=max_researchers, exclude=dispatched
@@ -292,6 +299,7 @@ def route_after_follow_up(state: MultiAgentState) -> list[Send] | str:
                 run_id=state["run_id"],
                 thread_id=state["thread_id"],
                 query=query,
+                **branch_context(state),
                 researcher_index=index,
                 round_number=round_number,
             ),
@@ -306,10 +314,15 @@ def build_finalize_node(max_follow_ups: int):
         evaluation = state.get("evaluation")
         gaps = list(dict.fromkeys(state.get("unresolved_gaps") or []))
         round_number = state.get("round_number") or 0
+        unfinished = unfinished_plan_items(
+            list(state.get("researcher_outcomes") or [])
+        )
         if not evidence_ids:
             termination_reason = "no_sources"
         elif evaluation is not None and evaluation.action == "complete":
-            termination_reason = "completed"
+            termination_reason = (
+                INCOMPLETE_PLAN_REASON if unfinished else "completed"
+            )
         elif evaluation is not None and evaluation.action == "follow_up":
             if round_number >= max_follow_ups or "no_new_assignments" in gaps:
                 termination_reason = "max_follow_ups_reached"
@@ -317,6 +330,9 @@ def build_finalize_node(max_follow_ups: int):
                 termination_reason = "insufficient_evidence"
         else:
             termination_reason = "insufficient_evidence"
+        agent_results = [o.agent_outcome for o in state.get("researcher_outcomes", []) if o.agent_outcome is not None]
+        if termination_reason == "completed" and any(o.status != "completed" for o in agent_results):
+            termination_reason = next(o.stop_reason for o in agent_results if o.status != "completed")
         outcome = ResearchOutcome(
             mode=ResearchMode.MULTI_AGENT,
             evidence_ids=evidence_ids,

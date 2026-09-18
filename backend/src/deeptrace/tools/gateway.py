@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 from time import perf_counter
 from typing import Any, Protocol
 
@@ -59,7 +60,19 @@ class AgentToolGateway:
         cache: ToolExecutionCoordinator,
         evidence_store: EvidenceStore,
         event_sink: EventSink,
+        retry_attempts: int = 1,
+        retry_base_seconds: float = 0.5,
     ) -> None:
+        if not isinstance(retry_attempts, int) or isinstance(retry_attempts, bool):
+            raise TypeError("retry_attempts must be an int")
+        if retry_attempts < 1:
+            raise ValueError("retry_attempts must be at least 1")
+        if not isinstance(retry_base_seconds, (int, float)) or isinstance(
+            retry_base_seconds, bool
+        ):
+            raise TypeError("retry_base_seconds must be numeric")
+        if retry_base_seconds < 0:
+            raise ValueError("retry_base_seconds cannot be negative")
         self._registry = registry
         self._allowlist = allowlist
         self._security = security
@@ -68,6 +81,9 @@ class AgentToolGateway:
         self._cache = cache
         self._evidence_store = evidence_store
         self._event_sink = event_sink
+        self._retry_attempts = retry_attempts
+        self._retry_base_seconds = float(retry_base_seconds)
+        self._logger = logging.getLogger(__name__)
 
     async def execute(
         self,
@@ -204,6 +220,39 @@ class AgentToolGateway:
             "tool.started",
             _event_payload(caller, request),
         )
+        for attempt in range(1, self._retry_attempts + 1):
+            result = await self._invoke_once(
+                tenant_id, request, spec, arguments
+            )
+            if (
+                result.ok
+                or not result.retryable
+                or attempt >= self._retry_attempts
+            ):
+                return result
+            await self._emit_event(
+                "tool.retry",
+                {
+                    **_event_payload(caller, request),
+                    "attempt": attempt,
+                    "error_code": result.error_code,
+                    "error_category": (
+                        None
+                        if result.error_category is None
+                        else result.error_category.value
+                    ),
+                },
+            )
+            await asyncio.sleep(self._retry_base_seconds * (2 ** (attempt - 1)))
+        return result
+
+    async def _invoke_once(
+        self,
+        tenant_id: str,
+        request: ToolRequest,
+        spec: ToolSpec,
+        arguments: BaseModel,
+    ) -> ToolResult:
         try:
             async with asyncio.timeout(spec.timeout_seconds):
                 adapter_result = await spec.handler(arguments)
@@ -216,8 +265,21 @@ class AgentToolGateway:
             return _failure(request, "provider_timeout")
         except asyncio.CancelledError:
             raise
-        except Exception:
-            return _failure(request, "provider_error")
+        except Exception as exc:
+            # Infrastructure/defects are classified as fatal and never retried.
+            # The full traceback stays in structured logs, not in ToolResult.
+            self._logger.exception(
+                "tool execution raised an unhandled exception",
+                extra={
+                    "run_id": request.run_id,
+                    "thread_id": request.thread_id,
+                    "call_id": request.call_id,
+                    "tool": request.tool.value,
+                    "error_category": "fatal",
+                    "internal_detail": repr(exc),
+                },
+            )
+            return _failure(request, "tool_internal_error")
 
     async def _project_result(
         self,
@@ -228,7 +290,11 @@ class AgentToolGateway:
     ) -> ToolResult:
         if not adapter_result.ok:
             assert adapter_result.error_code is not None
-            return _failure(request, adapter_result.error_code)
+            return _failure(
+                request,
+                adapter_result.error_code,
+                message=adapter_result.message,
+            )
         evidence_ids: list[str] = []
         data_ref = adapter_result.data_ref
         if adapter_result.evidence is not None:
@@ -262,6 +328,13 @@ class AgentToolGateway:
             {
                 "ok": result.ok,
                 "error_code": result.error_code,
+                "error_category": (
+                    None
+                    if result.error_category is None
+                    else result.error_category.value
+                ),
+                "retryable": result.retryable,
+                "message": result.message,
                 "cached": result.cached,
                 "replayed": result.replayed,
                 "budget_delta": budget_delta.model_dump(mode="json"),
@@ -344,8 +417,12 @@ def _correlation(request: ToolRequest) -> dict[str, Any]:
     }
 
 
-def _failure(request: ToolRequest, code: str) -> ToolResult:
-    return ToolResult(**_correlation(request), ok=False, error_code=code)
+def _failure(
+    request: ToolRequest, code: str, *, message: str | None = None
+) -> ToolResult:
+    return ToolResult(
+        **_correlation(request), ok=False, error_code=code, message=message
+    )
 
 
 def _rebind(result: ToolResult, request: ToolRequest) -> ToolResult:

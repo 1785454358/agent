@@ -11,7 +11,6 @@ from langgraph.runtime import Runtime
 from langgraph.types import Send
 
 from deeptrace.domain import (
-    TRANSIENT_TOOL_ERROR_CODES,
     ResearchMode,
     ResearchTopicInput,
     ResearchTopicOutcome,
@@ -25,18 +24,6 @@ from deeptrace.tools.policy import CallerRole, ToolCaller, UrlAuthorization, Url
 from deeptrace.tools.scraper.urls import normalize_url_before_fetch, validate_public_url
 
 from deeptrace.strategies.topic.state import FetchBranchState, ResearchTopicState
-
-
-class TransientToolError(RuntimeError):
-    """Raised by nodes so LangGraph RetryPolicy can replay the node."""
-
-
-def _raise_if_transient(result: ToolResult) -> ToolResult:
-    if not result.ok and result.error_code in TRANSIENT_TOOL_ERROR_CODES:
-        raise TransientToolError(
-            f"transient tool failure: {result.error_code}"
-        )
-    return result
 
 
 _ROLE_BY_MODE: dict[ResearchMode, CallerRole] = {
@@ -100,7 +87,6 @@ async def search_node(
         caller=_caller(topic_input),
         request=request,
     )
-    _raise_if_transient(result)
     return {"search_result": result, "executed_steps": 1}
 
 
@@ -228,7 +214,6 @@ async def fetch_page_node(
         request=request,
         authorization=authorization,
     )
-    _raise_if_transient(result)
     updates: dict[str, Any] = {
         "executed_steps": 1,
         "attempted_urls": [url],

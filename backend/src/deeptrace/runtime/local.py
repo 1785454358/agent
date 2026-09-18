@@ -12,7 +12,20 @@ from typing import Any
 from deeptrace.application.research import ApplicationResearchRequest
 from deeptrace.runtime.errors import ThreadBusyError
 from deeptrace.models import RunEvent
+from deeptrace.observability.messages import humanize_event_message
 from deeptrace.runtime.models import RunMode, RunRecord, StoredEvent
+
+
+_TERMINAL_STATUSES = frozenset({"completed", "partial", "failed", "cancelled"})
+
+
+def _parse_ts(value: Any) -> datetime:
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value)
+        except ValueError:
+            pass
+    return datetime.now(UTC)
 
 
 class _LocalRunState:
@@ -44,6 +57,72 @@ class LocalResearchRuntime:
 
     async def start(self) -> None:
         self._runs_dir.mkdir(parents=True, exist_ok=True)
+        self._load_persisted_runs()
+
+    def _load_persisted_runs(self) -> None:
+        """Reload run history from disk so restarts keep prior conversations.
+
+        Runs left non-terminal by an abrupt shutdown are marked interrupted, so
+        the UI never shows a run that can no longer advance.
+        """
+        recovered: list[RunRecord] = []
+        for path in sorted(self._runs_dir.glob("*.json")):
+            try:
+                record = RunRecord.model_validate_json(
+                    path.read_text(encoding="utf-8")
+                )
+            except (ValueError, OSError):
+                continue
+            if record.id in self._registry:
+                continue
+            state = _LocalRunState(record)
+            self._rebuild_events(state)
+            if record.status not in _TERMINAL_STATUSES:
+                record.status = "failed"
+                record.termination_reason = "interrupted"
+                record.error = record.error or "服务重启，运行已中断"
+                record.finished_at = record.finished_at or datetime.now(UTC)
+                record.updated_at = datetime.now(UTC)
+                self._persist(record)
+            self._registry[record.id] = state
+            recovered.append(record)
+        if recovered:
+            self._thread_locks.update(
+                (record.thread_id, asyncio.Lock())
+                for record in recovered
+                if record.thread_id and record.thread_id not in self._thread_locks
+            )
+
+    def _rebuild_events(self, state: _LocalRunState) -> None:
+        """Rebuild the SSE replay buffer from the persisted run record."""
+        if not state.record.events:
+            return
+        last_id = 0
+        for raw in state.record.events:
+            last_id += 1
+            created_at = _parse_ts(raw.get("ts"))
+            state.events.append(
+                StoredEvent(
+                    id=last_id,
+                    run_id=state.record.id,
+                    event_type=str(raw.get("event_type") or ""),
+                    payload=dict(raw),
+                    created_at=created_at,
+                )
+            )
+        if state.record.status in _TERMINAL_STATUSES:
+            last_id += 1
+            state.events.append(
+                StoredEvent(
+                    id=last_id,
+                    run_id=state.record.id,
+                    event_type="done",
+                    payload={},
+                    created_at=datetime.now(UTC),
+                )
+            )
+        if last_id >= self._next_event_id:
+            self._next_event_id = last_id + 1
 
     async def stop(self) -> None:
         tasks = [
@@ -157,11 +236,16 @@ class LocalResearchRuntime:
         record = state.record
 
         def on_harness_event(event_type: str, payload: dict) -> None:
+            details: dict[str, str | int | float | bool | None] = {}
+            tool = payload.get("tool")
+            if isinstance(tool, str) and tool:
+                details["tool"] = tool
             self._append_event(
                 state,
                 RunEvent(
                     event_type=event_type,
-                    message=str(payload.get("error_code") or event_type),
+                    message=humanize_event_message(event_type, payload),
+                    details=details,
                 ),
             )
 

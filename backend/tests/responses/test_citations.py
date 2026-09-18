@@ -82,6 +82,23 @@ def test_validate_citations_keeps_loaded_and_removes_unknown() -> None:
     assert "未知来源" in outcome.content
 
 
+def test_full_width_and_lenticular_markers_are_normalized() -> None:
+    draft = ResponseDraft(
+        response_mode=ResponseMode.ANSWER,
+        content="国内要点【1】，补充［2］，再来一个【1】。",
+    )
+
+    outcome = validate_citations(
+        draft, loaded_evidence_ids=["evidence-a", "evidence-b"]
+    )
+
+    assert outcome.partial_reason is None
+    assert [citation.marker for citation in outcome.citations] == ["[1]", "[2]"]
+    assert "【1】" not in outcome.content
+    assert "［2］" not in outcome.content
+    assert "[1]" in outcome.content and "[2]" in outcome.content
+
+
 def test_validate_citations_without_loaded_sources_yields_partial() -> None:
     draft = ResponseDraft(
         response_mode=ResponseMode.REPORT,

@@ -1,4 +1,4 @@
-"""ResearchPilot HTTP API and dashboard."""
+"""DeepResearch HTTP API and dashboard."""
 
 from __future__ import annotations
 
@@ -125,7 +125,7 @@ def create_app(
                 if dispose_resources is not None:
                     await dispose_resources()
 
-    app = FastAPI(title="ResearchPilot API", lifespan=lifespan)
+    app = FastAPI(title="DeepResearch API", lifespan=lifespan)
 
     @app.post("/researches")
     async def create_research(request: ResearchRequest) -> dict[str, Any]:
@@ -155,6 +155,7 @@ def create_app(
                 "mode": record.mode,
                 "status": record.status,
                 "created_at": record.created_at.isoformat(),
+                "thread_id": record.thread_id,
             }
             for record in records
         ]
@@ -229,7 +230,7 @@ def main() -> None:
 
     # 工厂模式：避免模块导入时读取环境变量或初始化外部依赖，
     # 测试可以在无 .env 的干净环境里安全 import create_app。
-    uvicorn.run(create_app(), host="127.0.0.1", port=8000)
+    uvicorn.run(create_app(), host="127.0.0.1", port=8001)
 
 
 if __name__ == "__main__":

@@ -26,6 +26,28 @@ def _tool_error(code: str, message: str, **details: Any) -> JsonObject:
     }
 
 
+def _classify_search_exception(exc: Exception) -> str:
+    """Map a provider exception to a code the gateway can classify.
+
+    Timeouts and rate limits are transient (the gateway retries with backoff);
+    anything else stays recoverable so the model can reformulate its query.
+    """
+    name = type(exc).__name__.casefold()
+    text = str(exc).casefold()
+    if "timeout" in name or "timed out" in text or "timeout" in text:
+        return "provider_timeout"
+    if any(token in text for token in ("429", "rate limit", "too many requests")):
+        return "http_failed"
+    if (
+        "connect" in name
+        or "connection" in text
+        or "http" in name
+        or "network" in text
+    ):
+        return "http_failed"
+    return "search_failed"
+
+
 def search_web(
     context: ToolContext,
     query: str,
@@ -47,7 +69,8 @@ def search_web(
         )
     except Exception as exc:
         return _tool_error(
-            "search_failed", f"Tavily 请求失败：{type(exc).__name__}"
+            _classify_search_exception(exc),
+            f"Tavily 请求失败：{type(exc).__name__}",
         )
     results: list[JsonObject] = []
     for item in response.get("results", []):

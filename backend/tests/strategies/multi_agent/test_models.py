@@ -44,6 +44,9 @@ def test_researcher_branch_state_is_private_per_researcher() -> None:
         "query",
         "researcher_index",
         "round_number",
+        "original_task",
+        "constraints",
+        "context_notes",
     }
 
 

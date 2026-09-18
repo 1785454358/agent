@@ -44,3 +44,22 @@ def conversation_background_lines(research_input) -> list[str]:
         + [f"最近对话：{m}" for m in research_input.recent_messages[:4]]
     )
     return lines
+
+
+def branch_context(state):
+    """Carry the original task and all current constraints into every branch."""
+    summary = state.get("conversation_summary") or {}
+    if hasattr(summary, "model_dump"):
+        summary = summary.model_dump()
+    return {
+        "original_task": state.get("question") or state.get("original_task", ""),
+        "constraints": list(summary.get("user_constraints") or state.get("constraints") or []),
+        "context_notes": list(summary.get("established_facts") or []) + list(state.get("recent_messages") or []),
+    }
+
+
+def research_messages(research_input, prompt):
+    from deeptrace.harness.prompts import task_messages
+    return task_messages(instruction="按当前研究阶段完成规划或评估，遵守用户约束与输出契约。",
+                         task=research_input.question,
+                         constraints=research_input.conversation_summary.user_constraints, prompt=prompt)

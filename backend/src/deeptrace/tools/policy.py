@@ -130,6 +130,7 @@ class UrlAuthorizationSource(StrEnum):
     SEARCH_RESULT = "search_result"
     MEMORY_RESULT = "memory_result"
     DIRECT_USER_INPUT = "direct_user_input"
+    AGENT_DISCOVERED = "agent_discovered"
 
 
 @dataclass(frozen=True)

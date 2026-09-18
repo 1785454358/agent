@@ -73,9 +73,10 @@ async def _run_multi_agent(
     max_researchers: int = 5,
     max_follow_ups: int = 1,
     checkpointer=None,
+    topic_graph=None,
 ):
     graph = build_multi_agent_research_graph(
-        build_research_topic_graph(),
+        topic_graph or build_research_topic_graph(),
         max_researchers=max_researchers,
         max_follow_ups=max_follow_ups,
         checkpointer=checkpointer,
@@ -354,3 +355,47 @@ async def test_loop_state_is_checkpointed_without_handwritten_loops() -> None:
     from deeptrace.strategies.multi_agent import graph as ma_graph_module
 
     assert "while " not in inspect.getsource(ma_graph_module)
+
+
+class _UnfinishedPlanTopicGraph:
+    """Delegates to the real topic graph but reports an open plan item."""
+
+    def __init__(self, inner) -> None:
+        self._inner = inner
+
+    async def ainvoke(self, input_data, config=None, **kwargs):
+        raw = await self._inner.ainvoke(input_data, config=config, **kwargs)
+        outcome = raw["outcome"].model_copy(
+            update={
+                "plan_total": 2,
+                "plan_completed": 1,
+                "unfinished_todos": ["尚未完成的步骤"],
+            }
+        )
+        return {"outcome": outcome}
+
+
+@pytest.mark.asyncio
+async def test_unfinished_researcher_plan_downgrades_completed_to_incomplete() -> None:
+    model = ScriptedModelGateway(
+        {
+            "supervisor": json.dumps({"assignments": ["方向 A"]}),
+            "evaluator": lambda prompt: _evaluation_with_prompt_evidence(prompt),
+        }
+    )
+    fixture = build_gateway_fixture(
+        search_results={
+            "方向 A": [
+                {"url": "https://example.com/a", "title": "A", "snippet": "s"}
+            ]
+        },
+        pages={"https://example.com/a": "body-a"},
+        model_gateway=model,
+    )
+    topic = _UnfinishedPlanTopicGraph(build_research_topic_graph())
+
+    result = await _run_multi_agent(model, fixture, topic_graph=topic)
+    outcome = result["outcome"]
+
+    assert outcome.evidence_ids
+    assert outcome.termination_reason == "incomplete_plan"

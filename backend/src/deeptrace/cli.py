@@ -1,4 +1,4 @@
-"""ResearchPilot 命令行入口（兼容 deeptrace 命令）。"""
+"""DeepResearch 命令行入口（兼容 deeptrace 命令）。"""
 
 from __future__ import annotations
 
@@ -18,8 +18,8 @@ from deeptrace.runtime.models import RunRecord
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="researchpilot",
-        description="运行 ResearchPilot Basic、Deep 或 Multi-Agent 研究 Agent",
+        prog="deepresearch",
+        description="运行 DeepResearch Workflow、Plan-and-Execute 或 Multi-Agent 研究 Agent",
     )
     parser.add_argument("question", help="研究问题")
     parser.add_argument(

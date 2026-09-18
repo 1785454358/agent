@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from deeptrace.domain import TRANSIENT_TOOL_ERROR_CODES, ToolRequest, ToolResult
+from deeptrace.domain import ToolRequest, ToolResult
 from deeptrace.tools.execution_store import (
     canonical_request_fingerprint,
     ClaimDisposition,
@@ -228,7 +228,7 @@ class SqlAlchemyToolExecutionStore:
             row.consumed_tool_calls += units.tool_calls
             row.consumed_network_requests += units.network_requests
             row.consumed_fetched_pages += units.fetched_pages
-            if not result.ok and result.error_code in TRANSIENT_TOOL_ERROR_CODES:
+            if not result.ok and result.retryable:
                 # Transient failures stay recoverable for node-level retries.
                 row.status = "recoverable"
                 row.owner_token = None
