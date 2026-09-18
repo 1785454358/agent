@@ -6,9 +6,16 @@
 
 ## 目标
 
-把 ResearchPilot 整理成面向 Agent 开发工程师岗位的 GitHub 展示作品。访客应能在不配置模型、搜索服务和后端的情况下看到一次完整研究流程，并能从 README 快速理解项目的 Agent Harness 设计和源码入口。
+把 DeepResearch 整理成面向 Agent 开发工程师岗位的 GitHub 展示作品。访客应能在不配置模型、搜索服务和后端的情况下看到一次完整研究流程，并能从 README 快速理解项目的 Agent Harness 设计和源码入口。
 
 展示包保持精简：复用现有工作台，不新建作品站，不模拟完整产品功能，不引入复杂动画或额外服务。
+
+## 名称边界
+
+- 对外项目名统一为 `DeepResearch`，机器可读项目标识统一为 `deepresearch`。
+- README、文档标题、前端页面标题、Showcase、API 标题、CLI 帮助、包元数据、CI 镜像标签和 Docker 默认数据库标识不再使用 `ResearchPilot / researchpilot`。
+- Python 导入包 `deeptrace`、`DEEPTRACE_*` 环境变量和 `deeptrace` CLI 别名继续保留；它们属于稳定技术命名空间，不作为展示品牌。
+- GitHub 仓库地址保持 `https://github.com/1785454358/agent`。
 
 ## 交付物
 
@@ -70,7 +77,7 @@ npm run build:showcase
 Showcase 页面包含：
 
 ```text
-顶部：ResearchPilot / SHOWCASE DATA / GitHub 链接
+顶部：DeepResearch / SHOWCASE DATA / GitHub 链接
 控制区：策略选择 / 示例问题 / 开始展示
 主体：执行轨迹
 结果：回答 / 引用来源
@@ -92,7 +99,7 @@ Showcase 页面包含：
 
 README 按以下顺序收敛：
 
-1. 项目名、CI/License、Agent Harness 一句话定位；
+1. DeepResearch、CI/License、Agent Harness 一句话定位；
 2. 工作台截图；
 3. 四个核心能力：共享 Agent Loop、Gateway 边界、三层错误治理、可恢复 Outcome；
 4. 三步无 Key Showcase 体验；
@@ -122,3 +129,4 @@ README 中所有 GitHub 链接、克隆命令、CI 和源码链接统一指向 `
 6. PNG 与 SVG 在 GitHub README 中正常显示。
 7. README 的本地链接全部有效，仓库地址统一且没有敏感信息。
 8. 文档明确区分固定展示数据、离线测试与真实外部服务验证。
+9. 当前工作树不再包含 `ResearchPilot / researchpilot`；`deeptrace / DEEPTRACE_*` 保持可用。
