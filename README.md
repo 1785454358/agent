@@ -111,6 +111,6 @@ npm run build:showcase
 | Checkpoint 恢复 | [`harness/checkpoint.py`](backend/src/deeptrace/harness/checkpoint.py) |
 | Memory Lifecycle | [`harness/memory/lifecycle.py`](backend/src/deeptrace/harness/memory/lifecycle.py) |
 
-深入设计见 [Agent Harness 架构文档](docs/architecture/agent-harness.md)，求职展示和讲解材料见 [docs/resume](docs/resume/README.md)。
+深入设计见 [Agent Harness 架构文档](docs/architecture/agent-harness.md)，演示与源码讲解材料见 [docs/resume](docs/resume/README.md)。
 
 Python 包名 `deeptrace`、`deeptrace` CLI 兼容入口和 `DEEPTRACE_*` 环境变量继续保留。
