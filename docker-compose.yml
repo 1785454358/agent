@@ -1,6 +1,6 @@
 x-runtime-environment: &runtime-environment
   DEEPTRACE_RUNTIME_MODE: distributed
-  DEEPTRACE_MYSQL_DSN: mysql+asyncmy://researchpilot:${MYSQL_PASSWORD:-researchpilot}@mysql:3306/researchpilot
+  DEEPTRACE_MYSQL_DSN: mysql+asyncmy://deepresearch:${MYSQL_PASSWORD:-deepresearch}@mysql:3306/deepresearch
   DEEPTRACE_REDIS_URL: redis://redis:6379/0
   DEEPTRACE_REDIS_JOB_STREAM: deeptrace:research:jobs
   DEEPTRACE_REDIS_CONSUMER_GROUP: research-workers
@@ -15,9 +15,9 @@ services:
   mysql:
     image: mysql:8.4
     environment:
-      MYSQL_DATABASE: researchpilot
-      MYSQL_USER: researchpilot
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-researchpilot}
+      MYSQL_DATABASE: deepresearch
+      MYSQL_USER: deepresearch
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-deepresearch}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root-local-only}
     volumes:
       - mysql-data:/var/lib/mysql

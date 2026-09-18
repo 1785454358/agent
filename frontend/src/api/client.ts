@@ -45,10 +45,11 @@ export function getRun(runId: string): Promise<RunDetail> {
 export function createRun(
   question: string,
   mode: ResearchMode,
+  threadId?: string,
 ): Promise<CreateRunResponse> {
   return request<CreateRunResponse>("/researches", {
     method: "POST",
-    body: JSON.stringify({ question, mode }),
+    body: JSON.stringify({ question, mode, thread_id: threadId ?? null }),
   });
 }
 

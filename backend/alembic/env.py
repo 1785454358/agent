@@ -1,4 +1,4 @@
-"""Alembic environment for the async ResearchPilot database."""
+"""Alembic environment for the async DeepResearch database."""
 
 from __future__ import annotations
 

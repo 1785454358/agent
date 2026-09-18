@@ -1,20 +1,63 @@
-/* 设计 token：从单文件版页面平移的暗色琥珀体系。 */
+/* 设计 token：深海军蓝工作台 + 青绿信号色（对齐参考稿）。 */
 :root {
-  --bg: #0d1117;
-  --panel: #11161f;
-  --panel-2: #161c27;
-  --line: #232b38;
-  --line-strong: #374150;
-  --text: #e8edf4;
-  --muted: #8b96a6;
-  --faint: #5c6575;
-  --amber: #e8b04b;
-  --amber-dim: #9a7b3a;
-  --ok: #5fc98f;
-  --err: #e06767;
+  /* 表面层级：页面 < 侧边栏 < 卡片 < 内嵌卡片 */
+  --bg: #0a1120;
+  --sidebar: #0b1424;
+  --panel: #101b2e;
+  --panel-2: #152238;
+  --panel-3: #1a2a44;
+
+  /* 描边 */
+  --line: #1e2c46;
+  --line-strong: #31456a;
+
+  /* 文字：主文字近白，次级文字明显提亮，弱化文字仅用于占位 */
+  --text: #edf2fa;
+  --text-soft: #d7e1f0;
+  --muted: #a6b5cd;
+  --faint: #7486a3;
+
+  /* 主信号色：青绿 */
+  --teal: #15bda9;
+  --teal-h: #0ea593;
+  --teal-soft: rgba(21, 189, 169, 0.12);
+  --teal-line: rgba(21, 189, 169, 0.38);
+
+  /* 状态色 */
+  --ok: #38d39b;
+  --err: #f47067;
+  --warn: #f2b455;
+
+  /* 事件图标砖配色（背景晕染 +  glyph） */
+  --tile-sky: rgba(96, 165, 250, 0.16);
+  --glyph-sky: #6cb2ff;
+  --tile-emerald: rgba(52, 211, 153, 0.15);
+  --glyph-emerald: #4ade80;
+  --tile-fuchsia: rgba(232, 121, 249, 0.14);
+  --glyph-fuchsia: #e879f9;
+  --tile-violet: rgba(167, 139, 250, 0.16);
+  --glyph-violet: #b4a0ff;
+  --tile-indigo: rgba(129, 140, 248, 0.16);
+  --glyph-indigo: #93a0ff;
+  --tile-cyan: rgba(34, 211, 238, 0.15);
+  --glyph-cyan: #38dcf0;
+  --tile-amber: rgba(245, 183, 62, 0.16);
+  --glyph-amber: #f6bd4e;
+  --tile-orange: rgba(251, 146, 60, 0.16);
+  --glyph-orange: #fb9d4d;
+  --tile-green: rgba(52, 211, 153, 0.16);
+  --glyph-green: #3ddc9f;
+  --tile-teal: rgba(21, 189, 169, 0.17);
+  --glyph-teal: #2dd4bf;
+  --tile-slate: rgba(148, 163, 184, 0.16);
+  --glyph-slate: #a8b6cc;
+  --tile-red: rgba(244, 112, 103, 0.16);
+  --glyph-red: #f87970;
+
   --mono: ui-monospace, "SFMono-Regular", "Cascadia Code", Consolas, monospace;
-  --serif: "Source Han Serif SC", "Noto Serif SC", Georgia,
-    "Times New Roman", serif;
   --sans: system-ui, -apple-system, "Segoe UI", "PingFang SC",
     "Microsoft YaHei", sans-serif;
+
+  --radius: 10px;
+  --shadow-panel: 0 10px 30px rgba(3, 8, 18, 0.35);
 }

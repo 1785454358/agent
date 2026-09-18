@@ -11,6 +11,10 @@ function setup(submitting = false) {
       onModeChange={onModeChange}
       onSubmit={onSubmit}
       submitting={submitting}
+      focusToken={0}
+      chatEnabled={false}
+      chatOpen={false}
+      onToggleChat={vi.fn()}
     />,
   );
   return { onSubmit, onModeChange };

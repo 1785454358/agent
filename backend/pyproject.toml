@@ -1,5 +1,5 @@
 [project]
-name = "researchpilot"
+name = "deepresearch"
 version = "0.2.0"
 description = "LangGraph Agent Harness with Workflow, Plan-and-Execute, and Multi-Agent research strategies"
 requires-python = ">=3.11"
@@ -41,7 +41,7 @@ explicit = true
 torch = { index = "pytorch-cu121" }
 
 [project.scripts]
-researchpilot = "deeptrace.cli:main"
+deepresearch = "deeptrace.cli:main"
 deeptrace = "deeptrace.cli:main"
 
 [dependency-groups]

@@ -1,3 +1,5 @@
+import { IconLink } from "./icons";
+
 interface SourcesProps {
   sources: string[];
   unresolvedGaps: string[];
@@ -15,7 +17,13 @@ function hostOf(url: string): string {
 export function Sources({ sources, unresolvedGaps }: SourcesProps) {
   return (
     <section className="sources-block">
-      <div className="block-label">来源（{sources.length}）</div>
+      <div className="section-head">
+        <span className="section-head-icon tone-indigo" aria-hidden="true">
+          <IconLink size={17} />
+        </span>
+        <h2 className="section-title">来源</h2>
+        <span className="section-count">{sources.length}</span>
+      </div>
       {sources.length === 0 ? (
         <div className="sources-empty">（无成功抓取来源）</div>
       ) : (

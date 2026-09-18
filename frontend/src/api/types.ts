@@ -28,6 +28,7 @@ export interface RunEvent {
   event_type: string;
   message: string;
   ts?: string;
+  tool?: string;
 }
 
 export interface RunSummary {
@@ -36,6 +37,12 @@ export interface RunSummary {
   mode: ResearchMode;
   status: RunStatus;
   created_at: string;
+  thread_id: string;
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  text: string;
 }
 
 export interface RunDetail {

@@ -42,7 +42,7 @@ jobs:
           file: backend/Dockerfile
           target: test
           push: false
-          tags: researchpilot:test
+          tags: deepresearch:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Build release image
@@ -52,6 +52,6 @@ jobs:
           file: backend/Dockerfile
           push: false
           load: true
-          tags: researchpilot:ci
+          tags: deepresearch:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max

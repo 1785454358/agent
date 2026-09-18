@@ -1,11 +1,13 @@
 {
-  "name": "researchpilot-frontend",
+  "name": "deepresearch-frontend",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "showcase": "vite --mode showcase",
     "build": "tsc -b && vite build",
+    "build:showcase": "tsc -b && vite build --mode showcase",
     "lint": "eslint src",
     "test": "vitest run"
   },
