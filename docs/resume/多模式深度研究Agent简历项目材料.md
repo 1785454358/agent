@@ -1,66 +1,50 @@
-# 多模式深度研究 Agent 简历材料
+# 多模式深度研究 Agent 简历项目材料
 
-## 五条核心版本
+## 推荐版本
 
-**（1）多模式深度研究 Agent　　　　　　　　　独立开发　　　　　　　　　2026.04-2026.09**
+**多模式深度研究 Agent｜独立开发｜2026.04–2026.09**
 
-**技术栈**　Python、LangGraph、LangChain、FastAPI、Pydantic、SQLAlchemy、MySQL、Redis Streams、Chroma、BAAI/bge-m3、Tavily、Docker、Pytest
+**技术栈：** Python、LangGraph、LangChain、FastAPI、Pydantic、SQLAlchemy、MySQL、Redis Streams、Chroma、BGE-M3、Tavily、Docker、Pytest
 
-**项目描述**　面向复杂开放问题构建深度研究 Agent，以基于 LangGraph 的顶层运行图承载 Workflow、Plan-and-Execute、Multi-Agent 三种研究策略子图，完成检索、查证、回答及按需报告生成。
+**项目描述：** 面向复杂开放问题构建多模式深度研究 Agent，通过统一 Agent Harness 完成网页检索、原文查证、引用回答和按需报告生成。
 
-- **统一运行图**　基于 LangGraph 构建顶层运行图，用可序列化 Harness State、Runtime Context 与策略/响应双注册表编排意图路由、上下文管理、工具、记忆、响应与恢复，三种策略共享运行协议并隔离子图状态。
-- **三种研究模式**　将 Workflow、Plan-and-Execute、Multi-Agent 实现为固定流程、有界重规划、主管并发调度三类 LangGraph 子图，通过 API 显式选择模式，并为 Auto 路由预留注册扩展点。
-- **Tool Gateway 与 Evidence**　模型调用与工具调用分别经过 ModelGateway 和 Tool Gateway；网关处理白名单、参数、安全校验、预算、幂等、超时与错误分类，临时错误由节点级 RetryPolicy 重放并真实重执行，永久失败按任务局部语义记录；Evidence Store 统一保存正文，图状态只保留证据引用。
-- **记忆与上下文管理**　短期记忆使用滑动窗口与有界结构化摘要；长期记忆由 MySQL 保存作用域、类型、重要度、置信度、版本和 Evidence 引用，先做结构化候选过滤，再用本地 BGE-M3 与 Chroma 执行候选内 TopK，命中 ID 回查 MySQL 后注入上下文，并保留索引修复与关键词降级。
-- **持久化与可靠性**　MySQL 保存运行记录、事件、Checkpoint、工具执行账本与长期记忆（自研 SQLAlchemy Checkpointer，生产 asyncmy、测试 aiosqlite 同一套 SQL）；本地运行时 Checkpoint 落 SQLite 文件；Redis Streams 负责任务投递与回收，Pub/Sub 唤醒 SSE，取消键传播取消信号；Checkpoint 与执行账本重放已提交结果并降低重复副作用。
+- **统一运行架构：** 基于 LangGraph 构建 Session Graph，集中管理上下文、记忆、策略路由与响应；Workflow、Plan-and-Execute、Multi-Agent 三种编排策略共享同一个 Agent Loop，并通过强类型输入输出隔离私有状态。
+- **模型与工具治理：** 所有生产模型调用通过 ModelGateway，强制携带 system instruction、original task 和 current constraints；外部工具通过 ToolGateway 统一执行白名单、参数与 URL/SSRF 校验、三级预算、缓存、Singleflight、超时和执行账本。
+- **受控 Agent Loop：** 实现 `prepare_context → model → tools/finish → observe → execution policy` 循环；无依赖工具有界并行，依赖调用等待前置结果，并保证每个 tool call 都有按原顺序闭合的 ToolMessage。
+- **错误与恢复：** 明确 transport retry、semantic repair、recovery replay 三层归属；使用 Checkpoint 保存可恢复 State，Ledger 重放已提交工具结果，所有受控退出生成包含状态、证据、错误、预算和计划完成度的 AgentOutcome。
+- **证据与记忆：** Evidence Store 保存正文和来源，Graph State 只携带 Evidence ID；实现会话窗口与结构化摘要、用户偏好和研究事实的长期记忆，以及 MySQL/SQLite 权威记录与 Chroma 语义索引分工。
 
-## 可选项目要点库
+## 精简版本
 
-以下要点可根据岗位要求和简历版面替换，建议最终保留五至七条。
+版面只够三条时使用：
 
-### Agent Harness
+- 基于 LangGraph 构建统一 Agent Harness，以 Session Graph 管理会话、记忆与策略路由，三种研究策略共享受控 Agent Loop。
+- 通过 ModelGateway 与 ToolGateway 统一模型信封、工具权限、URL 安全、预算、并发、重试、幂等账本和 Evidence 落库。
+- 使用 Checkpoint + Ledger 支持 at-least-once 场景恢复，以结构化 AgentOutcome 表达完成、部分成功、失败、取消和未完成计划。
 
-- **统一执行生命周期**　将请求规范化、意图识别、模式路由、上下文装载、工具调用、响应生成、记忆写入和事件记录编排为顶层运行图，集中处理横切能力，避免三种策略各自维护一套运行逻辑。
-- **状态与运行上下文**　用可序列化 State 保存可恢复的业务状态，以 Runtime Context 注入模型、工具、时钟和存储依赖，区分持久状态与进程内资源，便于测试、恢复和替换基础设施。
-- **注册表与子图隔离**　通过策略注册表和响应注册表按统一输入输出契约挂载子图；父图只接收标准 ResearchOutcome 与 ResponseOutcome，子图私有规划和协作状态不泄漏到共享 State。
-- **统一 LangGraph 编排**　三种策略的循环、条件分支、并发派发和恢复边界均由 LangGraph 表达，Checkpoint 落在确定节点，避免手写循环绕开状态机和执行记录。
+## 按岗位替换的要点
 
-### Research Mode
+### Agent 工程岗位
 
-- **Workflow**　将查询规划、并行检索、证据筛选和完整性评估固化为短路径图，适合边界清晰、时效要求高的研究问题。
-- **Plan-and-Execute**　Planner 生成任务计划，执行器逐项经 Topic 子图检索，Evaluator 决定完成、阻塞或重规划，重规划次数在条件边内强制有界，处理需要多轮查证的问题。
-- **Multi-Agent**　Supervisor 只做拆解、派发与完成判断（不接触联网工具），经 Send 并发调度 Researcher 子图，一个研究员失败只影响自身任务，聚合证据与缺口后返回统一 ResearchOutcome。
+- 将 system instruction、original task、current constraints 固定为模型调用不变量，按完整工具交换裁剪历史，避免上下文压缩破坏协议。
+- 将临时传输失败交给 Gateway，语义修复交给 Agent Loop，崩溃重放交给 Checkpoint/Worker/Ledger，避免多层重复重试。
+- 用有界 completion nudge、迭代上限、连续错误熔断和结构化 Outcome 控制开放式模型循环。
 
-### Tool Gateway 与 Evidence
+### 后端与可靠性岗位
 
-- **原子工具治理**　Tool Gateway 只暴露搜索、抓取和记忆检索三个原子工具，按调用者角色白名单放行；校验和安全拒绝不消耗预算，相同并发请求共享 singleflight，只有领导者消耗网络额度。
-- **图与工具的边界**　把带重规划和终止条件的复合研究过程建模为 LangGraph 子图，工具保持单一外部副作用，避免把隐藏循环包装成工具后失去节点级 Checkpoint 和轨迹。
-- **证据与引用可信**　Evidence Store 是正文唯一所有者，保存规范化正文、来源和内容哈希；图状态与长期记忆仅携带 Evidence ID；响应图只能引用本轮已加载的证据，未知引用会被移除而不是伪造。
+- 使用可序列化 State 和 Runtime Context 分离业务恢复状态与进程资源，策略子图通过统一输入输出接入顶层运行图。
+- 通过工具预算预留、Singleflight 和稳定 call ID 控制并发消耗；Ledger 重放已提交结果，降低 at-least-once 投递的重复影响。
+- 分布式模式使用 MySQL 保存权威状态、Redis Streams 投递任务和传播取消信号；不对任意外部副作用承诺 exactly-once。
 
-### 短期记忆与上下文
+### 检索与知识岗位
 
-- **滑动窗口与结构化压缩**　会话消息超过窗口水位时，把溢出消息交给模型压缩并合并进结构化摘要（用户约束、已确认事实、实体指代、未解决问题、已有结论），合并有界保证多轮压缩后摘要尺寸可控；模型压缩失败时窗口仍确定性裁剪。
-- **会话上下文装配**　每轮先做意图路由，已有上下文请求可以复用会话内证据，增量研究携带既有证据进入策略子图；压缩与召回结果按需注入规划与回答提示词，输出作为助手消息回写会话。
+- 将网页正文、来源和内容哈希保存到 Evidence Store，研究状态和记忆只引用 Evidence ID，响应仅允许引用本轮已加载证据。
+- 长期记忆先按 namespace、类型、状态和有效期过滤，再在候选内通过 BGE-M3 与 Chroma 做语义 TopK，命中后回查权威 Store。
 
-### 长期记忆
+## 事实边界
 
-- **记忆六问生命周期**　何时存（用户显式请求或研究结束后整理带证据的事实）、存什么（有界内容与受控 Evidence 引用）、如何组织（scope/owner/kind 命名空间；当前为单租户部署，跨租户隔离需先接入认证身份）、何时召回（研究、增量研究和报告请求自动触发）、如何更新（相同 namespace/type/subject 下同内容幂等、内容变化生成 supersedes 版本链）、如何遗忘（TTL 过期、陈旧降权、逻辑与物理删除），每一问都有可执行策略测试。
-- **混合语义召回**　MySQL 先按 user/workspace、memory_type、status 和 expires_at 过滤，Chroma 只在候选 memory_id 内执行 BGE-M3 向量 TopK，随后回查 MySQL 获取权威记录，并结合相似度、importance、confidence 与 recency 排序；Chroma 故障时降级到确定性检索。
+当前记录的离线测试基线为 `464 passed, 1 deselected`，覆盖三种策略、模型上下文信封、工具配对、Gateway 边界、AgentOutcome 和 Checkpoint 恢复。
 
-### 对话与输出
+以下能力只应写为演进方向：认证后的多租户隔离、通用 Human-in-the-loop 审批、完整内容级 Prompt Injection 检测、Provider 精确 Token 成本计量、真实服务性能结论和系统化在线 Agent Eval。
 
-- **默认简洁回答**　普通问题默认走 Answer 响应图；只有明确要求时进入 Brief 或 Report；研究深度与输出形式是两个独立选择。
-- **引用可追溯**　回答中的引用标记逐一映射到本轮加载的 Evidence 记录，生成失败或引用全部失效时返回带来源清单的部分结果，不伪造完整报告。
-- **会话意图路由**　区分新研究、已有上下文回答、模式切换、记忆更新和报告请求，同一 thread 经 Checkpoint 延续会话状态；请求可携带 thread_id 继续已有会话。
-
-### 持久化与可靠性
-
-- **自研 SQL Checkpointer**　基于 SQLAlchemy 实现 LangGraph Checkpoint Saver（生产 asyncmy/MySQL，测试 aiosqlite/SQLite 同一套 SQL），配合子图命名空间恢复图状态；执行账本按稳定 call_id 重放已提交工具结果，降低节点重放造成的重复调用，Provider 成功但账本未提交的窗口仍可能重复。
-- **Redis 与 MySQL 分工**　Redis Streams 承担任务投递、消费与回收，Pub/Sub 唤醒 SSE，取消键传播取消信号，MySQL 保存权威状态；系统采用 at-least-once 投递，账本重放成功与永久失败结果，临时失败保持可回收以支持节点级重试。
-- **分层预算控制**　在工具调用前按 Run/Mode/Agent 三级预留调用次数、网络请求与抓取页数预算，并发请求通过预留、提交和释放避免额度竞争；校验类拒绝不消耗预算。
-- **Checkpoint 与事件**　关键节点提交可恢复 State 和单调递增事件，客户端按事件 ID 续传进度；节点失败后从最近 Checkpoint 恢复，通过执行账本和调用键识别并降低 at-least-once 投递造成的重复影响。
-
-### 可观测性与评测
-
-- **结构化事件与指标**　网关与运行图输出带 run/thread/模式/调用者/工具标识的结构化事件（不含正文与异常敏感文本），聚合工具次数、失败、缓存命中与耗时。
-- **可重复的模式对照基线**　在同一脚本化数据集上比较三种模式的终止原因、证据数、执行步数、模型与工具调用次数，作为回归基线；真实模型与真实工具下的对照评测可基于同一骨架执行。
+面试展开材料见 [Agent Harness 面试手册](Agent%20Harness面试手册.md)，实现路径见 [源码学习指南](Agent%20Harness源码学习指南.md)。
