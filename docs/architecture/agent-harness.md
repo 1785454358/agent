@@ -170,7 +170,7 @@ Session Graph 的长期上下文采用滑动窗口和结构化摘要。摘要失
 
 ## 当前验证边界
 
-离线测试基线：`464 passed, 1 deselected`。相关不变量集中在：
+2026-09-22 当前工作树的确定性测试基线：`482 passed, 2 deselected`。相关不变量集中在：
 
 - [Agent loop tests](../../backend/tests/harness/test_agent_executor.py)
 - [Cross-cutting invariant tests](../../backend/tests/harness/test_agent_invariants.py)

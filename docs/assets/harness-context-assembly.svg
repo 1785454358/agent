@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">围绕当前决策装配 Context</title>
+  <desc id="desc">稳定层、任务层、工作层和证据层进入模型视图，较早的完整工具交换按预算裁剪并预留输出空间。</desc>
+  <defs><marker id="a" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M0 0 L11 5.5 L0 11 Z" fill="#B66932"/></marker><style>.s{font-family:"Microsoft YaHei","PingFang SC",Arial,sans-serif}.e{font-size:21px;font-weight:700;letter-spacing:4px;fill:#9A6A39}.t{font-size:45px;font-weight:800;fill:#243236}.st{font-size:23px;fill:#667174}.h{font-size:26px;font-weight:800}.b{font-size:20px}.sm{font-size:18px;fill:#667174}</style></defs>
+  <rect width="1600" height="900" fill="#F2EDE3"/>
+  <text x="80" y="82" class="s e">AGENT FIELD NOTE / CONTEXT ASSEMBLY</text><text x="80" y="145" class="s t">Context 不是历史堆积，而是本轮决策视图</text><text x="80" y="190" class="s st">先固定不可丢的信息，再装入当前工作状态与相关证据，最后按完整交换裁剪。</text>
+
+  <g transform="translate(90 265)" class="s">
+    <rect width="500" height="105" rx="16" fill="#243236"/><text x="30" y="45" class="h" fill="#fff">稳定层 · Stable</text><text x="30" y="78" class="b" fill="#E8EEEE">system instruction · tool protocol · safety rules</text>
+    <rect y="125" width="500" height="105" rx="16" fill="#D7C9B4"/><text x="30" y="170" class="h" fill="#243236">任务层 · Task</text><text x="30" y="203" class="b" fill="#3F4B4D">original task · current constraints · budget</text>
+    <rect y="250" width="500" height="105" rx="16" fill="#E5A66E"/><text x="30" y="295" class="h" fill="#243236">工作层 · Working</text><text x="30" y="328" class="b" fill="#3F4B4D">todos · latest feedback · current gaps</text>
+    <rect y="375" width="500" height="105" rx="16" fill="#84B2A5"/><text x="30" y="420" class="h" fill="#243236">证据层 · Evidence</text><text x="30" y="453" class="b" fill="#243236">retrieved slices · source metadata · citations</text>
+  </g>
+
+  <path d="M610 505 H755" stroke="#B66932" stroke-width="5" marker-end="url(#a)"/>
+  <g transform="translate(775 250)" class="s">
+    <rect width="430" height="520" rx="24" fill="#fff" stroke="#243236" stroke-width="4"/>
+    <text x="215" y="55" text-anchor="middle" class="h" fill="#243236">Model View</text>
+    <rect x="35" y="85" width="360" height="78" rx="12" fill="#243236"/><text x="215" y="132" text-anchor="middle" class="b" fill="#fff">必须保留：指令、任务、约束</text>
+    <rect x="35" y="180" width="360" height="84" rx="12" fill="#E5A66E"/><text x="215" y="215" text-anchor="middle" class="b" fill="#243236">最近完整工具交换</text><text x="215" y="244" text-anchor="middle" class="sm">AI tool calls + paired ToolMessages</text>
+    <rect x="35" y="282" width="360" height="84" rx="12" fill="#84B2A5"/><text x="215" y="317" text-anchor="middle" class="b" fill="#243236">相关证据摘要与引用</text><text x="215" y="346" text-anchor="middle" class="sm">正文留在 Evidence Store</text>
+    <rect x="35" y="384" width="360" height="58" rx="12" fill="#E9E0D2" stroke="#CBBDA8" stroke-dasharray="9 7"/><text x="215" y="420" text-anchor="middle" class="b" fill="#667174">较早完整交换：按预算裁剪</text>
+    <rect x="35" y="458" width="360" height="38" rx="10" fill="#785147"/><text x="215" y="484" text-anchor="middle" class="b" fill="#fff">预留输出 Token</text>
+  </g>
+
+  <g transform="translate(1270 310)" class="s">
+    <text x="0" y="0" class="h" fill="#243236">四条不变量</text>
+    <text x="0" y="55" class="b" fill="#3F4B4D">① 指令不丢</text><text x="0" y="100" class="b" fill="#3F4B4D">② 原始任务不丢</text><text x="0" y="145" class="b" fill="#3F4B4D">③ 当前约束不丢</text><text x="0" y="190" class="b" fill="#3F4B4D">④ 工具交换不拆半</text>
+    <rect x="0" y="245" width="250" height="130" rx="14" fill="#fff" stroke="#CBBDA8" stroke-width="3"/><text x="24" y="286" class="b" fill="#243236">失败时：</text><text x="24" y="322" class="sm">确定性裁剪仍生效</text><text x="24" y="354" class="sm">超限则明确退出</text>
+  </g>
+  <text x="90" y="835" class="s st">目标不是塞入更多信息，而是在有限窗口里提高约束遵守、证据相关性和任务完成率。</text>
+</svg>

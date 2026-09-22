@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Agent Harness 的五个核心问题</title>
+  <desc id="desc">从 Agent Loop、Context、Tool、Runtime 到 Eval 的闭环学习地图。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0 L12 6 L0 12 Z" fill="#B66932"/></marker>
+    <style>
+      .sans{font-family:"Microsoft YaHei","PingFang SC",Arial,sans-serif}.eyebrow{font-size:22px;font-weight:700;letter-spacing:5px;fill:#9A6A39}.title{font-size:48px;font-weight:800;fill:#243236}.sub{font-size:24px;fill:#667174}.num{font-size:20px;font-weight:700;fill:#E9BE91}.head{font-size:29px;font-weight:800;fill:#fff}.body{font-size:21px;fill:#E8EEEE}.foot{font-size:24px;font-weight:700;fill:#243236}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="#F2EDE3"/>
+  <text x="90" y="92" class="sans eyebrow">AGENT FIELD NOTE / LEARNING MAP</text>
+  <text x="90" y="160" class="sans title">学 Agent Harness，先抓住五个核心问题</text>
+  <text x="90" y="208" class="sans sub">不是堆组件，而是让模型判断持续变成可验收的行动。</text>
+
+  <g transform="translate(85 310)">
+    <g transform="translate(0 0)"><rect width="270" height="300" rx="18" fill="#243236"/><text x="28" y="48" class="sans num">01</text><text x="28" y="98" class="sans head">Agent Loop</text><text x="28" y="145" class="sans body"><tspan x="28">下一步做什么？</tspan><tspan x="28" dy="38">何时继续、等待</tspan><tspan x="28" dy="38">或结束？</tspan></text></g>
+    <g transform="translate(292 0)"><rect width="270" height="300" rx="18" fill="#365055"/><text x="28" y="48" class="sans num">02</text><text x="28" y="98" class="sans head">Context</text><text x="28" y="145" class="sans body"><tspan x="28">本轮该看什么？</tspan><tspan x="28" dy="38">哪些必须保留，</tspan><tspan x="28" dy="38">哪些按需召回？</tspan></text></g>
+    <g transform="translate(584 0)"><rect width="270" height="300" rx="18" fill="#B66932"/><text x="28" y="48" class="sans num" fill="#FFF3E5">03</text><text x="28" y="98" class="sans head">Tool</text><text x="28" y="145" class="sans body"><tspan x="28">能力能否调用？</tspan><tspan x="28" dy="38">参数、权限和</tspan><tspan x="28" dy="38">副作用谁校验？</tspan></text></g>
+    <g transform="translate(876 0)"><rect width="270" height="300" rx="18" fill="#487C70"/><text x="28" y="48" class="sans num">04</text><text x="28" y="98" class="sans head">Runtime</text><text x="28" y="145" class="sans body"><tspan x="28">失败后怎么续跑？</tspan><tspan x="28" dy="38">预算、并发和</tspan><tspan x="28" dy="38">恢复如何治理？</tspan></text></g>
+    <g transform="translate(1168 0)"><rect width="270" height="300" rx="18" fill="#785147"/><text x="28" y="48" class="sans num">05</text><text x="28" y="98" class="sans head">Eval</text><text x="28" y="145" class="sans body"><tspan x="28">结果真的更好吗？</tspan><tspan x="28" dy="38">完成、成本与</tspan><tspan x="28" dy="38">副作用怎么测？</tspan></text></g>
+  </g>
+
+  <path d="M220 660 C220 760 1380 760 1380 660" fill="none" stroke="#B66932" stroke-width="5" stroke-dasharray="14 12" marker-end="url(#arrow)"/>
+  <text x="800" y="735" text-anchor="middle" class="sans foot">Trace 与证据把评估结果反馈给下一轮设计</text>
+  <text x="90" y="846" class="sans sub">学习顺序：先理解循环，再理解信息、能力、运行时，最后用评测检验整套系统。</text>
+</svg>

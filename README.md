@@ -94,7 +94,7 @@ npm run build
 npm run build:showcase
 ```
 
-展示包当前验证基线（2026-09-18）：后端 `464 passed, 1 deselected`，前端 `26 passed`，Production 与 Showcase 两种构建均通过。
+当前工作树验证基线（2026-09-22）：后端确定性测试 `482 passed, 2 deselected`。前端测试与 Production、Showcase 构建命令见下方；真实 Provider 与搜索服务仍需独立凭据验证。
 
 真实 Provider 与搜索服务测试需要有效凭据，因此与确定性测试分开执行。当前测试覆盖三种策略、Gateway 边界、上下文不变量、ToolMessage 配对、AgentOutcome、Checkpoint 恢复、记忆、预算、引用和分布式租约。
 
@@ -112,5 +112,14 @@ npm run build:showcase
 | Memory Lifecycle | [`harness/memory/lifecycle.py`](backend/src/deeptrace/harness/memory/lifecycle.py) |
 
 深入设计见 [Agent Harness 架构文档](docs/architecture/agent-harness.md)，演示与源码讲解材料见 [docs/resume](docs/resume/README.md)。
+
+## 学习与面试材料
+
+| 材料 | 适合用途 |
+| --- | --- |
+| [项目深度拆解](docs/resume/Agent%20Harness项目深度拆解.md) | 按 Field Notes 从复杂任务拆到 Harness 设计和简历表达 |
+| [学习与面试路线](docs/resume/Agent%20Harness学习与面试路线.md) | 按阶段读源码、做实验并准备面试证据 |
+| [实现差距与完善清单](docs/resume/Agent%20Harness实现差距与完善清单.md) | 区分完整方案、当前实现与后续优先级 |
+| [面试手册](docs/resume/Agent%20Harness面试手册.md) | 高频追问、压力追问与事实边界 |
 
 Python 包名 `deeptrace`、`deeptrace` CLI 兼容入口和 `DEEPTRACE_*` 环境变量继续保留。

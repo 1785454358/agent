@@ -149,7 +149,7 @@ cd backend
 .\.venv\Scripts\python.exe -m pytest -m "not real" -q
 ```
 
-当前记录基线为 `464 passed, 1 deselected`。如果代码继续变化，以新运行结果为准。
+2026-09-22 当前工作树的确定性测试基线为 `482 passed, 2 deselected`。如果代码继续变化，以新运行结果为准。
 
 建议重点阅读这些测试场景：
 

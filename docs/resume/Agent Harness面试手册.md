@@ -10,7 +10,7 @@
 
 Agent Loop 每轮固定经过上下文准备、ModelGateway、工具分发、观察和执行策略。模型能更新计划、搜索和抓取，但系统强制保留原始任务与当前约束，限制迭代、并发和预算，并保证每个 tool call 都有 ToolMessage。外部工具统一经过 ToolGateway，执行权限、URL 安全、预算、缓存、Singleflight、重试、Ledger 和 Evidence 落库。
 
-恢复方面，Checkpoint 保存可恢复 State，Execution Ledger 重放已提交的工具结果。所有受控退出都产生结构化 AgentOutcome，而不是只返回一个停止原因。当前离线测试基线是 464 passed、1 deselected；真实 Provider 与外部服务单独验证。
+恢复方面，Checkpoint 保存可恢复 State，Execution Ledger 重放已提交的工具结果。所有受控退出都产生结构化 AgentOutcome，而不是只返回一个停止原因。2026-09-22 当前工作树的确定性测试基线是 482 passed、2 deselected；真实 Provider 与外部服务单独验证。
 
 ## 五个核心问题
 
