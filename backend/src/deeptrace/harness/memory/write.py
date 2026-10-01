@@ -11,6 +11,10 @@ from deeptrace.domain import MemoryRecord, MemoryStatus, MemoryType
 _ALLOWED_SOURCES = {"user_request", "consolidation", "repeated_preference"}
 
 
+class MemoryWriteRejected(ValueError):
+    """Admission rejected the write, rather than storage being unavailable."""
+
+
 class MemoryWritePolicy:
     """Gate every long-term write; one-off or unsupported content is rejected."""
 
@@ -63,7 +67,7 @@ async def remember(
 ) -> MemoryRecord:
     """Admission, retention and atomic versioning are one write boundary."""
     if not policy.can_store(record, source=source):
-        raise ValueError("memory_write_rejected")
+        raise MemoryWriteRejected("memory_write_rejected")
     if record.type is MemoryType.FACT and record.expires_at is None:
         record = record.model_copy(
             update={"expires_at": record.updated_at + timedelta(days=30)}

@@ -23,7 +23,12 @@ from deeptrace.harness.memory.recall import (
     select_memories,
     should_recall,
 )
-from deeptrace.harness.memory.write import MemoryWritePolicy, memory_subject, remember
+from deeptrace.harness.memory.write import (
+    MemoryWritePolicy,
+    MemoryWriteRejected,
+    memory_subject,
+    remember,
+)
 from deeptrace.harness.state import HarnessState
 from deeptrace.harness.token_budget import count_tokens
 
@@ -166,7 +171,9 @@ async def _memory_update_node(
         updated_at=now,
     )
     policy = MemoryWritePolicy()
-    if not policy.can_store(record, source="user_request"):
+    try:
+        stored = await remember(memory_store, record, policy, source="user_request")
+    except MemoryWriteRejected:
         turn["response_outcome"] = ResponseOutcome(
             response_mode=ResponseMode.ANSWER,
             content="这条内容不符合保存策略，未能记住。",
@@ -175,8 +182,6 @@ async def _memory_update_node(
             partial_reason="memory_rejected",
         )
         return {"turn": turn}
-    try:
-        stored = await remember(memory_store, record, policy, source="user_request")
     except Exception as exc:  # noqa: BLE001 - report explicit persistence failure
         await _degraded(context, "explicit_write", exc)
         turn["response_outcome"] = ResponseOutcome(

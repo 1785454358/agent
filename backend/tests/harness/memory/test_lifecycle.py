@@ -2,9 +2,103 @@ from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
+from strategies.fixtures import build_gateway_fixture
+
 from deeptrace.domain import ConversationIntent
 from deeptrace.harness.memory.lifecycle import _recall_memory
-from strategies.fixtures import build_gateway_fixture
+
+
+@pytest.mark.asyncio
+async def test_explicit_save_evaluates_admission_once_and_persists(monkeypatch):
+    from deeptrace.harness.memory import lifecycle
+    from deeptrace.harness.memory.write import MemoryWritePolicy
+
+    checks = []
+
+    class TracedPolicy(MemoryWritePolicy):
+        def can_store(self, record, *, source):
+            checks.append(source)
+            return super().can_store(record, source=source)
+
+    monkeypatch.setattr(lifecycle, "MemoryWritePolicy", TracedPolicy)
+    fixture = build_gateway_fixture()
+    result = await lifecycle._memory_update_node(
+        {"turn": {"user_input": "请记住，以后用中文回答"}},
+        SimpleNamespace(context=fixture.context),
+    )
+    assert result["turn"]["response_outcome"].partial_reason == "memory_updated"
+    records = await fixture.memory_store.list_namespace(
+        ("user", "user-1", "preferences")
+    )
+    assert [record.content for record in records] == ["以后用中文回答"]
+    assert checks == ["user_request"]
+
+
+@pytest.mark.asyncio
+async def test_explicit_admission_rejection_does_not_persist(monkeypatch):
+    from deeptrace.harness.memory import lifecycle
+    from deeptrace.harness.memory.write import MemoryWritePolicy
+
+    class DeniedPolicy(MemoryWritePolicy):
+        def can_store(self, record, *, source):
+            return False
+
+    monkeypatch.setattr(lifecycle, "MemoryWritePolicy", DeniedPolicy)
+    fixture = build_gateway_fixture()
+    result = await lifecycle._memory_update_node(
+        {"turn": {"user_input": "请记住，以后用中文回答"}},
+        SimpleNamespace(context=fixture.context),
+    )
+    assert result["turn"]["response_outcome"].partial_reason == "memory_rejected"
+    assert (
+        await fixture.memory_store.list_namespace(("user", "user-1", "preferences"))
+        == []
+    )
+
+
+@pytest.mark.asyncio
+async def test_explicit_save_survives_index_failure():
+    from deeptrace.harness.memory.lifecycle import _memory_update_node
+
+    class FailedIndex:
+        async def index(self, records):
+            raise RuntimeError("index unavailable")
+
+    fixture = build_gateway_fixture()
+    result = await _memory_update_node(
+        {"turn": {"user_input": "请记住，以后用中文回答"}},
+        SimpleNamespace(
+            context=replace(fixture.context, memory_retriever=FailedIndex())
+        ),
+    )
+    assert result["turn"]["response_outcome"].partial_reason == "memory_updated"
+    assert (
+        len(
+            await fixture.memory_store.list_namespace(("user", "user-1", "preferences"))
+        )
+        == 1
+    )
+
+
+@pytest.mark.asyncio
+async def test_explicit_save_propagates_store_cancellation():
+    import asyncio
+
+    from deeptrace.harness.memory.lifecycle import _memory_update_node
+    from deeptrace.harness.memory.store import InMemoryMemoryStore
+
+    class CancelledStore(InMemoryMemoryStore):
+        async def upsert(self, record, **kwargs):
+            raise asyncio.CancelledError()
+
+    fixture = build_gateway_fixture()
+    with pytest.raises(asyncio.CancelledError):
+        await _memory_update_node(
+            {"turn": {"user_input": "请记住，以后用中文回答"}},
+            SimpleNamespace(
+                context=replace(fixture.context, memory_store=CancelledStore())
+            ),
+        )
 
 
 @pytest.mark.asyncio
@@ -46,13 +140,16 @@ async def test_explicit_preferences_update_the_same_language_slot():
 
 
 @pytest.mark.asyncio
-async def test_explicit_memory_write_reports_store_failure():
+@pytest.mark.parametrize(
+    "error", [RuntimeError("storage offline"), ValueError("memory_write_rejected")]
+)
+async def test_explicit_memory_write_reports_store_failure(error):
     from deeptrace.harness.memory.lifecycle import _memory_update_node
     from deeptrace.harness.memory.store import InMemoryMemoryStore
 
     class BrokenStore(InMemoryMemoryStore):
         async def upsert(self, record, **kwargs):
-            raise RuntimeError("storage offline")
+            raise error
 
     fixture = build_gateway_fixture()
     runtime = SimpleNamespace(
@@ -154,8 +251,9 @@ async def test_consolidation_preserves_distinct_facts_and_degrades_on_store_fail
 
 @pytest.mark.asyncio
 async def test_recall_obeys_token_budget_and_preserves_provenance():
-    from deeptrace.domain import MemoryRecord, MemoryType
     import json
+
+    from deeptrace.domain import MemoryRecord, MemoryType
     from deeptrace.harness.token_budget import count_tokens
 
     fixture = build_gateway_fixture()
