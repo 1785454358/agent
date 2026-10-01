@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
+import re
+from datetime import timedelta
+
 from deeptrace.domain import MemoryRecord, MemoryStatus, MemoryType
 
 _ALLOWED_SOURCES = {"user_request", "consolidation", "repeated_preference"}
@@ -13,7 +17,10 @@ class MemoryWritePolicy:
     def can_store(self, record: MemoryRecord, *, source: str) -> bool:
         if source not in _ALLOWED_SOURCES:
             return False
-        if not isinstance(record, MemoryRecord) or record.status is not MemoryStatus.ACTIVE:
+        if (
+            not isinstance(record, MemoryRecord)
+            or record.status is not MemoryStatus.ACTIVE
+        ):
             return False
         if record.type is MemoryType.FACT:
             # facts require source evidence support
@@ -27,29 +34,38 @@ class MemoryWritePolicy:
         return False
 
 
-async def remember(store, record: MemoryRecord, policy: MemoryWritePolicy) -> MemoryRecord:
-    """Versioned upsert; identical content is idempotent, changes supersede."""
-    existing = await store.get(record.namespace, record.identity())
-    if existing is None:
-        stored = await store.put(record)
-        return stored
-    if existing.content == record.content:
-        return existing
-    if existing.status is not MemoryStatus.ACTIVE:
-        # re-activate a new version over a non-active predecessor
-        pass
-    new_version = MemoryRecord.model_validate(
-        {
-            **record.model_dump(),
-            "id": "",
-            "version": existing.version + 1,
-            "supersedes": existing.id,
-            "created_at": record.created_at,
-        }
-    )
-    superseded = existing.model_copy(
-        update={"status": MemoryStatus.SUPERSEDED}, deep=True
-    )
-    await store.put(superseded)
-    stored = await store.put(new_version)
-    return stored
+def memory_subject(content: str, *, preference: bool = False) -> str:
+    """Stable slots for known preferences; unknown facts remain separate items."""
+    text = content.strip()
+    if preference:
+        if re.search(r"(中文|英文|英语|汉语)", text) and re.search(
+            r"(用|使用|回答|回复|输出)", text
+        ):
+            return "response.language"
+        if re.search(r"(简洁|简短|详细|详尽)", text) and re.search(
+            r"(回答|回复|输出|内容|解释)", text
+        ):
+            return "response.detail"
+        if re.search(r"(表格|markdown|列表)", text, re.IGNORECASE) and re.search(
+            r"(用|使用|格式|输出)", text
+        ):
+            return "response.format"
+    normalized = " ".join(text.casefold().split())
+    return "item-" + hashlib.sha256(normalized.encode()).hexdigest()[:32]
+
+
+async def remember(
+    store,
+    record: MemoryRecord,
+    policy: MemoryWritePolicy,
+    *,
+    source: str = "consolidation",
+) -> MemoryRecord:
+    """Admission, retention and atomic versioning are one write boundary."""
+    if not policy.can_store(record, source=source):
+        raise ValueError("memory_write_rejected")
+    if record.type is MemoryType.FACT and record.expires_at is None:
+        record = record.model_copy(
+            update={"expires_at": record.updated_at + timedelta(days=30)}
+        )
+    return await store.upsert(record, allow_reactivate=source == "user_request")

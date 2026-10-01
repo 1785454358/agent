@@ -14,11 +14,12 @@ from deeptrace.domain import (
     ExecutionStatus,
     Finding,
     ResearchInput,
-    ResearchOutcome,
     ResearchMode,
-    ResponseOutcome,
+    ResearchOutcome,
     ResponseMode,
+    ResponseOutcome,
 )
+from deeptrace.domain.memory import RecalledMemory
 
 
 class ConversationState(TypedDict):
@@ -80,7 +81,7 @@ class TurnState(TypedDict):
     research_outcome: ResearchOutcome | None
     response_outcome: ResponseOutcome | None
     recalled_memory_ids: list[str]
-    recalled_memories: list[dict[str, str]]
+    recalled_memories: list[RecalledMemory]
     active_evidence_ids: list[str]
     budget: BudgetSnapshot
     status: ExecutionStatus
@@ -109,9 +110,7 @@ class HarnessState(TypedDict):
     turn: TurnState
 
 
-def new_conversation(
-    thread_id: str, mode: ResearchMode
-) -> ConversationState:
+def new_conversation(thread_id: str, mode: ResearchMode) -> ConversationState:
     now = datetime.now(UTC).isoformat()
     return {
         "thread_id": thread_id,

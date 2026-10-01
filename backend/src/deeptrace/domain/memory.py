@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime
 from enum import StrEnum
-from typing import Literal
+from typing import Literal, TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -18,6 +18,18 @@ STALE_AFTER_DAYS = 30
 
 MemoryScope = Literal["user", "workspace", "thread", "global"]
 MemoryNamespace = tuple[str, str, str]
+
+
+class RecalledMemory(TypedDict):
+    id: str
+    version: int
+    type: str
+    subject: str
+    content: str
+    source_evidence_ids: list[str]
+    confidence: float
+    updated_at: str
+    expires_at: str | None
 
 
 class MemoryType(StrEnum):
@@ -86,3 +98,43 @@ class MemoryRecord(BaseModel):
 
     def store_key(self) -> str:
         return f"{self.identity()}|v{self.version}"
+
+
+def next_memory_version(
+    record: MemoryRecord,
+    previous: MemoryRecord | None,
+    *,
+    allow_reactivate: bool = True,
+) -> MemoryRecord:
+    """Pure version decision; stores commit it and superseding atomically."""
+    if previous is None:
+        return record.model_copy(deep=True)
+    if previous.status is MemoryStatus.DELETED and not allow_reactivate:
+        return previous.model_copy(deep=True)
+    live = previous.status is MemoryStatus.ACTIVE and (
+        previous.expires_at is None or previous.expires_at > record.updated_at
+    )
+    if (
+        live
+        and previous.content == record.content
+        and previous.source_evidence_ids == record.source_evidence_ids
+    ):
+        return previous.model_copy(deep=True)
+    return MemoryRecord.model_validate(
+        {
+            **record.model_dump(),
+            "id": "",
+            "version": previous.version + 1,
+            "supersedes": previous.id,
+        }
+    )
+
+
+def current_memories(records: list[MemoryRecord]) -> list[MemoryRecord]:
+    """Newest version is authoritative, even when it is deleted or expired."""
+    latest: dict[str, MemoryRecord] = {}
+    for record in records:
+        previous = latest.get(record.identity())
+        if previous is None or record.version > previous.version:
+            latest[record.identity()] = record
+    return sorted(latest.values(), key=lambda r: r.identity())

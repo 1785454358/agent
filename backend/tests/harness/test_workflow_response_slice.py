@@ -79,9 +79,7 @@ def _registries() -> tuple[StrategyRegistry, ResponseGraphRegistry]:
     responses = ResponseGraphRegistry()
     responses.register(ResponseRegistration(ResponseMode.ANSWER, build_answer_graph()))
     responses.register(ResponseRegistration(ResponseMode.BRIEF, build_brief_graph()))
-    responses.register(
-        ResponseRegistration(ResponseMode.REPORT, build_report_graph())
-    )
+    responses.register(ResponseRegistration(ResponseMode.REPORT, build_report_graph()))
     return strategies, responses
 
 
@@ -124,9 +122,7 @@ async def test_default_request_returns_a_concise_cited_answer() -> None:
     fixture = _fixture(model)
     strategies, responses = _registries()
     checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
-    graph = build_agent_runtime_graph(
-        strategies, responses, checkpointer=checkpointer
-    )
+    graph = build_agent_runtime_graph(strategies, responses, checkpointer=checkpointer)
 
     result = await graph.ainvoke(
         _initial_state("研究 LangGraph Harness"),
@@ -138,17 +134,16 @@ async def test_default_request_returns_a_concise_cited_answer() -> None:
     assert turn["status"] is ExecutionStatus.COMPLETED
     assert turn["response_mode"] is ResponseMode.ANSWER
     assert turn["response_outcome"].partial_reason is None
-    assert turn["response_outcome"].citations[0].evidence_id == (
-        turn["research_outcome"].evidence_ids[0]
+    assert (
+        turn["response_outcome"].citations[0].evidence_id
+        == (turn["research_outcome"].evidence_ids[0])
     )
     # real typed tool calls happened through the gateway
     tool_sequence = [call["request"].tool.value for call in fixture.gateway.calls]
     assert tool_sequence == ["search_web", "fetch_page"]
     assert turn["research_outcome"].executed_steps >= 3
 
-    snapshot = await graph.aget_state(
-        {"configurable": {"thread_id": "thread-1"}}
-    )
+    snapshot = await graph.aget_state({"configurable": {"thread_id": "thread-1"}})
     serialized = json.dumps(snapshot.values, default=str, ensure_ascii=False)
     assert "unique-evidence-body-a" not in serialized
     for private_key in ("search_result", "loaded_evidence", "topic_input"):
@@ -194,8 +189,9 @@ async def test_explicit_report_request_reuses_research_and_routes_to_report() ->
     assert turn["response_outcome"].response_mode is ResponseMode.REPORT
     assert "正式报告" in model.calls[-1][1]
     # the same research strategy and evidence still backed the report
-    assert turn["response_outcome"].citations[0].evidence_id == (
-        turn["research_outcome"].evidence_ids[0]
+    assert (
+        turn["response_outcome"].citations[0].evidence_id
+        == (turn["research_outcome"].evidence_ids[0])
     )
 
 
@@ -227,9 +223,7 @@ async def test_plan_execute_mode_routes_through_application_service() -> None:
         )
     )
     responses = ResponseGraphRegistry()
-    responses.register(
-        ResponseRegistration(ResponseMode.ANSWER, build_answer_graph())
-    )
+    responses.register(ResponseRegistration(ResponseMode.ANSWER, build_answer_graph()))
     graph = build_agent_runtime_graph(strategies, responses)
 
     from deeptrace.application.research import ApplicationResearchRequest
@@ -279,9 +273,7 @@ async def test_multi_agent_mode_routes_through_application_service() -> None:
         )
     )
     responses = ResponseGraphRegistry()
-    responses.register(
-        ResponseRegistration(ResponseMode.ANSWER, build_answer_graph())
-    )
+    responses.register(ResponseRegistration(ResponseMode.ANSWER, build_answer_graph()))
     graph = build_agent_runtime_graph(strategies, responses)
 
     outcome = await ResearchApplicationService(graph).invoke(
@@ -314,9 +306,7 @@ async def test_follow_up_in_same_thread_answers_without_new_research() -> None:
     fixture = _fixture(model)
     strategies, responses = _registries()
     checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
-    graph = build_agent_runtime_graph(
-        strategies, responses, checkpointer=checkpointer
-    )
+    graph = build_agent_runtime_graph(strategies, responses, checkpointer=checkpointer)
     config = {"configurable": {"thread_id": "thread-1"}}
     service = ResearchApplicationService(graph)
 
@@ -348,9 +338,9 @@ async def test_follow_up_in_same_thread_answers_without_new_research() -> None:
     assert second.partial_reason is None
     # the responder prompt now carries the recent conversation, including the
     # previous turn's assistant reply and the injected summary
-    responder_prompt = [
-        prompt for role, prompt in model.calls if role == "responder"
-    ][-1]
+    responder_prompt = [prompt for role, prompt in model.calls if role == "responder"][
+        -1
+    ]
     assert "助手：" in responder_prompt
     assert second.cited_evidence_ids == first.cited_evidence_ids
     # no new research happened for the follow-up turn
@@ -372,9 +362,7 @@ async def test_report_request_after_research_skips_new_research() -> None:
     fixture = _fixture(model)
     strategies, responses = _registries()
     checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
-    graph = build_agent_runtime_graph(
-        strategies, responses, checkpointer=checkpointer
-    )
+    graph = build_agent_runtime_graph(strategies, responses, checkpointer=checkpointer)
     config = {"configurable": {"thread_id": "thread-1"}}
     service = ResearchApplicationService(graph)
     first_request = ApplicationResearchRequest(
@@ -416,9 +404,7 @@ async def test_incremental_research_runs_again_in_same_thread() -> None:
     fixture = _fixture(model)
     strategies, responses = _registries()
     checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
-    graph = build_agent_runtime_graph(
-        strategies, responses, checkpointer=checkpointer
-    )
+    graph = build_agent_runtime_graph(strategies, responses, checkpointer=checkpointer)
     config = {"configurable": {"thread_id": "thread-1"}}
     service = ResearchApplicationService(graph)
     first_request = ApplicationResearchRequest(
@@ -525,12 +511,11 @@ async def test_research_recalls_memories_and_consolidates_findings() -> None:
             updated_at=now,
         ),
         MemoryWritePolicy(),
+        source="user_request",
     )
     strategies, responses = _registries()
     checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
-    graph = build_agent_runtime_graph(
-        strategies, responses, checkpointer=checkpointer
-    )
+    graph = build_agent_runtime_graph(strategies, responses, checkpointer=checkpointer)
     service = ResearchApplicationService(graph)
 
     outcome = await service.invoke(
@@ -545,9 +530,7 @@ async def test_research_recalls_memories_and_consolidates_findings() -> None:
     )
 
     assert outcome.partial_reason is None
-    snapshot = await graph.aget_state(
-        {"configurable": {"thread_id": "thread-1"}}
-    )
+    snapshot = await graph.aget_state({"configurable": {"thread_id": "thread-1"}})
     recalled = snapshot.values["turn"]["recalled_memory_ids"]
     assert recalled, "preference should be recalled for research turns"
 
@@ -558,7 +541,9 @@ async def test_research_recalls_memories_and_consolidates_findings() -> None:
 
 
 @pytest.mark.asyncio
-async def test_harness_uses_semantic_retriever_and_indexes_consolidated_memory() -> None:
+async def test_harness_uses_semantic_retriever_and_indexes_consolidated_memory() -> (
+    None
+):
     from dataclasses import replace
 
     from deeptrace.domain import MemoryRecord, MemoryType
@@ -610,17 +595,19 @@ async def test_harness_uses_semantic_retriever_and_indexes_consolidated_memory()
     )
     fixture = _fixture(model)
     now = fixture.context.clock.now()
-    preference = MemoryRecord(
-        type=MemoryType.PREFERENCE,
-        namespace=("user", "user-1", "preferences"),
-        subject="回答风格",
-        content="用户偏好简洁回答",
+    remembered_fact = MemoryRecord(
+        type=MemoryType.FACT,
+        namespace=("workspace", "workspace-1", "facts"),
+        subject="checkpoint",
+        content="历史研究中 checkpoint 支持恢复",
+        source_evidence_ids=["historical-source"],
         confidence=1.0,
         importance=1.0,
         created_at=now,
         updated_at=now,
     )
-    retriever = RecordingRetriever(preference)
+    await fixture.memory_store.put(remembered_fact)
+    retriever = RecordingRetriever(remembered_fact)
     fixture.context = replace(
         fixture.context, memory_retriever=retriever, memory_recall_limit=2
     )
@@ -637,9 +624,8 @@ async def test_harness_uses_semantic_retriever_and_indexes_consolidated_memory()
         context=fixture.context,
     )
 
-    assert result["turn"]["recalled_memory_ids"] == [preference.id]
+    assert result["turn"]["recalled_memory_ids"] == [remembered_fact.id]
     assert retriever.recall_calls[0]["namespaces"] == [
-        ("user", "user-1", "preferences"),
         ("workspace", "workspace-1", "facts"),
     ]
     assert retriever.recall_calls[0]["limit"] == 2
@@ -661,9 +647,7 @@ async def test_follow_up_turns_do_not_recall_memory() -> None:
     fixture = _fixture(model)
     strategies, responses = _registries()
     checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
-    graph = build_agent_runtime_graph(
-        strategies, responses, checkpointer=checkpointer
-    )
+    graph = build_agent_runtime_graph(strategies, responses, checkpointer=checkpointer)
     service = ResearchApplicationService(graph)
     config = {"configurable": {"thread_id": "thread-1"}}
 
@@ -719,9 +703,7 @@ async def test_context_compression_updates_summary_and_trims_window() -> None:
     fixture = build_gateway_fixture(model_gateway=model)
     strategies, responses = _registries()
     checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
-    graph = build_agent_runtime_graph(
-        strategies, responses, checkpointer=checkpointer
-    )
+    graph = build_agent_runtime_graph(strategies, responses, checkpointer=checkpointer)
 
     from langchain_core.messages import HumanMessage
 
@@ -783,6 +765,7 @@ async def test_recalled_memories_reach_planner_and_responder_prompts() -> None:
             updated_at=now,
         ),
         MemoryWritePolicy(),
+        source="user_request",
     )
     strategies, responses = _registries()
     graph = build_agent_runtime_graph(strategies, responses)
@@ -800,9 +783,7 @@ async def test_recalled_memories_reach_planner_and_responder_prompts() -> None:
     )
 
     assert outcome.partial_reason is None
-    planner_prompt = next(
-        prompt for role, prompt in model.calls if role == "planner"
-    )
+    planner_prompt = next(prompt for role, prompt in model.calls if role == "planner")
     responder_prompt = next(
         prompt for role, prompt in model.calls if role == "responder"
     )

@@ -20,7 +20,10 @@ RESEARCH_SYSTEM_INSTRUCTION = (
 
 def task_messages(*, instruction: str, task: str, constraints=(), prompt: str = ""):
     return [
-        SystemMessage(content=instruction),
+        SystemMessage(
+            content=instruction
+            + "\n本轮用户明确要求优先于历史偏好；历史记忆中的事实仅作待核验背景，不替代当前证据。"
+        ),
         HumanMessage(
             content="原始任务：\n"
             + task

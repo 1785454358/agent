@@ -2,9 +2,17 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Protocol
 
-from deeptrace.domain import Evidence, MemoryRecord, MemoryType, ToolRequest, ToolResult
+from deeptrace.domain import (
+    Evidence,
+    MemoryRecord,
+    MemoryStatus,
+    MemoryType,
+    ToolRequest,
+    ToolResult,
+)
 from deeptrace.domain.memory import MemoryNamespace
 from deeptrace.tools.evidence_store import EvidenceDraft
 from deeptrace.tools.policy import ToolCaller, UrlAuthorization
@@ -48,13 +56,23 @@ class EventSink(Protocol):
 
 
 class Clock(Protocol):
-    def now(self) -> Any: ...
+    def now(self) -> datetime: ...
 
 
 class MemoryStorePort(Protocol):
     """Long-term memory port; implementations wrap a LangGraph Store."""
 
     async def put(self, record: MemoryRecord) -> MemoryRecord: ...
+
+    async def upsert(
+        self, record: MemoryRecord, *, allow_reactivate: bool = True
+    ) -> MemoryRecord: ...
+
+    async def set_status(
+        self, namespace: MemoryNamespace, identity: str, status: MemoryStatus
+    ) -> None: ...
+
+    async def delete(self, namespace: MemoryNamespace, identity: str) -> bool: ...
 
     async def get(
         self, namespace: MemoryNamespace, identity: str
@@ -69,12 +87,10 @@ class MemoryStorePort(Protocol):
         *,
         namespaces: list[MemoryNamespace],
         memory_types: set[MemoryType],
-        now: Any,
+        now: datetime,
     ) -> list[MemoryRecord]: ...
 
-    async def get_many_by_ids(
-        self, memory_ids: list[str]
-    ) -> list[MemoryRecord]: ...
+    async def get_many_by_ids(self, memory_ids: list[str]) -> list[MemoryRecord]: ...
 
 
 class MemoryRetrieverPort(Protocol):
@@ -84,7 +100,7 @@ class MemoryRetrieverPort(Protocol):
         namespaces: list[MemoryNamespace],
         memory_types: set[MemoryType],
         query: str,
-        now: Any,
+        now: datetime,
         limit: int,
     ) -> list[MemoryRecord]: ...
 
@@ -103,3 +119,4 @@ class HarnessContext:
     memory_store: MemoryStorePort | None = None
     memory_retriever: MemoryRetrieverPort | None = None
     memory_recall_limit: int = 5
+    memory_context_tokens: int = 768

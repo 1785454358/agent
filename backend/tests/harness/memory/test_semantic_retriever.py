@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from deeptrace.domain import MemoryRecord, MemoryType
+from deeptrace.domain import MemoryRecord, MemoryStatus, MemoryType
 from deeptrace.harness.memory.retriever import SemanticMemoryRetriever
 from deeptrace.harness.memory.vector_index import MemoryVectorHit
 
@@ -148,3 +148,36 @@ async def test_recall_falls_back_to_deterministic_ranking_when_chroma_fails() ->
 
     assert [record.id for record in result] == [wanted.id]
     assert "mysql_refetch" not in trace
+
+
+@pytest.mark.asyncio
+async def test_recall_refilters_records_changed_after_candidate_selection():
+    trace = []
+    record = _record("checkpoint", "checkpoint recovery")
+
+    class ChangedStore(_Store):
+        async def get_many_by_ids(self, memory_ids):
+            return [record.model_copy(update={"status": MemoryStatus.DELETED})]
+
+    retriever = SemanticMemoryRetriever(
+        ChangedStore([record], trace),
+        _Embeddings(trace),
+        _Index([MemoryVectorHit(memory_id=record.id, distance=0.1)], trace),
+    )
+    result = await retriever.recall(
+        namespaces=[record.namespace],
+        memory_types={MemoryType.FACT},
+        query="checkpoint",
+        now=NOW,
+        limit=5,
+    )
+    assert result == []
+
+
+def test_lexical_fallback_retrieves_a_chinese_fact_without_whitespace():
+    from deeptrace.harness.memory.recall import select_memories
+
+    wanted = _record("预算治理", "研究预算应在工具执行前预留")
+    unrelated = _record("天气", "明天有雨")
+    result = select_memories([unrelated, wanted], query="如何做好预算管理", now=NOW)
+    assert [r.subject for r in result] == ["预算治理"]

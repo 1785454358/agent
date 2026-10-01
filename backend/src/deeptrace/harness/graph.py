@@ -21,8 +21,12 @@ from deeptrace.domain import (
     ResponseOutcome,
 )
 from deeptrace.harness.context import HarnessContext
-from deeptrace.harness.prompts import task_messages
-from deeptrace.harness.memory.lifecycle import _recall_memory, _memory_update_node, _consolidate_memory
+from deeptrace.harness.memory.lifecycle import (
+    _consolidate_memory,
+    _memory_update_node,
+    _recall_memory,
+)
+from deeptrace.harness.memory.recall import memory_context_line
 from deeptrace.harness.policies.context import (
     SUMMARY_FACT_LIMIT,
     SUMMARY_LIST_LIMIT,
@@ -33,6 +37,7 @@ from deeptrace.harness.policies.intent import (
     classify_intent,
     response_mode_for_intent,
 )
+from deeptrace.harness.prompts import task_messages
 from deeptrace.harness.registry import ResponseGraphRegistry, StrategyRegistry
 from deeptrace.harness.state import HarnessState
 from deeptrace.responses.citations import select_response_mode
@@ -48,9 +53,7 @@ def _route_mode(state: HarnessState) -> str:
     return state["turn"]["selected_mode"].value
 
 
-def _summary_with_memories(
-    conversation: dict[str, Any], turn: dict[str, Any]
-):
+def _summary_with_memories(conversation: dict[str, Any], turn: dict[str, Any]):
     """Recalled memories are injected into a COPY of the conversation summary."""
     from deeptrace.domain import ConversationSummary
 
@@ -59,12 +62,10 @@ def _summary_with_memories(
     if not memories:
         return summary
     preferences = [
-        memory["content"]
-        for memory in memories
-        if memory.get("type") == "preference"
+        memory["content"] for memory in memories if memory.get("type") == "preference"
     ]
     facts = [
-        memory["content"]
+        memory_context_line(memory)
         for memory in memories
         if memory.get("type") in {"fact", "evidence"}
     ]
@@ -129,9 +130,7 @@ def _mode_node(registry: StrategyRegistry, mode: ResearchMode):
             "conversation": {
                 "active_mode": mode,
                 "evidence_ids": list(
-                    dict.fromkeys(
-                        conversation["evidence_ids"] + outcome.evidence_ids
-                    )
+                    dict.fromkeys(conversation["evidence_ids"] + outcome.evidence_ids)
                 ),
                 "established_findings": (
                     conversation["established_findings"] + outcome.findings
@@ -146,9 +145,7 @@ def _mode_node(registry: StrategyRegistry, mode: ResearchMode):
 def _initialize_turn(state: HarnessState) -> dict[str, Any]:
     turn = dict(state["turn"])
     turn["status"] = ExecutionStatus.RUNNING
-    user_message = HumanMessage(
-        content=turn["user_input"], id=f"{turn['run_id']}-user"
-    )
+    user_message = HumanMessage(content=turn["user_input"], id=f"{turn['run_id']}-user")
     return {"turn": turn, "conversation": {"messages": [user_message]}}
 
 
@@ -184,24 +181,23 @@ async def _manage_context(
                 role=SUMMARIZER_ROLE,
                 messages=task_messages(
                     instruction="保留事实与用户约束，压缩会话记录。",
-                    task=state["turn"]["user_input"], constraints=current.user_constraints,
+                    task=state["turn"]["user_input"],
+                    constraints=current.user_constraints,
                     prompt=(
-                            "你是一次会话上下文压缩器。请把以下较早的对话内容"
-                            "合并进当前会话摘要，保留用户约束、实体指代、"
-                            "未解决问题与已有结论。\n"
-                            '只输出 JSON：{"topic", "user_constraints": [], '
-                            '"established_facts": [], "referenced_entities": {}, '
-                            '"unresolved_questions": [], "previous_conclusions": []}。\n\n'
-                            f"当前摘要：{current.model_dump(mode='json')}\n\n"
-                            f"被压缩的对话：\n{overflow_text}"
-                        )
+                        "你是一次会话上下文压缩器。请把以下较早的对话内容"
+                        "合并进当前会话摘要，保留用户约束、实体指代、"
+                        "未解决问题与已有结论。\n"
+                        '只输出 JSON：{"topic", "user_constraints": [], '
+                        '"established_facts": [], "referenced_entities": {}, '
+                        '"unresolved_questions": [], "previous_conclusions": []}。\n\n'
+                        f"当前摘要：{current.model_dump(mode='json')}\n\n"
+                        f"被压缩的对话：\n{overflow_text}"
+                    ),
                 ),
             )
-            from deeptrace.strategies.model_io import payload_text
+            from deeptrace.harness.model_io import payload_text
 
-            incoming = ConversationSummary.model_validate_json(
-                payload_text(response)
-            )
+            incoming = ConversationSummary.model_validate_json(payload_text(response))
             updates["summary"] = merge_summaries(current, incoming)
         except Exception:
             # deterministic fallback: window trimmed, summary unchanged
@@ -241,9 +237,7 @@ def _classify_intent(state: HarnessState) -> dict[str, Any]:
         ConversationIntent.INCREMENTAL_RESEARCH,
     }
     if not turn["requires_research"]:
-        turn["response_mode"] = response_mode_for_intent(
-            intent, turn["user_input"]
-        )
+        turn["response_mode"] = response_mode_for_intent(intent, turn["user_input"])
         turn["active_evidence_ids"] = list(conversation["evidence_ids"])
     return {"turn": turn}
 
@@ -322,9 +316,7 @@ def _response_node(response_registry: ResponseGraphRegistry, mode: ResponseMode)
         registration = response_registry.resolve(mode)
         turn = state["turn"]
         summary = state["conversation"]["summary"]
-        summary_notes = (
-            [f"会话主题：{summary.topic}"] if summary.topic else []
-        ) + [
+        summary_notes = ([f"会话主题：{summary.topic}"] if summary.topic else []) + [
             f"已确认结论：{line}" for line in summary.previous_conclusions[:5]
         ]
         recent = [
@@ -338,13 +330,18 @@ def _response_node(response_registry: ResponseGraphRegistry, mode: ResponseMode)
         notes = (
             summary_notes
             + [
-                f"记忆：{memory['content'][:200]}"
+                "记忆：" + memory_context_line(memory)
                 for memory in (turn.get("recalled_memories") or [])
             ]
             + recent
         )[:24]
         response_input = ResponseInput(
-            constraints=list(summary.user_constraints) + [m["content"] for m in turn.get("recalled_memories", []) if m.get("type") == "preference"],
+            constraints=list(summary.user_constraints)
+            + [
+                m["content"]
+                for m in turn.get("recalled_memories", [])
+                if m.get("type") == "preference"
+            ],
             question=turn["user_input"],
             response_mode=mode,
             research_outcome=turn["research_outcome"],

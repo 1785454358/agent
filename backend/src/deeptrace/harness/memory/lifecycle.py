@@ -2,16 +2,30 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any
 
 from langgraph.runtime import Runtime
 
-from deeptrace.domain import MemoryRecord, MemoryType, ResponseMode, ResponseOutcome
+from deeptrace.domain import (
+    EvidenceLifecycleStatus,
+    MemoryRecord,
+    MemoryStatus,
+    MemoryType,
+    ResponseMode,
+    ResponseOutcome,
+)
+from deeptrace.domain.memory import RecalledMemory
 from deeptrace.harness.context import HarnessContext
-from deeptrace.harness.memory.recall import select_memories, should_recall
-from deeptrace.harness.memory.write import MemoryWritePolicy, remember
+from deeptrace.harness.memory.recall import (
+    eligible_memory,
+    select_memories,
+    should_recall,
+)
+from deeptrace.harness.memory.write import MemoryWritePolicy, memory_subject, remember
 from deeptrace.harness.state import HarnessState
+from deeptrace.harness.token_budget import count_tokens
 
 
 def _extract_memory_content(user_input: str) -> str:
@@ -47,51 +61,81 @@ async def _recall_memory(
     if not should_recall(turn["intent"], prior_evidence=prior_evidence):
         return {"turn": turn}
     now = runtime.context.clock.now()
-    records: list[Any] = []
+    ranked: list[MemoryRecord] = []
     namespaces = [
         ("user", runtime.context.user_id, "preferences"),
         ("workspace", runtime.context.workspace_id, "facts"),
     ]
     try:
+        preferences = await memory_store.list_eligible(
+            namespaces=namespaces[:1],
+            memory_types={MemoryType.PREFERENCE},
+            now=now,
+        )
+        preferences = [
+            r
+            for r in preferences
+            if r.namespace == namespaces[0] and r.type is MemoryType.PREFERENCE
+        ]
+        ranked = select_memories(
+            preferences,
+            query=turn["user_input"],
+            now=now,
+            limit=context.memory_recall_limit,
+        )
+        remaining = max(0, context.memory_recall_limit - len(ranked))
         retriever = runtime.context.memory_retriever
-        if retriever is not None:
-            ranked = await retriever.recall(
-                namespaces=namespaces,
-                memory_types={MemoryType.PREFERENCE, MemoryType.FACT},
+        if retriever is not None and remaining:
+            facts = await retriever.recall(
+                namespaces=namespaces[1:],
+                memory_types={MemoryType.FACT},
                 query=turn["user_input"],
                 now=now,
-                limit=runtime.context.memory_recall_limit,
+                limit=remaining,
             )
-        else:
+        elif remaining:
             records = await memory_store.list_eligible(
-                namespaces=namespaces,
-                memory_types={MemoryType.PREFERENCE, MemoryType.FACT},
+                namespaces=namespaces[1:],
+                memory_types={MemoryType.FACT},
                 now=now,
             )
-            ranked = select_memories(
+            facts = select_memories(
                 records,
                 query=turn["user_input"],
                 now=now,
-                limit=runtime.context.memory_recall_limit,
+                limit=remaining,
             )
-    except Exception:
-        logging.getLogger(__name__).exception("Optional memory recall unavailable")
-        ranked = []
-        try:
-            await context.event_sink.emit("memory.degraded", {"stage": "recall"})
-        except Exception:
-            logging.getLogger(__name__).warning(
-                "Memory degradation event unavailable", exc_info=True
-            )
-    turn["recalled_memory_ids"] = [record.id for record in ranked]
-    turn["recalled_memories"] = [
-        {
+        else:
+            facts = []
+        ranked.extend(
+            r
+            for r in facts
+            if r.namespace == namespaces[1]
+            and r.type is MemoryType.FACT
+            and eligible_memory(r, now=now)
+        )
+    except Exception as exc:  # noqa: BLE001 - optional recall must not fail research
+        await _degraded(context, "recall", exc)
+    views: list[RecalledMemory] = []
+    for record in ranked[: max(0, context.memory_recall_limit)]:
+        view: RecalledMemory = {
+            "id": record.id,
+            "version": record.version,
             "type": record.type.value,
-            "subject": record.subject[:200],
+            "subject": record.subject,
             "content": record.content[:500],
+            "source_evidence_ids": list(record.source_evidence_ids),
+            "confidence": record.confidence,
+            "updated_at": record.updated_at.isoformat(),
+            "expires_at": record.expires_at.isoformat() if record.expires_at else None,
         }
-        for record in ranked
-    ]
+        if (
+            count_tokens(json.dumps(views + [view], ensure_ascii=False))
+            <= context.memory_context_tokens
+        ):
+            views.append(view)
+    turn["recalled_memory_ids"] = [view["id"] for view in views]
+    turn["recalled_memories"] = views
     return {"turn": turn}
 
 
@@ -115,7 +159,7 @@ async def _memory_update_node(
     record = MemoryRecord(
         type=MemoryType.PREFERENCE,
         namespace=("user", runtime.context.user_id, "preferences"),
-        subject=content[:200],
+        subject=memory_subject(content, preference=True),
         content=content,
         confidence=1.0,
         created_at=now,
@@ -131,7 +175,18 @@ async def _memory_update_node(
             partial_reason="memory_rejected",
         )
         return {"turn": turn}
-    stored = await remember(memory_store, record, policy)
+    try:
+        stored = await remember(memory_store, record, policy, source="user_request")
+    except Exception as exc:  # noqa: BLE001 - report explicit persistence failure
+        await _degraded(context, "explicit_write", exc)
+        turn["response_outcome"] = ResponseOutcome(
+            response_mode=ResponseMode.ANSWER,
+            content="记忆保存失败，未能记住。",
+            citations=[],
+            cited_evidence_ids=[],
+            partial_reason="memory_unavailable",
+        )
+        return {"turn": turn}
     await _index_memory_best_effort(runtime.context, [stored])
     turn["response_outcome"] = ResponseOutcome(
         response_mode=ResponseMode.ANSWER,
@@ -158,21 +213,51 @@ async def _consolidate_memory(
     policy = MemoryWritePolicy()
     stored_records: list[MemoryRecord] = []
     for finding in outcome.findings[:20]:
-        record = MemoryRecord(
-            type=MemoryType.FACT,
-            namespace=("workspace", runtime.context.workspace_id, "facts"),
-            subject=finding.id[:200],
-            content=finding.claim,
-            source_evidence_ids=list(finding.evidence_ids),
-            confidence=finding.confidence,
-            created_at=now,
-            updated_at=now,
-        )
-        if policy.can_store(record, source="consolidation"):
-            stored = await remember(memory_store, record, policy)
-            stored_records.append(stored)
+        if not finding.evidence_ids or not set(finding.evidence_ids) <= set(
+            outcome.evidence_ids
+        ):
+            continue
+        try:
+            sources = await context.evidence_store.get_many(
+                context.workspace_id, finding.evidence_ids
+            )
+            if {
+                s.id for s in sources if s.status is EvidenceLifecycleStatus.ACTIVE
+            } != set(finding.evidence_ids):
+                continue
+            record = MemoryRecord(
+                type=MemoryType.FACT,
+                namespace=("workspace", context.workspace_id, "facts"),
+                subject=memory_subject(finding.claim),
+                content=finding.claim,
+                source_evidence_ids=list(finding.evidence_ids),
+                confidence=finding.confidence,
+                created_at=now,
+                updated_at=now,
+            )
+            stored = await remember(
+                memory_store, record, policy, source="consolidation"
+            )
+            if stored.status is MemoryStatus.ACTIVE:
+                stored_records.append(stored)
+        except Exception as exc:  # noqa: BLE001 - optional consolidation preserves results
+            await _degraded(context, "consolidation", exc)
     await _index_memory_best_effort(runtime.context, stored_records)
     return {}
+
+
+async def _degraded(context: HarnessContext, stage: str, error: Exception) -> None:
+    logging.getLogger(__name__).warning(
+        "Optional memory stage unavailable: %s",
+        stage,
+        exc_info=(type(error), error, error.__traceback__),
+    )
+    try:
+        await context.event_sink.emit("memory.degraded", {"stage": stage})
+    except Exception:
+        logging.getLogger(__name__).warning(
+            "Memory degradation event unavailable", exc_info=True
+        )
 
 
 async def _index_memory_best_effort(

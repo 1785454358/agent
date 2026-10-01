@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime
 
 from deeptrace.domain import MemoryRecord, MemoryStatus, MemoryType
-from deeptrace.domain.memory import STALE_AFTER_DAYS
 from deeptrace.harness.memory.recall import is_stale
 
 
@@ -19,9 +18,7 @@ def apply_lifecycle(
         if record.status is MemoryStatus.ACTIVE:
             if record.expires_at is not None and record.expires_at <= now:
                 target = MemoryStatus.EXPIRED
-            elif record.type is not MemoryType.PREFERENCE and is_stale(
-                record, now=now
-            ):
+            elif record.type is not MemoryType.PREFERENCE and is_stale(record, now=now):
                 target = MemoryStatus.STALE
         transitions[record.id or record.identity()] = target
     return transitions
@@ -34,5 +31,5 @@ async def forget(store, record: MemoryRecord, *, mode: str = "logical") -> Memor
         await store.delete(record.namespace, record.identity())
         return record.model_copy(update={"status": MemoryStatus.DELETED}, deep=True)
     deleted = record.model_copy(update={"status": MemoryStatus.DELETED}, deep=True)
-    await store.put(deleted)
+    await store.set_status(record.namespace, record.identity(), MemoryStatus.DELETED)
     return deleted
