@@ -23,7 +23,8 @@ flowchart TB
     MA --> LOOP
 
     subgraph LOOP[Shared Agent Harness Runtime]
-        PC[prepare_context] --> MG[ModelGateway]
+        PC[prepare_context: stop gate] --> CM[call_model: build model view]
+        CM --> MG[ModelGateway]
         MG --> DEC{tool calls?}
         DEC -->|yes| TG[ToolGateway]
         TG --> OBS[observe]
@@ -66,19 +67,23 @@ flowchart TB
 - [Plan-and-Execute](../../backend/src/deeptrace/strategies/plan_execute/)
 - [Multi-Agent](../../backend/src/deeptrace/strategies/multi_agent/)
 
+[strategies/common.py](../../backend/src/deeptrace/strategies/common.py) 统一输入归一化、研究分支调用、Outcome 校验、取消传播和部分完成的判定。策略节点只处理自己的计划、调度与状态更新，不再跨策略导入 Workflow 的公共函数。
+
 ## Shared Agent Loop
 
 循环节点为：
 
 ```text
 prepare_context
-  → ModelGateway
+  → call_model（即时构造模型视图 → ModelGateway）
   → execute_tools 或 observe
   → execution policy
   → 下一轮或 finalize
 ```
 
-`prepare_context` 构造本轮模型视图。历史消息不会被原地截断；系统按完整的 assistant tool-call 批次及其 ToolMessage 结果成组裁剪，避免产生半个工具交换。
+`prepare_context` 只检查继续执行的条件。`call_model` 在调用 Provider 前从原始 State 构造本轮模型视图，视图是局部变量，不保存为重复的 `model_messages` Checkpoint 字段。旧快照即便带有此字段，恢复也以原始任务、约束和消息重新生成视图。
+
+历史消息不会被原地截断；系统按完整的 assistant tool-call 批次及其 ToolMessage 结果成组裁剪，避免产生半个工具交换。节点名与工具执行后的恢复边界保持兼容。这与 [LangGraph 的原始状态和提示视图区分](https://docs.langchain.com/oss/python/langgraph/thinking-in-langgraph) 一致。
 
 模型当前可见三个工具：
 
@@ -109,6 +114,8 @@ Session Graph 的长期上下文采用滑动窗口和结构化摘要。摘要失
 - 上下文信封校验；
 - 超时和 transport retry；
 - 异常到稳定错误类别的映射。
+
+消息内容解码与 JSON 对象提取统一在 [harness/model_io.py](../../backend/src/deeptrace/harness/model_io.py)。`strategies/model_io.py` 保留策略提示组装及有既有消费者的解析导入入口，不再承担上层 Harness 反向依赖的底层解析职责。
 
 所有外部工具调用必须经过 [ToolGateway](../../backend/src/deeptrace/tools/gateway.py)。它统一：
 
@@ -145,7 +152,7 @@ Session Graph 的长期上下文采用滑动窗口和结构化摘要。摘要失
 - `budget` 快照；
 - `plan_total`、`plan_completed` 和 `unfinished_todos`。
 
-[Execution Policy](../../backend/src/deeptrace/harness/policies/execution.py) 负责继续、提示和停止决策，并在所有受控退出路径构造明确 Outcome。上层策略据此合并部分成功、未完成计划和取消状态。
+[Execution Policy](../../backend/src/deeptrace/harness/policies/execution.py) 负责继续、提示和停止决策，输出通用 `AgentOutcome`。Executor 包装为研究分支的 `ResearchTopicOutcome`，策略再汇总为 `ResearchOutcome`；停止策略不负责研究查询、URL 等业务包装。State、Policy 与 Outcome 共用 `AgentStatus` / `AgentStopReason` 类型定义。
 
 ## 记忆、证据和可恢复状态
 
@@ -156,6 +163,8 @@ Session Graph 的长期上下文采用滑动窗口和结构化摘要。摘要失
 - **Evidence Store**：保存网页正文、来源和内容哈希；State 只保存 Evidence ID。
 
 [Memory Lifecycle](../../backend/src/deeptrace/harness/memory/lifecycle.py) 负责按意图召回、处理用户显式记忆请求，并在研究完成后整理带证据的事实。权威记录保存在结构化 Store；Chroma 只承担候选内语义检索，命中后回查权威记录。
+
+长期记忆只在主链路自动使用用户偏好和工作区研究事实。写入执行准入策略和原子版本更新；召回先取每个身份的最新版本，再检查状态、有效期与相关性。注入有条数 / token 双重预算与来源标识，当前用户要求优先。显式保存失败会说明未保存，自动整理失败不使研究失败。完整设计见 [记忆模块](memory.md)。
 
 [Checkpoint serializer](../../backend/src/deeptrace/harness/checkpoint.py) 显式注册 Agent State、Todo 和 Outcome 类型。工具节点完成后有独立 Checkpoint 边界；恢复后仍要求模型上下文完整、工具调用配对、Gateway 边界和最终 Outcome 不变量成立。
 
@@ -170,13 +179,14 @@ Session Graph 的长期上下文采用滑动窗口和结构化摘要。摘要失
 
 ## 当前验证边界
 
-2026-09-22 当前工作树的确定性测试基线：`482 passed, 2 deselected`。相关不变量集中在：
+2026-10-01 的离线验收覆盖以下关键不变量，具体命令与最终结果见 [记忆模块验收记录](memory.md#验证)：
 
 - [Agent loop tests](../../backend/tests/harness/test_agent_executor.py)
 - [Cross-cutting invariant tests](../../backend/tests/harness/test_agent_invariants.py)
 - [ModelGateway tests](../../backend/tests/harness/test_model_gateway.py)
 - [Memory lifecycle tests](../../backend/tests/harness/memory/test_lifecycle.py)
+- [Memory transactions tests](../../backend/tests/harness/memory/test_memory_transactions.py)
 
-离线测试覆盖模型上下文信封、tool-call / ToolMessage 配对、Gateway 边界、AgentOutcome、并行工具顺序和 Checkpoint 恢复。真实 Provider、Tavily、MySQL、Redis 和 Chroma 需要凭据或外部服务，不写成已完成的本次验收。
+离线测试覆盖模型上下文信封、tool-call / ToolMessage 配对、Gateway 边界、AgentOutcome、并行工具顺序、旧 Checkpoint 恢复，以及内存 / SQLite 的记忆并发版本、事务回滚、遗忘和召回过滤。真实 Provider、Tavily、MySQL、Redis 和 Chroma 需要凭据或外部服务，不写成已完成的本次验收。
 
 当前演进方向包括认证后的租户隔离、通用 Human-in-the-loop 审批、内容级 Prompt Injection 检测、真实 Token 成本计量和系统化在线 Agent Eval。
