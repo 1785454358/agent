@@ -21,7 +21,7 @@ Local 和 Worker 直接映射结果，不再通过 response.partial_reason 猜�
 - 修改的生产文件 Ruff 全规则、测试 I/F、14 个文件格式检查通过；git diff --check 通过。
 - 审查了状态权威、原因优先级、来源租户边界、单次元数据查询、恢复不重复研究和适配器生命周期；原有 broad exception 保留在观察者隔离/公开运行失败边界，注明理由，不扩展吞异常行为。
 
-## 真实 API：已执行，端到端未通过
+## 真实 API 首轮：3 轮预算，端到端未通过
 
 执行命令：`.venv/Scripts/python.exe -m pytest tests/real/test_real_smoke.py -q -s -m real --tb=short --show-capture=no`。
 
@@ -40,3 +40,39 @@ Local 和 Worker 直接映射结果，不再通过 response.partial_reason 猜�
 ## 新增 Agent 评测范围
 
 设计提案见 `docs/superpowers/specs/2026-10-01-agent-evaluation-design.md`。推荐 Ragas 单主框架、pytest 工程回归、冻结题集、简单基线和记忆对照。尚未安装/接入 Ragas，也尚未执行框架真实 judge 或更大规模的 Agent 质量评测；待用户确认书面选型后实施。
+
+## 用户要求加额后的真实复验（2026-10-01）
+
+用户明确要求提高预算、争取端到端通过。检查实际 Settings.from_env 发现项目配置为 agent_max_iterations=8、openai_max_tokens=16000、max_tool_calls=30；原 3 轮 / 1024 token 是 smoke 的保守测试覆盖，不是生产配置。这一轮只调整测试，不修改 .env 或生产默认值。
+
+### 6 轮 / 1024 输出 token
+
+限额：最多 32 次逻辑模型调用、24 次工具调用，240 秒。
+
+结果：**1 failed，68.11 秒**；partial/insufficient_evidence，20 个研究执行步骤，4 个引用来源，21 次逻辑模型调用，7 次逻辑工具调用。
+
+三个分支均 iteration_limit，任务清单分别完成 3/4、1/3、3/4；无工具错误。Workflow gaps 包括 evaluation_unavailable，所以不能把这个退出原因直接解释为评估器判定真实资料不足。一次复用已抓取资料的 evaluator-only 诊断遇到连接错误，未取得可用于判断输出截断的响应；未重跑搜索/抓取。
+
+### 8 轮 / 2048 输出 token
+
+限额仍为 32 次逻辑模型 / 24 次工具调用，240 秒；增加评估器 finish_reason/schema error 和工具成功摘要。
+
+结果：**1 failed，98.02 秒**；partial/incomplete_plan，23 个研究执行步骤，3 个引用来源，26 次逻辑模型调用，9 次逻辑工具调用；3 次搜索、6 次抓取均成功。
+
+评估器 finish_reason=stop、schema validation 无错误、sufficient=true。两个分支计划已完成；第三分支在 8 轮时完成 3/4 项，仅“总结形成完整回答”仍为 in_progress。不能绕过计划完成检查而改称 completed。此结果支持继续校准少量收尾预算，而不是把充分证据的 partial 当作完整成功。
+
+离线复验：**562 passed, 2 deselected，53.25 秒**。真实 smoke 的静态 I/F 与格式检查通过；未修改任何生产实现或用户原有未提交评测/引用工作。
+
+最后一次校准采用 12 轮、2048 输出 token、40 次模型 / 24 次工具逻辑调用和 240 秒；保留全量 Harness snapshot 一致性检查，并要求实际成功 fetch_page、有引用回答、status=completed、termination_reason=completed、response.partial_reason=None。结果在下节记录。
+
+### 12 轮 / 2048 输出 token：轮次阻塞消除，另有评估契约问题
+
+结果：**1 failed，91.72 秒**；partial/insufficient_evidence，22 个研究执行步骤，3 个引用来源，26 次逻辑模型调用、7 次逻辑工具调用。3 次搜索和 4 次网页抓取均成功。
+
+只读 checkpoint 核实：三个研究分支分别在 7、8、8 轮结束，均为 completed，任务清单完成 3/3、4/4、3/3，无工具错误，已不再是 iteration_limit。整体 gaps 仅 evaluation_unavailable。
+
+评估器 finish_reason=stop，但 WorkflowEvaluation 校验出现 **string_type**，这证明另有结构化输出契约问题，不能解释为 token 截断或继续加迭代额度便能解决。失败发生在整体 completed 断言，没有改状态或放宽验收标准。
+
+没有执行第四次完整测试。测试诊断现进一步记录校验错误 loc 和 input_type（不输出原始输入），尚未再次调用 API。后续需修正评估输出契约/有限纠正；未在本轮暗中宽松转换字段、移除校验或将证据充足直接升级为 completed。
+
+本轮 code-review-and-quality 自审：只有测试预算、诊断和验收标准改变，生产实现/配置未改；诊断不打印凭据、响应正文或出错字段原值；共享计数在 await 前增长，三分支仍共用总限额；测试的来源、真实 fetch 成功、状态和 snapshot 断言均保留。预算修订完成，端到端完成目标尚未达成，不能宣称通过。

@@ -26,8 +26,8 @@ async def test_real_workflow_run_returns_cited_answer(tmp_path) -> None:
         mysql_dsn="",
         redis_url="",
         memory_retrieval="lexical",
-        agent_max_iterations=3,
-        openai_max_tokens=1024,
+        agent_max_iterations=12,
+        openai_max_tokens=2048,
         planner_timeout_seconds=45.0,
         writer_timeout_seconds=45.0,
     )
@@ -45,27 +45,67 @@ async def test_real_workflow_run_returns_cited_answer(tmp_path) -> None:
     bundle = build_harness_runtime(settings, runs_dir=tmp_path)
     context = bundle.context_factory(run_id)
     counts = {"model_calls": 0, "tool_calls": 0}
+    tool_results: list[dict] = []
 
     class BoundedModel:
         async def invoke(self, **kwargs):
-            if counts["model_calls"] >= 12:
+            if counts["model_calls"] >= 40:
                 raise RuntimeError("real smoke model-call limit reached")
             counts["model_calls"] += 1
-            return await context.model_gateway.invoke(**kwargs)
+            response = await context.model_gateway.invoke(**kwargs)
+            if kwargs["role"] == "evaluator":
+                from pydantic import ValidationError
+
+                from deeptrace.strategies.model_io import payload_text
+                from deeptrace.strategies.workflow.models import WorkflowEvaluation
+
+                errors = []
+                try:
+                    WorkflowEvaluation.model_validate_json(payload_text(response))
+                except ValidationError as exc:
+                    errors = [
+                        {
+                            "type": error["type"],
+                            "loc": error["loc"],
+                            "input_type": type(error.get("input")).__name__,
+                        }
+                        for error in exc.errors()
+                    ]
+                print(
+                    json.dumps(
+                        {
+                            "role": "evaluator",
+                            "finish_reason": response.response_metadata.get(
+                                "finish_reason"
+                            ),
+                            "validation_errors": errors,
+                        }
+                    )
+                )
+            return response
 
     class BoundedTools:
         async def execute(self, **kwargs):
-            if counts["tool_calls"] >= 12:
+            if counts["tool_calls"] >= 24:
                 raise RuntimeError("real smoke tool-call limit reached")
             counts["tool_calls"] += 1
-            return await context.tool_gateway.execute(**kwargs)
+            result = await context.tool_gateway.execute(**kwargs)
+            tool_results.append(
+                {
+                    "tool": result.tool.value,
+                    "ok": result.ok,
+                    "error_code": result.error_code,
+                    "evidence_count": len(result.evidence_ids),
+                }
+            )
+            return result
 
     bounded_context = replace(
         context, model_gateway=BoundedModel(), tool_gateway=BoundedTools()
     )
     config = {"configurable": {"thread_id": thread_id}}
     try:
-        async with asyncio.timeout(180):
+        async with asyncio.timeout(240):
             outcome = await bundle.service.invoke(
                 ApplicationResearchRequest(
                     run_id=run_id,
@@ -101,11 +141,19 @@ async def test_real_workflow_run_returns_cited_answer(tmp_path) -> None:
                         "termination_reason": outcome.termination_reason,
                         "executed_steps": outcome.executed_steps,
                         "sources": len(outcome.sources),
+                        "unresolved_gaps": outcome.unresolved_gaps,
+                        "tool_results": tool_results,
                         **counts,
                     }
                 )
             )
             assert outcome.sources
+            assert any(
+                row["tool"] == "fetch_page" and row["ok"] for row in tool_results
+            )
+            assert outcome.status == "completed"
+            assert outcome.termination_reason == "completed"
+            assert outcome.response_outcome.partial_reason is None
             assert outcome.response_outcome.cited_evidence_ids
             assert len(outcome.response_outcome.content) > 20
             assert "[1]" in outcome.response_outcome.content
