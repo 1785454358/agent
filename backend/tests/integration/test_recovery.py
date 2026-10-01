@@ -171,13 +171,23 @@ async def test_agent_tool_checkpoint_replay_uses_the_durable_ledger(tmp_path) ->
     )
     before_tools = await graph.aget_state(config)
     first = await graph.ainvoke(None, config=config, context=fixture.context)
+    # A fresh worker has an empty success cache; only the durable ledger can replay.
+    restarted = build_gateway_fixture(
+        execution_store=ledger,
+        evidence_store=fixture.evidence_store,
+        default_search_results=[
+            {"url": "https://example.com/a", "title": "A", "snippet": "s"}
+        ],
+    )
     replay = await graph.ainvoke(
-        None, config=before_tools.config, context=fixture.context
+        None, config=before_tools.config, context=restarted.context
     )
     assert replay["outcome"].evidence_ids == first["outcome"].evidence_ids
     assert len(replay["outcome"].evidence_ids) == 1
     assert fixture.search.calls == ["q"]
     assert fixture.fetcher.calls == ["https://example.com/a"]
+    assert restarted.search.calls == []
+    assert restarted.fetcher.calls == []
     evidence = await fixture.evidence_store.latest_for_source(
         "workspace-1", "https://example.com/a"
     )
@@ -243,7 +253,9 @@ def _new_turn(run_id: str, question: str):
 
 
 @pytest.mark.asyncio
-async def test_crash_after_tool_execution_replays_ledger_on_resume(tmp_path) -> None:
+async def test_crash_after_research_completion_reuses_subgraph_checkpoint(
+    tmp_path,
+) -> None:
     saver, ledger = await _setup(tmp_path)
     model = CrashOnceModelGateway(
         responses={

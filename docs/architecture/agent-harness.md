@@ -151,6 +151,16 @@ ANSWER / BRIEF / REPORT 共用 ResponsePolicy 与 `load_evidence → generate �
 
 实现与回归见 [响应图](../../backend/src/deeptrace/responses/graph.py) 和 [响应测试](../../backend/tests/responses/test_graph.py)。
 
+## 唯一研究执行入口
+
+三个研究策略与主要策略、响应、恢复测试都使用 `deeptrace.harness.agent_executor.build_research_agent_graph`。策略只安排研究任务，Executor 统一执行模型、工具和停止决策；不再保留另一套固定搜索 / URL 选择 / 抓取的 Topic 图。
+
+旧 Python 入口 `deeptrace.strategies.build_research_topic_graph` 及 `deeptrace.strategies.topic` 的节点、状态导出已移除。调用者需直接导入新入口，注入支持 `researcher` 角色及 `tools` 参数的 ModelGateway；不能将此次替换理解为仅改函数名的行为兼容。
+
+`ResearchTopicInput`、`ResearchTopicOutcome` 和 `TopicStepError` 领域契约仍保留。正式 Agent Loop 的节点和 Checkpoint 边界不变，但旧 Topic 图历史快照不承诺在新图中恢复：存在这类未完成任务时，先用旧版本完成，或创建新任务。此次未删除持久化检查点与执行账本，也未增加兼容转发或快照转换框架。
+
+测试只脚本化外部模型和搜索 / 抓取服务。ToolGateway、证据存储、Executor 与 Checkpoint 仍执行真实逻辑；并发研究分支根据自己的消息历史取得响应，不共享模型响应游标。脚本成本基线包含 researcher 调用，不代表真实 Provider 的质量、Token 成本或端到端延迟。
+
 ## AgentOutcome 与退出治理
 
 [AgentOutcome](../../backend/src/deeptrace/domain/agent.py) 不只是 `stop_reason`，还包含：
