@@ -1,6 +1,6 @@
 # Harness 简化：记忆入口与证据核验
 
-日期：2026-10-01。状态：用户回复“开始”确认实施；实施中。
+日期：2026-10-01。状态：用户回复“开始”确认实施；已完成。验收：547 passed，2 deselected；专项 98 passed。详见 [实施记录](../plans/2026-10-01-memory-simplification.md)。
 
 ## 目标
 
@@ -60,7 +60,7 @@
 5. 形成 ACTIVE 来源 ID 集合，仅保存所有引用均存在且 ACTIVE 的候选。保留逐条 Memory Store 写入失败隔离；一个 upsert 失败仍可保存其他候选。
 6. 最后统一尽力索引已保存的 ACTIVE 记录。删除标记返回值不进入索引，不因整理重放复活 tombstone。
 
-KeyError 回退的最坏代价为一次失败批次加最多 400 次去重读取，不声称缺失批次一定更快；正常批次不进入回退。缺失数据仍发出降级观测，不能把“未能找到”伪装成来源已核验。
+KeyError 回退的最坏代价为一次失败批次加最多 400 次去重读取，不声称缺失批次一定更快；正常批次不进入回退。逐 ID 回退使用已有接口的单 ID get_many，不依赖适配器额外提供 get。缺失数据仍发出降级观测，不能把“未能找到”伪装成来源已核验。
 
 只读取证据元数据，正文不进入 MemoryRecord、图 State 或 Checkpoint。检查来源存在不等于已经验证 claim 被原文蕴含，也不提供跨 Evidence Store 与 Memory Store 的事务快照保证。
 
@@ -77,7 +77,7 @@ KeyError 回退的最坏代价为一次失败批次加最多 400 次去重读取
 
 ## 召回与兼容边界
 
-这次只在 lifecycle 内使用已有非可选 HarnessContext，减少重复 context 访问和 namespace 切片，不新增统一检索服务。
+这次只在 lifecycle 内复用已有 HarnessContext，减少重复 context 访问和 namespace 切片，不新增统一检索服务。运行时 context 缺失时的兼容保护保留，避免可选记忆节点掩盖 Harness 本身的模式注册错误。
 
 保留偏好优先、事实相关性排序、语义失败时词汇回退、向量命中后权威回查、最新版本优先、状态 / 过期过滤和条数 / token 双预算。should_recall 的现有签名、MemoryRetrieverPort、SemanticMemoryRetriever、持久化类型和遗忘导出不变。
 

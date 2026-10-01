@@ -37,7 +37,7 @@ flowchart TB
 
 ## 写入：入口强制治理
 
-生产写入通过 `remember(store, record, policy, source=...)`，由 [write.py](../../backend/src/deeptrace/harness/memory/write.py) 执行准入、保留周期和 Store.upsert。
+生产写入通过 `remember(store, record, policy, source=...)`，由 [write.py](../../backend/src/deeptrace/harness/memory/write.py) 执行一次准入、保留周期和 Store.upsert。生命周期节点不重复预检；`MemoryWriteRejected(ValueError)` 表达规则拒绝，与存储故障分开处理。
 
 - 用户偏好只接受明确的 `user_request` 或既有策略允许的 `repeated_preference` 来源；当前主链路没有自动推断重复偏好的流程。
 - 事实必须带证据引用。自动整理还会检查引用属于当前 ResearchOutcome，并在同一 workspace 的 Evidence Store 中存在且为 ACTIVE。
@@ -47,6 +47,16 @@ flowchart TB
 30 天是应用的再核验周期，不是对世界事实有效期的判断。历史没有 expires_at 的记录保留原兼容行为。证据检查验证的是来源可追溯性，不是已经证明结论必然被原文蕴含。
 
 `put` 是存储适配器的低层写入接口，供种子、兼容数据及测试使用，不等同于生产准入入口。不要从业务节点绕过 `remember`。
+
+### 自动整理：合法候选 → 去重核验 → 保存 → 索引
+
+先检查前 20 条 finding 的引用属于本轮结果，再由 MemoryRecord 校验内容长度和来源上限。不合法的单条候选不阻止其他候选。每条最多 20 个来源，因此一次整理最多核验 400 个唯一 Evidence ID；没有合法候选时不读取证据。
+
+正常批次通过当前 workspace 的 `get_many` 一次读取去重来源，仅保存全部来源存在且 ACTIVE 的事实。严格批量读取遇到 KeyError 时，记录一次降级，再对每个唯一 ID 调用单 ID 的 `get_many`，跳过缺失项；不要求适配器提供 Harness 接口以外的 `get` 方法。这样一条缺失不会连带丢弃其他有效事实。其他存储异常直接降级，不逐事实重试；最坏缺失回退为一次失败批次加最多 400 次读取，不能把它说成恒定一次查询。
+
+[SQL Evidence Store](../../backend/src/deeptrace/persistence/evidence_store.py) 在同一会话中按最多 400 个唯一 ID 执行 tenant-scoped IN 查询，不加载 body 列。返回顺序和重复项与输入一致，各位置是独立副本；空列表无查询，缺失或跨租户 ID 仍抛 KeyError。网页正文继续通过 read_body / read_chunks 读取，不复制进 MemoryRecord 或图状态。
+
+核验后逐条通过 remember 保存，单个 upsert 失败不阻止其他候选；最终仅尽力索引已保存的 ACTIVE 记录。来源核验与记忆保存没有跨 Store 事务快照，核验不代表已经证明结论被原文蕴含。
 
 ## 身份与版本：明确 ADD / UPDATE / NOOP
 
@@ -116,6 +126,7 @@ SQL 为了正确处理旧版本，在指定 namespace / type 范围内读取版�
 ## 失败处理
 
 - 没有 Memory Store：研究仍继续，明确保存请求回答“未能保存”。
+- 显式保存不满足准入规则：返回 `memory_rejected`，不写 Store；存储抛出的普通 ValueError 即使消息相同，也不冒充规则拒绝。
 - 显式记住请求的 Store 写入失败：返回失败说明，不回复“已记住”。
 - 自动整理失败：记录日志与 `memory.degraded` 事件，保留研究结果。
 - recall 失败：保留已经获得的有效部分，或以空记忆继续任务。
@@ -143,8 +154,12 @@ SQL 为了正确处理旧版本，在指定 namespace / type 范围内读取版�
 .\.venv\Scripts\python.exe -m pytest -m "not real" -q --tb=short
 ```
 
-结果：`507 passed, 2 deselected`（18.87 秒）。本次改动的源文件通过 Ruff 检查与格式检查，`git diff --check` 无空白错误。
+本轮入口与证据读取收敛后的结果：`547 passed, 2 deselected`（43.36 秒）；记忆、SQL / 内存证据、Workflow 响应与恢复专项 `98 passed`（24.35 秒）。本次改动的源文件通过 Ruff 全规则检查，测试通过 I / F 检查，全部修改 Python 文件通过格式检查，`git diff --check` 无空白错误。
+
+真实 SQLite 查询探针确认：含重复项的两个唯一 ID 从 3 次查询减少到 1 次；401 个唯一 ID 从 401 次减少到 2 次，每批最多 400 个 ID，查询不加载 body。20 条 finding 共享来源时从 20 次重复核验减少到一次，真实 Memory Store 仍保存 20 条事实。缺失回退、同 ID 跨租户隔离、独立副本、单条候选 / 写入失败、重放 TTL、tombstone、取消及无 context / 无 Store 边界均有回归。
 
 新增回归覆盖：写入准入、稳定偏好更新、并发单 ACTIVE / 版本链、SQL 回滚、全版本遗忘、自动整理不复活 tombstone、旧版不越过最新失效记录、完整身份匹配、检索后状态回查、中文回退、证据引用检查、token 预算与来源保留、可选模块失败，以及旧 Checkpoint 模型视图兼容。
 
 真实 MySQL 多进程锁竞争、Chroma 服务、Embedding / LLM Provider 未在此次离线验收运行。namespace 沿用当前 user_id / workspace_id，不等于已经实现认证后的多租户安全隔离；自动事实整理也没有新增敏感信息识别或内容级 Prompt Injection 检测。
+
+本轮实施与 RED / GREEN 记录见 [实施计划](../superpowers/plans/2026-10-01-memory-simplification.md)。
