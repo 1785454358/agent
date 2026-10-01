@@ -8,13 +8,14 @@ from typing import Any
 
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
-from strategies.fixtures import build_gateway_fixture
+from strategies.fixtures import ScriptedModelGateway, build_gateway_fixture
 
 from deeptrace.application.research import (
     ApplicationResearchRequest,
     ResearchApplicationService,
 )
 from deeptrace.domain import ExecutionStatus, ResearchMode, ResponseMode
+from deeptrace.harness.agent_executor import build_research_agent_graph
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
 from deeptrace.harness.graph import build_agent_runtime_graph
 from deeptrace.harness.registry import (
@@ -32,25 +33,8 @@ from deeptrace.responses import (
 from deeptrace.strategies import (
     build_multi_agent_research_graph,
     build_plan_execute_research_graph,
-    build_research_topic_graph,
     build_workflow_research_graph,
 )
-
-
-class ScriptedModelGateway:
-    def __init__(self, responses: dict[str, Any]) -> None:
-        self._responses = responses
-        self.calls: list[tuple[str, str]] = []
-
-    async def invoke(self, *, role: str, messages: list[Any]) -> Any:
-        prompt = str(messages[-1].content)
-        self.calls.append((role, prompt))
-        response = self._responses[role]
-        if callable(response):
-            response = response(prompt)
-        if isinstance(response, Exception):
-            raise response
-        return response
 
 
 def _evaluation_with_prompt_evidence(prompt: str, *, sufficient: bool) -> str:
@@ -73,7 +57,7 @@ def _registries() -> tuple[StrategyRegistry, ResponseGraphRegistry]:
     strategies.register(
         StrategyRegistration(
             ResearchMode.WORKFLOW,
-            build_workflow_research_graph(build_research_topic_graph()),
+            build_workflow_research_graph(build_research_agent_graph()),
         )
     )
     responses = ResponseGraphRegistry()
@@ -219,7 +203,7 @@ async def test_plan_execute_mode_routes_through_application_service() -> None:
     strategies.register(
         StrategyRegistration(
             ResearchMode.PLAN_EXECUTE,
-            build_plan_execute_research_graph(build_research_topic_graph()),
+            build_plan_execute_research_graph(build_research_agent_graph()),
         )
     )
     responses = ResponseGraphRegistry()
@@ -242,7 +226,14 @@ async def test_plan_execute_mode_routes_through_application_service() -> None:
     assert outcome.response_mode is ResponseMode.ANSWER
     assert outcome.partial_reason is None
     roles = [role for role, _ in model.calls]
-    assert roles == ["planner", "evaluator", "responder"]
+    assert roles == [
+        "planner",
+        "researcher",
+        "researcher",
+        "researcher",
+        "evaluator",
+        "responder",
+    ]
 
 
 @pytest.mark.asyncio
@@ -269,7 +260,7 @@ async def test_multi_agent_mode_routes_through_application_service() -> None:
     strategies.register(
         StrategyRegistration(
             ResearchMode.MULTI_AGENT,
-            build_multi_agent_research_graph(build_research_topic_graph()),
+            build_multi_agent_research_graph(build_research_agent_graph()),
         )
     )
     responses = ResponseGraphRegistry()

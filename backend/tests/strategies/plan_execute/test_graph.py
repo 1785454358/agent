@@ -8,26 +8,9 @@ import pytest
 from langgraph.checkpoint.memory import InMemorySaver
 
 from deeptrace.domain import ResearchMode
+from deeptrace.harness.agent_executor import build_research_agent_graph
 from deeptrace.strategies.plan_execute.graph import build_plan_execute_research_graph
-from deeptrace.strategies.topic import build_research_topic_graph
-
-from strategies.fixtures import build_gateway_fixture
-
-
-class ScriptedModelGateway:
-    def __init__(self, responses: dict[str, Any]) -> None:
-        self._responses = responses
-        self.calls: list[tuple[str, str]] = []
-
-    async def invoke(self, *, role: str, messages: list[Any]) -> Any:
-        prompt = str(messages[-1].content)
-        self.calls.append((role, prompt))
-        response = self._responses[role]
-        if callable(response):
-            response = response(prompt)
-        if isinstance(response, Exception):
-            raise response
-        return response
+from strategies.fixtures import ScriptedModelGateway, build_gateway_fixture
 
 
 def _research_input(question: str) -> dict[str, Any]:
@@ -46,14 +29,18 @@ def _research_input(question: str) -> dict[str, Any]:
 
 def _evaluation_with_prompt_evidence(prompt: str, *, action: str = "complete") -> str:
     ids = sorted(set(re.findall(r"evidence-[0-9a-f]+", prompt)))
-    findings = [
-        {
-            "id": "finding-1",
-            "claim": "claim",
-            "evidence_ids": ids[:1],
-            "confidence": 0.9,
-        }
-    ] if ids else []
+    findings = (
+        [
+            {
+                "id": "finding-1",
+                "claim": "claim",
+                "evidence_ids": ids[:1],
+                "confidence": 0.9,
+            }
+        ]
+        if ids
+        else []
+    )
     return json.dumps(
         {
             "action": action,
@@ -75,7 +62,7 @@ async def _run_plan_execute(
     topic_graph=None,
 ):
     graph = build_plan_execute_research_graph(
-        topic_graph or build_research_topic_graph(),
+        topic_graph or build_research_agent_graph(),
         max_tasks=max_tasks,
         max_replans=max_replans,
         checkpointer=checkpointer,
@@ -98,12 +85,8 @@ async def test_plan_select_execute_evaluate_completes() -> None:
     )
     fixture = build_gateway_fixture(
         search_results={
-            "任务一": [
-                {"url": "https://example.com/a", "title": "A", "snippet": "s"}
-            ],
-            "任务二": [
-                {"url": "https://example.com/b", "title": "B", "snippet": "s"}
-            ],
+            "任务一": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}],
+            "任务二": [{"url": "https://example.com/b", "title": "B", "snippet": "s"}],
         },
         pages={
             "https://example.com/a": "body-a",
@@ -115,7 +98,9 @@ async def test_plan_select_execute_evaluate_completes() -> None:
     result = await _run_plan_execute(model, fixture)
     outcome = result["outcome"]
 
-    assert [role for role, _ in model.calls] == ["planner", "evaluator"]
+    roles = [role for role, _ in model.calls]
+    assert roles.count("researcher") == 6
+    assert [role for role in roles if role != "researcher"] == ["planner", "evaluator"]
     assert outcome.mode is ResearchMode.PLAN_EXECUTE
     assert outcome.termination_reason == "completed"
     assert len(outcome.evidence_ids) == 2
@@ -160,9 +145,7 @@ async def test_task_failure_becomes_gap_but_sibling_evidence_survives() -> None:
     )
     fixture = build_gateway_fixture(
         search_results={
-            "好任务": [
-                {"url": "https://example.com/a", "title": "A", "snippet": "s"}
-            ]
+            "好任务": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}]
         },
         pages={"https://example.com/a": "body-a"},
         model_gateway=model,
@@ -172,8 +155,12 @@ async def test_task_failure_becomes_gap_but_sibling_evidence_survives() -> None:
     outcome = result["outcome"]
 
     assert len(outcome.evidence_ids) == 1
-    assert any("空任务" in gap for gap in outcome.unresolved_gaps)
-    assert outcome.termination_reason == "completed"
+    empty_branch = next(
+        branch for branch in result["topic_outcomes"] if branch.query == "空任务"
+    )
+    assert empty_branch.agent_outcome.stop_reason == "incomplete_plan"
+    assert "agent_exit:incomplete_plan" in outcome.unresolved_gaps
+    assert outcome.termination_reason == "incomplete_plan"
 
 
 @pytest.mark.asyncio
@@ -184,16 +171,17 @@ async def test_zero_evidence_terminates_as_no_sources_without_evaluation() -> No
             "evaluator": "must not run",
         }
     )
-    fixture = build_gateway_fixture(
-        default_search_results=[], model_gateway=model
-    )
+    fixture = build_gateway_fixture(default_search_results=[], model_gateway=model)
 
     result = await _run_plan_execute(model, fixture)
     outcome = result["outcome"]
 
     assert outcome.termination_reason == "no_sources"
     assert outcome.evidence_ids == []
-    assert [role for role, _ in model.calls] == ["planner"]
+    assert [role for role, _ in model.calls] == [
+        "planner",
+        *("researcher" for _ in range(4)),
+    ]
 
 
 @pytest.mark.asyncio
@@ -252,9 +240,7 @@ async def test_replan_produces_new_tasks_and_completes() -> None:
     )
     fixture = build_gateway_fixture(
         search_results={
-            "首任务": [
-                {"url": "https://example.com/a", "title": "A", "snippet": "s"}
-            ],
+            "首任务": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}],
             "补充任务": [
                 {"url": "https://example.com/b", "title": "B", "snippet": "s"}
             ],
@@ -360,7 +346,7 @@ async def test_loop_state_is_checkpointed_without_handwritten_loops() -> None:
     assert result["outcome"].termination_reason == "completed"
 
     snapshot = await build_plan_execute_research_graph(
-        build_research_topic_graph(), checkpointer=checkpointer
+        build_research_agent_graph(), checkpointer=checkpointer
     ).aget_state({"configurable": {"thread_id": "pe-thread"}})
     for field in ("plan_tasks", "completed_tasks", "replan_count", "decision"):
         assert field in snapshot.values
@@ -408,7 +394,7 @@ async def test_unfinished_executor_plan_downgrades_completed_to_incomplete() -> 
         pages={"https://example.com/a": "body-a"},
         model_gateway=model,
     )
-    topic = _UnfinishedPlanTopicGraph(build_research_topic_graph())
+    topic = _UnfinishedPlanTopicGraph(build_research_agent_graph())
 
     result = await _run_plan_execute(model, fixture, topic_graph=topic)
     outcome = result["outcome"]

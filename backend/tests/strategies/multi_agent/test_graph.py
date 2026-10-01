@@ -9,26 +9,9 @@ import pytest
 from langgraph.checkpoint.memory import InMemorySaver
 
 from deeptrace.domain import ResearchMode
+from deeptrace.harness.agent_executor import build_research_agent_graph
 from deeptrace.strategies.multi_agent.graph import build_multi_agent_research_graph
-from deeptrace.strategies.topic import build_research_topic_graph
-
-from strategies.fixtures import build_gateway_fixture
-
-
-class ScriptedModelGateway:
-    def __init__(self, responses: dict[str, Any]) -> None:
-        self._responses = responses
-        self.calls: list[tuple[str, str]] = []
-
-    async def invoke(self, *, role: str, messages: list[Any]) -> Any:
-        prompt = str(messages[-1].content)
-        self.calls.append((role, prompt))
-        response = self._responses[role]
-        if callable(response):
-            response = response(prompt)
-        if isinstance(response, Exception):
-            raise response
-        return response
+from strategies.fixtures import ScriptedModelGateway, build_gateway_fixture
 
 
 def _research_input(question: str) -> dict[str, Any]:
@@ -47,14 +30,18 @@ def _research_input(question: str) -> dict[str, Any]:
 
 def _evaluation_with_prompt_evidence(prompt: str, *, action: str = "complete") -> str:
     ids = sorted(set(re.findall(r"evidence-[0-9a-f]+", prompt)))
-    findings = [
-        {
-            "id": "finding-1",
-            "claim": "claim",
-            "evidence_ids": ids[:1],
-            "confidence": 0.9,
-        }
-    ] if ids else []
+    findings = (
+        [
+            {
+                "id": "finding-1",
+                "claim": "claim",
+                "evidence_ids": ids[:1],
+                "confidence": 0.9,
+            }
+        ]
+        if ids
+        else []
+    )
     return json.dumps(
         {
             "action": action,
@@ -76,7 +63,7 @@ async def _run_multi_agent(
     topic_graph=None,
 ):
     graph = build_multi_agent_research_graph(
-        topic_graph or build_research_topic_graph(),
+        topic_graph or build_research_agent_graph(),
         max_researchers=max_researchers,
         max_follow_ups=max_follow_ups,
         checkpointer=checkpointer,
@@ -93,9 +80,7 @@ async def _run_multi_agent(
 async def test_supervisor_plans_and_researchers_fan_out_concurrently() -> None:
     model = ScriptedModelGateway(
         {
-            "supervisor": json.dumps(
-                {"assignments": ["研究方向 A", "研究方向 B"]}
-            ),
+            "supervisor": json.dumps({"assignments": ["研究方向 A", "研究方向 B"]}),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(prompt),
         }
     )
@@ -118,7 +103,12 @@ async def test_supervisor_plans_and_researchers_fan_out_concurrently() -> None:
     result = await _run_multi_agent(model, fixture)
     outcome = result["outcome"]
 
-    assert [role for role, _ in model.calls] == ["supervisor", "evaluator"]
+    roles = [role for role, _ in model.calls]
+    assert roles.count("researcher") == 6
+    assert [role for role in roles if role != "researcher"] == [
+        "supervisor",
+        "evaluator",
+    ]
     assert outcome.mode is ResearchMode.MULTI_AGENT
     assert outcome.termination_reason == "completed"
     assert len(outcome.evidence_ids) == 2
@@ -136,9 +126,7 @@ async def test_researcher_failure_is_task_local_and_siblings_survive() -> None:
     )
     fixture = build_gateway_fixture(
         search_results={
-            "好方向": [
-                {"url": "https://example.com/a", "title": "A", "snippet": "s"}
-            ],
+            "好方向": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}],
             "坏方向": [
                 {"url": "https://example.com/broken", "title": "B", "snippet": "s"}
             ],
@@ -153,7 +141,7 @@ async def test_researcher_failure_is_task_local_and_siblings_survive() -> None:
 
     assert len(outcome.evidence_ids) == 1
     assert any("坏方向" in gap for gap in outcome.unresolved_gaps)
-    assert outcome.termination_reason == "completed"
+    assert outcome.termination_reason == "tool_error"
 
 
 @pytest.mark.asyncio
@@ -166,9 +154,7 @@ async def test_supervisor_never_touches_the_tool_gateway() -> None:
     )
     fixture = build_gateway_fixture(
         search_results={
-            "方向 A": [
-                {"url": "https://example.com/a", "title": "A", "snippet": "s"}
-            ]
+            "方向 A": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}]
         },
         pages={"https://example.com/a": "body-a"},
         model_gateway=model,
@@ -192,12 +178,8 @@ async def test_researcher_branches_are_isolated_per_assignment() -> None:
     )
     fixture = build_gateway_fixture(
         search_results={
-            "方向 A": [
-                {"url": "https://example.com/a", "title": "A", "snippet": "s"}
-            ],
-            "方向 B": [
-                {"url": "https://example.com/b", "title": "B", "snippet": "s"}
-            ],
+            "方向 A": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}],
+            "方向 B": [{"url": "https://example.com/b", "title": "B", "snippet": "s"}],
         },
         model_gateway=model,
     )
@@ -207,7 +189,8 @@ async def test_researcher_branches_are_isolated_per_assignment() -> None:
     by_caller: dict[str, list[str]] = {}
     for call in fixture.gateway.calls:
         by_caller.setdefault(call["caller"].caller_id, []).append(
-            call["request"].arguments.get("query") or call["request"].arguments.get("url")
+            call["request"].arguments.get("query")
+            or call["request"].arguments.get("url")
         )
     researcher_ids = sorted(by_caller)
     assert len(researcher_ids) == 2
@@ -215,9 +198,7 @@ async def test_researcher_branches_are_isolated_per_assignment() -> None:
         caller: [value for value in values if value and not value.startswith("http")]
         for caller, values in by_caller.items()
     }
-    assert all(
-        len(queries) == 1 for queries in queries_per_researcher.values()
-    )
+    assert all(len(queries) == 1 for queries in queries_per_researcher.values())
 
 
 @pytest.mark.asyncio
@@ -281,9 +262,7 @@ async def test_follow_up_assignments_skip_already_dispatched_queries() -> None:
             "初始方向": [
                 {"url": "https://example.com/a", "title": "A", "snippet": "s"}
             ],
-            "新方向": [
-                {"url": "https://example.com/b", "title": "B", "snippet": "s"}
-            ],
+            "新方向": [{"url": "https://example.com/b", "title": "B", "snippet": "s"}],
         },
         model_gateway=model,
     )
@@ -332,9 +311,7 @@ async def test_loop_state_is_checkpointed_without_handwritten_loops() -> None:
     )
     fixture = build_gateway_fixture(
         search_results={
-            "方向 A": [
-                {"url": "https://example.com/a", "title": "A", "snippet": "s"}
-            ]
+            "方向 A": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}]
         },
         pages={"https://example.com/a": "unique-ma-body-a"},
         model_gateway=model,
@@ -345,7 +322,7 @@ async def test_loop_state_is_checkpointed_without_handwritten_loops() -> None:
     assert result["outcome"].termination_reason == "completed"
 
     snapshot = await build_multi_agent_research_graph(
-        build_research_topic_graph(), checkpointer=checkpointer
+        build_research_agent_graph(), checkpointer=checkpointer
     ).aget_state({"configurable": {"thread_id": "ma-thread"}})
     for field in ("assignments", "round_number", "researcher_outcomes"):
         assert field in snapshot.values
@@ -385,14 +362,12 @@ async def test_unfinished_researcher_plan_downgrades_completed_to_incomplete() -
     )
     fixture = build_gateway_fixture(
         search_results={
-            "方向 A": [
-                {"url": "https://example.com/a", "title": "A", "snippet": "s"}
-            ]
+            "方向 A": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}]
         },
         pages={"https://example.com/a": "body-a"},
         model_gateway=model,
     )
-    topic = _UnfinishedPlanTopicGraph(build_research_topic_graph())
+    topic = _UnfinishedPlanTopicGraph(build_research_agent_graph())
 
     result = await _run_multi_agent(model, fixture, topic_graph=topic)
     outcome = result["outcome"]

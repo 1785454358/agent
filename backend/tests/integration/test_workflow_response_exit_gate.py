@@ -5,10 +5,10 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-from typing import Any
 
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
+from strategies.fixtures import ScriptedModelGateway, build_gateway_fixture
 
 from deeptrace.application.research import (
     ApplicationResearchRequest,
@@ -16,6 +16,7 @@ from deeptrace.application.research import (
     ResearchApplicationService,
 )
 from deeptrace.domain import ResearchMode, ResponseMode
+from deeptrace.harness.agent_executor import build_research_agent_graph
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
 from deeptrace.harness.graph import build_agent_runtime_graph
 from deeptrace.harness.registry import (
@@ -30,27 +31,8 @@ from deeptrace.responses import (
     build_report_graph,
 )
 from deeptrace.strategies import (
-    build_research_topic_graph,
     build_workflow_research_graph,
 )
-
-from strategies.fixtures import build_gateway_fixture
-
-
-class ScriptedModelGateway:
-    def __init__(self, responses: dict[str, Any]) -> None:
-        self._responses = responses
-        self.calls: list[tuple[str, str]] = []
-
-    async def invoke(self, *, role: str, messages: list[Any]) -> Any:
-        prompt = str(messages[-1].content)
-        self.calls.append((role, prompt))
-        response = self._responses[role]
-        if callable(response):
-            response = response(prompt)
-        if isinstance(response, Exception):
-            raise response
-        return response
 
 
 def _evaluation(prompt: str) -> str:
@@ -88,23 +70,15 @@ def _build_service():
     strategies.register(
         StrategyRegistration(
             ResearchMode.WORKFLOW,
-            build_workflow_research_graph(build_research_topic_graph()),
+            build_workflow_research_graph(build_research_agent_graph()),
         )
     )
     responses = ResponseGraphRegistry()
-    responses.register(
-        ResponseRegistration(ResponseMode.ANSWER, build_answer_graph())
-    )
-    responses.register(
-        ResponseRegistration(ResponseMode.BRIEF, build_brief_graph())
-    )
-    responses.register(
-        ResponseRegistration(ResponseMode.REPORT, build_report_graph())
-    )
+    responses.register(ResponseRegistration(ResponseMode.ANSWER, build_answer_graph()))
+    responses.register(ResponseRegistration(ResponseMode.BRIEF, build_brief_graph()))
+    responses.register(ResponseRegistration(ResponseMode.REPORT, build_report_graph()))
     checkpointer = InMemorySaver(serde=create_harness_checkpoint_serializer())
-    graph = build_agent_runtime_graph(
-        strategies, responses, checkpointer=checkpointer
-    )
+    graph = build_agent_runtime_graph(strategies, responses, checkpointer=checkpointer)
     return ResearchApplicationService(graph), checkpointer
 
 

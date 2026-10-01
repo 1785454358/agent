@@ -9,12 +9,13 @@ from __future__ import annotations
 
 import json
 import re
+from typing import Any
 
 from langgraph.checkpoint.memory import InMemorySaver
-
-import pytest
+from strategies.fixtures import build_gateway_fixture, scripted_research_response
 
 from deeptrace.domain import ResearchMode
+from deeptrace.harness.agent_executor import build_research_agent_graph
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
 from deeptrace.harness.graph import build_agent_runtime_graph
 from deeptrace.harness.registry import (
@@ -27,18 +28,12 @@ from deeptrace.responses import build_answer_graph
 from deeptrace.strategies import (
     build_multi_agent_research_graph,
     build_plan_execute_research_graph,
-    build_research_topic_graph,
     build_workflow_research_graph,
 )
 
-from strategies.fixtures import build_gateway_fixture
-
-
 QUESTION = "LangGraph Harness 的 checkpoint 与恢复机制"
 SEARCH_RESULTS = {
-    QUESTION: [
-        {"url": "https://example.com/a", "title": "A", "snippet": "checkpoint"}
-    ]
+    QUESTION: [{"url": "https://example.com/a", "title": "A", "snippet": "checkpoint"}]
 }
 
 
@@ -66,8 +61,10 @@ def _evaluate_mode(mode: ResearchMode) -> dict[str, object]:
     model_calls: list[str] = []
 
     class Gateway:
-        async def invoke(self, *, role: str, messages: list[Any]) -> Any:
+        async def invoke(self, *, role: str, messages: list[Any], tools=None) -> Any:
             model_calls.append(role)
+            if role == "researcher":
+                return scripted_research_response(messages, tools)
             prompt = str(messages[-1].content)
             if role == "planner":
                 return json.dumps({"queries": [QUESTION]})
@@ -108,23 +105,21 @@ def _evaluate_mode(mode: ResearchMode) -> dict[str, object]:
     strategies.register(
         StrategyRegistration(
             mode,
-            builders[mode](build_research_topic_graph()),
+            builders[mode](build_research_agent_graph()),
         )
     )
     responses = ResponseGraphRegistry()
-    responses.register(
-        ResponseRegistration(_answer_mode(), build_answer_graph())
-    )
+    responses.register(ResponseRegistration(_answer_mode(), build_answer_graph()))
     graph = build_agent_runtime_graph(
         strategies,
         responses,
-        checkpointer=InMemorySaver(
-            serde=create_harness_checkpoint_serializer()
-        ),
+        checkpointer=InMemorySaver(serde=create_harness_checkpoint_serializer()),
     )
 
-    from deeptrace.harness.state import new_conversation, new_turn
-    from deeptrace.application.research import ApplicationResearchRequest, ResearchApplicationService
+    from deeptrace.application.research import (
+        ApplicationResearchRequest,
+        ResearchApplicationService,
+    )
 
     service = ResearchApplicationService(graph)
     outcome = asyncio.run(
@@ -139,7 +134,9 @@ def _evaluate_mode(mode: ResearchMode) -> dict[str, object]:
             context=fixture.context,
         )
     )
-    snapshot = asyncio.run(graph.aget_state({"configurable": {"thread_id": "thread-1"}}))
+    snapshot = asyncio.run(
+        graph.aget_state({"configurable": {"thread_id": "thread-1"}})
+    )
     research = snapshot.values["turn"]["research_outcome"]
     return {
         "mode": mode.value,
@@ -172,6 +169,8 @@ def test_three_modes_complete_on_the_same_dataset_with_comparable_cost() -> None
     assert all(row["termination"] == "completed" for row in rows)
     assert all(row["answered"] for row in rows)
     assert all(row["evidence_count"] == 1 for row in rows)
+    assert all(row["model_calls"] == 6 for row in rows)
+    assert all(row["tool_calls"] == 2 for row in rows)
     # cost/latency proxies stay within a deterministic, documented envelope
     workflow_row = next(r for r in rows if r["mode"] == "workflow")
     assert workflow_row["executed_steps"] <= 8
