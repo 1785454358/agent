@@ -5,33 +5,13 @@ import re
 from typing import Any
 
 import pytest
-from langgraph.checkpoint.memory import InMemorySaver
 from langchain_core.messages import AIMessage
+from langgraph.checkpoint.memory import InMemorySaver
 
 from deeptrace.domain import ResearchInput, ResearchMode
-from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
-from deeptrace.strategies.topic import build_research_topic_graph
+from deeptrace.harness.agent_executor import build_research_agent_graph
 from deeptrace.strategies.workflow.graph import build_workflow_research_graph
-
-from strategies.fixtures import build_gateway_fixture
-
-
-class ScriptedModelGateway:
-    """Records role calls and returns scripted text or callable responses."""
-
-    def __init__(self, responses: dict[str, Any]) -> None:
-        self._responses = responses
-        self.calls: list[tuple[str, str]] = []
-
-    async def invoke(self, *, role: str, messages: list[Any]) -> Any:
-        prompt = str(messages[-1].content)
-        self.calls.append((role, prompt))
-        response = self._responses[role]
-        if callable(response):
-            response = response(prompt)
-        if isinstance(response, Exception):
-            raise response
-        return response
+from strategies.fixtures import ScriptedModelGateway, build_gateway_fixture
 
 
 def _research_input(question: str = "研究 LangGraph Harness") -> dict[str, Any]:
@@ -73,7 +53,7 @@ async def _run_workflow(
     checkpointer=None,
     topic_graph=None,
 ):
-    topic_graph = topic_graph or build_research_topic_graph()
+    topic_graph = topic_graph or build_research_agent_graph()
     graph = build_workflow_research_graph(
         topic_graph, query_limit=query_limit, checkpointer=checkpointer
     )
@@ -115,7 +95,9 @@ async def test_workflow_routes_plan_topics_evaluate_finalize() -> None:
     result = await _run_workflow(model, fixture)
     outcome = result["outcome"]
 
-    assert [role for role, _prompt in model.calls] == ["planner", "evaluator"]
+    roles = [role for role, _prompt in model.calls]
+    assert roles.count("researcher") == 6
+    assert [role for role in roles if role != "researcher"] == ["planner", "evaluator"]
     assert result["queries"] == ["query one", "query two"]
     assert outcome.mode is ResearchMode.WORKFLOW
     assert outcome.termination_reason == "completed"
@@ -211,11 +193,13 @@ async def test_one_topic_failure_is_a_gap_while_sibling_evidence_survives() -> N
     outcome = result["outcome"]
 
     assert len(outcome.evidence_ids) == 1
-    assert any(
-        "doomed query" in gap and "no_search_results" in gap
-        for gap in outcome.unresolved_gaps
+    empty_branch = next(
+        branch for branch in result["topic_outcomes"] if branch.query == "doomed query"
     )
-    assert outcome.termination_reason == "completed"
+    assert empty_branch.evidence_ids == []
+    assert empty_branch.agent_outcome.stop_reason == "incomplete_plan"
+    assert "agent_exit:incomplete_plan" in outcome.unresolved_gaps
+    assert outcome.termination_reason == "incomplete_plan"
 
 
 @pytest.mark.asyncio
@@ -234,7 +218,10 @@ async def test_zero_usable_evidence_yields_partial_no_sources() -> None:
     assert outcome.evidence_ids == []
     assert outcome.findings == []
     assert outcome.termination_reason == "no_sources"
-    assert [role for role, _prompt in model.calls] == ["planner"]
+    assert [role for role, _prompt in model.calls] == [
+        "planner",
+        *("researcher" for _ in range(4)),
+    ]
 
 
 @pytest.mark.asyncio
@@ -324,7 +311,7 @@ async def test_topic_execution_failure_is_a_gap_and_siblings_survive() -> None:
         pages={"https://example.com/a": "body-a"},
         model_gateway=model,
     )
-    flaky = FlakyTopicGraph(build_research_topic_graph(), fail_query="broken")
+    flaky = FlakyTopicGraph(build_research_agent_graph(), fail_query="broken")
 
     result = await _run_workflow(model, fixture, topic_graph=flaky)
     outcome = result["outcome"]
@@ -359,7 +346,7 @@ async def test_workflow_state_keeps_references_and_topic_privacy() -> None:
 
     assert result["outcome"].termination_reason == "completed"
     snapshot = await build_workflow_research_graph(
-        build_research_topic_graph(), checkpointer=checkpointer
+        build_research_agent_graph(), checkpointer=checkpointer
     ).aget_state({"configurable": {"thread_id": "workflow-thread"}})
     assert "search_result" not in snapshot.values
     serialized = json.dumps(snapshot.values, default=str, ensure_ascii=False)
@@ -401,7 +388,7 @@ async def test_unfinished_executor_plan_downgrades_completed_to_incomplete() -> 
         pages={"https://example.com/a": "body-a"},
         model_gateway=model,
     )
-    topic = _UnfinishedPlanTopicGraph(build_research_topic_graph())
+    topic = _UnfinishedPlanTopicGraph(build_research_agent_graph())
 
     result = await _run_workflow(model, fixture, topic_graph=topic)
     outcome = result["outcome"]

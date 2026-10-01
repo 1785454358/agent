@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import json
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from deeptrace.harness.context import HarnessContext
+from langchain_core.messages import AIMessage, ToolMessage
+
 from deeptrace.domain import ResearchMode
+from deeptrace.harness.context import HarnessContext
 from deeptrace.harness.memory.store import InMemoryMemoryStore
 from deeptrace.models import RawDocument, ScraperUsed
 from deeptrace.tools import AgentToolGateway, build_research_tool_registry
@@ -20,7 +23,6 @@ from deeptrace.tools.policy import (
     StaticToolAllowlist,
     ToolCaller,
 )
-
 
 TENANT_ID = "workspace-1"
 FIXED_NOW = datetime(2026, 9, 12, 8, 0, 0, tzinfo=UTC)
@@ -35,8 +37,60 @@ class RecordingEventSink:
 
 
 class NoopModelGateway:
-    async def invoke(self, *, role: str, messages: list[Any]) -> Any:
-        raise AssertionError("topic graphs must not invoke the model gateway")
+    async def invoke(self, *, role: str, messages: list[Any], tools=None) -> Any:
+        raise AssertionError("this test must explicitly configure model responses")
+
+
+def scripted_research_response(messages: list[Any], tools: Any) -> AIMessage:
+    """Script external model decisions from this branch's transcript, not a cursor."""
+    assert tools, "the executor must bind research tools"
+    observations = [message for message in messages if isinstance(message, ToolMessage)]
+    if not observations:
+        task_prompt = str(messages[1].content)
+        query = task_prompt.split("当前研究分支：", 1)[1].split("\n", 1)[0]
+        return AIMessage(
+            content="",
+            tool_calls=[
+                {"name": "search_web", "args": {"query": query}, "id": "search"}
+            ],
+        )
+    observation = json.loads(observations[-1].content)
+    if observation.get("tool") == "search_web" and observation.get("ok"):
+        try:
+            results = json.loads(observation["preview"])["results"]
+        except (ValueError, KeyError):
+            results = []
+        calls = [
+            {
+                "name": "fetch_page",
+                "args": {"url": result["url"]},
+                "id": f"fetch-{index}",
+            }
+            for index, result in enumerate(results)
+        ]
+        if calls:
+            return AIMessage(content="", tool_calls=calls)
+    return AIMessage(content="研究脚本结束。")
+
+
+class ScriptedModelGateway:
+    """Role responses plus a transcript-local script for the real Agent Loop."""
+
+    def __init__(self, responses: dict[str, Any]) -> None:
+        self._responses = responses
+        self.calls: list[tuple[str, str]] = []
+
+    async def invoke(self, *, role: str, messages: list[Any], tools=None) -> Any:
+        prompt = str(messages[-1].content)
+        self.calls.append((role, prompt))
+        if role == "researcher":
+            return scripted_research_response(messages, tools)
+        response = self._responses[role]
+        if callable(response):
+            response = response(prompt)
+        if isinstance(response, Exception):
+            raise response
+        return response
 
 
 class RecordingToolGateway:
