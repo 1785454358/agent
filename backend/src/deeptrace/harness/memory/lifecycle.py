@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from langgraph.runtime import Runtime
+from pydantic import ValidationError
 
 from deeptrace.domain import (
     EvidenceLifecycleStatus,
@@ -59,28 +60,26 @@ async def _recall_memory(
 ) -> dict[str, Any]:
     turn = dict(state["turn"])
     context = runtime.context
-    memory_store = context.memory_store if context is not None else None
-    if memory_store is None:
+    if context is None or context.memory_store is None:
         return {"turn": turn}
+    memory_store = context.memory_store
     prior_evidence = bool(state["conversation"]["evidence_ids"])
     if not should_recall(turn["intent"], prior_evidence=prior_evidence):
         return {"turn": turn}
-    now = runtime.context.clock.now()
+    now = context.clock.now()
     ranked: list[MemoryRecord] = []
-    namespaces = [
-        ("user", runtime.context.user_id, "preferences"),
-        ("workspace", runtime.context.workspace_id, "facts"),
-    ]
+    preference_namespace = ("user", context.user_id, "preferences")
+    fact_namespace = ("workspace", context.workspace_id, "facts")
     try:
         preferences = await memory_store.list_eligible(
-            namespaces=namespaces[:1],
+            namespaces=[preference_namespace],
             memory_types={MemoryType.PREFERENCE},
             now=now,
         )
         preferences = [
             r
             for r in preferences
-            if r.namespace == namespaces[0] and r.type is MemoryType.PREFERENCE
+            if r.namespace == preference_namespace and r.type is MemoryType.PREFERENCE
         ]
         ranked = select_memories(
             preferences,
@@ -89,10 +88,10 @@ async def _recall_memory(
             limit=context.memory_recall_limit,
         )
         remaining = max(0, context.memory_recall_limit - len(ranked))
-        retriever = runtime.context.memory_retriever
+        retriever = context.memory_retriever
         if retriever is not None and remaining:
             facts = await retriever.recall(
-                namespaces=namespaces[1:],
+                namespaces=[fact_namespace],
                 memory_types={MemoryType.FACT},
                 query=turn["user_input"],
                 now=now,
@@ -100,7 +99,7 @@ async def _recall_memory(
             )
         elif remaining:
             records = await memory_store.list_eligible(
-                namespaces=namespaces[1:],
+                namespaces=[fact_namespace],
                 memory_types={MemoryType.FACT},
                 now=now,
             )
@@ -115,7 +114,7 @@ async def _recall_memory(
         ranked.extend(
             r
             for r in facts
-            if r.namespace == namespaces[1]
+            if r.namespace == fact_namespace
             and r.type is MemoryType.FACT
             and eligible_memory(r, now=now)
         )
@@ -150,8 +149,7 @@ async def _memory_update_node(
     turn = dict(state["turn"])
     content = _extract_memory_content(turn["user_input"])
     context = runtime.context
-    memory_store = context.memory_store if context is not None else None
-    if memory_store is None:
+    if context is None or context.memory_store is None:
         turn["response_outcome"] = ResponseOutcome(
             response_mode=ResponseMode.ANSWER,
             content="记忆功能当前不可用，未能保存。",
@@ -160,10 +158,11 @@ async def _memory_update_node(
             partial_reason="memory_unavailable",
         )
         return {"turn": turn}
-    now = runtime.context.clock.now()
+    memory_store = context.memory_store
+    now = context.clock.now()
     record = MemoryRecord(
         type=MemoryType.PREFERENCE,
-        namespace=("user", runtime.context.user_id, "preferences"),
+        namespace=("user", context.user_id, "preferences"),
         subject=memory_subject(content, preference=True),
         content=content,
         confidence=1.0,
@@ -192,7 +191,7 @@ async def _memory_update_node(
             partial_reason="memory_unavailable",
         )
         return {"turn": turn}
-    await _index_memory_best_effort(runtime.context, [stored])
+    await _index_memory_best_effort(context, [stored])
     turn["response_outcome"] = ResponseOutcome(
         response_mode=ResponseMode.ANSWER,
         content=f"已记住：{content}",
@@ -207,39 +206,52 @@ async def _consolidate_memory(
     state: HarnessState, runtime: Runtime[HarnessContext]
 ) -> dict[str, Any]:
     context = runtime.context
-    memory_store = context.memory_store if context is not None else None
-    if memory_store is None:
+    if context is None or context.memory_store is None:
         return {}
+    memory_store = context.memory_store
     turn = state["turn"]
     outcome = turn.get("research_outcome")
     if outcome is None or not outcome.findings:
         return {}
-    now = runtime.context.clock.now()
-    policy = MemoryWritePolicy()
-    stored_records: list[MemoryRecord] = []
+    now = context.clock.now()
+    allowed_ids = set(outcome.evidence_ids)
+    candidates: list[MemoryRecord] = []
     for finding in outcome.findings[:20]:
-        if not finding.evidence_ids or not set(finding.evidence_ids) <= set(
-            outcome.evidence_ids
-        ):
+        if not finding.evidence_ids or not set(finding.evidence_ids) <= allowed_ids:
             continue
         try:
-            sources = await context.evidence_store.get_many(
-                context.workspace_id, finding.evidence_ids
+            candidates.append(
+                MemoryRecord(
+                    type=MemoryType.FACT,
+                    namespace=("workspace", context.workspace_id, "facts"),
+                    subject=memory_subject(finding.claim),
+                    content=finding.claim,
+                    source_evidence_ids=list(finding.evidence_ids),
+                    confidence=finding.confidence,
+                    created_at=now,
+                    updated_at=now,
+                )
             )
-            if {
-                s.id for s in sources if s.status is EvidenceLifecycleStatus.ACTIVE
-            } != set(finding.evidence_ids):
-                continue
-            record = MemoryRecord(
-                type=MemoryType.FACT,
-                namespace=("workspace", context.workspace_id, "facts"),
-                subject=memory_subject(finding.claim),
-                content=finding.claim,
-                source_evidence_ids=list(finding.evidence_ids),
-                confidence=finding.confidence,
-                created_at=now,
-                updated_at=now,
-            )
+        except ValidationError as exc:
+            await _degraded(context, "consolidation", exc)
+    if not candidates:
+        return {}
+    source_ids = list(
+        dict.fromkeys(
+            source for record in candidates for source in record.source_evidence_ids
+        )
+    )
+    try:
+        active_ids = await _active_evidence_ids(context, source_ids)
+    except Exception as exc:  # noqa: BLE001 - do not retry an unavailable evidence store
+        await _degraded(context, "consolidation", exc)
+        return {}
+    policy = MemoryWritePolicy()
+    stored_records: list[MemoryRecord] = []
+    for record in candidates:
+        if not set(record.source_evidence_ids) <= active_ids:
+            continue
+        try:
             stored = await remember(
                 memory_store, record, policy, source="consolidation"
             )
@@ -247,8 +259,39 @@ async def _consolidate_memory(
                 stored_records.append(stored)
         except Exception as exc:  # noqa: BLE001 - optional consolidation preserves results
             await _degraded(context, "consolidation", exc)
-    await _index_memory_best_effort(runtime.context, stored_records)
+    await _index_memory_best_effort(context, stored_records)
     return {}
+
+
+async def _active_evidence_ids(
+    context: HarnessContext, source_ids: list[str]
+) -> set[str]:
+    """Batch metadata reads; only missing IDs trigger bounded per-ID fallback."""
+    try:
+        sources = await context.evidence_store.get_many(
+            context.workspace_id, source_ids
+        )
+    except KeyError as exc:
+        await _degraded(context, "consolidation", exc)
+        active_ids: set[str] = set()
+        for source_id in source_ids:
+            try:
+                sources = await context.evidence_store.get_many(
+                    context.workspace_id, [source_id]
+                )
+            except KeyError:
+                continue
+            active_ids.update(
+                source.id
+                for source in sources
+                if source.status is EvidenceLifecycleStatus.ACTIVE
+            )
+        return active_ids
+    return {
+        source.id
+        for source in sources
+        if source.status is EvidenceLifecycleStatus.ACTIVE
+    }
 
 
 async def _degraded(context: HarnessContext, stage: str, error: Exception) -> None:

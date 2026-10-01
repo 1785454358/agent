@@ -93,6 +93,7 @@ async def test_get_many_limits_each_query_to_400_unique_ids(instrumented_store):
 
     assert [record.id for record in result] == requested
     assert len(selects) == 2
+    assert [sql.count("?") for sql in selects] == [401, 2]
     assert all("evidence_records.body" not in sql for sql in selects)
 
 
@@ -101,6 +102,20 @@ async def test_get_many_empty_input_does_not_query(instrumented_store):
     store, selects = instrumented_store
     assert await store.get_many("tenant-1", []) == ()
     assert selects == []
+
+
+@pytest.mark.asyncio
+async def test_get_many_same_id_in_two_tenants_returns_only_local_metadata(
+    instrumented_store,
+):
+    store, selects = instrumented_store
+    local = await store.ingest("tenant-1", _draft("shared body"))
+    foreign = await store.ingest(
+        "tenant-2", _draft("shared body").model_copy(update={"title": "foreign title"})
+    )
+    assert local.id == foreign.id
+    records = await store.get_many("tenant-1", [local.id])
+    assert [record.title for record in records] == [local.title]
 
 
 @pytest.mark.asyncio

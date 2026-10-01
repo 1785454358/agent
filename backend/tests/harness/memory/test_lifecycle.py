@@ -9,6 +9,340 @@ from deeptrace.harness.memory.lifecycle import _recall_memory
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("operation", ["recall", "update", "consolidate"])
+@pytest.mark.parametrize("missing", ["context", "store"])
+async def test_memory_nodes_preserve_optional_runtime_boundaries(operation, missing):
+    from deeptrace.harness.memory.lifecycle import (
+        _consolidate_memory,
+        _memory_update_node,
+    )
+
+    fixture = build_gateway_fixture()
+    context = (
+        None if missing == "context" else replace(fixture.context, memory_store=None)
+    )
+    state = {
+        "turn": {"user_input": "请记住，用中文回答"},
+        "conversation": {"evidence_ids": []},
+    }
+    nodes = {
+        "recall": _recall_memory,
+        "update": _memory_update_node,
+        "consolidate": _consolidate_memory,
+    }
+    result = await nodes[operation](state, SimpleNamespace(context=context))
+    if operation == "update":
+        assert result["turn"]["response_outcome"].partial_reason == "memory_unavailable"
+    elif operation == "recall":
+        assert result == {"turn": state["turn"]}
+    else:
+        assert result == {}
+
+
+class EvidenceReads:
+    """Count reads while delegating to the real tenant-scoped store."""
+
+    def __init__(self, store, batch_error=None):
+        self.store = store
+        self.batch_error = batch_error
+        self.batches = []
+
+    async def get_many(self, tenant, ids):
+        self.batches.append((tenant, list(ids)))
+        if self.batch_error is not None and len(self.batches) == 1:
+            raise self.batch_error
+        return await self.store.get_many(tenant, ids)
+
+
+async def _ingest_source(
+    fixture, *, tenant="workspace-1", url="source", body="content"
+):
+    from deeptrace.tools.evidence_store import EvidenceDraft
+
+    return await fixture.evidence_store.ingest(
+        tenant,
+        EvidenceDraft(
+            canonical_url=f"https://example.com/{url}",
+            title=url,
+            body=body,
+            media_type="text/plain",
+            source_quality=0.9,
+            fetched_at=fixture.context.clock.now(),
+        ),
+    )
+
+
+def _consolidation_state(claims, *, allowed_ids=None):
+    from deeptrace.domain import Finding, ResearchMode, ResearchOutcome
+
+    return {
+        "turn": {
+            "research_outcome": ResearchOutcome(
+                mode=ResearchMode.WORKFLOW,
+                evidence_ids=(
+                    list(dict.fromkeys(source for _, ids in claims for source in ids))
+                    if allowed_ids is None
+                    else allowed_ids
+                ),
+                termination_reason="completed",
+                executed_steps=1,
+                findings=[
+                    Finding(
+                        id=f"finding-{i}", claim=claim, evidence_ids=ids, confidence=0.9
+                    )
+                    for i, (claim, ids) in enumerate(claims)
+                ],
+            )
+        }
+    }
+
+
+@pytest.mark.asyncio
+async def test_consolidation_batches_shared_sources_and_limits_findings():
+    from datetime import timedelta
+
+    from deeptrace.harness.memory.lifecycle import _consolidate_memory
+
+    fixture = build_gateway_fixture()
+    source = await _ingest_source(fixture)
+    reads = EvidenceReads(fixture.evidence_store)
+    state = _consolidation_state([(f"claim-{i}", [source.id]) for i in range(21)])
+
+    assert (
+        await _consolidate_memory(
+            state,
+            SimpleNamespace(context=replace(fixture.context, evidence_store=reads)),
+        )
+        == {}
+    )
+
+    facts = await fixture.memory_store.list_namespace(
+        ("workspace", "workspace-1", "facts")
+    )
+    assert {fact.content for fact in facts} == {f"claim-{i}" for i in range(20)}
+    assert all(fact.source_evidence_ids == [source.id] for fact in facts)
+    assert all(
+        fact.expires_at == fixture.context.clock.now() + timedelta(days=30)
+        for fact in facts
+    )
+    assert reads.batches == [("workspace-1", [source.id])]
+
+
+@pytest.mark.asyncio
+async def test_consolidation_missing_sources_do_not_discard_valid_siblings():
+    from deeptrace.harness.memory.lifecycle import _consolidate_memory
+
+    fixture = build_gateway_fixture()
+    old = await _ingest_source(fixture)
+    active = await _ingest_source(fixture, body="updated")
+    foreign = await _ingest_source(fixture, tenant="other-workspace", body="foreign")
+    reads = EvidenceReads(fixture.evidence_store)
+    state = _consolidation_state(
+        [
+            ("valid", [active.id]),
+            ("missing", ["missing"]),
+            ("foreign", [foreign.id]),
+            ("superseded", [old.id]),
+            ("partly missing", [active.id, "missing"]),
+        ]
+    )
+
+    await _consolidate_memory(
+        state, SimpleNamespace(context=replace(fixture.context, evidence_store=reads))
+    )
+
+    facts = await fixture.memory_store.list_namespace(
+        ("workspace", "workspace-1", "facts")
+    )
+    assert [fact.content for fact in facts] == ["valid"]
+    unique_ids = [active.id, "missing", foreign.id, old.id]
+    assert reads.batches == [("workspace-1", unique_ids)] + [
+        ("workspace-1", [item]) for item in unique_ids
+    ]
+    assert [name for name, _ in fixture.events.events].count("memory.degraded") == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("claim", "ids", "allowed_ids"),
+    [
+        ("x" * 2001, ["source"], None),
+        ("too many sources", [f"source-{i}" for i in range(21)], None),
+        ("outside outcome", ["source"], []),
+    ],
+    ids=["content_limit", "source_limit", "outside_outcome"],
+)
+async def test_consolidation_invalid_candidates_do_not_read_evidence(
+    claim, ids, allowed_ids
+):
+    from deeptrace.harness.memory.lifecycle import _consolidate_memory
+
+    fixture = build_gateway_fixture()
+    reads = EvidenceReads(fixture.evidence_store)
+    await _consolidate_memory(
+        _consolidation_state([(claim, ids)], allowed_ids=allowed_ids),
+        SimpleNamespace(context=replace(fixture.context, evidence_store=reads)),
+    )
+    assert reads.batches == []
+    assert (
+        await fixture.memory_store.list_namespace(("workspace", "workspace-1", "facts"))
+        == []
+    )
+
+
+@pytest.mark.asyncio
+async def test_consolidation_storage_outage_does_not_retry_each_fact():
+    from deeptrace.harness.memory.lifecycle import _consolidate_memory
+
+    fixture = build_gateway_fixture()
+    source = await _ingest_source(fixture)
+    reads = EvidenceReads(fixture.evidence_store, batch_error=RuntimeError("offline"))
+    state = _consolidation_state([("first", [source.id]), ("second", [source.id])])
+
+    await _consolidate_memory(
+        state, SimpleNamespace(context=replace(fixture.context, evidence_store=reads))
+    )
+
+    assert reads.batches == [("workspace-1", [source.id])]
+    assert (
+        await fixture.memory_store.list_namespace(("workspace", "workspace-1", "facts"))
+        == []
+    )
+    assert [name for name, _ in fixture.events.events].count("memory.degraded") == 1
+
+
+@pytest.mark.asyncio
+async def test_consolidation_empty_findings_do_not_read_evidence():
+    from deeptrace.harness.memory.lifecycle import _consolidate_memory
+
+    fixture = build_gateway_fixture()
+    reads = EvidenceReads(fixture.evidence_store)
+    assert (
+        await _consolidate_memory(
+            _consolidation_state([]),
+            SimpleNamespace(context=replace(fixture.context, evidence_store=reads)),
+        )
+        == {}
+    )
+    assert reads.batches == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("stage", ["batch", "fallback"])
+async def test_consolidation_propagates_evidence_read_cancellation(stage):
+    import asyncio
+
+    from deeptrace.harness.memory.lifecycle import _consolidate_memory
+
+    fixture = build_gateway_fixture()
+    source = await _ingest_source(fixture)
+
+    class CancelledReads(EvidenceReads):
+        async def get_many(self, tenant, ids):
+            if self.batches:
+                raise asyncio.CancelledError()
+            return await super().get_many(tenant, ids)
+
+    reads = CancelledReads(
+        fixture.evidence_store,
+        batch_error=asyncio.CancelledError()
+        if stage == "batch"
+        else KeyError("missing"),
+    )
+    with pytest.raises(asyncio.CancelledError):
+        await _consolidate_memory(
+            _consolidation_state([("claim", [source.id])]),
+            SimpleNamespace(context=replace(fixture.context, evidence_store=reads)),
+        )
+    assert (
+        await fixture.memory_store.list_namespace(("workspace", "workspace-1", "facts"))
+        == []
+    )
+
+
+class RecordedIndex:
+    def __init__(self):
+        self.batches = []
+
+    async def index(self, records):
+        self.batches.append([record.model_copy(deep=True) for record in records])
+
+
+@pytest.mark.asyncio
+async def test_consolidation_isolates_candidate_and_write_failures_before_indexing():
+    from deeptrace.harness.memory.lifecycle import _consolidate_memory
+    from deeptrace.harness.memory.store import InMemoryMemoryStore
+
+    class FailOneStore(InMemoryMemoryStore):
+        async def upsert(self, record, **kwargs):
+            if record.content == "write fails":
+                raise RuntimeError("one write failed")
+            return await super().upsert(record, **kwargs)
+
+    fixture = build_gateway_fixture()
+    source = await _ingest_source(fixture)
+    memory_store = FailOneStore()
+    index = RecordedIndex()
+    state = _consolidation_state(
+        [
+            ("x" * 2001, [source.id]),
+            ("write fails", [source.id]),
+            ("valid sibling", [source.id]),
+        ]
+    )
+    await _consolidate_memory(
+        state,
+        SimpleNamespace(
+            context=replace(
+                fixture.context, memory_store=memory_store, memory_retriever=index
+            )
+        ),
+    )
+    facts = await memory_store.list_namespace(("workspace", "workspace-1", "facts"))
+    assert [fact.content for fact in facts] == ["valid sibling"]
+    assert len(index.batches) == 1
+    assert [record.id for record in index.batches[0]] == [facts[0].id]
+
+
+@pytest.mark.asyncio
+async def test_consolidation_replay_keeps_ttl_and_does_not_reactivate_deleted_fact():
+    from datetime import timedelta
+
+    from deeptrace.domain import MemoryStatus
+    from deeptrace.harness.memory.forget import forget
+    from deeptrace.harness.memory.lifecycle import _consolidate_memory
+
+    fixture = build_gateway_fixture()
+    source = await _ingest_source(fixture)
+    index = RecordedIndex()
+    context = replace(fixture.context, memory_retriever=index)
+    state = _consolidation_state([("remember this fact", [source.id])])
+    namespace = ("workspace", "workspace-1", "facts")
+    await _consolidate_memory(state, SimpleNamespace(context=context))
+    original = (await fixture.memory_store.list_namespace(namespace))[0]
+
+    later_context = replace(
+        context,
+        clock=SimpleNamespace(now=lambda: original.updated_at + timedelta(days=1)),
+    )
+    await _consolidate_memory(state, SimpleNamespace(context=later_context))
+    assert await fixture.memory_store.list_namespace(
+        namespace, include_inactive=True
+    ) == [original]
+
+    await forget(fixture.memory_store, original)
+    index.batches.clear()
+    await _consolidate_memory(state, SimpleNamespace(context=later_context))
+    assert await fixture.memory_store.list_namespace(namespace) == []
+    history = await fixture.memory_store.list_namespace(
+        namespace, include_inactive=True
+    )
+    assert len(history) == 1 and history[0].status is MemoryStatus.DELETED
+    assert history[0].version == original.version
+    assert index.batches == []
+
+
+@pytest.mark.asyncio
 async def test_explicit_save_evaluates_admission_once_and_persists(monkeypatch):
     from deeptrace.harness.memory import lifecycle
     from deeptrace.harness.memory.write import MemoryWritePolicy
