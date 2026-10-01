@@ -1,26 +1,28 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import UTC, datetime
 from typing import Any
 
 import pytest
-from langgraph.checkpoint.memory import InMemorySaver
-
 from deeptrace.domain import (
-    EvidenceLifecycleStatus,
+    ErrorCategory,
     ResearchMode,
     ResearchOutcome,
     ResponseInput,
     ResponseMode,
 )
+from deeptrace.harness.model_gateway import ModelCallError
 from deeptrace.responses.graph import (
     build_answer_graph,
     build_brief_graph,
     build_report_graph,
 )
 from deeptrace.tools.evidence_store import EvidenceDraft, InMemoryEvidenceStore
-
+from langchain_core.messages import AIMessage
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.errors import NodeCancelledError
 from strategies.fixtures import TENANT_ID, build_gateway_fixture
 
 
@@ -83,9 +85,7 @@ def _response_input(
 
 
 async def _run_response(graph, model: ScriptedModelGateway, payload, fixture):
-    result = await graph.ainvoke(
-        {"response_input": payload}, context=fixture.context
-    )
+    result = await graph.ainvoke({"response_input": payload}, context=fixture.context)
     return result
 
 
@@ -102,9 +102,7 @@ async def test_answer_graph_is_concise_and_cites_loaded_evidence() -> None:
     fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
 
     graph = build_answer_graph()
-    result = await _run_response(
-        graph, model, _response_input(ids), fixture
-    )
+    result = await _run_response(graph, model, _response_input(ids), fixture)
     outcome = result["outcome"]
 
     assert [role for role, _ in model.calls] == ["responder"]
@@ -193,9 +191,7 @@ async def test_report_markdown_headings_are_stripped_to_plain_text() -> None:
 async def test_response_budget_reserves_output_and_reports_trimming() -> None:
     from deeptrace.harness.token_budget import TokenBudgetConfig
 
-    model = ScriptedModelGateway(
-        {"responder": json.dumps({"content": "结论 [1]。"})}
-    )
+    model = ScriptedModelGateway({"responder": json.dumps({"content": "结论 [1]。"})})
     store = InMemoryEvidenceStore()
     ids = await _seed_evidence(
         store, [("https://example.com/big", "Big", "word " * 2000)]
@@ -312,11 +308,7 @@ async def test_dangling_output_triggers_one_completion_retry() -> None:
 @pytest.mark.asyncio
 async def test_unknown_citation_markers_are_dropped_never_invented() -> None:
     model = ScriptedModelGateway(
-        {
-            "responder": json.dumps(
-                {"content": "有依据的部分 [1]，幻觉部分 [3]。"}
-            )
-        }
+        {"responder": json.dumps({"content": "有依据的部分 [1]，幻觉部分 [3]。"})}
     )
     store = InMemoryEvidenceStore()
     ids = await _seed_evidence(
@@ -422,9 +414,7 @@ async def test_persistent_markerless_draft_still_falls_back() -> None:
 
 @pytest.mark.asyncio
 async def test_cross_tenant_evidence_ids_are_never_loadable() -> None:
-    model = ScriptedModelGateway(
-        {"responder": json.dumps({"content": "回答 [1]"})}
-    )
+    model = ScriptedModelGateway({"responder": json.dumps({"content": "回答 [1]"})})
     store = InMemoryEvidenceStore()
     ids = await _seed_evidence(
         store, [("https://example.com/a", "来源 A", "unique-body-a")]
@@ -456,9 +446,7 @@ async def test_no_usable_evidence_yields_partial_without_model_call() -> None:
 
 @pytest.mark.asyncio
 async def test_response_state_never_contains_evidence_bodies() -> None:
-    model = ScriptedModelGateway(
-        {"responder": json.dumps({"content": "结论 [1]"})}
-    )
+    model = ScriptedModelGateway({"responder": json.dumps({"content": "结论 [1]"})})
     store = InMemoryEvidenceStore()
     ids = await _seed_evidence(
         store, [("https://example.com/a", "来源 A", "unique-private-body-marker")]
@@ -479,3 +467,156 @@ async def test_response_state_never_contains_evidence_bodies() -> None:
     )
     serialized = json.dumps(snapshot.values, default=str, ensure_ascii=False)
     assert "unique-private-body-marker" not in serialized
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("initial", "corrected", "partial_reason"),
+    [
+        (
+            json.dumps({"content": "没有引用的长正文。" * 400 + "，"}),
+            json.dumps({"content": "仍然没有引用的长正文。" * 400 + "，"}),
+            "no_supported_citations",
+        ),
+        (
+            "not JSON",
+            json.dumps({"content": "有依据的长正文 [1]。" * 400}),
+            None,
+        ),
+        (
+            json.dumps({"content": "没有引用的长正文。" * 400}),
+            "not JSON",
+            "no_supported_citations",
+        ),
+    ],
+    ids=["combined-problems", "parse-then-length", "failed-correction"],
+)
+async def test_draft_problems_never_chain_multiple_corrections(
+    initial: str, corrected: str, partial_reason: str | None
+) -> None:
+    responses = iter([initial, corrected])
+    model = ScriptedModelGateway(
+        {"responder": lambda prompt: next(responses, corrected)}
+    )
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(
+        store, [("https://example.com/a", "来源 A", "unique-body-a")]
+    )
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+
+    result = await _run_response(
+        build_answer_graph(), model, _response_input(ids), fixture
+    )
+
+    assert len(model.calls) == 2
+    outcome = result["outcome"]
+    assert len(outcome.content) <= 2000
+    assert outcome.partial_reason == partial_reason
+    assert outcome.cited_evidence_ids == ids
+
+
+@pytest.mark.asyncio
+async def test_correction_combines_all_first_draft_problems() -> None:
+    responses = iter(
+        [
+            json.dumps({"content": "没有引用的长正文。" * 400 + "，"}),
+            json.dumps({"content": "完整且有依据的回答 [1]。"}),
+        ]
+    )
+    model = ScriptedModelGateway({"responder": lambda prompt: next(responses)})
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(
+        store, [("https://example.com/a", "来源 A", "unique-body-a")]
+    )
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+
+    result = await _run_response(
+        build_answer_graph(), model, _response_input(ids), fixture
+    )
+
+    assert result["outcome"].content == "完整且有依据的回答 [1]。"
+    assert len(model.calls) == 2
+    correction_prompt = model.calls[1][1]
+    assert "超过篇幅上限" in correction_prompt
+    assert "不完整" in correction_prompt
+    assert "引用" in correction_prompt
+
+
+@pytest.mark.asyncio
+async def test_response_accepts_real_message_text_blocks_without_repair() -> None:
+    model = ScriptedModelGateway(
+        {
+            "responder": AIMessage(
+                content=[
+                    {"type": "text", "text": '{"content": "文本块中的结论 [1]。"}'}
+                ]
+            )
+        }
+    )
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(
+        store, [("https://example.com/a", "来源 A", "unique-body-a")]
+    )
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+
+    result = await _run_response(
+        build_answer_graph(), model, _response_input(ids), fixture
+    )
+
+    assert result["outcome"].content == "文本块中的结论 [1]。"
+    assert result["outcome"].partial_reason is None
+    assert len(model.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_unparseable_correction_retains_the_usable_first_draft() -> None:
+    initial = "首稿有依据 [1]。" * 400
+    responses = iter([json.dumps({"content": initial}), "not JSON"])
+    model = ScriptedModelGateway(
+        {"responder": lambda prompt: next(responses, "not JSON")}
+    )
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(
+        store, [("https://example.com/a", "来源 A", "unique-body-a")]
+    )
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+
+    result = await _run_response(
+        build_answer_graph(), model, _response_input(ids), fixture
+    )
+
+    outcome = result["outcome"]
+    assert outcome.content.startswith("首稿有依据 [1]。")
+    assert len(outcome.content) <= 2000
+    assert outcome.cited_evidence_ids == ids
+    assert len(model.calls) == 2
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("during_correction", [False, True])
+@pytest.mark.parametrize("cancelled", [False, True])
+async def test_generation_does_not_swallow_transport_errors_or_cancellation(
+    during_correction: bool, cancelled: bool
+) -> None:
+    # LangGraph wraps cancellation raised by a node body at the graph boundary.
+    expected_error = NodeCancelledError if cancelled else ModelCallError
+
+    def responder(prompt: str) -> str:
+        if during_correction and len(model.calls) == 1:
+            return "not JSON"
+        if cancelled:
+            raise asyncio.CancelledError()
+        raise ModelCallError(ErrorCategory.TRANSIENT)
+
+    model = ScriptedModelGateway({"responder": responder})
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(
+        store, [("https://example.com/a", "来源 A", "unique-body-a")]
+    )
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+
+    with pytest.raises(expected_error) as raised:
+        await _run_response(build_answer_graph(), model, _response_input(ids), fixture)
+    if cancelled:
+        assert isinstance(raised.value.__cause__, asyncio.CancelledError)
+    assert len(model.calls) == (2 if during_correction else 1)

@@ -8,7 +8,6 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from deeptrace.harness.prompts import task_messages
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.runtime import Runtime
@@ -22,6 +21,8 @@ from deeptrace.domain import (
     ResponseOutcome,
 )
 from deeptrace.harness.context import HarnessContext
+from deeptrace.harness.model_io import payload_text
+from deeptrace.harness.prompts import task_messages
 from deeptrace.harness.token_budget import (
     BudgetAllocation,
     Segment,
@@ -35,7 +36,6 @@ from deeptrace.responses.citations import (
 )
 from deeptrace.responses.models import ResponseDraft
 from deeptrace.responses.state import ResponseState
-
 
 logger = logging.getLogger(__name__)
 
@@ -62,25 +62,21 @@ def strip_markdown_headings(text: str) -> str:
     return _BOLD_RE.sub(r"\1", without_headings)
 
 
-# 一次纠正性重试：首次输出无法解析或完全没有角标时，带着更严格的要求再要一次。
-CORRECTIVE_SUFFIX = (
-    "\n\n上一版输出未通过校验，请严格重做："
-    '只输出一个 JSON 对象 {"content": "..."}，不要输出任何额外文字或代码块；'
-    "content 中每个事实性句子末尾必须带半角方括号角标 [n]，"
-    "n 只能取上面列出的资料编号，且不允许出现没有任何角标的成稿。"
-)
-
-# 输出不完整或超过篇幅上限时只纠偏一次，要求给出完整且不超限的成稿。
 _SENTENCE_END = "。！？.!?…\n"
 # 以这些符号结尾几乎可以确定是被截断的悬空句。
 _DANGLING_END = "，,、：:；;（(【《「『-—"
 
 
-def _length_corrective_suffix(max_chars: int) -> str:
+def _corrective_suffix(issues: list[str], max_chars: int) -> str:
+    """One repair request covers every problem in the initial candidate."""
     return (
-        "\n\n上一版输出不完整或超过篇幅上限，请重新输出完整版本："
-        f"全文不超过 {max_chars} 个字符，结尾必须是完整的句子，"
-        '只输出一个 JSON 对象 {"content": "..."}，不要重复已有内容。'
+        "\n\n上一版输出未通过校验，请严格重做："
+        + "；".join(issues)
+        + "。"
+        + f"全文不超过 {max_chars} 个字符，结尾必须是完整的句子。"
+        + '只输出一个 JSON 对象 {"content": "..."}，不要输出额外文字或代码块；'
+        + "content 中每个事实性句子末尾必须带半角方括号角标 [n]，"
+        + "n 只能取上面列出的资料编号。"
     )
 
 
@@ -102,6 +98,7 @@ def _cut_at_sentence(text: str, limit: int) -> str:
         if window[index] in _SENTENCE_END:
             return window[: index + 1].rstrip()
     return window.rstrip()
+
 
 MAX_ANSWER_CONTENT = 2_000
 MAX_BRIEF_CONTENT = 8_000
@@ -175,23 +172,6 @@ async def load_evidence_node(
     return {"loaded_evidence": loaded}
 
 
-def _payload_text(response: Any) -> str:
-    if isinstance(response, str):
-        text = response
-    elif hasattr(response, "content"):
-        content = response.content
-        text = content if isinstance(content, str) else str(content)
-    else:
-        text = str(response)
-    stripped = text.strip()
-    if stripped.startswith("```"):
-        lines = stripped.splitlines()
-        if len(lines) >= 2 and lines[-1].strip().endswith("```"):
-            lines = lines[1:-1]
-        stripped = "\n".join(lines).strip()
-    return stripped
-
-
 def _source_block(evidence: Evidence, body: str, marker: str, limit: int) -> str:
     excerpt = body[:limit]
     return (
@@ -239,10 +219,8 @@ def _extract_content(raw_text: str) -> str:
         if start == -1 or end <= start:
             raise
         payload = json.loads(raw_text[start : end + 1])
-    if not isinstance(payload, dict) or not isinstance(
-        payload.get("content"), str
-    ):
-        raise ValueError("model payload is not a content object")
+    if not isinstance(payload, dict) or not isinstance(payload.get("content"), str):
+        raise TypeError("model payload is not a content object")
     return payload["content"]
 
 
@@ -351,7 +329,7 @@ async def _record_generation_observability(
             try:
                 await runtime.context.event_sink.emit("response.budget", summary)
             except Exception:
-                pass
+                logger.debug("Response budget event unavailable", exc_info=True)
     if output_truncated or output_incomplete:
         details = {
             "response_mode": policy.mode.value,
@@ -363,7 +341,7 @@ async def _record_generation_observability(
         try:
             await runtime.context.event_sink.emit("response.truncated", details)
         except Exception:
-            pass
+            logger.debug("Response truncation event unavailable", exc_info=True)
 
 
 def build_generate_node(
@@ -377,9 +355,7 @@ def build_generate_node(
     ) -> dict[str, Any]:
         loaded = list(state.get("loaded_evidence") or [])
         if not loaded:
-            return {
-                "outcome": _fallback_outcome(policy, loaded, reason="no_evidence")
-            }
+            return {"outcome": _fallback_outcome(policy, loaded, reason="no_evidence")}
 
         response_input = _response_input(state)
         tenant = runtime.context.workspace_id
@@ -387,9 +363,7 @@ def build_generate_node(
         sources: list[str] = []
         for index, record in enumerate(loaded, 1):
             try:
-                body = await runtime.context.evidence_store.read_body(
-                    tenant, record.id
-                )
+                body = await runtime.context.evidence_store.read_body(tenant, record.id)
             except (KeyError, ValueError):
                 body = ""
             sources.append(
@@ -397,13 +371,15 @@ def build_generate_node(
             )
         findings_lines = "\n".join(
             f"- {finding.claim}（{', '.join(finding.evidence_ids)}）"
-            for finding in (response_input.research_outcome.findings if response_input.research_outcome else [])
+            for finding in (
+                response_input.research_outcome.findings
+                if response_input.research_outcome
+                else []
+            )
         )
         # context_notes are pre-bounded by the caller (24 entries, each
         # truncated); do not re-trim here or recent messages get cut
-        notes = "\n".join(
-            f"- {note}" for note in response_input.context_notes
-        )
+        notes = "\n".join(f"- {note}" for note in response_input.context_notes)
 
         allocations: list[BudgetAllocation] = []
 
@@ -419,87 +395,62 @@ def build_generate_node(
             )
             allocations.append(allocation)
             response = await runtime.context.model_gateway.invoke(
-                role=RESPONDER_ROLE, messages=task_messages(instruction=policy.instructions, task=response_input.question, constraints=response_input.constraints, prompt=prompt)
+                role=RESPONDER_ROLE,
+                messages=task_messages(
+                    instruction=policy.instructions,
+                    task=response_input.question,
+                    constraints=response_input.constraints,
+                    prompt=prompt,
+                ),
             )
             content = strip_markdown_headings(
-                _extract_content(_payload_text(response)).strip()
+                _extract_content(payload_text(response)).strip()
             ).strip()
             if not content:
                 raise ValueError("model content is empty")
             return content
 
-        async def fit_length(initial: str) -> tuple[str, bool, bool]:
-            """One corrective retry for over-long or dangling output, then cut
-            at a sentence boundary instead of silently slicing mid-sentence."""
-            max_chars = policy.max_content_chars
-            over = len(initial) > max_chars
-            incomplete = _looks_incomplete(initial)
-            if not over and not incomplete:
-                return initial, False, False
-            logger.warning(
-                "responder output over_length=%s incomplete=%s; "
-                "issuing one length corrective retry",
-                over,
-                incomplete,
-            )
-            try:
-                retried = await invoke_model(
-                    corrective_suffix=_length_corrective_suffix(max_chars)
-                )
-            except (ValidationError, ValueError, TypeError) as error:
-                logger.warning(
-                    "length corrective retry failed (%s); cutting deterministically",
-                    type(error).__name__,
-                )
-                retried = ""
-            candidate = retried or initial
-            still_incomplete = _looks_incomplete(candidate)
-            if len(candidate) > max_chars:
-                return _cut_at_sentence(candidate, max_chars), True, still_incomplete
-            return candidate, False, still_incomplete
-
-        # 首次尝试
+        content = ""
+        issues: list[str] = []
         try:
             content = await invoke_model()
         except (ValidationError, ValueError, TypeError) as first_error:
             logger.warning(
-                "responder draft unparseable on first attempt (%s); "
-                "issuing one corrective retry",
+                "responder draft unparseable (%s)",
                 type(first_error).__name__,
             )
-            try:
-                content = await invoke_model(corrective_suffix=CORRECTIVE_SUFFIX)
-            except (ValidationError, ValueError, TypeError) as second_error:
-                logger.warning(
-                    "responder draft still unparseable after retry (%s); "
-                    "falling back to evidence listing",
-                    type(second_error).__name__,
-                )
-                return {"draft": None}
+            issues.append("无法解析或正文为空")
 
-        # 零角标自愈：模型偶发不标 [n] 时，带严格要求重试一次
-        if not extract_citation_markers(content):
+        if content:
+            if not extract_citation_markers(content):
+                issues.append("正文没有引用标记")
+            if len(content) > policy.max_content_chars:
+                issues.append("超过篇幅上限")
+            if _looks_incomplete(content):
+                issues.append("正文不完整")
+        if issues:
             logger.warning(
-                "responder draft carried no citation markers on first attempt; "
-                "issuing one corrective retry"
+                "responder draft has %d problems; issuing one combined correction",
+                len(issues),
             )
             try:
-                repaired = await invoke_model(corrective_suffix=CORRECTIVE_SUFFIX)
-                if extract_citation_markers(repaired):
-                    content = repaired
-                else:
-                    logger.warning(
-                        "responder retry still carries no citation markers; "
-                        "validation gate will apply the evidence fallback"
+                content = await invoke_model(
+                    corrective_suffix=_corrective_suffix(
+                        issues, policy.max_content_chars
                     )
-                    content = repaired
+                )
             except (ValidationError, ValueError, TypeError) as retry_error:
                 logger.warning(
-                    "citation corrective retry failed (%s); keeping first draft",
+                    "combined correction unparseable (%s); retaining first candidate",
                     type(retry_error).__name__,
                 )
 
-        content, output_truncated, output_incomplete = await fit_length(content)
+        if not content:
+            return {"draft": None}
+        output_incomplete = _looks_incomplete(content)
+        output_truncated = len(content) > policy.max_content_chars
+        if output_truncated:
+            content = _cut_at_sentence(content, policy.max_content_chars)
         await _record_generation_observability(
             runtime,
             policy,
@@ -507,9 +458,7 @@ def build_generate_node(
             output_truncated,
             output_incomplete,
         )
-        return {
-            "draft": ResponseDraft(response_mode=policy.mode, content=content)
-        }
+        return {"draft": ResponseDraft(response_mode=policy.mode, content=content)}
 
     return generate_node
 
@@ -528,9 +477,7 @@ def build_validate_node(policy: ResponsePolicy):
                 len(loaded),
             )
             return {
-                "outcome": _fallback_outcome(
-                    policy, loaded, reason="generation_failed"
-                )
+                "outcome": _fallback_outcome(policy, loaded, reason="generation_failed")
             }
         outcome = validate_citations(
             draft, loaded_evidence_ids=[record.id for record in loaded]
@@ -542,9 +489,7 @@ def build_validate_node(policy: ResponsePolicy):
                 len(loaded),
                 extract_citation_markers(draft.content),
             )
-            outcome = _fallback_outcome(
-                policy, loaded, reason="no_supported_citations"
-            )
+            outcome = _fallback_outcome(policy, loaded, reason="no_supported_citations")
         return {"outcome": outcome}
 
     return validate_node
