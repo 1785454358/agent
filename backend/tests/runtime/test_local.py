@@ -5,44 +5,52 @@ from typing import Any
 
 import pytest
 
-from deeptrace.domain import ResponseMode
+from deeptrace.application.result import ApplicationRunResult
+from deeptrace.domain import ResearchOutcome, ResponseOutcome
 from deeptrace.runtime.local import LocalResearchRuntime
 from deeptrace.runtime.models import RunRecord
 
 
-class FakeOutcome:
-    response_mode = ResponseMode.ANSWER
-    content = "简洁回答 [1]"
-    partial_reason = None
-    cited_evidence_ids = ["evidence-1"]
-
-
-class FakeEvidence:
-    canonical_url = "https://example.com/a"
-
-
-class FakeEvidenceStore:
-    async def get_many(self, tenant_id, ids):
-        return [FakeEvidence() for _ in ids]
-
-
 class FakeContext:
     workspace_id = "workspace-1"
-    evidence_store = FakeEvidenceStore()
+    evidence_store = object()  # Adapter must not query sources a second time.
 
 
 class FakeApplication:
     """Application-service stub for runtime lifecycle tests."""
 
-    def __init__(self, *, invoke_hook: Any = None) -> None:
+    def __init__(self, *, invoke_hook: Any = None, partial: bool = False) -> None:
         self.requests: list[Any] = []
         self._invoke_hook = invoke_hook
+        self.partial = partial
 
     async def invoke(self, request, *, config, context):
         self.requests.append((request, config, context))
         if self._invoke_hook is not None:
             await self._invoke_hook()
-        return FakeOutcome()
+        reason = "max_iterations" if self.partial else "completed"
+        gaps = ["Missing comparison"] if self.partial else []
+        return ApplicationRunResult(
+            run_id=request.run_id,
+            thread_id=request.thread_id,
+            status="partial" if self.partial else "completed",
+            response_outcome=ResponseOutcome(
+                response_mode="answer",
+                content="简洁回答 [1]",
+                citations=[{"evidence_id": "evidence-1", "marker": "[1]"}],
+                cited_evidence_ids=["evidence-1"],
+            ),
+            research_outcome=ResearchOutcome(
+                mode="workflow",
+                executed_steps=7,
+                termination_reason=reason,
+                unresolved_gaps=gaps,
+            ),
+            executed_steps=7,
+            termination_reason=reason,
+            unresolved_gaps=gaps,
+            sources=["https://example.com/a"],
+        )
 
 
 async def wait_for_terminal(runtime: LocalResearchRuntime, run_id: str):
@@ -80,6 +88,26 @@ async def test_local_runtime_executes_and_persists_run(tmp_path) -> None:
     assert persisted["status"] == "completed"
     assert persisted["answer"] == "简洁回答 [1]"
     await runtime.stop()
+
+
+@pytest.mark.asyncio
+async def test_local_runtime_preserves_partial_research_in_persisted_record(
+    tmp_path,
+) -> None:
+    runtime = build_runtime(tmp_path, FakeApplication(partial=True))
+    await runtime.start()
+    try:
+        created = await runtime.create("Question", "workflow")
+        completed = await wait_for_terminal(runtime, created.id)
+        assert completed.status == "partial"
+        assert completed.termination_reason == "max_iterations"
+        assert completed.unresolved_gaps == ["Missing comparison"]
+        assert completed.sources == ["https://example.com/a"]
+        persisted = json.loads((tmp_path / f"{created.id}.json").read_text("utf-8"))
+        assert persisted["status"] == "partial"
+        assert persisted["events"][-1]["message"] == "研究部分完成"
+    finally:
+        await runtime.stop()
 
 
 @pytest.mark.asyncio

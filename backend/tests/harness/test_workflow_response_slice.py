@@ -223,8 +223,8 @@ async def test_plan_execute_mode_routes_through_application_service() -> None:
         context=fixture.context,
     )
 
-    assert outcome.response_mode is ResponseMode.ANSWER
-    assert outcome.partial_reason is None
+    assert outcome.response_outcome.response_mode is ResponseMode.ANSWER
+    assert outcome.response_outcome.partial_reason is None
     roles = [role for role, _ in model.calls]
     assert roles == [
         "planner",
@@ -278,8 +278,8 @@ async def test_multi_agent_mode_routes_through_application_service() -> None:
         context=fixture.context,
     )
 
-    assert outcome.partial_reason is None
-    assert outcome.content == "多智能体结论 [1]。"
+    assert outcome.response_outcome.partial_reason is None
+    assert outcome.response_outcome.content == "多智能体结论 [1]。"
     assert next(role for role, _ in model.calls) == "supervisor"
 
 
@@ -311,7 +311,7 @@ async def test_follow_up_in_same_thread_answers_without_new_research() -> None:
         config=config,
         context=fixture.context,
     )
-    assert first.partial_reason is None
+    assert first.response_outcome.partial_reason is None
     tool_calls_after_first_turn = len(fixture.gateway.calls)
 
     second = await service.invoke(
@@ -325,15 +325,18 @@ async def test_follow_up_in_same_thread_answers_without_new_research() -> None:
         context=fixture.context,
     )
 
-    assert second.response_mode is ResponseMode.BRIEF
-    assert second.partial_reason is None
+    assert second.response_outcome.response_mode is ResponseMode.BRIEF
+    assert second.response_outcome.partial_reason is None
     # the responder prompt now carries the recent conversation, including the
     # previous turn's assistant reply and the injected summary
     responder_prompt = [prompt for role, prompt in model.calls if role == "responder"][
         -1
     ]
     assert "助手：" in responder_prompt
-    assert second.cited_evidence_ids == first.cited_evidence_ids
+    assert (
+        second.response_outcome.cited_evidence_ids
+        == first.response_outcome.cited_evidence_ids
+    )
     # no new research happened for the follow-up turn
     assert len(fixture.gateway.calls) == tool_calls_after_first_turn
     assert [role for role, _ in model.calls][-1] == "responder"
@@ -375,8 +378,8 @@ async def test_report_request_after_research_skips_new_research() -> None:
         second_request, config=config, context=fixture.context
     )
 
-    assert outcome.response_mode is ResponseMode.REPORT
-    assert outcome.partial_reason is None
+    assert outcome.response_outcome.response_mode is ResponseMode.REPORT
+    assert outcome.response_outcome.partial_reason is None
     assert len(fixture.gateway.calls) == calls_after_research
     assert "正式报告" in model.calls[-1][1]
 
@@ -417,7 +420,7 @@ async def test_incremental_research_runs_again_in_same_thread() -> None:
         second_request, config=config, context=fixture.context
     )
 
-    assert outcome.partial_reason is None
+    assert outcome.response_outcome.partial_reason is None
     assert len(fixture.gateway.calls) > calls_after_first
 
 
@@ -440,7 +443,7 @@ async def test_switch_mode_updates_conversation_without_research() -> None:
         context=fixture.context,
     )
 
-    assert outcome.partial_reason == "mode_switched"
+    assert outcome.response_outcome.partial_reason == "mode_switched"
     assert fixture.gateway.calls == []
     assert model.calls == []
 
@@ -463,8 +466,8 @@ async def test_memory_update_writes_preference_and_answers() -> None:
         context=fixture.context,
     )
 
-    assert outcome.partial_reason == "memory_updated"
-    assert "简洁的回答" in outcome.content
+    assert outcome.response_outcome.partial_reason == "memory_updated"
+    assert "简洁的回答" in outcome.response_outcome.content
     assert fixture.gateway.calls == []
     stored = await fixture.memory_store.list_namespace(
         ("user", "user-1", "preferences")
@@ -520,7 +523,7 @@ async def test_research_recalls_memories_and_consolidates_findings() -> None:
         context=fixture.context,
     )
 
-    assert outcome.partial_reason is None
+    assert outcome.response_outcome.partial_reason is None
     snapshot = await graph.aget_state({"configurable": {"thread_id": "thread-1"}})
     recalled = snapshot.values["turn"]["recalled_memory_ids"]
     assert recalled, "preference should be recalled for research turns"
@@ -773,7 +776,7 @@ async def test_recalled_memories_reach_planner_and_responder_prompts() -> None:
         context=fixture.context,
     )
 
-    assert outcome.partial_reason is None
+    assert outcome.response_outcome.partial_reason is None
     planner_prompt = next(prompt for role, prompt in model.calls if role == "planner")
     responder_prompt = next(
         prompt for role, prompt in model.calls if role == "responder"

@@ -6,15 +6,16 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, StringConstraints, field_validator
 
+from deeptrace.application.result import ApplicationRunResult
 from deeptrace.domain import (
     ResearchMode,
+    ResearchOutcome,
     ResponseMode,
     ResponseOutcome,
     normalize_research_mode,
 )
 from deeptrace.harness.context import HarnessContext
 from deeptrace.harness.state import new_conversation, new_turn
-
 
 MAX_QUESTION_LENGTH = 20_000
 
@@ -37,7 +38,9 @@ class ApplicationResearchRequest(BaseModel):
     thread_id: Identifier
     question: Annotated[
         str,
-        StringConstraints(strip_whitespace=True, min_length=1, max_length=MAX_QUESTION_LENGTH),
+        StringConstraints(
+            strip_whitespace=True, min_length=1, max_length=MAX_QUESTION_LENGTH
+        ),
     ]
     mode: ResearchMode
     response_mode: ResponseMode | None = None
@@ -62,7 +65,7 @@ class ResearchApplicationService:
         *,
         config: dict[str, Any] | None,
         context: HarnessContext,
-    ):
+    ) -> ApplicationRunResult:
         merged_config = dict(config or {})
         configurable = dict(merged_config.get("configurable") or {})
 
@@ -97,7 +100,7 @@ class ResearchApplicationService:
                 result = await self._graph.ainvoke(
                     None, config=merged_config, context=context
                 )
-                return self._extract_outcome(result)
+                return await self._extract_result(result, request, context)
 
         if snapshot is not None and snapshot.values.get("conversation"):
             # Multi-turn continuation: keep the persisted ConversationState.
@@ -110,10 +113,14 @@ class ResearchApplicationService:
         result = await self._graph.ainvoke(
             initial_state, config=merged_config, context=context
         )
-        return self._extract_outcome(result)
+        return await self._extract_result(result, request, context)
 
     @staticmethod
-    def _extract_outcome(result: dict[str, Any]):
+    async def _extract_result(
+        result: dict[str, Any],
+        request: ApplicationResearchRequest,
+        context: HarnessContext,
+    ) -> ApplicationRunResult:
         turn = result["turn"]
         response_outcome = turn.get("response_outcome")
         if response_outcome is None:
@@ -121,4 +128,36 @@ class ResearchApplicationService:
                 "graph finished without a response outcome: "
                 f"status={turn.get('status')}"
             )
-        return ResponseOutcome.model_validate(response_outcome)
+        status = turn.get("status")
+        if status not in {"completed", "partial"}:
+            raise RuntimeError(f"graph finished without a terminal status: {status}")
+        response = ResponseOutcome.model_validate(response_outcome)
+        raw_research = turn.get("research_outcome")
+        research = (
+            ResearchOutcome.model_validate(raw_research)
+            if raw_research is not None
+            else None
+        )
+        reason = response.partial_reason
+        if research is not None and research.termination_reason != "completed":
+            reason = research.termination_reason
+        sources: list[str] = []
+        if response.cited_evidence_ids:
+            evidence = await context.evidence_store.get_many(
+                context.workspace_id, response.cited_evidence_ids
+            )
+            sources = [item.canonical_url for item in evidence]
+        return ApplicationRunResult(
+            run_id=request.run_id,
+            thread_id=request.thread_id,
+            status=status,
+            response_outcome=response,
+            research_outcome=research,
+            termination_reason=reason
+            or ("completed" if status == "completed" else "partial"),
+            executed_steps=research.executed_steps if research is not None else 0,
+            unresolved_gaps=list(research.unresolved_gaps)
+            if research is not None
+            else [],
+            sources=sources,
+        )

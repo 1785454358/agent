@@ -10,11 +10,10 @@ from pathlib import Path
 from typing import Any
 
 from deeptrace.application.research import ApplicationResearchRequest
-from deeptrace.runtime.errors import ThreadBusyError
 from deeptrace.models import RunEvent
 from deeptrace.observability.messages import humanize_event_message
+from deeptrace.runtime.errors import ThreadBusyError
 from deeptrace.runtime.models import RunMode, RunRecord, StoredEvent
-
 
 _TERMINAL_STATUSES = frozenset({"completed", "partial", "failed", "cancelled"})
 
@@ -68,9 +67,7 @@ class LocalResearchRuntime:
         recovered: list[RunRecord] = []
         for path in sorted(self._runs_dir.glob("*.json")):
             try:
-                record = RunRecord.model_validate_json(
-                    path.read_text(encoding="utf-8")
-                )
+                record = RunRecord.model_validate_json(path.read_text(encoding="utf-8"))
             except (ValueError, OSError):
                 continue
             if record.id in self._registry:
@@ -220,7 +217,7 @@ class LocalResearchRuntime:
             record.finished_at = datetime.now(UTC)
             record.error = "运行被用户取消"
             raise
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - public runtime failure boundary
             record.status = "failed"
             record.termination_reason = "worker_error"
             record.finished_at = datetime.now(UTC)
@@ -262,19 +259,19 @@ class LocalResearchRuntime:
             config={"configurable": {"thread_id": thread_id}},
             context=context,
         )
-        record.answer = outcome.content
-        record.status = "completed" if outcome.partial_reason is None else "partial"
-        record.termination_reason = outcome.partial_reason or "completed"
+        record.answer = outcome.response_outcome.content
+        record.status = outcome.status
+        record.termination_reason = outcome.termination_reason
         record.finished_at = datetime.now(UTC)
-        evidence = await context.evidence_store.get_many(
-            context.workspace_id, outcome.cited_evidence_ids
-        )
-        record.sources = [item.canonical_url for item in evidence]
+        record.sources = outcome.sources
+        record.unresolved_gaps = outcome.unresolved_gaps
         self._append_event(
             state,
             RunEvent(
                 event_type="response.completed",
-                message="研究已完成",
+                message="研究已完成"
+                if outcome.status == "completed"
+                else "研究部分完成",
             ),
         )
 

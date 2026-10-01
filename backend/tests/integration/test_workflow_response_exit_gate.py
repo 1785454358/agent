@@ -110,9 +110,9 @@ def test_exit_gate_default_request_produces_cited_answer_with_typed_tools() -> N
         )
     )
 
-    assert outcome.response_mode is ResponseMode.ANSWER
-    assert outcome.partial_reason is None
-    assert outcome.content == "研究结论 [1]。"
+    assert outcome.response_outcome.response_mode is ResponseMode.ANSWER
+    assert outcome.response_outcome.partial_reason is None
+    assert outcome.response_outcome.content == "研究结论 [1]。"
 
     # Typed tool calls entered the gateway; page bodies live only in Evidence.
     assert [call["request"].tool.value for call in fixture.gateway.calls] == [
@@ -124,7 +124,7 @@ def test_exit_gate_default_request_produces_cited_answer_with_typed_tools() -> N
             fixture.context.workspace_id, "https://example.com/a"
         )
     ).id
-    assert outcome.cited_evidence_ids == [evidence_id]
+    assert outcome.response_outcome.cited_evidence_ids == [evidence_id]
 
     # Private child checkpoints survive under their namespaces.
     async def _namespaces() -> set[str]:
@@ -164,9 +164,9 @@ def test_exit_gate_report_request_reuses_research_and_evidence() -> None:
         )
     )
 
-    assert outcome.response_mode is ResponseMode.REPORT
+    assert outcome.response_outcome.response_mode is ResponseMode.REPORT
     assert "正式报告" in model.calls[-1][1]
-    assert outcome.citations[0].marker == "[1]"
+    assert outcome.response_outcome.citations[0].marker == "[1]"
 
 
 def test_exit_gate_invalid_thread_identity_fails_before_side_effects() -> None:

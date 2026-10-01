@@ -61,7 +61,7 @@ async def _run(question: str, mode: str = "workflow") -> int:
             print(f"{index}. {source}")
     else:
         print("无成功抓取来源")
-    print(f"\n状态：{result.status}；模型调用步数：{result.steps}")
+    print(f"\n状态：{result.status}；执行步数：{result.steps}")
     print("\n" + format_role_usage(result.role_usage))
     cost = (
         f"${result.estimated_cost_usd}"

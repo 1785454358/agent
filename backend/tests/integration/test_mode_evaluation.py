@@ -145,7 +145,7 @@ def _evaluate_mode(mode: ResearchMode) -> dict[str, object]:
         "executed_steps": research.executed_steps,
         "model_calls": len(model_calls),
         "tool_calls": len(fixture.gateway.calls),
-        "answered": outcome.partial_reason is None,
+        "answered": outcome.response_outcome.partial_reason is None,
     }
 
 

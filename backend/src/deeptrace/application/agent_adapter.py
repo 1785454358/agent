@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from deeptrace.application.research import ApplicationResearchRequest
 from deeptrace.config import Settings
@@ -48,7 +49,7 @@ class HarnessResearchRunner:
                 return
             try:
                 on_event(RunEvent(event_type=event_type, message=message))
-            except Exception:
+            except Exception:  # noqa: BLE001 - observers cannot abort execution
                 return
 
         def on_harness_event(event_type: str, payload: dict) -> None:
@@ -66,7 +67,7 @@ class HarnessResearchRunner:
                         details=details,
                     )
                 )
-            except Exception:
+            except Exception:  # noqa: BLE001 - observers cannot abort execution
                 return
 
         context = bundle.context_factory(run.id, on_harness_event)
@@ -81,30 +82,23 @@ class HarnessResearchRunner:
             config={"configurable": {"thread_id": thread_id}},
             context=context,
         )
-        sources: list[str] = []
-        if outcome.cited_evidence_ids:
-            evidence = await context.evidence_store.get_many(
-                context.workspace_id, outcome.cited_evidence_ids
-            )
-            sources = [item.canonical_url for item in evidence]
         emit(
             "response.completed",
-            "研究已完成" if outcome.partial_reason is None else "研究部分完成",
+            "研究已完成" if outcome.status == "completed" else "研究部分完成",
         )
-        status = "completed" if outcome.partial_reason is None else "partial"
         return AgentResult(
-            status=status,  # type: ignore[arg-type]
-            answer=outcome.content,
-            sources=sources,
-            steps=1,
+            status=outcome.status,
+            answer=outcome.response_outcome.content,
+            sources=outcome.sources,
+            steps=outcome.executed_steps,
             events=[],
-            termination_reason=outcome.partial_reason or "completed",
+            termination_reason=outcome.termination_reason,
             search_queries=[],
             provider_usage=TokenUsage(),
             role_usage=UsageBreakdown(),
             estimated_cost_usd=None,
             stage_seconds={},
-            unresolved_gaps=[],
+            unresolved_gaps=outcome.unresolved_gaps,
         )
 
 

@@ -5,7 +5,8 @@ from types import SimpleNamespace
 from typing import Any
 
 from deeptrace.api import create_app
-from deeptrace.domain import ResponseMode
+from deeptrace.application.result import ApplicationRunResult
+from deeptrace.domain import ResponseOutcome
 from deeptrace.runtime.local import LocalResearchRuntime
 from deeptrace.runtime.models import RunRecord
 
@@ -66,30 +67,28 @@ class FakeRuntime:
         return None
 
 
-class FakeOutcome:
-    response_mode = ResponseMode.ANSWER
-    content = "简洁回答 [1]"
-    partial_reason = None
-    cited_evidence_ids = ["evidence-1"]
-
-
-class FakeEvidence:
-    canonical_url = "https://example.com/a"
-
-
-class FakeEvidenceStore:
-    async def get_many(self, tenant_id, ids):
-        return [FakeEvidence() for _ in ids]
-
-
 class FakeContext:
     workspace_id = "workspace-1"
-    evidence_store = FakeEvidenceStore()
+    evidence_store = object()
 
 
 class FakeApplication:
     async def invoke(self, request, *, config, context):
-        return FakeOutcome()
+        return ApplicationRunResult(
+            run_id=request.run_id,
+            thread_id=request.thread_id,
+            status="completed",
+            response_outcome=ResponseOutcome(
+                response_mode="answer",
+                content="简洁回答 [1]",
+                citations=[{"evidence_id": "evidence-1", "marker": "[1]"}],
+                cited_evidence_ids=["evidence-1"],
+            ),
+            research_outcome=None,
+            executed_steps=0,
+            termination_reason="completed",
+            sources=["https://example.com/a"],
+        )
 
 
 def build_local_runtime(tmp_path):
@@ -131,9 +130,7 @@ def test_api_creates_and_completes_research(tmp_path) -> None:
     assert data["answer"] == "简洁回答 [1]"
     assert data["sources"] == ["https://example.com/a"]
     assert data["thread_id"] == "thread-9"
-    assert any(
-        event["event_type"] == "response.completed" for event in data["events"]
-    )
+    assert any(event["event_type"] == "response.completed" for event in data["events"])
     persisted = json.loads(
         (tmp_path / "runs" / f"{run_id}.json").read_text(encoding="utf-8")
     )
@@ -173,9 +170,7 @@ def test_api_routes_plan_execute_mode_and_persists_selection(tmp_path):
     from fastapi.testclient import TestClient
 
     runtime = build_local_runtime(tmp_path)
-    with TestClient(
-        create_app(settings=SimpleNamespace(), runtime=runtime)
-    ) as client:
+    with TestClient(create_app(settings=SimpleNamespace(), runtime=runtime)) as client:
         run_id = client.post(
             "/researches", json={"question": "研究问题", "mode": "deep"}
         ).json()["id"]
@@ -184,9 +179,7 @@ def test_api_routes_plan_execute_mode_and_persists_selection(tmp_path):
         assert (
             json.loads(
                 (tmp_path / "runs" / f"{run_id}.json").read_text(encoding="utf-8")
-            )[
-                "mode"
-            ]
+            )["mode"]
             == "plan_execute"
         )
         assert (

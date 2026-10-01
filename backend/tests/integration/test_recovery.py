@@ -446,8 +446,12 @@ async def test_service_resumes_an_interrupted_run_for_the_same_identity(
     # same run identity again: the service resumes the interrupted run
     outcome = await service.invoke(request, config=config, context=fixture.context)
 
-    assert outcome.partial_reason is None
-    assert outcome.cited_evidence_ids
+    assert outcome.response_outcome.partial_reason is None
+    assert outcome.response_outcome.cited_evidence_ids
+    assert outcome.status == "completed"
+    assert outcome.termination_reason == "completed"
+    assert outcome.executed_steps == outcome.research_outcome.executed_steps
+    assert (outcome.run_id, outcome.thread_id) == (request.run_id, request.thread_id)
     # the planner ran exactly once across both attempts (no restart from zero)
     assert model.calls.count("planner") == 1
     assert fixture.search.calls == ["研究问题"]
