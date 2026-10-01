@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Sequence
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.orm import defer
 
 from deeptrace.domain import Evidence, EvidenceLifecycleStatus
 from deeptrace.persistence.orm import EvidenceRecordRow
@@ -26,6 +27,7 @@ class SqlAlchemyEvidenceStore:
     """
 
     _INGEST_ATTEMPTS = 3
+    _READ_BATCH_SIZE = 400
 
     def __init__(self, sessions: async_sessionmaker[AsyncSession]) -> None:
         self._sessions = sessions
@@ -63,8 +65,7 @@ class SqlAlchemyEvidenceStore:
                         select(EvidenceRecordRow)
                         .where(
                             EvidenceRecordRow.tenant_id == tenant,
-                            EvidenceRecordRow.canonical_url_hash
-                            == canonical_url_hash,
+                            EvidenceRecordRow.canonical_url_hash == canonical_url_hash,
                             EvidenceRecordRow.status == "active",
                         )
                         .order_by(EvidenceRecordRow.version.desc())
@@ -134,10 +135,32 @@ class SqlAlchemyEvidenceStore:
     ) -> tuple[Evidence, ...]:
         if isinstance(evidence_ids, (str, bytes)):
             raise TypeError("evidence_ids must be a sequence of identifiers")
-        results: list[Evidence] = []
-        for evidence_id in evidence_ids:
-            results.append(await self.get(tenant_id, evidence_id))
-        return tuple(results)
+        tenant = _require_identifier("tenant_id", tenant_id)
+        requested = [
+            _require_identifier("evidence_id", evidence_id)
+            for evidence_id in evidence_ids
+        ]
+        unique_ids = list(dict.fromkeys(requested))
+        if not unique_ids:
+            return ()
+        records: dict[str, Evidence] = {}
+        async with self._sessions() as session:
+            for start in range(0, len(unique_ids), self._READ_BATCH_SIZE):
+                batch = unique_ids[start : start + self._READ_BATCH_SIZE]
+                rows = await session.scalars(
+                    select(EvidenceRecordRow)
+                    .options(defer(EvidenceRecordRow.body))
+                    .where(
+                        EvidenceRecordRow.tenant_id == tenant,
+                        EvidenceRecordRow.evidence_id.in_(batch),
+                    )
+                )
+                records.update((row.evidence_id, _to_model(row)) for row in rows)
+        if len(records) != len(unique_ids):
+            raise KeyError("evidence is not available for tenant")
+        return tuple(
+            records[evidence_id].model_copy(deep=True) for evidence_id in requested
+        )
 
     async def read_body(self, tenant_id: str, evidence_id: str) -> str:
         async with self._sessions() as session:
@@ -153,15 +176,11 @@ class SqlAlchemyEvidenceStore:
             raise KeyError("evidence is not available for tenant")
         return record.body
 
-    async def read_chunks(
-        self, tenant_id: str, evidence_id: str
-    ) -> tuple[str, ...]:
+    async def read_chunks(self, tenant_id: str, evidence_id: str) -> tuple[str, ...]:
         body = await self.read_body(tenant_id, evidence_id)
         return (body,) if body else ()
 
-    async def latest_for_source(
-        self, tenant_id: str, canonical_url: str
-    ) -> Evidence:
+    async def latest_for_source(self, tenant_id: str, canonical_url: str) -> Evidence:
         normalized = normalize_url_before_fetch(canonical_url)
         url_hash = _sha256_hex(normalized)
         async with self._sessions() as session:
@@ -222,5 +241,5 @@ def _sha256_hex(value: str) -> str:
 
 
 def _evidence_id(canonical_url: str, content_hash: str) -> str:
-    payload = f"{canonical_url}\0{content_hash}".encode("utf-8")
+    payload = f"{canonical_url}\0{content_hash}".encode()
     return "evidence-" + hashlib.sha256(payload).hexdigest()
