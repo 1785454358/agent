@@ -1,8 +1,9 @@
 """Serializable state shared by the loop and its policies."""
 
 from enum import StrEnum
-from typing import Annotated, Any, TypedDict
+from typing import Annotated, TypedDict
 
+from langchain_core.messages import AnyMessage
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -12,6 +13,7 @@ from deeptrace.domain import (
     ResearchTopicOutcome,
     TopicStepError,
 )
+from deeptrace.domain.agent import AgentStopReason
 
 MAX_TODOS = 20
 MAX_TODO_CONTENT_CHARS = 500
@@ -56,8 +58,7 @@ def _add_steps(left: int | None, right: int | None) -> int:
 
 class AgentExecutorState(TypedDict, total=False):
     topic_input: ResearchTopicInput
-    messages: Annotated[list[Any], add_messages]
-    model_messages: list[Any]
+    messages: Annotated[list[AnyMessage], add_messages]
     iteration: int
     consecutive_errors: int
     completion_nudges: int
@@ -69,7 +70,7 @@ class AgentExecutorState(TypedDict, total=False):
     failures: list[ErrorRecord]
     executed_steps: Annotated[int, _add_steps]
     pages_fetched: int
-    stop_reason: str
+    stop_reason: AgentStopReason
     outcome: ResearchTopicOutcome
 
 

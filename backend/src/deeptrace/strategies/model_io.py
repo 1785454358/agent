@@ -2,36 +2,16 @@
 
 from __future__ import annotations
 
-import json
-from typing import Any
+# Public decoding imports are retained for existing consumers, including eval.
+from deeptrace.harness.model_io import parse_json_object, payload_text
 
-
-def payload_text(response: Any) -> str:
-    """Extract comparable text from a model gateway response."""
-    if isinstance(response, str):
-        text = response
-    elif hasattr(response, "content"):
-        content = response.content
-        text = content if isinstance(content, str) else str(content)
-    else:
-        text = str(response)
-    stripped = text.strip()
-    if stripped.startswith("```"):
-        lines = stripped.splitlines()
-        if len(lines) >= 2 and lines[-1].strip().endswith("```"):
-            lines = lines[1:-1]
-        elif lines and lines[0].strip().startswith("```"):
-            lines = lines[1:]
-        stripped = "\n".join(lines).strip()
-    return stripped
-
-
-def parse_json_object(text: str) -> dict[str, Any] | None:
-    try:
-        payload = json.loads(text)
-    except (TypeError, ValueError):
-        return None
-    return payload if isinstance(payload, dict) else None
+__all__ = [
+    "branch_context",
+    "conversation_background_lines",
+    "parse_json_object",
+    "payload_text",
+    "research_messages",
+]
 
 
 def conversation_background_lines(research_input) -> list[str]:
@@ -53,13 +33,20 @@ def branch_context(state):
         summary = summary.model_dump()
     return {
         "original_task": state.get("question") or state.get("original_task", ""),
-        "constraints": list(summary.get("user_constraints") or state.get("constraints") or []),
-        "context_notes": list(summary.get("established_facts") or []) + list(state.get("recent_messages") or []),
+        "constraints": list(
+            summary.get("user_constraints") or state.get("constraints") or []
+        ),
+        "context_notes": list(summary.get("established_facts") or [])
+        + list(state.get("recent_messages") or []),
     }
 
 
 def research_messages(research_input, prompt):
     from deeptrace.harness.prompts import task_messages
-    return task_messages(instruction="按当前研究阶段完成规划或评估，遵守用户约束与输出契约。",
-                         task=research_input.question,
-                         constraints=research_input.conversation_summary.user_constraints, prompt=prompt)
+
+    return task_messages(
+        instruction="按当前研究阶段完成规划或评估，遵守用户约束与输出契约。",
+        task=research_input.question,
+        constraints=research_input.conversation_summary.user_constraints,
+        prompt=prompt,
+    )

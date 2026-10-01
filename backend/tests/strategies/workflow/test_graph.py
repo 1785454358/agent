@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
+from langchain_core.messages import AIMessage
 
 from deeptrace.domain import ResearchInput, ResearchMode
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
@@ -126,6 +127,16 @@ async def test_workflow_routes_plan_topics_evaluate_finalize() -> None:
 
 
 @pytest.mark.asyncio
+async def test_workflow_uses_queries_from_a_real_chat_message() -> None:
+    model = ScriptedModelGateway(
+        {"planner": AIMessage(content='{"queries":["official docs"]}')}
+    )
+    fixture = build_gateway_fixture(model_gateway=model)
+    result = await _run_workflow(model, fixture)
+    assert result["queries"] == ["official docs"]
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "planner_response", [RuntimeError("planner down"), "not json at all"]
 )
@@ -162,9 +173,7 @@ async def test_planner_failure_falls_back_to_the_user_question(
 async def test_planner_queries_are_deduplicated_and_bounded() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps(
-                {"queries": ["q1", "q1", "q2", "q3", "q4", "q5"]}
-            ),
+            "planner": json.dumps({"queries": ["q1", "q1", "q2", "q3", "q4", "q5"]}),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),
@@ -217,9 +226,7 @@ async def test_zero_usable_evidence_yields_partial_no_sources() -> None:
             "evaluator": "evaluator must not run",
         }
     )
-    fixture = build_gateway_fixture(
-        default_search_results=[], model_gateway=model
-    )
+    fixture = build_gateway_fixture(default_search_results=[], model_gateway=model)
 
     result = await _run_workflow(model, fixture)
     outcome = result["outcome"]

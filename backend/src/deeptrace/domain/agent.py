@@ -6,22 +6,25 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from deeptrace.domain.execution import BudgetSnapshot, ErrorRecord
 
+AgentStatus = Literal["completed", "partial", "failed", "cancelled"]
+AgentStopReason = Literal[
+    "completed",
+    "iteration_limit",
+    "error_limit",
+    "budget_exhausted",
+    "context_limit",
+    "model_error",
+    "tool_error",
+    "incomplete_plan",
+    "cancelled",
+]
+
 
 class AgentOutcome(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    status: Literal["completed", "partial", "failed", "cancelled"]
-    stop_reason: Literal[
-        "completed",
-        "iteration_limit",
-        "error_limit",
-        "budget_exhausted",
-        "context_limit",
-        "model_error",
-        "tool_error",
-        "incomplete_plan",
-        "cancelled",
-    ]
+    status: AgentStatus
+    stop_reason: AgentStopReason
     summary: str = ""
     evidence_ids: list[str] = Field(default_factory=list)
     errors: list[ErrorRecord] = Field(default_factory=list)

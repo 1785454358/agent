@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
-import asyncio
 
 from langchain_core.runnables import RunnableConfig
 from langgraph.runtime import Runtime
@@ -11,41 +11,34 @@ from pydantic import ValidationError
 
 from deeptrace.domain import (
     INCOMPLETE_PLAN_REASON,
-    ResearchInput,
-    ResearchOutcome,
     ResearchMode,
+    ResearchOutcome,
     ResearchTopicInput,
-    ResearchTopicOutcome,
     unfinished_plan_items,
 )
 from deeptrace.harness.context import HarnessContext
-from deeptrace.strategies.model_io import parse_json_object, payload_text, branch_context, research_messages
+from deeptrace.strategies.common import (
+    effective_termination_reason,
+    filter_findings,
+    invoke_research_branch,
+    topic_error_gaps,
+)
+from deeptrace.strategies.common import (
+    research_input_from_state as _research_input,
+)
+from deeptrace.strategies.model_io import (
+    branch_context,
+    parse_json_object,
+    payload_text,
+    research_messages,
+)
 from deeptrace.strategies.plan_execute.models import ExecutorDecision, TaskPlan
-from deeptrace.strategies.workflow.nodes import filter_findings, topic_error_gaps
 from deeptrace.strategies.plan_execute.state import PlanExecuteState
-
 
 PLAN_EXECUTE_CALLER_ID = "plan-execute-executor"
 PLANNER_ROLE = "planner"
 REPLANNER_ROLE = "replanner"
 EVALUATOR_ROLE = "evaluator"
-
-
-def _research_input(state: PlanExecuteState) -> ResearchInput:
-    return ResearchInput.model_validate(
-        {
-            "run_id": state["run_id"],
-            "thread_id": state["thread_id"],
-            "question": state["question"],
-            "conversation_summary": state.get("conversation_summary") or {},
-            "recent_messages": state.get("recent_messages") or [],
-            "prior_evidence_ids": state.get("prior_evidence_ids") or [],
-            "unresolved_gaps": [],
-            "budget": state.get("budget") or {},
-            "current_date": state["current_date"],
-            "timezone": state["timezone"],
-        }
-    )
 
 
 def build_plan_node(max_tasks: int):
@@ -58,7 +51,7 @@ def build_plan_node(max_tasks: int):
         background = conversation_background_lines(research_input)
         prompt = (
             "你是一次研究任务的规划器。请把用户问题拆解为互不重复的研究任务查询，"
-            f"数量不超过 {max_tasks} 条，并只输出 JSON：{{\"queries\": [\"...\"]}}。\n\n"
+            f'数量不超过 {max_tasks} 条，并只输出 JSON：{{"queries": ["..."]}}。\n\n'
             f"用户问题：{research_input.question}\n"
             + ("" if not background else "会话背景：\n" + "\n".join(background) + "\n")
             + f"今天日期：{research_input.current_date}"
@@ -81,6 +74,9 @@ def build_plan_node(max_tasks: int):
                     if len(queries) >= max_tasks:
                         break
         except Exception:
+            logging.getLogger(__name__).warning(
+                "Research planning failed; using fallback", exc_info=True
+            )
             queries = []
         plan = TaskPlan(queries=queries or [research_input.question])
         return {
@@ -122,13 +118,11 @@ def build_execute_task_node(topic_graph):
             **branch_context(state),
         )
         try:
-            raw = await topic_graph.ainvoke(
-                {"topic_input": topic_input}, config=config
-            )
-            outcome = ResearchTopicOutcome.model_validate(raw["outcome"])
-            if outcome.agent_outcome and outcome.agent_outcome.status == "cancelled":
-                raise asyncio.CancelledError()
+            outcome = await invoke_research_branch(topic_graph, topic_input, config)
         except Exception:
+            logging.getLogger(__name__).warning(
+                "Research branch failed; preserving partial outcome", exc_info=True
+            )
             return {
                 "completed_tasks": [query],
                 "executed_steps": 1,
@@ -256,6 +250,9 @@ def build_replan_node(max_tasks: int):
                     if len(new_queries) >= max_tasks:
                         break
         except Exception:
+            logging.getLogger(__name__).warning(
+                "Research replanning failed; retaining current result", exc_info=True
+            )
             new_queries = []
         if new_queries:
             return {"plan_tasks": new_queries, "replan_count": replan_count}
@@ -280,15 +277,11 @@ def build_finalize_node(max_replans: int):
         decision = state.get("decision")
         gaps = list(dict.fromkeys(state.get("unresolved_gaps") or []))
         replan_count = state.get("replan_count") or 0
-        unfinished = unfinished_plan_items(
-            list(state.get("topic_outcomes") or [])
-        )
+        unfinished = unfinished_plan_items(list(state.get("topic_outcomes") or []))
         if not evidence_ids:
             termination_reason = "no_sources"
         elif decision is not None and decision.action == "complete":
-            termination_reason = (
-                INCOMPLETE_PLAN_REASON if unfinished else "completed"
-            )
+            termination_reason = INCOMPLETE_PLAN_REASON if unfinished else "completed"
         elif decision is not None and decision.action == "replan":
             if replan_count >= max_replans or "no_new_tasks_to_plan" in gaps:
                 termination_reason = "max_replans_reached"
@@ -296,9 +289,9 @@ def build_finalize_node(max_replans: int):
                 termination_reason = "insufficient_evidence"
         else:
             termination_reason = "insufficient_evidence"
-        agent_results = [o.agent_outcome for o in state.get("topic_outcomes", []) if o.agent_outcome is not None]
-        if termination_reason == "completed" and any(o.status != "completed" for o in agent_results):
-            termination_reason = next(o.stop_reason for o in agent_results if o.status != "completed")
+        termination_reason = effective_termination_reason(
+            termination_reason, state.get("topic_outcomes", [])
+        )
         outcome = ResearchOutcome(
             mode=ResearchMode.PLAN_EXECUTE,
             evidence_ids=evidence_ids,

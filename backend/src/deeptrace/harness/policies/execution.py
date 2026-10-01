@@ -1,10 +1,11 @@
 """Pure continuation and exit decisions for every orchestration strategy."""
 
 from dataclasses import dataclass
+from typing import Literal
 
-from deeptrace.domain import BudgetSnapshot, ResearchTopicOutcome
-from deeptrace.domain.agent import AgentOutcome
-from deeptrace.harness.agent_state import TodoStatus, topic_input
+from deeptrace.domain import BudgetSnapshot
+from deeptrace.domain.agent import AgentOutcome, AgentStatus, AgentStopReason
+from deeptrace.harness.agent_state import AgentExecutorState, TodoStatus
 
 
 @dataclass(frozen=True)
@@ -21,7 +22,9 @@ class ExecutionPolicy:
         ):
             raise ValueError("Invalid execution limits")
 
-    def stop(self, state, *, model_finished=False):
+    def stop(
+        self, state: AgentExecutorState, *, model_finished: bool = False
+    ) -> AgentStopReason | Literal[""]:
         if state.get("stop_reason"):
             return state["stop_reason"]
         open_items = [
@@ -40,12 +43,12 @@ class ExecutionPolicy:
             return "incomplete_plan"
         return ""
 
-    def outcome(self, state):
+    def outcome(self, state: AgentExecutorState) -> AgentOutcome:
         reason = state.get("stop_reason") or "incomplete_plan"
         evidence = sorted(set(state.get("evidence_ids") or []))
         todos = state.get("todos") or []
         unfinished = [t.content for t in todos if t.status != TodoStatus.COMPLETED]
-        status = "partial"
+        status: AgentStatus = "partial"
         if reason in {"completed", "cancelled"}:
             status = reason
         elif not evidence and reason in {"model_error", "tool_error", "context_limit"}:
@@ -58,7 +61,7 @@ class ExecutionPolicy:
             ),
             "",
         )
-        result = AgentOutcome(
+        return AgentOutcome(
             status=status,
             stop_reason=reason,
             summary=summary,
@@ -74,15 +77,4 @@ class ExecutionPolicy:
                 used_model_calls=state.get("iteration", 0),
                 used_tool_calls=state.get("executed_steps", 0),
             ),
-        )
-        return ResearchTopicOutcome(
-            query=topic_input(state).query,
-            agent_outcome=result,
-            evidence_ids=evidence,
-            attempted_urls=sorted(set(state.get("attempted_urls") or []))[:100],
-            errors=state.get("errors", [])[-100:],
-            executed_steps=result.executed_steps,
-            plan_total=result.plan_total,
-            plan_completed=result.plan_completed,
-            unfinished_todos=unfinished,
         )

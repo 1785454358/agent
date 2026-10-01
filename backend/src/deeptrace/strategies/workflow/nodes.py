@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import json
+import logging
 from typing import Any
-import asyncio
 
 from langchain_core.runnables import RunnableConfig
 from langgraph.runtime import Runtime
@@ -13,19 +12,29 @@ from pydantic import ValidationError
 
 from deeptrace.domain import (
     INCOMPLETE_PLAN_REASON,
-    ResearchInput,
-    ResearchOutcome,
     ResearchMode,
+    ResearchOutcome,
     ResearchTopicInput,
-    ResearchTopicOutcome,
     unfinished_plan_items,
 )
-from deeptrace.domain.evidence import Finding
 from deeptrace.harness.context import HarnessContext
-from deeptrace.strategies.model_io import parse_json_object, payload_text, branch_context, research_messages
-from deeptrace.strategies.workflow.models import QueryPlan, WorkflowEvaluation
+from deeptrace.strategies.common import (
+    effective_termination_reason,
+    filter_findings,
+    invoke_research_branch,
+    topic_error_gaps,
+)
+from deeptrace.strategies.common import (
+    research_input_from_state as _research_input,
+)
+from deeptrace.strategies.model_io import (
+    branch_context,
+    parse_json_object,
+    payload_text,
+    research_messages,
+)
+from deeptrace.strategies.workflow.models import WorkflowEvaluation
 from deeptrace.strategies.workflow.state import TopicBranchState, WorkflowState
-
 
 WORKFLOW_CALLER_ID = "workflow-graph"
 PLANNER_ROLE = "planner"
@@ -49,42 +58,6 @@ def parse_query_plan(text: str, *, limit: int, fallback: str) -> list[str]:
     return queries or [fallback]
 
 
-def filter_findings(
-    findings: list[Finding], *, allowed_evidence_ids: set[str]
-) -> list[Finding]:
-    return [
-        finding
-        for finding in findings
-        if finding.evidence_ids and set(finding.evidence_ids) <= allowed_evidence_ids
-    ]
-
-
-def topic_error_gaps(outcome: ResearchTopicOutcome) -> list[str]:
-    agent = outcome.agent_outcome
-    extra = [f"agent_exit:{agent.stop_reason}"] if agent and agent.status != "completed" else []
-    return extra + [
-        f"topic[{outcome.query}] {error.stage}:{error.target}:{error.code}"
-        for error in outcome.errors
-    ]
-
-
-def _research_input(state: WorkflowState) -> ResearchInput:
-    return ResearchInput.model_validate(
-        {
-            "run_id": state["run_id"],
-            "thread_id": state["thread_id"],
-            "question": state["question"],
-            "conversation_summary": state.get("conversation_summary") or {},
-            "recent_messages": state.get("recent_messages") or [],
-            "prior_evidence_ids": state.get("prior_evidence_ids") or [],
-            "unresolved_gaps": [],
-            "budget": state.get("budget") or {},
-            "current_date": state["current_date"],
-            "timezone": state["timezone"],
-        }
-    )
-
-
 def build_plan_queries_node(query_limit: int):
     async def plan_queries_node(
         state: WorkflowState,
@@ -96,9 +69,13 @@ def build_plan_queries_node(query_limit: int):
         summary_lines = conversation_background_lines(research_input)
         prompt = (
             "你是一次研究任务的查询规划器。请基于用户问题生成互不重复的搜索查询，"
-            f"数量不超过 {query_limit} 条，并只输出 JSON：{{\"queries\": [\"...\"]}}。\n\n"
+            f'数量不超过 {query_limit} 条，并只输出 JSON：{{"queries": ["..."]}}。\n\n'
             f"用户问题：{research_input.question}\n"
-            + ("" if not summary_lines else "会话背景：\n" + "\n".join(summary_lines) + "\n")
+            + (
+                ""
+                if not summary_lines
+                else "会话背景：\n" + "\n".join(summary_lines) + "\n"
+            )
             + f"今天日期：{research_input.current_date}"
         )
         queries: list[str]
@@ -107,9 +84,14 @@ def build_plan_queries_node(query_limit: int):
                 role=PLANNER_ROLE, messages=research_messages(research_input, prompt)
             )
             queries = parse_query_plan(
-                str(response), limit=query_limit, fallback=research_input.question
+                payload_text(response),
+                limit=query_limit,
+                fallback=research_input.question,
             )
         except Exception:
+            logging.getLogger(__name__).warning(
+                "Research planning failed; using fallback", exc_info=True
+            )
             queries = [research_input.question]
         return {"queries": queries, "executed_steps": 1}
 
@@ -146,20 +128,21 @@ def build_research_topic_node(topic_graph):
             mode=ResearchMode.WORKFLOW,
             caller_id=WORKFLOW_CALLER_ID,
             original_task=state.get("original_task", state["query"]),
-            constraints=state.get("constraints", []), context_notes=state.get("context_notes", []),
+            constraints=state.get("constraints", []),
+            context_notes=state.get("context_notes", []),
         )
         try:
-            raw = await topic_graph.ainvoke(
-                {"topic_input": topic_input}, config=config
-            )
-            outcome = ResearchTopicOutcome.model_validate(raw["outcome"])
-            if outcome.agent_outcome and outcome.agent_outcome.status == "cancelled":
-                raise asyncio.CancelledError()
+            outcome = await invoke_research_branch(topic_graph, topic_input, config)
         except Exception as exc:
+            logging.getLogger(__name__).warning(
+                "Research branch failed; preserving partial outcome", exc_info=True
+            )
             return {
                 "executed_steps": 1,
                 "unresolved_gaps": [
-                    f"topic_execution_failed:{state['query']}:{type(exc).__name__}"[:500]
+                    f"topic_execution_failed:{state['query']}:{type(exc).__name__}"[
+                        :500
+                    ]
                 ],
             }
         gaps = topic_error_gaps(outcome)
@@ -246,14 +229,12 @@ def finalize_node(state: WorkflowState) -> dict[str, Any]:
     if not evidence_ids:
         termination_reason = "no_sources"
     elif evaluation is not None and evaluation.sufficient:
-        termination_reason = (
-            INCOMPLETE_PLAN_REASON if unfinished else "completed"
-        )
+        termination_reason = INCOMPLETE_PLAN_REASON if unfinished else "completed"
     else:
         termination_reason = "insufficient_evidence"
-    agent_results = [o.agent_outcome for o in state.get("topic_outcomes", []) if o.agent_outcome is not None]
-    if termination_reason == "completed" and any(o.status != "completed" for o in agent_results):
-        termination_reason = next(o.stop_reason for o in agent_results if o.status != "completed")
+    termination_reason = effective_termination_reason(
+        termination_reason, state.get("topic_outcomes", [])
+    )
     outcome = ResearchOutcome(
         mode=ResearchMode.WORKFLOW,
         evidence_ids=evidence_ids,

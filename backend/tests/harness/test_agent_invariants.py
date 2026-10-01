@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import replace
+from typing import Any
 
 import pytest
 from deeptrace.domain import ResearchMode, ResearchTopicInput
@@ -479,25 +480,45 @@ async def test_strategy_propagates_cancelled_agent_without_evaluation():
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("code,reason", [("budget_exhausted", "budget_exhausted"), ("tool_internal_error", "tool_error")])
+@pytest.mark.parametrize(
+    "code,reason",
+    [("budget_exhausted", "budget_exhausted"), ("tool_internal_error", "tool_error")],
+)
 async def test_terminal_tool_error_closes_pending_calls(code, reason):
     from deeptrace.domain import ToolResult
     from deeptrace.domain.errors import classify_error_code
-    model = Model(AIMessage(content="", tool_calls=[
-        call("search_web", {"query": "a"}, "a"),
-        call("search_web", {"query": "b"}, "b"),
-    ]))
+
+    model = Model(
+        AIMessage(
+            content="",
+            tool_calls=[
+                call("search_web", {"query": "a"}, "a"),
+                call("search_web", {"query": "b"}, "b"),
+            ],
+        )
+    )
     fixture = build_gateway_fixture(model_gateway=model)
     calls = []
+
     class FailedGateway:
         async def execute(self, **kwargs):
             request = kwargs["request"]
             calls.append(request)
-            return ToolResult(request_id=request.request_id, run_id=request.run_id, thread_id=request.thread_id,
-                              call_id=request.call_id, tool=request.tool, ok=False,
-                              error_code=code, error_category=classify_error_code(code))
+            return ToolResult(
+                request_id=request.request_id,
+                run_id=request.run_id,
+                thread_id=request.thread_id,
+                call_id=request.call_id,
+                tool=request.tool,
+                ok=False,
+                error_code=code,
+                error_category=classify_error_code(code),
+            )
+
     raw = await build_research_agent_graph(max_tool_concurrency=1).ainvoke(
-        {"topic_input": task()}, context=replace(fixture.context, tool_gateway=FailedGateway()))
+        {"topic_input": task()},
+        context=replace(fixture.context, tool_gateway=FailedGateway()),
+    )
     assert_pairs(raw["messages"])
     assert raw["outcome"].agent_outcome.stop_reason == reason
     assert len(calls) == 1 and len(model.calls) == 1
@@ -506,14 +527,39 @@ async def test_terminal_tool_error_closes_pending_calls(code, reason):
 @pytest.mark.asyncio
 async def test_checkpoint_serializes_plan_and_final_outcome():
     saver = InMemorySaver(serde=create_harness_checkpoint_serializer())
-    fixture = build_gateway_fixture(model_gateway=Model(AIMessage(content="", tool_calls=[
-        call("write_todos", {"todos": [{"content": "collect evidence", "status": "pending"}]}, "plan")
-    ])))
+    fixture = build_gateway_fixture(
+        model_gateway=Model(
+            AIMessage(
+                content="",
+                tool_calls=[
+                    call(
+                        "write_todos",
+                        {
+                            "todos": [
+                                {"content": "collect evidence", "status": "pending"}
+                            ]
+                        },
+                        "plan",
+                    )
+                ],
+            )
+        )
+    )
     config = {"configurable": {"thread_id": "plan-resume"}}
     graph = build_research_agent_graph(max_iterations=2, checkpointer=saver)
-    await graph.ainvoke({"topic_input": task()}, config=config, context=fixture.context,
-                        interrupt_after=["execute_tools"])
-    raw = await graph.ainvoke(None, config=config, context=replace(fixture.context, model_gateway=Model(AIMessage(content="done"))))
+    await graph.ainvoke(
+        {"topic_input": task()},
+        config=config,
+        context=fixture.context,
+        interrupt_after=["execute_tools"],
+    )
+    raw = await graph.ainvoke(
+        None,
+        config=config,
+        context=replace(
+            fixture.context, model_gateway=Model(AIMessage(content="done"))
+        ),
+    )
     checkpoint = await graph.aget_state(config)
     assert checkpoint.values["outcome"] == raw["outcome"]
     assert raw["outcome"].agent_outcome.unfinished_todos == ["collect evidence"]
@@ -522,9 +568,82 @@ async def test_checkpoint_serializes_plan_and_final_outcome():
 
 @pytest.mark.asyncio
 async def test_invalid_fetch_arguments_still_finalize_cleanly():
-    fixture = build_gateway_fixture(model_gateway=Model(AIMessage(content="", tool_calls=[
-        call("fetch_page", {}, "bad-fetch")])))
-    raw = await build_research_agent_graph(max_iterations=1).ainvoke({"topic_input": task()}, context=fixture.context)
+    fixture = build_gateway_fixture(
+        model_gateway=Model(
+            AIMessage(content="", tool_calls=[call("fetch_page", {}, "bad-fetch")])
+        )
+    )
+    raw = await build_research_agent_graph(max_iterations=1).ainvoke(
+        {"topic_input": task()}, context=fixture.context
+    )
     assert_pairs(raw["messages"])
     assert raw["outcome"].agent_outcome.stop_reason == "iteration_limit"
     assert raw["outcome"].errors[0].code == "invalid_arguments"
+
+
+@pytest.mark.asyncio
+async def test_checkpoint_before_model_keeps_facts_without_a_duplicate_model_view():
+    saver = InMemorySaver(serde=create_harness_checkpoint_serializer())
+    fixture = build_gateway_fixture(model_gateway=Model(AIMessage(content="done")))
+    graph = build_research_agent_graph(completion_nudge_limit=0, checkpointer=saver)
+    config = {"configurable": {"thread_id": "before-model"}}
+    await graph.ainvoke(
+        {
+            "topic_input": task(
+                original_task="canonical task", constraints=["official only"]
+            )
+        },
+        config=config,
+        context=fixture.context,
+        interrupt_after=["prepare_context"],
+    )
+    checkpoint = await graph.aget_state(config)
+    assert "model_messages" not in checkpoint.values
+    raw = await graph.ainvoke(None, config=config, context=fixture.context)
+    assert raw["outcome"].agent_outcome.status == "partial"
+    sent = "\n".join(str(m.content) for m in fixture.context.model_gateway.calls[0])
+    assert "canonical task" in sent and "official only" in sent
+
+
+@pytest.mark.asyncio
+async def test_legacy_checkpoint_model_view_is_rebuilt_from_original_facts():
+    from langchain_core.messages import HumanMessage
+    from langgraph.graph import START, END, StateGraph
+    from deeptrace.harness.agent_state import AgentExecutorState
+
+    class LegacyState(AgentExecutorState, total=False):
+        model_messages: list[Any]
+
+    saver = InMemorySaver(serde=create_harness_checkpoint_serializer())
+    builder = StateGraph(LegacyState)
+    builder.add_node(
+        "prepare_context",
+        lambda s: {"model_messages": [HumanMessage(content="obsolete model view")]},
+    )
+    builder.add_node("call_model", lambda s: {})
+    builder.add_edge(START, "prepare_context")
+    builder.add_edge("prepare_context", "call_model")
+    builder.add_edge("call_model", END)
+    config = {"configurable": {"thread_id": "legacy-view"}}
+    await builder.compile(checkpointer=saver).ainvoke(
+        {
+            "topic_input": task(
+                original_task="canonical task", constraints=["official only"]
+            )
+        },
+        config=config,
+        interrupt_after=["prepare_context"],
+    )
+    model = Model(AIMessage(content="done"))
+    fixture = build_gateway_fixture(model_gateway=model)
+    result = await build_research_agent_graph(
+        checkpointer=saver, completion_nudge_limit=0
+    ).ainvoke(
+        None,
+        config=config,
+        context=fixture.context,
+    )
+    sent = "\n".join(str(m.content) for m in model.calls[0])
+    assert "canonical task" in sent and "official only" in sent
+    assert "obsolete model view" not in sent
+    assert result["outcome"].agent_outcome.status == "partial"

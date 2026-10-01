@@ -12,8 +12,8 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.runtime import Runtime
 
-from deeptrace.domain import ErrorCategory, ErrorRecord
-from deeptrace.harness.agent_state import AgentExecutorState, TodoStatus
+from deeptrace.domain import ErrorCategory, ErrorRecord, ResearchTopicOutcome
+from deeptrace.harness.agent_state import AgentExecutorState, TodoStatus, topic_input
 from deeptrace.harness.agent_tools import (
     RESEARCH_TOOLS,
     WRITE_TODOS_TOOL,
@@ -38,7 +38,7 @@ def _error(code, category=ErrorCategory.FATAL):
     )
 
 
-def _normalize_calls(response, state):
+def _normalize_calls(response: AIMessage, state: AgentExecutorState) -> AIMessage:
     """Persist unique bounded identities before tools run; stable across replay."""
     used = {
         c["id"] for m in state.get("messages", []) for c in getattr(m, "tool_calls", [])
@@ -86,22 +86,24 @@ def build_research_agent_graph(
         stop = policy.stop(state)
         if stop:
             return {"stop_reason": stop}
+        return {}
+
+    async def call_model(
+        state: AgentExecutorState, runtime: Runtime[HarnessContext]
+    ) -> dict[str, Any]:
         try:
-            return {"model_messages": prepare_messages(state, RESEARCH_TOOLS, budget)}
+            messages = prepare_messages(state, RESEARCH_TOOLS, budget)
         except ContextLimitError:
             return {
                 "stop_reason": "context_limit",
                 "failures": [*state.get("failures", []), _error("context_limit")],
             }
 
-    async def call_model(
-        state: AgentExecutorState, runtime: Runtime[HarnessContext]
-    ) -> dict[str, Any]:
         updates: dict[str, Any] = {"iteration": state.get("iteration", 0) + 1}
         try:
             response = await runtime.context.model_gateway.invoke(
                 role=RESEARCHER_ROLE,
-                messages=state["model_messages"],
+                messages=messages,
                 tools=RESEARCH_TOOLS,
             )
             if not isinstance(response, AIMessage):
@@ -169,8 +171,21 @@ def build_research_agent_graph(
             "completion_nudges": state.get("completion_nudges", 0) + 1,
         }
 
-    def finalize(state):
-        return {"outcome": policy.outcome(state), "model_messages": []}
+    def finalize(state: AgentExecutorState) -> dict[str, Any]:
+        agent = policy.outcome(state)
+        return {
+            "outcome": ResearchTopicOutcome(
+                query=topic_input(state).query,
+                agent_outcome=agent,
+                evidence_ids=agent.evidence_ids,
+                attempted_urls=sorted(set(state.get("attempted_urls") or []))[:100],
+                errors=state.get("errors", [])[-100:],
+                executed_steps=agent.executed_steps,
+                plan_total=agent.plan_total,
+                plan_completed=agent.plan_completed,
+                unfinished_todos=agent.unfinished_todos,
+            )
+        }
 
     builder = StateGraph(AgentExecutorState, context_schema=HarnessContext)
     for name, node in [
