@@ -1,6 +1,6 @@
 # Workflow 评估器输出契约修复
 
-日期：2026-10-01。状态：提案待确认，不含已实施声明。
+日期：2026-10-01。状态：用户已确认，已实施；离线与真实单题验收通过。
 
 ## 已确认原因
 
@@ -28,4 +28,12 @@
 
 离线回归、Ruff、格式与 diff 检查完成后，再在 12 轮 / 2048 输出 / 40 模型 / 24 工具 / 240 秒上限内执行一次真实单题，要求 search/fetch/cited answer、completed 和 checkpoint 一致性全部通过；不能仅凭来源存在宣布通过。
 
-这是一项新的生产行为修复，需要用户确认后进入 writing-plans 与 TDD，未在预算调优过程中直接实施。
+用户已以“修复”确认本方案；按 writing-plans 与 TDD 实施，未在预算调优过程中直接实施。
+
+## 实施结果
+
+生产改动限定于 evaluate_node：明确字段类型、合法示例和完整 schema；仅 JSON/schema 校验错误触发一次纠正。原始响应最多 4000 字符，最多 10 条 type/loc 错误，每个字符串路径片段最多 200 字符；系统消息明确其为不可信数据。ModelGateway 调用位于解析异常处理之外，网关错误和取消不被误认为格式问题。有效 sufficient=false 不重试；两次格式失败仍 evaluation_unavailable，阶段 executed_steps 仍为 1。
+
+节点/研究图/响应集成：46 passed。全量离线：573 passed, 2 deselected。真实单题：1 passed，114.53 秒，completed/completed，5 个引用来源，28 次逻辑模型调用、9 次逻辑工具调用，23 个研究步骤。首次 evaluator finish_reason=length、json_invalid；一次纠正后 finish_reason=stop、schema 无错误。未放宽任何完成断言或提高本轮预算。
+
+完整验收与局限见 [运行结果验证](../../architecture/2026-10-01-run-result-verification.md)。
