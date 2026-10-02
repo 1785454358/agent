@@ -24,7 +24,14 @@ def _transient(exc: Exception) -> bool:
         isinstance(exc, (TimeoutError, ConnectionError))
         or status in {408, 429, 500, 502, 503, 504}
         or type(exc).__name__
-        in {"APITimeoutError", "APIConnectionError", "ConnectError", "ReadTimeout"}
+        in {
+            "APITimeoutError",
+            "APIConnectionError",
+            "OpenAIConnectionError",
+            "OpenAITimeoutError",
+            "ConnectError",
+            "ReadTimeout",
+        }
     )
 
 
