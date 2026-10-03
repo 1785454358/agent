@@ -327,20 +327,20 @@ Use the existing Ruff invocation route (uvx ruff if absent in the venv) on this 
 
 **Files:** Unique tmp outputs below; the validation report and this plan. Requires Task7 complete; no new source edits. All commands from backend. Per-command exit1 with retained partials is a result, not permission to rerun.
 
-- [ ] Research the frozen-dev matrix exactly once:
+- [x] Research the frozen-dev matrix exactly once:
 
 ```powershell
 .venv/Scripts/python.exe -X utf8 -m deeptrace.eval --model real --modes plan_execute,workflow,multi_agent --repeats 1 --response-mode answer --response-max-chars 2000 --max-model-calls 40 --max-tool-calls 24 --max-provider-attempts 80 --max-batch-model-calls 360 --max-batch-provider-attempts 720 --agent-iterations 12 --max-output-tokens 4096 --run-timeout 360 --dataset ../tmp/evidence-loop-real-20261002-assets/questions.jsonl --corpus ../tmp/evidence-loop-real-20261002-assets/corpus.jsonl --run-prefix grounded-handoff-real-answer-20261003 --out ../tmp/grounded-handoff-real-answer-20261003
 ```
 
-- [ ] Score it once and run strict comparison without adding baseline pairs:
+- [x] Score it once and run strict comparison without adding baseline pairs:
 
 ```powershell
 .venv-ragas/Scripts/python.exe -X utf8 evaluation/ragas_quality.py --input ../tmp/grounded-handoff-real-answer-20261003/quality_eval.json --out ../tmp/grounded-handoff-real-answer-20261003-quality --max-provider-attempts 144 --env-file .env
 .venv/Scripts/python.exe -X utf8 -m deeptrace.eval.compare_cli --input ../tmp/grounded-handoff-real-answer-20261003/quality_eval.json --scores ../tmp/grounded-handoff-real-answer-20261003-quality/quality_scores.json --metadata ../tmp/evidence-loop-real-20261002-assets/analysis-card.json --out ../tmp/grounded-handoff-real-answer-20261003-comparison
 ```
 
-- [ ] Run actual live search/fetch/read/model chain exactly once (CLI enforces Task6's fixed limits), then score once:
+- [x] Run actual live search/fetch/read/model chain exactly once (CLI enforces Task6's fixed limits), then score once:
 
 ```powershell
 .venv/Scripts/python.exe -X utf8 -m deeptrace.eval.live --dataset ../tmp/grounded-handoff-live-assets-20261003/questions.jsonl --run-prefix grounded-handoff-live-answer-20261003 --out ../tmp/grounded-handoff-live-answer-20261003
@@ -349,15 +349,25 @@ Use the existing Ruff invocation route (uvx ruff if absent in the venv) on this 
 
 If live search/fetch fails, preserve all records and label live validation not passed. Do not fall back to local corpus, inject gold URLs as prior fetch grants or relax fetch security. Stop/back off on quota/rate-limit failures; do not create new output directories to repeat the batch.
 
-- [ ] Audit each stage from actual per-call frames, not a union of everything ever read: Gateway raw result, actual numbered researcher tool preview, successful local note, actual evaluator candidate/support input, normalized global accepted finding, actual final Writer input and output citation. Handle multiple evaluator calls and branches explicitly; the older single-frame support-budget audit assumption is insufficient. Validate coordinates/hash/quote, scoped references, atomic omission and termination reasons. Audit the unchanged frozen source after both batches.
-- [ ] Report all9 dev and3 live statuses including partial/failed, scores with valid denominators/NA/error, primary P&E and both secondary modes, Provider/input-output tokens, Gateway versus local counts, known/unknown cost, visibility failures and actual end-to-end operations. Do not aggregate live/frozen scores, mix Answer/Report, impute missing judge values, or relabel partial with nonempty text as completed.
-- [ ] Manually inspect live answers against preregistered official reference obligations and every cited page; label this agent review, not independent human blind review. Faithfulness=1 and successful structured references are not completeness guarantees. State exactly which mode passed obligations; no production-readiness claim based on one live question.
-- [ ] Update validation report and task checkboxes with observed evidence; if quality does not improve, say so and distinguish acquisition, note omission, semantic assessment and judge disagreement. Commit only new documentation/self-owned task artifacts with verified staged files; hand off result, remaining failures and runnable source snapshot identity.
+- [x] Audit each stage from actual per-call frames, not a union of everything ever read: Gateway raw result, actual numbered researcher tool preview, successful local note, actual evaluator candidate/support input, normalized global accepted finding, actual final Writer input and output citation. Handle multiple evaluator calls and branches explicitly; the older single-frame support-budget audit assumption is insufficient. Validate coordinates/hash/quote, scoped references, atomic omission and termination reasons. Audit the unchanged frozen source after both batches. Actual sampling limitation: each run had only one evaluator call; this is not a real multi-round audit claim.
+- [x] Report all9 dev and3 live statuses including partial/failed, scores with valid denominators/NA/error, primary P&E and both secondary modes, Provider/input-output tokens, Gateway versus local counts, known/unknown cost, visibility failures and actual end-to-end operations. Do not aggregate live/frozen scores, mix Answer/Report, impute missing judge values, or relabel partial with nonempty text as completed.
+- [x] Manually inspect live answers against preregistered official reference obligations and every cited page; label this agent review, not independent human blind review. Faithfulness=1 and successful structured references are not completeness guarantees. State exactly which mode passed obligations; no production-readiness claim based on one live question.
+- [x] Update validation report and task checkboxes with observed evidence; if quality does not improve, say so and distinguish acquisition, note omission, semantic assessment and judge disagreement. Commit only new documentation/self-owned task artifacts with verified staged files; hand off result, remaining failures and runnable source snapshot identity.
 
 ## Plan self-review and execution handoff
+
+### 2026-10-03 implementation checkpoint
+
+- [x] Approved design implemented inline with available TDD/debug/review skills; unavailable execution skills not claimed.
+- [x] Tasks1–6 core implementation delivered: find/after, bounded actual-read n refs, atomic recording and checkpoint/context persistence, current-view candidate handoff, completion prompts, separately metered local tools and explicit live adapters/CLI.
+- [x] Full regression 1104 passed / 2 real deselected; isolated scorer 34 passed. New core Ruff checks and compileall passed. Actual RED/GREEN evidence and five-axis agent self-review recorded in the validation report.
+- [x] Once-only preflight froze source/test snapshots, unchanged scorer and assets; dev/live identities recorded before paid requests. Known dev and new live diagnostic are explicitly not independent heldout evidence.
+- [x] Registered dev9 and live3 research dispatched once with original ceilings. No production or scorer edits after freeze.
+- [x] All12 research statuses and once-only scores retained: dev27/27 metrics ok, live9/9; strict comparison has no baseline pairs. Per-frame audit verifies50 candidate notes/62 normalized supports and no final Writer support loss. Final source snapshot verification passed.
+- [x] Final validation report records P&E F1=.48 (previous descriptive reference .563333), WF=.61, MA=.25; dev6/9 completed and live0/3. No overall improvement or production-readiness claim. Detailed fixture checkboxes above remain the proposed checklist, not an assertion that every suggested fixture was added verbatim.
 
 - [x] Spec coverage mapped to Tasks1–8: acquisition, bounded references, records/transaction boundaries/context, final handoff, completion obligations, counts/live plumbing, compatibility/full tests, two registered experiments.
 - [x] Interfaces and defaults explicit; no harness→strategy dependency, model-issued grants, local notes→global coverage bypass or new state service.
 - [x] Boundary tests and real commands supplied; unknown/source/gold/price distinctions retained. Runtime code never hardcodes the known dev's missing API.
 - [x] Task-start and paid-run snapshots required; existing dirty files not swept into commits. The written plan is not evidence that tests or APIs have run.
-- [ ] Execution method selected. Preferred fallback here: inline TDD with the available skills, checkpointing progress between tasks; the unavailable execution skills must not be claimed as used.
+- [x] Execution method used: inline TDD with available skills and implementation checkpoints; unavailable execution skills not claimed.
