@@ -162,4 +162,4 @@ SQL 为了正确处理旧版本，在指定 namespace / type 范围内读取版�
 
 真实 MySQL 多进程锁竞争、Chroma 服务、Embedding / LLM Provider 未在此次离线验收运行。namespace 沿用当前 user_id / workspace_id，不等于已经实现认证后的多租户安全隔离；自动事实整理也没有新增敏感信息识别或内容级 Prompt Injection 检测。
 
-本轮实施与 RED / GREEN 记录见 [实施计划](../superpowers/plans/2026-10-01-memory-simplification.md)。
+相关回归入口见 [记忆生命周期测试](../../backend/tests/harness/memory/test_lifecycle.py) 和 [记忆事务测试](../../backend/tests/harness/memory/test_memory_transactions.py)。

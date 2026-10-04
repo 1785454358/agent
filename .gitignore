@@ -27,3 +27,10 @@ tmp/
 deepresearch-*.tar
 caozuo.txt
 *.log
+
+# Author documentation stays available locally
+/docs/evaluation/
+/docs/resume/
+/docs/superpowers/
+/docs/architecture/2026-10-01-run-result-verification.md
+/docs/assets/harness-*.svg
