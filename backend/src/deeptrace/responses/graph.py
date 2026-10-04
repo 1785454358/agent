@@ -23,6 +23,7 @@ from deeptrace.domain import (
 )
 from deeptrace.harness.context import HarnessContext
 from deeptrace.harness.model_io import payload_text
+from deeptrace.harness.model_budget import ModelBudgetExceeded
 from deeptrace.harness.prompts import task_messages
 from deeptrace.harness.token_budget import (
     BudgetAllocation,
@@ -575,6 +576,10 @@ def build_generate_node(
         issues: list[str] = []
         try:
             content = await invoke_model()
+        except ModelBudgetExceeded:
+            grounding_issue = "budget_exhausted"
+            return {"draft": None, "grounding_issue": grounding_issue,
+                    "visible_evidence_ids": visible_evidence_ids}
         except (ValidationError, ValueError, TypeError) as first_error:
             logger.warning(
                 "responder draft unparseable (%s)",
@@ -600,6 +605,8 @@ def build_generate_node(
                         issues, policy.max_content_chars
                     )
                 )
+            except ModelBudgetExceeded:
+                grounding_issue = "budget_exhausted"
             except (ValidationError, ValueError, TypeError) as retry_error:
                 logger.warning(
                     "combined correction unparseable (%s); retaining first candidate",
@@ -651,7 +658,7 @@ def build_validate_node(policy: ResponsePolicy):
                 len(loaded),
             )
             return {
-                "outcome": _fallback_outcome(policy, loaded, reason="generation_failed")
+                "outcome": _fallback_outcome(policy, loaded, reason=state.get("grounding_issue") or "generation_failed")
             }
         outcome = validate_citations(
             draft,

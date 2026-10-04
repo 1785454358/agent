@@ -37,6 +37,14 @@ class SearchArguments(BaseModel):
     limit: int = Field(default=3, ge=1, le=10)
 
 
+def test_progress_argument_summary_never_copies_arbitrary_arguments():
+    from deeptrace.tools.gateway import _event_payload
+
+    payload = _event_payload(_caller(), _request(arguments={"query": "量子研究", "api_key": "secret"}))
+    assert payload["query"] == "量子研究"
+    assert "api_key" not in payload
+
+
 @pytest.mark.asyncio
 async def test_host_context_reaches_handler_without_model_identity_arguments():
     contexts = []

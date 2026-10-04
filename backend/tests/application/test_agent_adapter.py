@@ -46,9 +46,11 @@ async def test_worker_maps_authoritative_result_without_reading_sources(
             )
 
     runner = HarnessResearchRunner(object())
-    runner._bundle = SimpleNamespace(
-        service=Application(), context_factory=lambda *_: object()
-    )
+    def context_factory(run_id, on_event):
+        on_event("replanning.completed", {"round": 2, "tasks_json": '["补充论文"]', "api_key": "secret"})
+        return object()
+
+    runner._bundle = SimpleNamespace(service=Application(), context_factory=context_factory)
     events = []
     result = await runner(
         RunRecord(
@@ -69,3 +71,5 @@ async def test_worker_maps_authoritative_result_without_reading_sources(
     assert events[-1].message == (
         "研究已完成" if status == "completed" else "研究部分完成"
     )
+    assert events[0].details == {"round": 2, "tasks_json": '["补充论文"]'}
+    assert not any(event.event_type == "planning.completed" for event in events)

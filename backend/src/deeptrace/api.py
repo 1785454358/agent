@@ -21,7 +21,7 @@ from deeptrace.persistence.repository import SqlAlchemyRunRepository
 from deeptrace.queue.redis_streams import RedisResearchBroker
 from deeptrace.runtime.distributed import DistributedResearchRuntime
 from deeptrace.runtime.local import LocalResearchRuntime
-from deeptrace.runtime.errors import ThreadBusyError
+from deeptrace.runtime.errors import RunActiveError, ThreadBusyError
 from deeptrace.runtime.models import RunMode, RunRecord
 from deeptrace.runtime.protocol import ResearchRuntime
 
@@ -42,6 +42,12 @@ class ResearchRequest(BaseModel):
     def normalize_mode(cls, value: str) -> str:
         """Canonical values pass through; legacy aliases normalize at the boundary."""
         return normalize_research_mode(value).value
+
+
+class BatchDeleteRequest(BaseModel):
+    """Batch removal request: duplicates are ignored, order is preserved."""
+
+    ids: list[str] = Field(min_length=1)
 
 
 def _record_to_response(record: RunRecord) -> dict[str, Any]:
@@ -173,6 +179,42 @@ def create_app(
         if record is None:
             raise HTTPException(404, "运行不存在")
         return {"id": run_id, "status": record.status}
+
+    async def _delete_many(run_ids: list[str]) -> dict[str, list[str]]:
+        """Delete each run; active or missing runs are reported, not deleted."""
+        deleted: list[str] = []
+        active: list[str] = []
+        missing: list[str] = []
+        for run_id in dict.fromkeys(run_ids):  # dedupe while keeping order
+            try:
+                if await selected_runtime.delete(run_id):
+                    deleted.append(run_id)
+                else:
+                    missing.append(run_id)
+            except RunActiveError:
+                active.append(run_id)
+        return {"deleted": deleted, "active": active, "missing": missing}
+
+    @app.delete("/researches/{run_id}")
+    async def delete_research(run_id: str) -> dict[str, str]:
+        try:
+            deleted = await selected_runtime.delete(run_id)
+        except RunActiveError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        if not deleted:
+            raise HTTPException(404, "运行不存在")
+        return {"id": run_id}
+
+    @app.post("/researches/batch-delete")
+    async def batch_delete_researches(
+        request: BatchDeleteRequest,
+    ) -> dict[str, list[str]]:
+        return await _delete_many(request.ids)
+
+    @app.delete("/researches")
+    async def delete_all_researches() -> dict[str, list[str]]:
+        records = await selected_runtime.list()
+        return await _delete_many([record.id for record in records])
 
     @app.get("/researches/{run_id}/events")
     async def stream_events(

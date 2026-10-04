@@ -17,10 +17,11 @@ from tavily import TavilyClient
 from deeptrace.application.research import ResearchApplicationService
 from deeptrace.config import Settings
 from deeptrace.domain import ResearchMode, ResponseMode
-from deeptrace.harness.agent_executor import build_research_agent_graph
+from deeptrace.harness.batch_research import build_batch_research_graph
 from deeptrace.harness.context import HarnessContext
 from deeptrace.harness.graph import build_agent_runtime_graph
 from deeptrace.harness.model_gateway import ChatModelGateway
+from deeptrace.harness.model_budget import RunBudgetModelGateway
 from deeptrace.harness.registry import (
     ResponseGraphRegistry,
     ResponseRegistration,
@@ -122,8 +123,12 @@ class _SeededBudgets:
         return await self._inner.release(receipt)
 
 
-def _budgets_for_run(run_id: str) -> InMemoryBudgetManager:
-    limit = BudgetUnits(tool_calls=60, network_requests=90, fetched_pages=60)
+def _budgets_for_run(run_id: str, settings: Settings) -> InMemoryBudgetManager:
+    limit = BudgetUnits(
+        tool_calls=settings.max_tool_calls,
+        network_requests=settings.max_tool_calls,
+        fetched_pages=settings.max_fetched_pages,
+    )
     scopes: list[BudgetScopeKey] = [BudgetScopeKey.for_run(run_id)]
     for mode in ResearchMode:
         scopes.append(BudgetScopeKey.for_mode(run_id, mode))
@@ -431,7 +436,11 @@ def build_harness_runtime(
         max_tokens=settings.openai_max_tokens,
     )
     model_gateway = ChatModelGateway(
-        model, timeout_seconds=settings.planner_timeout_seconds
+        model, timeout_seconds=settings.planner_timeout_seconds, retry_attempts=1,
+        role_timeout_seconds={
+            "evaluator": settings.evaluator_timeout_seconds,
+            "responder": settings.writer_timeout_seconds,
+        },
     )
 
     fetcher = AsyncWebFetcher(
@@ -442,16 +451,13 @@ def build_harness_runtime(
     )
 
     strategies = StrategyRegistry()
-    executor = build_research_agent_graph(
+    executor = build_batch_research_graph(
         token_budget=TokenBudgetConfig(
             context_tokens=settings.model_context_tokens,
             output_reserve_tokens=settings.openai_max_tokens or 4096,
             safety_tokens=settings.context_safety_tokens,
         ),
-        max_iterations=settings.agent_max_iterations,
-        consecutive_error_limit=settings.agent_consecutive_error_limit,
-        completion_nudge_limit=settings.agent_completion_nudge_limit,
-        max_discovered_urls=settings.agent_max_discovered_urls,
+        source_target=settings.research_source_target,
     )
     strategies.register(
         StrategyRegistration(
@@ -460,12 +466,14 @@ def build_harness_runtime(
     )
     strategies.register(
         StrategyRegistration(
-            ResearchMode.PLAN_EXECUTE, build_plan_execute_research_graph(executor)
+            ResearchMode.PLAN_EXECUTE, build_plan_execute_research_graph(
+                executor, max_tasks=min(6, settings.search_query_count))
         )
     )
     strategies.register(
         StrategyRegistration(
-            ResearchMode.MULTI_AGENT, build_multi_agent_research_graph(executor)
+            ResearchMode.MULTI_AGENT, build_multi_agent_research_graph(
+                executor, max_researchers=min(5, settings.search_query_count), max_follow_ups=2)
         )
     )
     # Budget is a guardrail, not a compressor: reserve output tokens first so
@@ -488,6 +496,7 @@ def build_harness_runtime(
     )
     graph = build_agent_runtime_graph(strategies, responses, checkpointer=saver)
     service = ResearchApplicationService(graph)
+    run_model_gateways: dict[str, RunBudgetModelGateway] = {}
 
     def context_factory(run_id: str, on_event=None) -> HarnessContext:
         from deeptrace.persistence.execution_ledger import (
@@ -495,6 +504,13 @@ def build_harness_runtime(
         )
 
         recorder = HarnessEventRecorder(run_id=run_id)
+        if run_id not in run_model_gateways:
+            run_model_gateways[run_id] = RunBudgetModelGateway(
+                model_gateway, max_calls=settings.max_model_calls,
+                max_input_tokens=settings.max_input_tokens,
+                finishing_input_reserve=min(20_000, settings.max_input_tokens // 5),
+                max_seconds=settings.research_max_seconds,
+            )
         if on_event is not None:
             recorder.on_sync_event = on_event
         tool_context = ToolContext(tavily=TavilyClient(api_key=settings.tavily_api_key))
@@ -510,7 +526,7 @@ def build_harness_runtime(
         # Crash-safe budgeting: when the ledger is durable, consumed units are
         # seeded from it once before the first reservation, so a resumed run
         # cannot exceed its original allowance.
-        budgets: Any = _budgets_for_run(run_id)
+        budgets: Any = _budgets_for_run(run_id, settings)
         if isinstance(ledger, SqlAlchemyToolExecutionStore):
             budgets = _SeededBudgets(
                 budgets,
@@ -537,7 +553,7 @@ def build_harness_runtime(
         return HarnessContext(
             user_id="local-user",
             workspace_id="local-workspace",
-            model_gateway=model_gateway,
+            model_gateway=run_model_gateways[run_id],
             tool_gateway=tool_gateway,
             evidence_store=evidence_store,
             event_sink=recorder,
@@ -545,6 +561,7 @@ def build_harness_runtime(
             memory_store=memory_store,
             memory_retriever=memory_retriever,
             memory_recall_limit=settings.memory_top_k,
+            research_max_pages=settings.agent_max_pages,
         )
 
     return HarnessRuntimeBundle(service, context_factory, [engine, fetcher])

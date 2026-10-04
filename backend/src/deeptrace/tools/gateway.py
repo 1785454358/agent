@@ -426,6 +426,9 @@ def _event_payload(
         "tool": value.tool.value,
         "caller_id": caller.caller_id,
         "mode": None if caller.mode is None else caller.mode.value,
+        **({key: item for key, item in value.arguments.items()
+            if key in {"url", "query"} and isinstance(item, str)}
+           if isinstance(value, ToolRequest) else {}),
     }
 
 

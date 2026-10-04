@@ -4,10 +4,36 @@ from __future__ import annotations
 
 from typing import Any
 
+# Public primitive fields only: never copy arbitrary model/provider payloads.
+_PUBLIC_FIELDS = frozenset({
+    "tool", "call_id", "caller_id", "mode", "ok", "error_code",
+    "error_category", "retryable", "message", "cached", "replayed", "duration_ms",
+    "round", "task", "tasks_json", "gaps_json", "reason", "action", "next_step",
+    "url", "query", "branch", "iteration", "covered", "total",
+})
+
+
+def public_event_details(payload: dict[str, Any]) -> dict[str, str | int | float | bool | None]:
+    fields = dict(payload)
+    # Agent observations include preflight denials and cache hits which never
+    # emitted gateway started/completed events. Keep just their public outcome.
+    result = payload.get("result")
+    if isinstance(result, dict):
+        fields.update({key: result[key] for key in (
+            "ok", "error_code", "error_category", "retryable", "message", "cached", "replayed"
+        ) if key in result})
+    if "call_id" not in fields and isinstance(payload.get("tool_call_id"), str):
+        fields["call_id"] = payload["tool_call_id"]
+    return {
+        key: value for key, value in fields.items()
+        if key in _PUBLIC_FIELDS and isinstance(value, (str, int, float, bool, type(None)))
+    }
+
 _TOOL_LABEL: dict[str, str] = {
     "search_web": "网页搜索",
     "fetch_page": "网页抓取",
     "search_memory": "记忆检索",
+    "read_evidence": "阅读原文证据",
 }
 
 _PHASE_LABEL: dict[str, str] = {
@@ -18,6 +44,16 @@ _PHASE_LABEL: dict[str, str] = {
     "replanning.completed": "研究计划调整完成",
     "plan.finish_rejected": "计划评估未通过，继续补查",
     "task.started": "开始执行子任务",
+    "task.completed": "子任务执行结束",
+    "task.failed": "子任务执行失败",
+    "evaluation.started": "开始核对本轮证据",
+    "evaluation.completed": "本轮证据核对结束",
+    "research.batch_synthesis.started": "开始整理研究发现",
+    "research.batch_synthesis.completed": "研究发现已整理",
+    "research.batch_synthesis.failed": "研究发现待核验",
+    "research.route": "确定后续研究步骤",
+    "agent.context_view": "准备研究上下文",
+    "evidence.view": "整理原文证据片段",
     "supervisor.dispatched": "Supervisor 已派发研究方向",
     "supervisor.retry": "Supervisor 发起补查",
     "supervisor.fallback": "Supervisor 启用兜底策略",

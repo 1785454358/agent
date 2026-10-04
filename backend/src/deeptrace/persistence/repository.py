@@ -17,7 +17,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from deeptrace.models import AgentResult, RunEvent
 from deeptrace.persistence.orm import ResearchRunRow, RunEventRow, ThreadLeaseRow
+from deeptrace.runtime.errors import RunActiveError
 from deeptrace.runtime.models import RunRecord, StoredEvent
+
+_TERMINAL_STATUSES = frozenset({"completed", "partial", "failed", "cancelled"})
 
 
 class RunRepository(Protocol):
@@ -46,6 +49,8 @@ class RunRepository(Protocol):
     ) -> list[StoredEvent]: ...
 
     async def request_cancel(self, run_id: str) -> RunRecord | None: ...
+
+    async def delete(self, run_id: str) -> bool: ...
 
     async def complete(
         self, run_id: str, worker_id: str, result: AgentResult
@@ -235,6 +240,28 @@ class SqlAlchemyRunRepository:
                 return None
             await session.commit()
         return await self.get(run_id)
+
+    async def delete(self, run_id: str) -> bool:
+        """Remove a terminal run with its events and thread lease.
+
+        Returns False when the run does not exist; raises
+        :class:`RunActiveError` for runs that have not terminated yet.
+        """
+        async with self._sessions() as session:
+            row = await session.get(ResearchRunRow, run_id)
+            if row is None:
+                return False
+            if row.status not in _TERMINAL_STATUSES:
+                raise RunActiveError(run_id)
+            await session.execute(
+                sa_delete(RunEventRow).where(RunEventRow.run_id == run_id)
+            )
+            await session.execute(
+                sa_delete(ThreadLeaseRow).where(ThreadLeaseRow.run_id == run_id)
+            )
+            await session.delete(row)
+            await session.commit()
+        return True
 
     async def complete(
         self, run_id: str, worker_id: str, result: AgentResult

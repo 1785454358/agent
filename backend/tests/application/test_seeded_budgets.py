@@ -4,9 +4,33 @@ import asyncio
 
 import pytest
 
-from deeptrace.application.assembly import _SeededBudgets
+from deeptrace.application.assembly import _SeededBudgets, _budgets_for_run
+from deeptrace.config import Settings
 from deeptrace.domain import ResearchMode
 from deeptrace.tools.budget import BudgetScopeKey, BudgetUnits, InMemoryBudgetManager
+
+
+@pytest.mark.asyncio
+async def test_assembled_budget_uses_config_and_still_enforces_global_limit() -> None:
+    settings = Settings(
+        openai_api_key="test", openai_base_url="https://example.com",
+        openai_model="test", tavily_api_key="test",
+        max_tool_calls=2, max_fetched_pages=1,
+    )
+    budget = _budgets_for_run("configured", settings)
+    branch = BudgetScopeKey.for_agent(
+        "configured", ResearchMode.PLAN_EXECUTE, "plan-execute-executor",
+    )
+    sibling = BudgetScopeKey.for_agent(
+        "configured", ResearchMode.WORKFLOW, "workflow-graph",
+    )
+    units = BudgetUnits(tool_calls=1, network_requests=1, fetched_pages=1)
+    receipt = await budget.reserve(branch, units)
+    assert receipt is not None
+    await budget.commit(receipt, units)
+    assert await budget.reserve(sibling, units) is None
+    snapshot = await budget.snapshot()
+    assert snapshot.for_scope(BudgetScopeKey.for_run("configured")).limit.fetched_pages == 1
 
 
 @pytest.mark.asyncio

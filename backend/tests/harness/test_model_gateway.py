@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import asynccontextmanager
 
 import pytest
 from deeptrace.harness.model_gateway import ChatModelGateway
@@ -64,3 +65,23 @@ async def test_gateway_rejects_a_model_call_without_the_context_envelope():
         )
 
     assert provider.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_gateway_uses_role_deadlines_without_changing_other_roles(monkeypatch):
+    deadlines = []
+
+    @asynccontextmanager
+    async def timeout(seconds):
+        deadlines.append(seconds)
+        yield
+
+    monkeypatch.setattr(asyncio, "timeout", timeout)
+    provider = Provider(*(AIMessage(content="ok") for _ in range(3)))
+    gateway = ChatModelGateway(
+        provider, timeout_seconds=60,
+        role_timeout_seconds={"evaluator": 120, "responder": 90},
+    )
+    for role in ("researcher", "evaluator", "responder"):
+        await gateway.invoke(role=role, messages=MESSAGES)
+    assert deadlines == [60, 120, 90]

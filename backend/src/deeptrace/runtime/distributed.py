@@ -97,6 +97,9 @@ class DistributedResearchRuntime:
         await self._broker.request_cancel(run_id)
         return run
 
+    async def delete(self, run_id: str) -> bool:
+        return await self._repository.delete(run_id)
+
     async def events(self, run_id: str, after_event_id: int = 0):
         cursor = after_event_id
         async with self._broker.subscription(run_id) as notifications:

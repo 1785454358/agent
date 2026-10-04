@@ -4,7 +4,7 @@ import hashlib
 import json
 import re
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from deeptrace.domain.evidence import EvidenceLifecycleStatus, EvidenceSupport, Finding
 from deeptrace.domain.evidence_anchor import ReadEvidenceAnchor
@@ -19,7 +19,10 @@ MAX_RESEARCH_FINDINGS = 20
 class RecordFindingDraft(BaseModel):
     model_config = ConfigDict(extra="forbid")
     claim: str = Field(min_length=1, max_length=1000)
-    refs: list[str] = Field(min_length=1, max_length=3)
+    refs: list[str] = Field(
+        min_length=1, max_length=3,
+        description="1–3 个此前 read_evidence 返回的 n 编号，不能为空；无原文支持的结论不要提交。",
+    )
     confidence: float = Field(ge=0, le=1)
 
     @field_validator("refs")
@@ -42,6 +45,29 @@ class RecordFindingDraft(BaseModel):
 class RecordFindingsArguments(BaseModel):
     model_config = ConfigDict(extra="forbid")
     findings: list[RecordFindingDraft] = Field(min_length=1, max_length=5)
+
+
+def recording_error_message(error, *, malformed=False):
+    """Give bounded corrective feedback without echoing claims or bad input."""
+    if malformed:
+        detail = "工具参数不是合法 JSON，请重新提交 findings 数组。"
+    elif isinstance(error, ValidationError):
+        details = []
+        for issue in error.errors(include_input=False, include_context=False)[:3]:
+            field = ""
+            for part in issue["loc"]:
+                if isinstance(part, int):
+                    field += f"[{part}]"
+                elif part in {"findings", "claim", "refs", "confidence"}:
+                    field += ("." if field else "") + part
+            reason = {"too_short": "内容不足或为空", "missing": "必填字段缺失",
+                      "extra_forbidden": "包含不支持的字段"}.get(issue["type"], "格式或取值不正确")
+            details.append(f"{field or '参数'}：{reason}")
+        detail = "；".join(details) + "。"
+    else:
+        detail = "引用必须是此前实际读取且仍有效的原文 n 编号，请检查 read_evidence 返回值。"
+    return (detail + "每条 findings 需要 claim、refs（1–3 个已读原文 n 编号，不能为空）、confidence（0–1）。"
+            "没有原文支持的结论应删除，整批未保存。")[:500]
 
 
 def number_read_preview(preview, references):

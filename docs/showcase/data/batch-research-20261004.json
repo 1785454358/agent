@@ -1,0 +1,82 @@
+{
+  "run_id": "batch-test-318a747851",
+  "question": "2026年量子力学领域进展",
+  "date": "2026-10-04",
+  "mode": "plan_execute",
+  "model": "doubao-seed-2.0-lite",
+  "status": "completed",
+  "elapsed_seconds": 222.144,
+  "model_calls": 7,
+  "provider_usage": {
+    "input_tokens": 51980,
+    "output_tokens": 11581,
+    "total_tokens": 63561
+  },
+  "roles": {
+    "planner": {
+      "calls": 1,
+      "seconds": 13.246,
+      "input_tokens": 657,
+      "output_tokens": 893,
+      "total_tokens": 1550
+    },
+    "researcher": {
+      "calls": 3,
+      "seconds": 37.008,
+      "input_tokens": 10563,
+      "output_tokens": 1931,
+      "total_tokens": 12494
+    },
+    "evaluator": {
+      "calls": 1,
+      "seconds": 59.461,
+      "input_tokens": 10926,
+      "output_tokens": 4852,
+      "total_tokens": 15778
+    },
+    "responder": {
+      "calls": 2,
+      "seconds": 54.184000000000005,
+      "input_tokens": 29834,
+      "output_tokens": 3905,
+      "total_tokens": 33739
+    }
+  },
+  "tools": {
+    "fetch_page": {
+      "calls": 8,
+      "successful": 8,
+      "cached": 0,
+      "seconds": 6.378
+    },
+    "read_evidence": {
+      "calls": 9,
+      "successful": 9,
+      "cached": 0,
+      "seconds": 0.724
+    },
+    "search_web": {
+      "calls": 3,
+      "successful": 3,
+      "cached": 0,
+      "seconds": 27.354
+    }
+  },
+  "supplement_rounds": 0,
+  "answer": "2026年南开大学团队在量子多体系统耗散动力学理论研究取得突破，发现在一维量子自旋链模型中量子临界点能够显著增强并稳定强量子姆潘巴效应，该机制具有一定普适性，首次系统揭示了量子相变与非平衡耗散动力学之间的深层联系，为在可控量子体系中实现和调控非平衡效应提供了新的理论依据[1]。\n\n2026年5月中国科学技术大学团队成功研制出可编程光量子计算原型机“九章四号”，首次操纵和探测高达3050个光子的量子态，求解高斯玻色采样任务的速度比当前全球最快超级计算机更快，巩固了我国在光量子计算领域的领先地位[2]。\n2026年2月深圳国际量子研究院超导量子计算团队在超导量子芯片互联领域取得重要实验进展，首次实现跨越4K温区的超导量子芯片间微波量子态传输与纠缠生成，成功构建出抗热噪声的新型微波量子网络架构，攻克了微波量子网络因严苛低温要求难以扩展的核心难题[3]。\n\n2026年全球量子计算研究进入临近实用性突破的关键跨越期，全球量子科技投资已超过557亿美元，世界科技强国纷纷加大政策与资金投入，量子计算发展分为三个阶段，当前正向创制容错量子计算机的第三步迈进[4]。\n量子力学领域新进展，特别是量子计算、量子精密测量等方向的突破，有望推动生物制药、材料研发、人工智能、信息安全、气象预报、定位导航等众多领域产生技术变革，量子科技已被我国列为优先发展的未来产业，将成为新的经济增长点[5][4]。",
+  "sources": [
+    "https://news.nankai.edu.cn/zhxw/system/2026/03/13/030071055.shtml",
+    "http://paper.people.com.cn/rmrb/pc/content/202608/01/content_30172525.html",
+    "https://htcz.sz.gov.cn/cxsj/fbt/content/post_12897683.html",
+    "https://www.stdaily.com/web/gdxw/2026-07/11/content_545968.html",
+    "https://www.news.cn/liangzi/20260801/9f881e8662204c6e88fdff704dfc1970/c.html"
+  ],
+  "sampling": {
+    "fresh_thread_and_store": true,
+    "memory_retrieval": "semantic",
+    "temperature": 0,
+    "sample_count": 1,
+    "answer_format_repairs": 1
+  },
+  "measurement_scope": "All provider-reported model roles, including answer repair. Initialization and independent scoring excluded."
+}

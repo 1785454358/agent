@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { cancelRun, createRun, ApiError } from "./api/client";
+import {
+  cancelRun,
+  createRun,
+  deleteAllRuns,
+  deleteRun,
+  deleteRuns,
+  ApiError,
+  type DeleteRunsResult,
+} from "./api/client";
 import {
   isTerminalStatus,
   type ChatMessage,
@@ -104,6 +112,41 @@ export default function App() {
     },
   });
 
+  // 删除历史：单个走专用接口，批量/清空走聚合接口，统一归一化结果
+  const deleteMutation = useMutation({
+    mutationFn: async (
+      target: string[] | "all",
+    ): Promise<DeleteRunsResult> => {
+      if (target === "all") return deleteAllRuns();
+      if (target.length === 1) {
+        const removed = await deleteRun(target[0]);
+        return { deleted: [removed.id], active: [], missing: [] };
+      }
+      return deleteRuns(target);
+    },
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ["runs"] });
+      for (const id of result.deleted) {
+        queryClient.removeQueries({ queryKey: ["runs", id] });
+      }
+      if (selectedRunId && result.deleted.includes(selectedRunId)) {
+        setSelectedRunId(null);
+        setFollowUpRunId(null);
+        setChatOpen(false);
+      }
+      if (result.active.length > 0) {
+        setToast(`已删除 ${result.deleted.length} 条记录；${result.active.length} 条进行中已跳过`);
+      }
+    },
+    onError: (error) => {
+      setToast(
+        error instanceof ApiError
+          ? `删除失败：${error.message}`
+          : "删除失败：网络错误",
+      );
+    },
+  });
+
   const runs = useMemo(() => runsQuery.data ?? [], [runsQuery.data]);
 
   const startNewResearch = () => {
@@ -142,6 +185,7 @@ export default function App() {
         selectedId={selectedRunId}
         onSelect={setSelectedRunId}
         onNewResearch={startNewResearch}
+        onDelete={(target) => deleteMutation.mutate(target)}
         collapsed={historyCollapsed}
         onToggle={() => setHistoryCollapsed((v) => !v)}
       />
@@ -178,7 +222,7 @@ export default function App() {
                   <span className="question-card-text">{run.question}</span>
                 </section>
               )}
-              <EventTimeline events={events} />
+              <EventTimeline events={events} status={run?.status} terminationReason={run?.termination_reason} />
               <Report answer={run?.answer ?? ""} error={run?.error ?? null} />
               <Sources
                 sources={run?.sources ?? []}

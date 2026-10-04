@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1150" viewBox="0 0 1200 1150" role="img" aria-labelledby="title desc">
 <title id="title">DeepResearch：从研究问题到有来源的回答</title>
-<desc id="desc">研究问题由工作台或API进入Session Graph，选择三种编排策略之一。所有策略复用共享Agent Loop：准备上下文、模型决策、工具执行、观察与执行判定。各分支结果汇总后进行证据评估、写作与引用验证。右侧为贯穿运行的记忆、证据、预算、Checkpoint和Ledger。</desc>
+<desc id="desc">研究问题进入会话管理并选择策略。程序按计划批量检索、去重、抓取和阅读原文；模型集中整理发现。核对证据后按缺口有限补查，或生成带引用的回答。右侧为贯穿运行的记忆、证据、共享预算、Checkpoint和Ledger。</desc>
 <defs>
 <marker id="flow-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 9 5 1 9Z" fill="#4364d8"/></marker>
 <marker id="loop-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 9 5 1 9Z" fill="#138777"/></marker>
@@ -46,40 +46,37 @@ text { font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK
 <path d="M460 564V586" class="flow" marker-end="url(#flow-arrow)"/>
 <circle cx="460" cy="564" r="4" fill="#4364d8"/>
 <rect x="40" y="586" width="840" height="300" rx="16" fill="#ffffff" stroke="#4364d8" stroke-width="2"/>
-<text x="64" y="628" class="section">共享 Agent Loop</text>
+<text x="64" y="628" class="section">批量取材与集中整理</text>
 <rect x="714" y="604" width="142" height="32" rx="7" fill="#eef3ff" stroke="#eef3ff" stroke-width="0"/>
 <text x="785" y="626" class="small" text-anchor="middle" style="fill:#4364d8;font-weight:600">同一运行契约</text>
 <rect x="64" y="664" width="174" height="84" rx="10" fill="#f6f8fc" stroke="#d3dcec" stroke-width="1"/>
 <text x="151.0" y="699" class="node-title" text-anchor="middle">任务与上下文</text>
 <text x="151.0" y="729" class="small" text-anchor="middle">任务 · 约束 · 历史</text>
 <rect x="260" y="664" width="174" height="84" rx="10" fill="#eef3ff" stroke="#bdcbf2" stroke-width="1"/>
-<text x="347.0" y="699" class="node-title" text-anchor="middle">模型决策</text>
-<text x="347.0" y="729" class="code" text-anchor="middle">ModelGateway</text>
+<text x="347.0" y="699" class="node-title" text-anchor="middle">批量检索</text>
+<text x="347.0" y="729" class="code" text-anchor="middle">ToolGateway</text>
 <rect x="676" y="664" width="180" height="84" rx="10" fill="#f6f8fc" stroke="#d3dcec" stroke-width="1"/>
-<text x="766.0" y="699" class="node-title" text-anchor="middle">观察结果</text>
-<text x="766.0" y="729" class="small" text-anchor="middle">证据 · 状态 · 错误</text>
+<text x="766.0" y="699" class="node-title" text-anchor="middle">集中整理</text>
+<text x="766.0" y="729" class="code" text-anchor="middle">ModelGateway</text>
 <rect x="456" y="664" width="198" height="84" rx="10" fill="#eef3ff" stroke="#bdcbf2" stroke-width="1"/>
-<text x="555" y="693" class="node-title" text-anchor="middle">执行工具</text>
-<text x="555" y="716" class="code" text-anchor="middle">ToolGateway</text>
-<text x="555" y="737" class="copy" text-anchor="middle" style="font-size:16px">搜索 · 抓取 · 原文阅读</text>
+<text x="555" y="693" class="node-title" text-anchor="middle">抓取与阅读</text>
+<text x="555" y="716" class="code" text-anchor="middle">EvidenceStore</text>
+<text x="555" y="737" class="copy" text-anchor="middle" style="font-size:16px">URL 去重 · 原文选段</text>
 <path d="M238 706H260" class="flow" marker-end="url(#flow-arrow)"/>
 <path d="M434 706H456" class="flow" marker-end="url(#flow-arrow)"/>
 <path d="M654 706H676" class="flow" marker-end="url(#flow-arrow)"/>
-<path d="M347 664V647H766V664" class="flow" marker-end="url(#flow-arrow)"/>
-<rect x="482" y="635" width="146" height="23" rx="4" fill="#ffffff" stroke="#ffffff" stroke-width="0"/>
-<text x="555" y="653" class="copy" text-anchor="middle" style="font-size:16px">无工具调用</text>
 <path d="M766 748V792" class="flow" marker-end="url(#flow-arrow)"/>
 <rect x="456" y="792" width="400" height="54" rx="10" fill="#eef8f5" stroke="#a9d8cd" stroke-width="1"/>
-<text x="656" y="826" class="copy" text-anchor="middle" style="font-size:21px;fill:#126c60;font-weight:650">执行判定：继续研究 / 结束分支</text>
+<text x="656" y="826" class="copy" text-anchor="middle" style="font-size:21px;fill:#126c60;font-weight:650">证据核验：补查 / 生成回答</text>
 <path d="M456 819H151V748" class="loop" marker-end="url(#loop-arrow)"/>
 <rect x="237" y="804" width="115" height="27" rx="4" fill="#ffffff" stroke="#ffffff" stroke-width="0"/>
-<text x="294" y="824" class="copy" text-anchor="middle" style="font-size:17px;fill:#138777;font-weight:600">继续研究</text>
+<text x="294" y="824" class="copy" text-anchor="middle" style="font-size:17px;fill:#138777;font-weight:600">按缺口补查</text>
 <path d="M656 846V910H460V988" class="flow" marker-end="url(#flow-arrow)"/>
 <rect x="284" y="928" width="352" height="34" rx="6" fill="#f8faff" stroke="#f8faff" stroke-width="0"/>
 <text x="460" y="951" class="code" text-anchor="middle">AgentOutcome → ResearchOutcome</text>
 <rect x="40" y="988" width="840" height="94" rx="12" fill="#eef8f5" stroke="#a9d8cd" stroke-width="1.5"/>
 <text x="64" y="1028" class="section">回答与来源</text>
-<text x="64" y="1060" class="copy">证据评估 → Writer → 引用验证</text>
+<text x="64" y="1060" class="copy">已核验证据 → Writer → 引用验证</text>
 <text x="856" y="1044" class="copy" text-anchor="end" style="fill:#138777;font-weight:600">可追溯的研究产物</text>
 <rect x="922" y="284" width="238" height="798" rx="14" fill="#f0f4fa" stroke="#d3dcec" stroke-width="1"/>
 <text x="944" y="327" class="node-title">运行支撑</text>

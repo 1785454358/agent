@@ -10,6 +10,8 @@ from strategies.fixtures import FIXED_NOW, TENANT_ID, build_gateway_fixture
 from deeptrace.domain import ResearchMode, ResearchTopicInput
 from deeptrace.harness.agent_executor import build_research_agent_graph
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
+from deeptrace.harness.agent_tools import execute_batch
+from deeptrace.harness.research_findings import number_read_preview
 from deeptrace.tools.evidence_store import EvidenceDraft
 
 
@@ -27,6 +29,40 @@ async def seed(fixture):
         ),
     )
     return record, body
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("malformed", [False, True])
+async def test_recording_failure_explains_invalid_field_without_admitting_unreferenced_claim(malformed):
+    fixture = build_gateway_fixture()
+    record, body = await seed(fixture)
+    preview = json.dumps({
+        "evidence_id": record.id, "version": record.version,
+        "content_hash": record.content_hash, "historical": False,
+        "selection": {"body_length": len(body)},
+        "passages": [{"start": 0, "end": len(body), "text": body}],
+    })
+    _, refs, _ = number_read_preview(preview, {})
+    arguments = {"__invalid_arguments__": True} if malformed else {"findings": [
+        {"claim": "Supported fact", "refs": ["n1"], "confidence": 0.8},
+        {"claim": "UNSUPPORTED_PRIVATE_CLAIM", "refs": [], "confidence": 0.9},
+    ]}
+    result = await execute_batch({
+        "topic_input": task_for(ResearchMode.WORKFLOW, record),
+        "research_refs": refs,
+        "messages": [AIMessage(content="", tool_calls=[{
+            "id": "record", "name": "record_findings", "args": arguments,
+        }])],
+    }, fixture.context)
+    payload = json.loads(result["messages"][0].content)
+    assert payload["error_code"] == "invalid_arguments"
+    assert "message" in payload
+    assert "JSON" in payload["message"] if malformed else "findings[1].refs" in payload["message"]
+    assert "原文" in payload["message"]
+    assert "UNSUPPORTED_PRIVATE_CLAIM" not in payload["message"]
+    assert not result["research_findings"]
+    local = next(p for kind, p in fixture.events.events if kind == "agent.local_tool")
+    assert local["message"] == payload["message"]
 
 
 def task_for(mode, record):

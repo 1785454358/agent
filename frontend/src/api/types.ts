@@ -24,11 +24,18 @@ export function isTerminalStatus(status: RunStatus): boolean {
 }
 
 export interface RunEvent {
-  id: number;
+  id?: number;
   event_type: string;
   message: string;
   ts?: string;
   tool?: string;
+  details?: {
+    tool?: string; call_id?: string; ok?: boolean; message?: string;
+    error_code?: string; retryable?: boolean; url?: string; query?: string;
+    round?: number; task?: string; tasks_json?: string; gaps_json?: string;
+    reason?: string; action?: string; next_step?: string; covered?: number; total?: number;
+    branch?: string; iteration?: number;
+  };
 }
 
 export interface RunSummary {

@@ -40,9 +40,31 @@ def test_basic_defaults(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     assert settings.chroma_collection == "deeptrace-long-term-memory"
     assert settings.chroma_persist_path == Path("chroma")
     assert settings.memory_top_k == 5
+    assert settings.agent_max_iterations == 24
+    assert settings.agent_max_pages == 8
+    assert settings.max_fetched_pages == 80
+    assert settings.max_tool_calls == 240
     assert not hasattr(settings, "max_task_rounds")
     assert not hasattr(settings, "task_concurrency")
     assert not hasattr(settings, "query_loop_threshold")
+
+
+def test_branch_and_run_limits_can_be_overridden(monkeypatch, tmp_path):
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv("DEEPTRACE_AGENT_MAX_PAGES", "6")
+    monkeypatch.setenv("DEEPTRACE_AGENT_MAX_ITERATIONS", "32")
+    monkeypatch.setenv("DEEPTRACE_MAX_FETCHED_PAGES", "100")
+    monkeypatch.setenv("DEEPTRACE_MAX_TOOL_CALLS", "300")
+    settings = Settings.from_env()
+    assert (settings.agent_max_pages, settings.agent_max_iterations) == (6, 32)
+    assert (settings.max_fetched_pages, settings.max_tool_calls) == (100, 300)
+
+
+def test_branch_page_limit_rejects_unsafe_config(monkeypatch, tmp_path):
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv("DEEPTRACE_AGENT_MAX_PAGES", "9")
+    with pytest.raises(RuntimeError, match="DEEPTRACE_AGENT_MAX_PAGES"):
+        Settings.from_env()
 
 
 def test_distributed_runtime_settings(

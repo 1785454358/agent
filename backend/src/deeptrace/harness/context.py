@@ -124,3 +124,4 @@ class HarnessContext:
     memory_recall_limit: int = 5
     memory_context_tokens: int = 768
     response_max_content_chars: int | None = None
+    research_max_pages: int = 8

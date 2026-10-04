@@ -23,16 +23,14 @@ flowchart TB
     MA --> LOOP
 
     subgraph LOOP[Shared Agent Harness Runtime]
-        PC[prepare_context: stop gate] --> CM[call_model: build model view]
-        CM --> MG[ModelGateway]
-        MG --> DEC{tool calls?}
-        DEC -->|yes| TG[ToolGateway]
-        TG --> OBS[observe]
-        DEC -->|no| OBS
-        OBS --> EP[Execution Policy]
-        EP -->|continue| PC
-        EP -->|finish| OUT[AgentOutcome]
+        PC[研究任务与约束] --> SEARCH[程序批量检索]
+        SEARCH --> TG[ToolGateway: 去重 / 抓取 / 原文阅读]
+        TG --> MG[ModelGateway: 集中整理发现]
+        MG --> OUT[AgentOutcome]
     end
+    OUT --> REVIEW[全局证据核验]
+    REVIEW -->|具体缺口 / 有限补查| SR
+    REVIEW -->|有依据的结论| WRITE[Writer / 引用验证]
 
     CP[Checkpoint] -. state .-> SG
     CP -. state .-> LOOP
@@ -44,12 +42,14 @@ flowchart TB
 架构分为两层：
 
 - **Session Graph** 管理一轮对话的生命周期，包括上下文压缩、意图识别、长期记忆召回、策略路由、响应模式和记忆整理。
-- **Shared Agent Harness Runtime** 管理一次研究分支的模型—工具循环。Workflow、Plan-and-Execute、Multi-Agent 负责不同的任务拆解与协调方式，但不各自实现工具循环。
+- **Shared Agent Harness Runtime** 管理研究分支的批量取材和集中整理。三种策略共享同一条取材与引用管道，负责各自的任务调度。
 
 主要入口：
 
 - [顶层 Session Graph](../../backend/src/deeptrace/harness/graph.py)
-- [Shared Agent Loop](../../backend/src/deeptrace/harness/agent_executor.py)
+- [默认批量研究子图](../../backend/src/deeptrace/harness/batch_research.py)
+- [按计划取材](../../backend/src/deeptrace/harness/batch_collection.py)
+- [集中整理与一次格式修复](../../backend/src/deeptrace/harness/batch_synthesis.py)
 - [运行时依赖](../../backend/src/deeptrace/harness/context.py)
 - [组装入口](../../backend/src/deeptrace/application/assembly.py)
 
@@ -93,7 +93,19 @@ flowchart TB
 
 这条管道将研究者实际读取的原文交给评估器，并由宿主解析模型选择的引用编号。检索相关性、语义判断和最终回答质量通过独立评测核对；公开运行的原始回答、配置和指标见[真实研究案例](../showcase/case-asyncio.md)。
 
-## Shared Agent Loop
+## 默认批量研究路径
+
+生产装配默认运行 `search → fetch → read → synthesize → finalize`。程序执行检索、URL 去重、并行抓取和带锚点的原文选段；模型接收一批原文，提交有引用的研究发现。每个分支通常一次整理调用，参数或引用不合法时最多一次修复。
+
+首批默认选择最多三个不同来源，失败页面由剩余候选替换。已授权来源可以直接读取，避免重复抓取。原文、内容版本和引用锚点继续由既有 EvidenceStore 与 ToolGateway 保存和校验；模型只能引用本次输入可见的原文编号。分支取材完成与事实需求覆盖分开判定。
+
+Plan-and-Execute 和 Multi-Agent 依据全局证据缺口安排最多两轮补查；补查没有新增证据时停止。Workflow 保持固定阶段的并行取材路径。
+
+整个问题默认共享 20 次模型调用和 100,000 输入 token 的准入预算。并行分支在同一 run 的网关中原子预留额度；研究阶段保留最后两次调用给评估与回答。调用前按上下文估算准入，服务商返回 usage 后结算，缺少 usage 时保留估算值。研究阶段时间窗口默认 600 秒，收尾另留 120 秒。配置见环境模板。
+
+## SDK 自由 Agent 循环
+
+`build_research_agent_graph()` 保留供直接 SDK 调用与历史轨迹验证使用。下面描述该可选执行器；默认应用装配使用上面的批量子图。
 
 循环节点为：
 
@@ -132,7 +144,7 @@ prepare_context
 
 [Context Policy](../../backend/src/deeptrace/harness/policies/agent_context.py) 在预算内固定保留这些内容，[ModelGateway](../../backend/src/deeptrace/harness/model_gateway.py) 在调用 Provider 前再次校验信封。较早的完整工具交换和可选背景可以被裁剪，任务与约束不能被裁剪。
 
-研究循环通常发送最近三组完整工具交换，并额外保留最多三份去重的较早实际读取预览，不用候选结论代替原文。8k输入为软目标，必要已读原文和最新交换不为满足软目标而裁断，硬上下文预算仍不可越过。持久轨迹与checkpoint不裁剪。版本匹配及语义充分性仍需实测，模型声称covered不构成确定性证明。
+批量整理默认以 6k 输入为目标，按完整来源片段组选择材料；没有被交给模型的原文编号不能用于提交发现。SDK 自由循环保留最近三组完整工具交换，并在剩余预算内保留较早阅读预览；其 6k 目标为软限制，硬窗口仍不可越过。持久轨迹和原文库完整保留。
 
 Session Graph 的长期上下文采用滑动窗口和结构化摘要。摘要失败时仍执行确定性窗口裁剪，避免上下文无限增长。
 
@@ -169,10 +181,10 @@ Session Graph 的长期上下文采用滑动窗口和结构化摘要。摘要失
 | 类型 | 所有者 | 处理内容 | 不负责什么 |
 | --- | --- | --- | --- |
 | Transport retry | ModelGateway / ToolGateway | 超时、连接错误、限流、可识别的临时服务错误 | 不修正查询语义和工具参数 |
-| Semantic repair | Shared Agent Loop | 将结构化失败作为 ToolMessage 回灌，让模型换参数、换查询或换来源 | 不重复已经提交的外部副作用 |
+| Semantic repair | 批量整理 / 策略补查 | 格式或引用错误最多修复一次；根据全局缺口安排新查询 | 不重复已经提交的外部副作用 |
 | Recovery replay | Checkpoint / Worker / Ledger | 进程崩溃、节点重放和 at-least-once 投递后的恢复 | 不把业务失败伪装成成功 |
 
-每类重试只有一个主要所有者。网关退避次数有限；Agent 受迭代与错误熔断限制；恢复时优先读取 Ledger 已提交结果。
+每类重试只有一个主要所有者。生产模型网关采用单次传输尝试，由共享运行预算限制实际请求数量；工具网关保留有限传输重试，恢复时优先读取 Ledger 已提交结果。
 
 ## 响应生成：一条有界纠错路径
 
@@ -184,13 +196,13 @@ ANSWER / BRIEF / REPORT 共用 ResponsePolicy 与 `load_evidence → generate �
 
 实现与回归见 [响应图](../../backend/src/deeptrace/responses/graph.py) 和 [响应测试](../../backend/tests/responses/test_graph.py)。
 
-## 唯一研究执行入口
+## 研究执行入口与迁移
 
-三个研究策略与主要策略、响应、恢复测试都使用 `deeptrace.harness.agent_executor.build_research_agent_graph`。策略只安排研究任务，Executor 统一执行模型、工具和停止决策；不再保留另一套固定搜索 / URL 选择 / 抓取的 Topic 图。
+生产装配的三个研究策略统一使用 `deeptrace.harness.batch_research.build_batch_research_graph`。策略安排研究任务和缺口补查，批量执行器完成取材与集中整理。`deeptrace.harness.agent_executor.build_research_agent_graph` 保留为可选 SDK 入口，其自由工具循环与现有测试继续有效。
 
 旧 Python 入口 `deeptrace.strategies.build_research_topic_graph` 及 `deeptrace.strategies.topic` 的节点、状态导出已移除。调用者需直接导入新入口，注入支持 `researcher` 角色及 `tools` 参数的 ModelGateway；不能将此次替换理解为仅改函数名的行为兼容。
 
-`ResearchTopicInput`、`ResearchTopicOutcome` 和 `TopicStepError` 领域契约仍保留。正式 Agent Loop 的节点和 Checkpoint 边界不变，但旧 Topic 图历史快照不承诺在新图中恢复：存在这类未完成任务时，先用旧版本完成，或创建新任务。此次未删除持久化检查点与执行账本，也未增加兼容转发或快照转换框架。
+`ResearchTopicInput`、`ResearchTopicOutcome` 和 `TopicStepError` 领域契约仍保留。新批量子图具有独立的 search / fetch / read / synthesize 检查点。旧自由循环的未完成快照应由原版本完成，或创建新任务；已完成的研究记录仍可读取。持久化检查点、执行账本与证据存储继续复用。
 
 测试只脚本化外部模型和搜索 / 抓取服务。ToolGateway、证据存储、Executor 与 Checkpoint 仍执行真实逻辑；并发研究分支根据自己的消息历史取得响应，不共享模型响应游标。脚本成本基线包含 researcher 调用，不代表真实 Provider 的质量、Token 成本或端到端延迟。
 
@@ -223,10 +235,11 @@ ANSWER / BRIEF / REPORT 共用 ResponsePolicy 与 `load_evidence → generate �
 
 ## Token 与调用预算
 
-当前预算分为两类：
+当前预算覆盖三个层次：
 
 - 模型上下文采用保守 Token 估算，固定保留指令、原始任务、当前约束和输出空间，再按完整交换裁剪历史。
 - 外部工具在执行前按 Run / Mode / Agent 预留调用次数和网络额度，并在成功、失败或取消后提交或释放。
+- 默认批量运行共享模型请求、输入准入与时间预算，并为核验和回答保留额度。计数器覆盖同一进程内同一 run 的并发分支；跨进程恢复仍使用工具持久化账本，模型准入计数不作为持久化账单。
 
 `AgentOutcome.budget` 当前主要记录模型调用与工具步骤统计，不应表述为 Provider 返回的精确 Token 账单。全链路真实 Token 成本计量仍是演进方向。
 

@@ -67,7 +67,7 @@ export const SHOWCASE_SCENARIOS: Record<ResearchMode, ShowcaseScenario> = {
       {
         id: 2,
         event_type: "task.started",
-        message: "Executor 选取下一个 todo，交给 Shared Agent Loop 执行",
+        message: "Executor 选取下一个 todo，交给共享批量执行器取材与集中整理",
       },
       {
         id: 3,
@@ -93,7 +93,7 @@ export const SHOWCASE_SCENARIOS: Record<ResearchMode, ShowcaseScenario> = {
       },
     ],
     answer:
-      "Planner 只根据原始任务、当前约束和会话背景拆分可执行研究 todo，Executor 再逐项交给 Shared Agent Loop。恢复时，Checkpoint 还原 Agent State，Ledger 提供已执行工具与幂等记录；它们都不负责产出结果。Agent Loop 恢复推进后，由 Execution Policy 根据 todo、证据、错误与预算生成 AgentOutcome，最后由 Plan-and-Execute Finalize 汇总各子任务为 ResearchOutcome。",
+      "Planner 根据原始任务、当前约束和会话背景拆分研究 todo。程序按计划批量检索、去重、抓页和读取原文，模型集中整理研究发现。Checkpoint 保存阶段状态，持久化 Ledger 提供已执行工具的幂等记录；恢复后由 Execution Policy 生成 AgentOutcome，Plan-and-Execute 汇总并核验证据，再按具体缺口有限补查。",
     sources: [
       `${REPOSITORY}/blob/main/backend/src/deeptrace/harness/policies/agent_context.py`,
       `${REPOSITORY}/blob/main/backend/src/deeptrace/harness/policies/execution.py`,
@@ -105,7 +105,7 @@ export const SHOWCASE_SCENARIOS: Record<ResearchMode, ShowcaseScenario> = {
   multi_agent: {
     mode: "multi_agent",
     question: "三个策略怎样共享同一个 Agent Runtime？",
-    summary: "Supervisor 负责任务协调，Researcher 复用同一个受治理循环。",
+    summary: "Supervisor 负责任务协调，Researcher 复用同一条批量取材管道。",
     events: [
       {
         id: 1,
@@ -120,7 +120,7 @@ export const SHOWCASE_SCENARIOS: Record<ResearchMode, ShowcaseScenario> = {
       {
         id: 3,
         event_type: "researcher.started",
-        message: "Researcher 分支通过共享 Agent Loop 并行执行",
+        message: "Researcher 分支通过共享批量执行器并行取材与集中整理",
       },
       {
         id: 4,
@@ -140,9 +140,9 @@ export const SHOWCASE_SCENARIOS: Record<ResearchMode, ShowcaseScenario> = {
       },
     ],
     answer:
-      "Workflow、Plan-and-Execute 和 Multi-Agent 只负责不同的 orchestration strategy。Multi-Agent 的 Supervisor 做拆解、派发与评估，每个 Researcher 都调用同一个 Shared Agent Loop，因此模型信封、工具权限、预算、ToolMessage 配对、Checkpoint 和 AgentOutcome 不变量不会因策略不同而分叉。",
+      "Workflow、Plan-and-Execute 和 Multi-Agent 负责不同的任务编排。Supervisor 拆解、派发与评估，每个 Researcher 都复用同一个批量执行器。固定取材由程序完成，模型集中整理；模型信封、工具权限、共享预算、Checkpoint 和 AgentOutcome 运行规则在三种策略中保持一致。",
     sources: [
-      `${REPOSITORY}/blob/main/backend/src/deeptrace/harness/agent_executor.py`,
+      `${REPOSITORY}/blob/main/backend/src/deeptrace/harness/batch_research.py`,
       `${REPOSITORY}/blob/main/backend/src/deeptrace/strategies/multi_agent/nodes.py`,
     ],
     sourceCodeUrl: `${REPOSITORY}/blob/main/backend/src/deeptrace/strategies/multi_agent`,

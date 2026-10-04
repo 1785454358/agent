@@ -40,6 +40,7 @@ from deeptrace.harness.research_completion import (
 from deeptrace.harness.research_findings import (
     RecordFindingsArguments,
     number_read_preview,
+    recording_error_message,
     resolve_recorded_findings,
 )
 from deeptrace.tools.adapters import FetchPageArguments, SearchWebArguments
@@ -447,7 +448,8 @@ async def execute_batch(state, context, *, max_concurrency=4, max_discovered_url
                                 "tool": name,
                                 "recorded_ids": [f.id for f in findings],
                                 "total": len(findings),
-                            }
+                                "message": "已记录原文支持的发现，不需重复提交；核对本分支要点后，充分则申请 finish_research，否则仅补查具体缺口。",
+                            }, ensure_ascii=False,
                         ),
                     ),
                     research_findings=findings,
@@ -468,7 +470,10 @@ async def execute_batch(state, context, *, max_concurrency=4, max_discovered_url
                                 "ok": False,
                                 "tool": name,
                                 "error_code": code,
-                            }
+                                "message": recording_error_message(
+                                    exc, malformed=args.get("__invalid_arguments__") is True,
+                                ),
+                            }, ensure_ascii=False,
                         ),
                     ),
                     error=failure(code, category=ErrorCategory.VALIDATION),
@@ -696,6 +701,8 @@ async def execute_batch(state, context, *, max_concurrency=4, max_discovered_url
                         "error_code": observation.error.code
                         if observation.error
                         else None,
+                        "message": json.loads(observation.message.content).get("message")
+                        if observation.error else None,
                     },
                 )
             except Exception:
@@ -763,7 +770,10 @@ async def execute_batch(state, context, *, max_concurrency=4, max_discovered_url
                     "caller_id": task.caller_id,
                     "branch": task.query,
                     "tool_call_id": call["id"],
+                    "call_id": call["id"] if call["name"] in LOCAL_TOOLS else _digest(_request_id(task) + "\0" + call["id"]),
                     "tool": call["name"],
+                    **{key: value for key, value in call.get("args", {}).items()
+                       if key in {"url", "query"} and isinstance(value, str)},
                     "result": json.loads(observation.message.content),
                     "research_findings": [
                         f.model_dump(mode="json")

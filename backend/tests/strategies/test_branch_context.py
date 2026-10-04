@@ -43,6 +43,17 @@ def test_current_gaps_are_not_discarded_at_the_strategy_boundary():
     ]
 
 
+@pytest.mark.asyncio
+async def test_host_page_quota_comes_from_context_not_model_or_state():
+    from dataclasses import replace
+    from deeptrace.strategies.common import validated_branch_context
+
+    fixture = build_gateway_fixture()
+    context = replace(fixture.context, research_max_pages=6)
+    result = await validated_branch_context({**_state(), "max_pages": 999}, context)
+    assert result["max_pages"] == 6
+
+
 def test_branch_context_preserves_bounded_targeted_requirements_and_gaps():
     context = branch_context(_state())
     assert context.get("requirements") == _state()["requirements"]

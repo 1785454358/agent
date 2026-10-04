@@ -44,7 +44,7 @@ def test_manifest_hashes_worktree_source_and_assets_without_gold_payload(tmp_pat
     assert first["schema_version"] == 2
     assert first["sample_ids"] == ["run-q-workflow"]
     assert first.get("research_context_policy") == {
-        "soft_input_tokens": 8000,
+        "soft_input_tokens": 6000,
         "recent_exchange_groups": 3,
         "retained_actual_read_previews": 3,
     }

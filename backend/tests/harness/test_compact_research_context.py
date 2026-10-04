@@ -109,3 +109,18 @@ def test_assigned_requirement_and_remaining_budget_are_visible():
     assert "本分支负责" in content and "My assigned fact" in content
     assert "全局背景" in content and "Other branch fact" in content
     assert "剩余研究调用：2" in content
+
+
+def test_host_progress_distinguishes_read_sources_and_quota_from_coverage():
+    from deeptrace.domain.evidence_anchor import ReadEvidenceAnchor
+    source_task = task().model_copy(update={"max_pages": 8})
+    anchor = ReadEvidenceAnchor(evidence_id="source-1", version=1, content_hash="hash", start=0, end=5)
+    messages, _ = prepare_messages_with_diagnostics({
+        "topic_input": source_task, "pages_fetched": 2, "read_anchors": [anchor, anchor],
+        "evidence_ids": ["source-1"],
+    }, (), TokenBudgetConfig())
+    content = str(messages[1].content)
+    assert "抓页配额：2/8" in content
+    assert "已实际读取 1 个来源" in content
+    assert "已记录 0 条候选发现" in content
+    assert "不代表需求已覆盖" in content

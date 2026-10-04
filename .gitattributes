@@ -3,3 +3,6 @@ backend/src/deeptrace/eval/data/benchmarks/research-v1/upstream/*.mdx -text whit
 backend/src/deeptrace/eval/data/benchmarks/research-v1/LICENSE.txt -text
 backend/src/deeptrace/eval/data/public/drb-v1/upstream/query.jsonl -text
 backend/src/deeptrace/eval/data/public/drb-v1/LICENSE.txt -text
+
+# Generated portfolio documents must retain their original binary bytes.
+*.pdf binary

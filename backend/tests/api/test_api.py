@@ -41,6 +41,9 @@ class FakeRuntime:
         self.created: list[Any] = []
         self.started = False
         self.stopped = False
+        self.records: list[RunRecord] = []
+        self.deleted: list[str] = []
+        self.active_ids: set[str] = set()
 
     async def start(self) -> None:
         self.started = True
@@ -58,13 +61,21 @@ class FakeRuntime:
         )
 
     async def list(self):
-        return []
+        return list(self.records)
 
     async def get(self, run_id):
         return None
 
     async def cancel(self, run_id):
         return None
+
+    async def delete(self, run_id):
+        from deeptrace.runtime.errors import RunActiveError
+
+        if run_id in self.active_ids:
+            raise RunActiveError(run_id)
+        self.deleted.append(run_id)
+        return run_id != "missing"
 
 
 class FakeContext:
@@ -202,3 +213,74 @@ def test_legacy_basic_record_reads_back_as_workflow(tmp_path) -> None:
     data = client.get(f"/researches/{created}").json()
 
     assert data["mode"] == "workflow"
+
+
+def test_api_delete_routes_delegate_to_runtime() -> None:
+    from fastapi.testclient import TestClient
+
+    runtime = FakeRuntime()
+    runtime.active_ids = {"run-busy"}
+    with TestClient(create_app(settings=object(), runtime=runtime)) as client:
+        assert client.delete("/researches/run-1").status_code == 200
+        assert client.delete("/researches/run-busy").status_code == 409
+        assert client.delete("/researches/missing").status_code == 404
+
+    assert runtime.deleted == ["run-1", "missing"]
+
+
+def test_api_batch_delete_reports_active_and_missing_runs() -> None:
+    from fastapi.testclient import TestClient
+
+    runtime = FakeRuntime()
+    runtime.active_ids = {"run-busy"}
+    with TestClient(create_app(settings=object(), runtime=runtime)) as client:
+        response = client.post(
+            "/researches/batch-delete",
+            json={"ids": ["run-1", "run-busy", "missing", "run-1"]},
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "deleted": ["run-1"],
+            "active": ["run-busy"],
+            "missing": ["missing"],
+        }
+        assert (
+            client.post("/researches/batch-delete", json={"ids": []}).status_code
+            == 422
+        )
+
+    assert runtime.deleted == ["run-1", "missing"]
+
+
+def test_api_delete_all_clears_history() -> None:
+    from fastapi.testclient import TestClient
+
+    runtime = FakeRuntime()
+    runtime.records = [
+        RunRecord(id="run-a", question="问题一", created_at=datetime.now(UTC)),
+        RunRecord(id="run-b", question="问题二", created_at=datetime.now(UTC)),
+    ]
+    with TestClient(create_app(settings=object(), runtime=runtime)) as client:
+        response = client.delete("/researches")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "deleted": ["run-a", "run-b"],
+        "active": [],
+        "missing": [],
+    }
+    assert runtime.deleted == ["run-a", "run-b"]
+
+
+def test_api_deletes_completed_local_run_and_persisted_file(tmp_path) -> None:
+    from fastapi.testclient import TestClient
+
+    runtime = build_local_runtime(tmp_path)
+    with TestClient(create_app(settings=SimpleNamespace(), runtime=runtime)) as client:
+        run_id = client.post("/researches", json={"question": "问题"}).json()["id"]
+        wait_for_completed(client, run_id)
+
+        assert client.delete(f"/researches/{run_id}").status_code == 200
+        assert client.get(f"/researches/{run_id}").status_code == 404
+        assert not (tmp_path / "runs" / f"{run_id}.json").exists()
+        assert client.get("/researches").json() == []

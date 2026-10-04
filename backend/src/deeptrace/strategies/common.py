@@ -62,7 +62,11 @@ async def validated_branch_context(
         for record in records
         if record.status is EvidenceLifecycleStatus.ACTIVE
     ]
-    return {**branch_context(state), "authorized_evidence_ids": authorized}
+    return {
+        **branch_context(state),
+        "authorized_evidence_ids": authorized,
+        "max_pages": context.research_max_pages,
+    }
 
 
 async def invoke_research_branch(
@@ -117,6 +121,12 @@ def effective_termination_reason(
 def _controlled_exit(outcome: ResearchTopicOutcome) -> str | None:
     agent = outcome.agent_outcome
     if agent is None or agent.status == "completed":
+        return None
+    # A completed acquisition attempt with no usable passage is a factual gap
+    # for the aggregate evaluator/replanner, not a fatal unfinished user plan.
+    if (agent.stop_reason == "incomplete_plan"
+            and "batch_acquisition_incomplete" in outcome.research_finding_diagnostics
+            and not agent.unfinished_todos):
         return None
     # The agent cannot complete without sources, even when no todo is open.
     # That recoverable discovery failure is not an unfinished plan/fatal exit.

@@ -122,17 +122,24 @@ class Settings:
     model_context_tokens: int = 256_000
     context_safety_tokens: int = 4_096
     planner_timeout_seconds: float = 60.0
+    evaluator_timeout_seconds: float = 120.0
     writer_timeout_seconds: float = 60.0
-    max_fetched_pages: int = 20
-    max_tool_calls: int = 30
+    max_fetched_pages: int = 80
+    max_tool_calls: int = 240
     tool_timeout_seconds: float = 45.0
     # Agentic execution loop and tool error recovery.
-    agent_max_iterations: int = 8
+    agent_max_iterations: int = 24
+    agent_max_pages: int = 8
     agent_tool_retry_attempts: int = 3
     agent_tool_retry_base_seconds: float = 0.5
     agent_max_discovered_urls: int = 200
     agent_consecutive_error_limit: int = 3
     agent_completion_nudge_limit: int = 2
+    # Default batched research: small acquisition batches and a shared run cap.
+    research_source_target: int = 3
+    max_model_calls: int = 20
+    max_input_tokens: int = 100_000
+    research_max_seconds: float = 600.0
     input_cost_per_million: Decimal | None = None
     output_cost_per_million: Decimal | None = None
     openai_max_tokens: int | None = None
@@ -248,14 +255,18 @@ class Settings:
             writer_timeout_seconds=_bounded_float(
                 "DEEPTRACE_WRITER_TIMEOUT_SECONDS", 60.0, 0.1, 600.0
             ),
-            max_fetched_pages=_bounded_int("DEEPTRACE_MAX_FETCHED_PAGES", 20, 1, 1_000),
-            max_tool_calls=_bounded_int("DEEPTRACE_MAX_TOOL_CALLS", 30, 1, 200),
+            evaluator_timeout_seconds=_bounded_float(
+                "DEEPTRACE_EVALUATOR_TIMEOUT_SECONDS", 120.0, 0.1, 600.0
+            ),
+            max_fetched_pages=_bounded_int("DEEPTRACE_MAX_FETCHED_PAGES", 80, 1, 1_000),
+            max_tool_calls=_bounded_int("DEEPTRACE_MAX_TOOL_CALLS", 240, 1, 1_000),
             tool_timeout_seconds=_bounded_float(
                 "DEEPTRACE_TOOL_TIMEOUT_SECONDS", 45, 0.1, 600
             ),
             agent_max_iterations=_bounded_int(
-                "DEEPTRACE_AGENT_MAX_ITERATIONS", 8, 1, 50
+                "DEEPTRACE_AGENT_MAX_ITERATIONS", 24, 1, 50
             ),
+            agent_max_pages=_bounded_int("DEEPTRACE_AGENT_MAX_PAGES", 8, 1, 8),
             agent_tool_retry_attempts=_bounded_int(
                 "DEEPTRACE_AGENT_TOOL_RETRY_ATTEMPTS", 3, 1, 10
             ),
@@ -271,6 +282,10 @@ class Settings:
             agent_completion_nudge_limit=_bounded_int(
                 "DEEPTRACE_AGENT_COMPLETION_NUDGE_LIMIT", 2, 0, 10
             ),
+            research_source_target=_bounded_int("DEEPTRACE_RESEARCH_SOURCE_TARGET", 3, 1, 8),
+            max_model_calls=_bounded_int("DEEPTRACE_MAX_MODEL_CALLS", 20, 3, 100),
+            max_input_tokens=_bounded_int("DEEPTRACE_MAX_INPUT_TOKENS", 100_000, 10_000, 2_000_000),
+            research_max_seconds=_bounded_float("DEEPTRACE_RESEARCH_MAX_SECONDS", 600, 1, 3600),
             input_cost_per_million=input_cost,
             output_cost_per_million=output_cost,
             openai_max_tokens=_optional_int("OPENAI_MAX_TOKENS"),

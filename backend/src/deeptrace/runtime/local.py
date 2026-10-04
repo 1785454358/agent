@@ -11,8 +11,8 @@ from typing import Any
 
 from deeptrace.application.research import ApplicationResearchRequest
 from deeptrace.models import RunEvent
-from deeptrace.observability.messages import humanize_event_message
-from deeptrace.runtime.errors import ThreadBusyError
+from deeptrace.observability.messages import humanize_event_message, public_event_details
+from deeptrace.runtime.errors import RunActiveError, ThreadBusyError
 from deeptrace.runtime.models import RunMode, RunRecord, StoredEvent
 
 _TERMINAL_STATUSES = frozenset({"completed", "partial", "failed", "cancelled"})
@@ -185,6 +185,21 @@ class LocalResearchRuntime:
             await asyncio.gather(state.task, return_exceptions=True)
         return state.record
 
+    async def delete(self, run_id: str) -> bool:
+        """Drop a terminal run from the registry and remove its JSON file."""
+        state = self._registry.get(run_id)
+        if state is None:
+            return False
+        if state.record.status not in _TERMINAL_STATUSES:
+            raise RunActiveError(run_id)
+        del self._registry[run_id]
+        try:
+            (self._runs_dir / f"{run_id}.json").unlink()
+        except FileNotFoundError:
+            pass
+        state.changed.set()  # release any SSE waiter still holding this state
+        return True
+
     async def events(self, run_id: str, after_event_id: int = 0):
         state = self._registry.get(run_id)
         if state is None:
@@ -233,15 +248,12 @@ class LocalResearchRuntime:
         record = state.record
 
         def on_harness_event(event_type: str, payload: dict) -> None:
-            details: dict[str, str | int | float | bool | None] = {}
-            tool = payload.get("tool")
-            if isinstance(tool, str) and tool:
-                details["tool"] = tool
+            details = public_event_details(payload)
             self._append_event(
                 state,
                 RunEvent(
                     event_type=event_type,
-                    message=humanize_event_message(event_type, payload),
+                    message=humanize_event_message(event_type, details),
                     details=details,
                 ),
             )

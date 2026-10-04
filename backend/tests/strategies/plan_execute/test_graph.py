@@ -5,7 +5,9 @@ from typing import Any
 
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
+from langchain_core.messages import AIMessage
 
+from deeptrace.config.settings import Settings
 from deeptrace.domain import ResearchMode
 from deeptrace.harness.agent_executor import build_research_agent_graph
 from deeptrace.strategies.plan_execute.graph import build_plan_execute_research_graph
@@ -32,6 +34,42 @@ def _research_input(question: str) -> dict[str, Any]:
 
 def _evaluation_with_prompt_evidence(prompt: str, *, action: str = "complete") -> str:
     return json.dumps(evaluation_payload_from_view(prompt, action=action))
+
+
+@pytest.mark.asyncio
+async def test_nested_executor_can_use_the_increased_iteration_allowance() -> None:
+    settings = Settings("test", "https://example.com", "test", "test")
+    responses = []
+    results = {}
+    for index in range(4):
+        url = f"https://example.com/{index}"
+        query = f"topic-{index}"
+        results[query] = [{"url": url, "title": "source", "snippet": "s"}]
+        for name, arguments in [("search_web", {"query": query}), ("fetch_page", {"url": url})]:
+            responses.append(AIMessage(content="", tool_calls=[{
+                "name": name, "args": arguments, "id": f"{name}-{index}",
+            }]))
+    responses.append(AIMessage(content="done"))
+    model = ScriptedModelGateway({
+        "planner": json.dumps({"requirements": [{"id": "r1", "description": "核验来源"}],
+                               "queries": ["initial"], "query_targets": {"initial": ["r1"]}}),
+        "evaluator": lambda prompt: _evaluation_with_prompt_evidence(prompt),
+    })
+    invoke_role = model.invoke
+
+    async def invoke(**kwargs):
+        if kwargs["role"] == "researcher":
+            return responses.pop(0)
+        return await invoke_role(**kwargs)
+
+    model.invoke = invoke
+    fixture = build_gateway_fixture(model_gateway=model, search_results=results)
+    result = await _run_plan_execute(model, fixture, topic_graph=build_research_agent_graph(
+        max_iterations=settings.agent_max_iterations,
+    ))
+    assert result["outcome"].termination_reason == "completed"
+    assert result["topic_outcomes"][0].agent_outcome.iterations == 9
+    assert len(result["outcome"].evidence_ids) == 4
 
 
 async def _run_plan_execute(
@@ -301,6 +339,43 @@ async def test_replan_produces_new_tasks_and_completes() -> None:
     assert "首任务" not in fixture.search.calls[1:]  # never re-executed
     assert outcome.termination_reason == "completed"
     assert len(outcome.evidence_ids) == 2
+    progress = [(kind, data) for kind, data in fixture.events.events
+                if kind.startswith(("planning.", "task.", "evaluation.", "replanning.", "research.route"))]
+    assert [kind for kind, _ in progress] == [
+        "planning.started", "planning.completed", "task.started", "task.completed",
+        "evaluation.started", "evaluation.completed", "research.route",
+        "replanning.started", "replanning.completed", "task.started", "task.completed",
+        "evaluation.started", "evaluation.completed", "research.route",
+    ]
+    assert json.loads(progress[1][1]["tasks_json"]) == ["首任务"]
+    assert progress[6][1]["next_step"] == "replan"
+    assert progress[7][1]["round"] == 2
+    assert json.loads(progress[8][1]["tasks_json"]) == ["补充任务"]
+    assert progress[-1][1]["next_step"] == "finalize"
+    completed_ids = {data["call_id"] for kind, data in fixture.events.events if kind == "tool.completed"}
+    for kind, data in fixture.events.events:
+        if kind == "agent.tool_observation" and data["tool"] in {"search_web", "fetch_page"}:
+            assert data["call_id"] in completed_ids
+
+
+@pytest.mark.asyncio
+async def test_evaluation_logs_real_stop_instead_of_a_proposed_replan(monkeypatch):
+    from langgraph.runtime import Runtime
+    from deeptrace.strategies.plan_execute import nodes
+
+    async def evaluate(*args, **kwargs):
+        return {"assessment": type("Decision", (), {"action": "replan", "reason": "需要更多原文"})(),
+                "unresolved_gaps": ["基础理论缺证据"], "executed_steps": 1}
+
+    monkeypatch.setattr(nodes, "run_evidence_evaluation", evaluate)
+    monkeypatch.setattr(nodes, "strong_exit_reason", lambda state: "iteration_limit")
+    fixture = build_gateway_fixture()
+    await nodes.build_evaluate_node(2)({"replan_count": 0}, Runtime(context=fixture.context))
+    route = fixture.events.events[-1]
+    assert route[0] == "research.route"
+    assert route[1]["action"] == "replan"
+    assert route[1]["next_step"] == "finalize"
+    assert route[1]["reason"] == "iteration_limit"
 
 
 @pytest.mark.asyncio

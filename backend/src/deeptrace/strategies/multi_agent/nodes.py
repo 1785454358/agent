@@ -197,6 +197,7 @@ async def supervisor_evaluate_node(
         runtime.context,
         ReferenceSupervisorEvaluation,
         incomplete_action="follow_up",
+        repair_attempts=1,
     )
     return {"evaluation": result.pop("assessment"), **result}
 

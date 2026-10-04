@@ -168,7 +168,13 @@ class AsyncWebFetcher:
                 )
             except WebFetchError as browser_error:
                 if best is None:
-                    raise browser_error from http_error
+                    if http_error is not None:
+                        raise WebFetchError(
+                            browser_error.code,
+                            f"{browser_error}；HTTP 阶段：{http_error}",
+                            **browser_error.details,
+                        ) from browser_error
+                    raise
 
         if not candidates:
             raise http_error or WebFetchError("empty_extraction", "未提取到正文")
@@ -246,8 +252,9 @@ class AsyncWebFetcher:
             except WebFetchError:
                 raise
             except httpx.HTTPError as exc:
+                status = f"（HTTP {exc.response.status_code}）" if isinstance(exc, httpx.HTTPStatusError) else ""
                 raise WebFetchError(
-                    "http_failed", f"HTTP 请求失败：{type(exc).__name__}"
+                    "http_failed", f"HTTP 请求失败：{type(exc).__name__}{status}"
                 ) from exc
         raise WebFetchError("too_many_redirects", "重定向次数超过限制")
 
@@ -279,8 +286,8 @@ class AsyncWebFetcher:
                 wait_until="domcontentloaded",
                 timeout=self._browser_timeout_ms,
             )
+            html = await self._read_browser_content(page)
             await self._ensure_public_url(page.url)
-            html = await page.content()
             if len(html.encode("utf-8")) > MAX_RESPONSE_BYTES:
                 raise WebFetchError(
                     "response_too_large", "浏览器渲染后的页面超过大小限制"
@@ -289,11 +296,31 @@ class AsyncWebFetcher:
         except WebFetchError:
             raise
         except Exception as exc:
+            network_error = re.search(r"net::[A-Z_]+", str(exc))
+            if network_error:
+                cause = network_error.group(0)
+            elif type(exc).__name__ == "TimeoutError":
+                cause = f"加载超过 {self._browser_timeout_ms / 1000:g} 秒"
+            elif "page is navigating and changing the content" in str(exc):
+                cause = "页面持续跳转，无法读取正文"
+            else:
+                cause = type(exc).__name__
             raise WebFetchError(
-                "browser_failed", f"浏览器抓取失败：{type(exc).__name__}"
+                "browser_failed", f"浏览器抓取失败：{cause}"
             ) from exc
         finally:
             await context.close()
+
+    async def _read_browser_content(self, page: Any) -> str:
+        try:
+            return await page.content()
+        except Exception as exc:
+            # A client-side redirect can race with content() just after DOM load.
+            # Wait once for that navigation; persistent redirects still fail visibly.
+            if "page is navigating and changing the content" not in str(exc):
+                raise
+            await page.wait_for_load_state("domcontentloaded", timeout=self._browser_timeout_ms)
+            return await page.content()
 
     async def _ensure_browser(self) -> None:
         if self._browser is not None:

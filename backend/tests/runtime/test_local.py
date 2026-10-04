@@ -72,6 +72,27 @@ def build_runtime(tmp_path, application: FakeApplication) -> LocalResearchRuntim
 
 
 @pytest.mark.asyncio
+async def test_local_runtime_preserves_planning_and_tool_failure_details(tmp_path):
+    def context_factory(run_id, on_event):
+        on_event("tool.completed", {"tool": "fetch_page", "call_id": "fetch-1", "ok": False,
+                                   "error_code": "browser_failed", "message": "浏览器超时", "api_key": "secret"})
+        on_event("replanning.completed", {"round": 2, "tasks_json": '["论文原文"]'})
+        return FakeContext()
+
+    runtime = LocalResearchRuntime(object(), tmp_path, application=FakeApplication(), context_factory=context_factory)
+    await runtime.start()
+    try:
+        created = await runtime.create("研究问题", "plan_execute")
+        run = await wait_for_terminal(runtime, created.id)
+        assert run.events[0]["details"]["message"] == "浏览器超时"
+        assert run.events[0]["details"]["ok"] is False
+        assert "api_key" not in run.events[0]["details"]
+        assert run.events[1]["details"] == {"round": 2, "tasks_json": '["论文原文"]'}
+    finally:
+        await runtime.stop()
+
+
+@pytest.mark.asyncio
 async def test_local_runtime_executes_and_persists_run(tmp_path) -> None:
     runtime = build_runtime(tmp_path, FakeApplication())
     await runtime.start()
@@ -255,6 +276,46 @@ async def test_local_runtime_continues_the_requested_thread(tmp_path) -> None:
     request, config, _context = application.requests[1]
     assert request.thread_id == first.thread_id
     assert config["configurable"]["thread_id"] == first.thread_id
+    await runtime.stop()
+
+
+@pytest.mark.asyncio
+async def test_local_runtime_deletes_terminal_run(tmp_path) -> None:
+    runtime = build_runtime(tmp_path, FakeApplication())
+    await runtime.start()
+    created = await runtime.create("研究问题", "workflow")
+    await wait_for_terminal(runtime, created.id)
+
+    assert await runtime.delete(created.id) is True
+    assert await runtime.get(created.id) is None
+    assert not (tmp_path / f"{created.id}.json").exists()
+    assert [run.id for run in await runtime.list()] == []
+    await runtime.stop()
+
+
+@pytest.mark.asyncio
+async def test_local_runtime_delete_rejects_active_and_missing(tmp_path) -> None:
+    from deeptrace.runtime.errors import RunActiveError
+
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def hook() -> None:
+        started.set()
+        await release.wait()
+
+    runtime = build_runtime(tmp_path, FakeApplication(invoke_hook=hook))
+    await runtime.start()
+    assert await runtime.delete("missing") is False
+
+    run = await runtime.create("研究问题", "workflow")
+    await started.wait()
+    with pytest.raises(RunActiveError):
+        await runtime.delete(run.id)
+
+    release.set()
+    await wait_for_terminal(runtime, run.id)
+    assert await runtime.delete(run.id) is True
     await runtime.stop()
 
 

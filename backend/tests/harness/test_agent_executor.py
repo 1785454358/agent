@@ -7,6 +7,7 @@ from langchain_core.messages import AIMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from strategies.fixtures import build_gateway_fixture
 
+from deeptrace.config.settings import Settings
 from deeptrace.domain import ResearchMode, ResearchTopicInput
 from deeptrace.harness.agent_executor import (
     WRITE_TODOS_TOOL,
@@ -282,6 +283,74 @@ async def test_research_checkpoint_keeps_evidence_references_not_page_bodies() -
 
 async def _run(graph, fixture, topic_input: ResearchTopicInput):
     return await graph.ainvoke({"topic_input": topic_input}, context=fixture.context)
+
+
+@pytest.mark.asyncio
+async def test_configured_allowances_support_more_than_three_pages_and_eight_turns() -> None:
+    settings = Settings("test", "https://example.com", "test", "test")
+    urls = [f"https://example.com/{index}" for index in range(4)]
+    responses = []
+    results = {}
+    for index, url in enumerate(urls):
+        query = f"topic-{index}"
+        results[query] = [{"url": url, "title": "source", "snippet": "s"}]
+        responses.extend([
+            _tool_call("search_web", {"query": query}, f"search-{index}"),
+            _tool_call("fetch_page", {"url": url}, f"fetch-{index}"),
+        ])
+    model = ScriptedModelGateway([*responses, AIMessage(content="done")])
+    fixture = build_gateway_fixture(model_gateway=model, search_results=results)
+    raw = await _run(
+        build_research_agent_graph(max_iterations=settings.agent_max_iterations),
+        fixture,
+        _topic_input().model_copy(update={"max_pages": settings.agent_max_pages}),
+    )
+    assert len(model.calls) == 9
+    assert fixture.fetcher.calls == urls
+    assert len(raw["outcome"].evidence_ids) == 4
+    assert raw["outcome"].agent_outcome.status == "completed"
+
+
+@pytest.mark.asyncio
+async def test_configured_iteration_limit_still_stops_unproductive_searches() -> None:
+    settings = Settings("test", "https://example.com", "test", "test")
+    model = ScriptedModelGateway([
+        _tool_call("search_web", {"query": f"query-{index}"}, f"search-{index}")
+        for index in range(settings.agent_max_iterations)
+    ])
+    fixture = build_gateway_fixture(model_gateway=model, default_search_results=[])
+    raw = await _run(
+        build_research_agent_graph(max_iterations=settings.agent_max_iterations),
+        fixture,
+        _topic_input().model_copy(update={"max_pages": settings.agent_max_pages}),
+    )
+    assert len(model.calls) == 24
+    assert raw["outcome"].agent_outcome.stop_reason == "iteration_limit"
+
+
+@pytest.mark.asyncio
+async def test_configured_page_limit_still_blocks_a_ninth_page() -> None:
+    settings = Settings("test", "https://example.com", "test", "test")
+    urls = [f"https://example.com/{index}" for index in range(9)]
+    model = ScriptedModelGateway([
+        _tool_call("search_web", {"query": "first", "limit": 8}, "search-first"),
+        _fetch_batch(*urls[:8]),
+        _tool_call("search_web", {"query": "extra"}, "search-extra"),
+        _tool_call("fetch_page", {"url": urls[8]}, "fetch-extra"),
+        AIMessage(content="done"),
+    ])
+    fixture = build_gateway_fixture(model_gateway=model, search_results={
+        "first": [{"url": url, "title": "source", "snippet": "s"} for url in urls[:8]],
+        "extra": [{"url": urls[8], "title": "extra", "snippet": "s"}],
+    })
+    raw = await _run(
+        build_research_agent_graph(max_iterations=settings.agent_max_iterations),
+        fixture,
+        _topic_input().model_copy(update={"max_pages": settings.agent_max_pages}),
+    )
+    assert fixture.fetcher.calls == urls[:8]
+    assert len(raw["outcome"].evidence_ids) == 8
+    assert "page_limit" in str(raw["messages"])
 
 
 @pytest.mark.asyncio

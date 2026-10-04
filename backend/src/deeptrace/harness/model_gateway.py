@@ -68,6 +68,7 @@ class ChatModelGateway:
         retry_attempts: int = 2,
         retry_base_seconds: float = 0.5,
         timeout_seconds: float = 60,
+        role_timeout_seconds: dict[str, float] | None = None,
     ) -> None:
         self._model = model
         self._role_overrides = role_overrides or {}
@@ -76,6 +77,9 @@ class ChatModelGateway:
         self._attempts = retry_attempts
         self._delay = retry_base_seconds
         self._timeout = timeout_seconds
+        self._role_timeouts = dict(role_timeout_seconds or {})
+        if any(seconds <= 0 for seconds in self._role_timeouts.values()):
+            raise ValueError("Invalid role timeout")
 
     async def invoke(
         self,
@@ -93,7 +97,7 @@ class ChatModelGateway:
             runnable = runnable.bind(**overrides)
         for attempt in range(self._attempts):
             try:
-                async with asyncio.timeout(self._timeout):
+                async with asyncio.timeout(self._role_timeouts.get(role, self._timeout)):
                     return await runnable.ainvoke(messages)
             except Exception as exc:
                 transient = _transient(exc)

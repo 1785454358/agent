@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any
 
@@ -16,6 +17,7 @@ from deeptrace.domain import (
     unfinished_plan_items,
 )
 from deeptrace.harness.context import HarnessContext
+from deeptrace.observability.progress import emit_progress
 from deeptrace.strategies.common import (
     effective_termination_reason,
     filter_findings,  # noqa: F401 - public API re-export
@@ -55,6 +57,7 @@ def build_plan_node(max_tasks: int):
         state: PlanExecuteState, runtime: Runtime[HarnessContext]
     ) -> dict[str, Any]:
         research_input = _research_input(state)
+        await emit_progress(runtime.context, "planning.started", round=1)
         from deeptrace.strategies.model_io import conversation_background_lines
 
         background = conversation_background_lines(research_input)
@@ -90,6 +93,10 @@ def build_plan_node(max_tasks: int):
             queries = []
         queries, contract = seal_initial_plan(research_input.question, payload, queries)
         plan = TaskPlan(queries=queries, requirements=contract["requirements"])
+        await emit_progress(
+            runtime.context, "planning.completed", round=1,
+            tasks_json=json.dumps(plan.queries, ensure_ascii=False),
+        )
         return {
             **contract,
             "plan_tasks": plan.queries,
@@ -123,6 +130,8 @@ def build_execute_task_node(topic_graph):
     ) -> dict[str, Any]:
         require_evidence_contract(state)
         query = state["current_task"]
+        round_number = (state.get("replan_count") or 0) + 1
+        await emit_progress(runtime.context, "task.started", round=round_number, task=query)
         branch = {
             **state,
             "target_requirement_ids": assigned_targets(state, query),
@@ -141,12 +150,20 @@ def build_execute_task_node(topic_graph):
             logging.getLogger(__name__).warning(
                 "Research branch failed; preserving partial outcome", exc_info=True
             )
+            await emit_progress(
+                runtime.context, "task.failed", round=round_number,
+                task=query, reason="topic_execution_failed",
+            )
             return {
                 "completed_tasks": [query],
                 "executed_steps": 1,
                 "diagnostic_gaps": [f"topic_execution_failed:{query}"[:500]],
             }
         gaps = topic_error_gaps(outcome)
+        await emit_progress(
+            runtime.context, "task.completed", round=round_number, task=query,
+            reason=outcome.agent_outcome.stop_reason if outcome.agent_outcome else None,
+        )
         updates: dict[str, Any] = {
             "completed_tasks": [query],
             "topic_outcomes": [outcome],
@@ -163,10 +180,54 @@ def build_execute_task_node(topic_graph):
 async def evaluate_node(
     state: PlanExecuteState, runtime: Runtime[HarnessContext]
 ) -> dict[str, Any]:
+    round_number = (state.get("replan_count") or 0) + 1
+    await emit_progress(runtime.context, "evaluation.started", round=round_number)
     result = await run_evidence_evaluation(
-        state, runtime.context, ReferenceExecutorDecision, incomplete_action="replan"
+        state, runtime.context, ReferenceExecutorDecision,
+        incomplete_action="replan", repair_attempts=1,
     )
-    return {"decision": result.pop("assessment"), **result}
+    decision = result.pop("assessment")
+    coverage = result.get("coverage")
+    await emit_progress(
+        runtime.context, "evaluation.completed", round=round_number,
+        action=decision.action if decision else "unavailable",
+        reason=decision.reason if decision else "evaluation_unavailable",
+        gaps_json=json.dumps(result.get("unresolved_gaps") or [], ensure_ascii=False),
+        covered=sum(item.status == "covered" for item in coverage.items) if coverage else 0,
+        total=len(coverage.items) if coverage else 0,
+    )
+    return {"decision": decision, **result}
+
+
+def build_evaluate_node(max_replans: int):
+    async def evaluate_with_route(
+        state: PlanExecuteState, runtime: Runtime[HarnessContext]
+    ) -> dict[str, Any]:
+        result = await evaluate_node(state, runtime)
+        evaluated = {**state, **result}
+        next_step = build_route_after_evaluate(max_replans)(evaluated)
+        decision = result["decision"]
+        reason = strong_exit_reason(evaluated)
+        if not reason:
+            if evaluated.get("no_progress"):
+                reason = "no_research_progress"
+            elif coverage_complete(evaluated):
+                reason = "coverage_complete"
+            elif next_step == "replan":
+                reason = "insufficient_evidence"
+            elif (state.get("replan_count") or 0) >= max_replans:
+                reason = "max_replans_reached"
+            else:
+                reason = "evaluation_unavailable"
+        await emit_progress(
+            runtime.context, "research.route",
+            round=(state.get("replan_count") or 0) + 1,
+            action=decision.action if decision else "unavailable",
+            next_step=next_step, reason=reason,
+        )
+        return result
+
+    return evaluate_with_route
 
 
 def build_route_after_evaluate(max_replans: int):
@@ -193,6 +254,11 @@ def build_replan_node(max_tasks: int):
     async def replan_node(
         state: PlanExecuteState, runtime: Runtime[HarnessContext]
     ) -> dict[str, Any]:
+        replan_count = (state.get("replan_count") or 0) + 1
+        await emit_progress(
+            runtime.context, "replanning.started", round=replan_count + 1,
+            gaps_json=json.dumps(state.get("unresolved_gaps") or [], ensure_ascii=False),
+        )
         planned = await supplement_plan(
             state,
             runtime.context,
@@ -200,8 +266,11 @@ def build_replan_node(max_tasks: int):
             dispatched=state.get("completed_tasks") or [],
             limit=max_tasks,
         )
-        replan_count = (state.get("replan_count") or 0) + 1
         new_queries = planned.pop("queries")
+        await emit_progress(
+            runtime.context, "replanning.completed", round=replan_count + 1,
+            tasks_json=json.dumps(new_queries, ensure_ascii=False),
+        )
         if new_queries:
             return {**planned, "plan_tasks": new_queries, "replan_count": replan_count}
         return {

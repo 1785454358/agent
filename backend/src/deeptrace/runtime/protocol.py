@@ -21,6 +21,15 @@ class ResearchRuntime(Protocol):
 
     async def cancel(self, run_id: str) -> RunRecord | None: ...
 
+    async def delete(self, run_id: str) -> bool:
+        """Remove a terminal run and its events.
+
+        Returns False when the run does not exist; raises
+        :class:`RunActiveError` when the run has not reached a terminal
+        state yet.
+        """
+        ...
+
     def events(
         self, run_id: str, after_event_id: int = 0
     ) -> AsyncIterator[StoredEvent]: ...

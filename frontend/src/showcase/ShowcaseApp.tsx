@@ -34,7 +34,7 @@ export function ShowcaseApp() {
       <section className="showcase-hero">
         <div>
           <p className="showcase-eyebrow">Governed Agent Harness</p>
-          <h1>把开放式 Agent 循环放进可验证的运行边界</h1>
+          <h1>从研究计划，到有依据的回答</h1>
           <p className="showcase-lead">
             固定演示数据，不会调用模型或外部工具。切换策略即可查看同一个
             Agent Runtime 如何完成研究、工具治理与明确退出。

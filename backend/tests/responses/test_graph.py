@@ -14,6 +14,7 @@ from deeptrace.domain import (
     ResponseMode,
 )
 from deeptrace.harness.model_gateway import ModelCallError
+from deeptrace.harness.model_budget import ModelBudgetExceeded
 from deeptrace.responses.graph import (
     build_answer_graph,
     build_brief_graph,
@@ -40,6 +41,17 @@ class ScriptedModelGateway:
         if isinstance(response, Exception):
             raise response
         return response
+
+
+@pytest.mark.asyncio
+async def test_run_budget_denial_returns_evidence_backed_partial_instead_of_crashing():
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(store, [("https://example.com/a", "source", "supported fact")])
+    model = ScriptedModelGateway({"responder": ModelBudgetExceeded("input_tokens")})
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+    result = await _run_response(build_answer_graph(), model, _response_input(ids), fixture)
+    assert result["outcome"].partial_reason
+    assert result["outcome"].cited_evidence_ids == ids
 
 
 async def _seed_evidence(

@@ -310,3 +310,44 @@ async def test_thread_lease_is_atomic_and_reclaims_stale_leases(repository) -> N
     released = await repository.release_thread_lease("thread-1", "run-3")
     assert released is True
     assert await repository.release_thread_lease("thread-1", "run-3") is False
+
+
+@pytest.mark.asyncio
+async def test_repository_deletes_terminal_run_with_events_and_lease(
+    repository,
+) -> None:
+    run = RunRecord(
+        id="run-1",
+        question="问题",
+        thread_id="thread-1",
+        created_at=datetime.now(UTC),
+    )
+    await repository.create(run)
+    assert await repository.acquire_thread_lease("thread-1", "run-1") is True
+    await repository.claim("run-1", "worker-1", 60)
+    await repository.append_event(
+        "run-1", RunEvent(event_type="response.completed", message="完成")
+    )
+    await repository.fail("run-1", "worker-1", "boom")
+
+    assert await repository.delete("run-1") is True
+    assert await repository.get("run-1") is None
+    assert await repository.events_after("run-1", 0) == []
+    # the thread lease went away with the run: a new run can claim the thread
+    assert await repository.acquire_thread_lease("thread-1", "run-2") is True
+
+
+@pytest.mark.asyncio
+async def test_repository_delete_rejects_active_and_missing_runs(
+    repository,
+) -> None:
+    from deeptrace.runtime.errors import RunActiveError
+
+    await repository.create(
+        RunRecord(id="run-1", question="问题", created_at=datetime.now(UTC))
+    )
+
+    with pytest.raises(RunActiveError):
+        await repository.delete("run-1")
+    assert await repository.delete("missing") is False
+    assert await repository.get("run-1") is not None

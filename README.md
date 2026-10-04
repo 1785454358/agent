@@ -9,7 +9,7 @@ DeepResearch 是基于 LangGraph 的多模式深度研究 Agent。它将问题�
 
 面向技术资料调研、方案对比与多方向研究，项目提供 Workflow、Plan-and-Execute、Multi-Agent 三种策略，共享同一套 Agent 运行时。
 
-[快速体验](#快速体验) · [真实研究案例](docs/showcase/case-asyncio.md) · [架构设计](docs/architecture/agent-harness.md) · [设计参考](docs/showcase/mature-projects.md)
+[快速体验](#快速体验) · [作品 PDF](docs/showcase/DeepResearch_项目作品介绍.pdf) · [批量研究实测](docs/showcase/case-batch-research.md) · [架构设计](docs/architecture/agent-harness.md)
 
 ![DeepResearch 真实研究案例：问题、研究过程、回答与官方来源](docs/assets/deepresearch-case-preview.svg)
 
@@ -56,6 +56,8 @@ Agent 将问题拆为三个研究方向，经搜索、抓取和原文阅读后�
 
 数据来自 2026-10-04 的一项已知诊断任务、一次真实联网运行；展示的是该案例结果。评测与研究调用分别计量。查看[原始回答、配置和指标记录](docs/showcase/case-asyncio.md)。
 
+新版批量执行器的同题实测已完成「2026年量子力学领域进展」：**7 次模型请求、63,561 token、222.14 秒、5 个引用来源**。固定取材步骤由程序执行，模型集中整理、核验与生成回答。查看[真实截图与原始统计](docs/showcase/case-batch-research.md)，或下载[四页作品介绍](docs/showcase/DeepResearch_项目作品介绍.pdf)。以上为单题单次运行数据。
+
 ## 技术亮点
 
 ### 三种策略，共享一套运行时
@@ -68,6 +70,8 @@ Agent 将问题拆为三个研究方向，经搜索、抓取和原文阅读后�
 
 三种策略统一接收 `ResearchInput`，输出 `ResearchOutcome`，复用模型调用、工具治理、上下文、预算与退出规则。
 
+默认执行器按计划批量检索、去重、抓取和阅读原文，再由模型集中整理研究发现。Plan-and-Execute 与 Multi-Agent 根据证据缺口进行有限补查，整个问题共享模型调用与输入预算，并预留回答生成额度。
+
 ### 从搜索结果到可追溯证据
 
 搜索发现来源，网页抓取保存正文，阅读工具按问题选取原文。研究结论保留证据标识、原文位置及内容版本，评估阶段检查需求覆盖与来源适用性，再向 Writer 交接材料。
@@ -78,7 +82,7 @@ Agent 将问题拆为三个研究方向，经搜索、抓取和原文阅读后�
 
 - **统一调用入口**：`ModelGateway` 管理模型调用，`ToolGateway` 管理工具权限、URL 校验、并发、预算与重试。
 - **明确执行结果**：`AgentOutcome` 包含运行状态、答案、证据、预算、错误与未完成任务。
-- **分层恢复机制**：Gateway 处理传输重试，Agent Loop 处理语义修复，Worker、Checkpoint 与 Ledger 支持任务恢复和执行记录复用。
+- **分层恢复机制**：工具 Gateway 处理传输重试，整理阶段处理有界格式修复，Worker、Checkpoint 与 Ledger 支持任务恢复和执行记录复用。
 - **会话与记忆**：Session Graph 管理策略路由和会话生命周期，支持关键词召回及本地语义记忆。
 - **过程可观测**：FastAPI 与 SSE 将运行事件推送到前端，工作台展示进度、历史运行、回答与来源。
 
@@ -86,7 +90,7 @@ Agent 将问题拆为三个研究方向，经搜索、抓取和原文阅读后�
 
 ![DeepResearch Agent Harness 架构](docs/assets/deepresearch-harness.svg)
 
-主流程从上向下阅读：三种策略复用同一个研究循环，右侧的记忆、证据、预算与恢复机制贯穿运行过程。
+主流程从上向下阅读：三种策略复用批量取材和集中整理，核对证据后按缺口补查或生成回答。右侧的记忆、证据、预算与恢复机制贯穿运行过程。
 
 本地模式采用进程内执行器与 SQLite 持久化。分布式模式采用 MySQL、Redis Streams、独立 Worker 与 Chroma，分别承载运行数据、任务投递、执行和语义索引。
 
@@ -155,7 +159,8 @@ npm run build:showcase
 | 关注点 | 入口 |
 | --- | --- |
 | 会话管理与策略路由 | [harness/graph.py](backend/src/deeptrace/harness/graph.py) |
-| 共享 Agent 执行循环 | [harness/agent_executor.py](backend/src/deeptrace/harness/agent_executor.py) |
+| 默认批量研究执行器 | [harness/batch_research.py](backend/src/deeptrace/harness/batch_research.py) |
+| 共享模型请求与输入预算 | [harness/model_budget.py](backend/src/deeptrace/harness/model_budget.py) |
 | 模型调用边界 | [harness/model_gateway.py](backend/src/deeptrace/harness/model_gateway.py) |
 | 工具治理与执行记录 | [tools/gateway.py](backend/src/deeptrace/tools/gateway.py) |
 | 证据评估与覆盖检查 | [strategies/evidence_evaluation.py](backend/src/deeptrace/strategies/evidence_evaluation.py) |

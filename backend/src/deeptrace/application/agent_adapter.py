@@ -8,7 +8,7 @@ from typing import Any
 from deeptrace.application.research import ApplicationResearchRequest
 from deeptrace.config import Settings
 from deeptrace.models import AgentResult, RunEvent, TokenUsage, UsageBreakdown
-from deeptrace.observability.messages import humanize_event_message
+from deeptrace.observability.messages import humanize_event_message, public_event_details
 from deeptrace.runtime.models import RunRecord
 
 
@@ -53,17 +53,14 @@ class HarnessResearchRunner:
                 return
 
         def on_harness_event(event_type: str, payload: dict) -> None:
-            details: dict[str, str | int | float | bool | None] = {}
-            tool = payload.get("tool")
-            if isinstance(tool, str) and tool:
-                details["tool"] = tool
+            details = public_event_details(payload)
             if on_event is None:
                 return
             try:
                 on_event(
                     RunEvent(
                         event_type=event_type,
-                        message=humanize_event_message(event_type, payload),
+                        message=humanize_event_message(event_type, details),
                         details=details,
                     )
                 )
@@ -71,7 +68,7 @@ class HarnessResearchRunner:
                 return
 
         context = bundle.context_factory(run.id, on_harness_event)
-        emit("planning.completed", "研究任务已进入统一运行图")
+        emit("run.started", "研究任务已进入统一运行图")
         outcome = await bundle.service.invoke(
             ApplicationResearchRequest(
                 run_id=run.id,

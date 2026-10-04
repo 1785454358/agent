@@ -58,3 +58,27 @@ export function cancelRun(runId: string): Promise<{ id: string }> {
     method: "POST",
   });
 }
+
+/** 批量删除结果：active/missing 表示被跳过的运行。 */
+export interface DeleteRunsResult {
+  deleted: string[];
+  active: string[];
+  missing: string[];
+}
+
+export function deleteRun(runId: string): Promise<{ id: string }> {
+  return request<{ id: string }>(`/researches/${runId}`, {
+    method: "DELETE",
+  });
+}
+
+export function deleteRuns(runIds: string[]): Promise<DeleteRunsResult> {
+  return request<DeleteRunsResult>("/researches/batch-delete", {
+    method: "POST",
+    body: JSON.stringify({ ids: runIds }),
+  });
+}
+
+export function deleteAllRuns(): Promise<DeleteRunsResult> {
+  return request<DeleteRunsResult>("/researches", { method: "DELETE" });
+}
