@@ -3,11 +3,11 @@ from __future__ import annotations
 from deeptrace.domain import ToolName
 from deeptrace.tools.contracts import ToolCapability, ToolSpec
 
-
 _REQUIRED_CAPABILITIES: dict[ToolName, ToolCapability] = {
     ToolName.SEARCH_WEB: ToolCapability.WEB_SEARCH,
     ToolName.FETCH_PAGE: ToolCapability.PAGE_FETCH,
     ToolName.SEARCH_MEMORY: ToolCapability.MEMORY_READ,
+    ToolName.READ_EVIDENCE: ToolCapability.EVIDENCE_READ,
 }
 
 

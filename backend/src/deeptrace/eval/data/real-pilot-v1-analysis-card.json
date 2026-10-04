@@ -1,0 +1,12 @@
+{
+  "dataset_sha256": "78aad429946b02eef88a2c8e2874e3933eb026b9a47a6429d1c21ab248eba4f2",
+  "corpus_sha256": "11db2bf365e55986d149d2e916541ad0c734d31a592d687761dcca394c2ea151",
+  "questions": {
+    "langgraph-checkpoint-store-pilot-001": {
+      "dataset": "real-primary-source-pilot-v1",
+      "split": "dev_calibration",
+      "data_kind": "real_source",
+      "category": "state_and_memory"
+    }
+  }
+}

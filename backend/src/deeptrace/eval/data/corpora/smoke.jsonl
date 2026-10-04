@@ -1,0 +1,8 @@
+{"doc_id": "doc-checkpoint", "url": "https://corpus.example/langgraph-checkpoint", "title": "LangGraph checkpoint 与崩溃恢复", "body": "checkpoint 保存可序列化的控制状态，进程崩溃后可以恢复；执行账本会重放已提交的工具结果，避免重复副作用。", "tags": ["checkpoint", "recovery", "harness", "崩溃恢复"]}
+{"doc_id": "doc-tool-gateway", "url": "https://corpus.example/tool-gateway", "title": "ToolGateway 工具治理边界", "body": "ToolGateway 统一执行调用者白名单、参数与 URL 校验、预算预留、缓存、执行账本与证据落库，所有外部工具调用都必须经过它。", "tags": ["ToolGateway", "白名单", "预算", "工具治理"]}
+{"doc_id": "doc-multi-agent", "url": "https://corpus.example/multi-agent", "title": "Multi-Agent Supervisor 与 Researcher 协作", "body": "Supervisor 负责把问题拆解为互不重叠的研究方向，Researcher 并行执行研究分支，最后聚合结果并评估证据是否充足。", "tags": ["Multi-Agent", "Supervisor", "Researcher", "协作"]}
+{"doc_id": "doc-plan-execute", "url": "https://corpus.example/plan-execute", "title": "Plan-and-Execute 研究策略", "body": "先由规划器拆解任务，再逐项执行，并根据评估发现的缺口进行有界重规划。", "tags": ["plan", "execute", "replan", "策略"]}
+{"doc_id": "doc-memory", "url": "https://corpus.example/memory-lifecycle", "title": "长期记忆生命周期", "body": "按意图召回用户偏好与带证据的事实，权威记录保存在结构化存储中，语义索引只做候选检索。", "tags": ["memory", "记忆", "召回", "lifecycle"]}
+{"doc_id": "doc-evidence", "url": "https://corpus.example/evidence-store", "title": "Evidence Store 证据存储", "body": "保存网页正文、来源和内容哈希，图状态只保存证据 ID，响应只允许引用本轮成功加载的证据。", "tags": ["evidence", "证据", "引用"]}
+{"doc_id": "doc-budget", "url": "https://corpus.example/token-budget", "title": "Token 与调用预算", "body": "模型上下文使用保守估算并按完整工具交换裁剪历史，外部工具按运行、模式和代理三级预留调用额度。", "tags": ["预算", "token", "budget"]}
+{"doc_id": "doc-response", "url": "https://corpus.example/response-graph", "title": "响应与引用校验", "body": "响应子图只加载本轮允许的证据，模型输出必须带半角方括号角标，无法引用的引用不会被补造。", "tags": ["response", "citation", "引用校验"]}

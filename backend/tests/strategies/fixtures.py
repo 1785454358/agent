@@ -28,6 +28,63 @@ TENANT_ID = "workspace-1"
 FIXED_NOW = datetime(2026, 9, 12, 8, 0, 0, tzinfo=UTC)
 
 
+def evaluation_payload_from_view(
+    prompt: str, *, sufficient: bool | None = None, action: str = "complete"
+) -> dict:
+    """Script the output protocol from visible passages, never reference answers."""
+    material = json.JSONDecoder().raw_decode(
+        prompt.rsplit("\nEVIDENCE_VIEW_JSON:\n", 1)[1].lstrip()
+    )[0]
+    findings = []
+    for passage in material["passages"]:
+        text = passage["text"]
+        quotes = [text] if len(text) <= 500 else [text[:500], text[-500:]]
+        quote = next(
+            (q for q in quotes if q and text.find(q, text.find(q) + 1) < 0), None
+        )
+        if quote:
+            findings = [
+                {
+                    "id": "finding-1",
+                    "claim": quote,
+                    "confidence": 0.9,
+                    "supports": [{"ref": passage["ref"]}],
+                }
+            ]
+            break
+    covered = bool(findings) and (sufficient is not False) and action == "complete"
+    result = {
+        "findings": findings,
+        "source_checks": [
+            {
+                "source": s["source"],
+                "status": "eligible",
+                "reason": "scripted fixture source",
+            }
+            for s in material["sources"]
+        ],
+        "unresolved_gaps": [],
+        "coverage": {
+            "items": [
+                {
+                    "requirement_id": item["id"],
+                    "status": "covered" if covered else "missing",
+                    "reason": "scripted protocol coverage"
+                    if covered
+                    else "需要更多资料",
+                    "finding_ids": ["finding-1"] if covered else [],
+                }
+                for item in material["requirements"]
+            ]
+        },
+    }
+    if sufficient is not None:
+        result["sufficient"] = sufficient
+    else:
+        result.update(action=action, reason="scripted decision")
+    return result
+
+
 class RecordingEventSink:
     def __init__(self) -> None:
         self.events: list[tuple[str, dict[str, Any]]] = []
@@ -44,6 +101,12 @@ class NoopModelGateway:
 def scripted_research_response(messages: list[Any], tools: Any) -> AIMessage:
     """Script external model decisions from this branch's transcript, not a cursor."""
     assert tools, "the executor must bind research tools"
+    if any(
+        message.type == "human"
+        and str(message.content).startswith("请继续收集证据并完成计划。")
+        for message in messages
+    ):
+        return AIMessage(content="研究脚本没有其他来源，保留缺口。")
     observations = [message for message in messages if isinstance(message, ToolMessage)]
     if not observations:
         task_prompt = str(messages[1].content)
@@ -193,7 +256,10 @@ def build_gateway_fixture(
         fail=search_fail,
     )
     fetcher = ScriptedFetcher(pages=pages, failures=fetch_failures)
-    registry = build_research_tool_registry(search=search, fetcher=fetcher)
+    evidence_store = evidence_store or InMemoryEvidenceStore()
+    registry = build_research_tool_registry(
+        search=search, fetcher=fetcher, evidence_store=evidence_store
+    )
     limit = BudgetUnits(tool_calls=50, network_requests=50, fetched_pages=50)
     caller_ids = (
         "workflow-graph",
@@ -209,7 +275,6 @@ def build_gateway_fixture(
             for caller_id in caller_ids:
                 scopes.append(BudgetScopeKey.for_agent(run_id, mode, caller_id))
     budgets = InMemoryBudgetManager({scope: limit for scope in scopes})
-    evidence_store = evidence_store or InMemoryEvidenceStore()
     memory_store = InMemoryMemoryStore()
     events = RecordingEventSink()
     inner = AgentToolGateway(

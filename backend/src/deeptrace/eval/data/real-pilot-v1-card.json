@@ -1,0 +1,32 @@
+{
+  "dataset": "real-primary-source-pilot-v1",
+  "split": "dev_calibration",
+  "question_count": 1,
+  "source_commit": "23961cff61a42b52525f3b20b4094d8d2fba1744",
+  "source_url": "https://github.com/langchain-ai/langgraph/blob/23961cff61a42b52525f3b20b4094d8d2fba1744/docs/docs/concepts/persistence.md",
+  "raw_file_sha256": "7c5b745fec517934a508677c03475d5981e12102137a1fbf533ee04038cde84b",
+  "source_license": "MIT",
+  "source_license_file": "langgraph-LICENSE.txt",
+  "retrieved_at": "2026-10-02",
+  "extraction": "Two exact contiguous markdown excerpts: # Persistence to before Let's see what checkpoints; ## Memory Store to before ### Semantic Search. Excerpt bodies are unchanged.",
+  "reviewer_kind": "agent_source_check_not_human",
+  "reference_verification": "Each reference fact matched to Threads, Checkpoints or Memory Store / Basic Usage sections before viewing Agent output.",
+  "limitations": [
+    "Curated narrow corpus, two excerpts of one upstream document; not live web search.",
+    "Historical pinned documentation, not latest API guidance.",
+    "One development calibration pair only; not a held-out benchmark or official DeepResearch Bench score.",
+    "Both systems have identical corpus, model and limits; baseline always follows workflow in this calibration."
+  ],
+  "documents": [
+    {
+      "doc_id": "langgraph-persistence",
+      "url": "https://github.com/langchain-ai/langgraph/blob/23961cff61a42b52525f3b20b4094d8d2fba1744/docs/docs/concepts/persistence.md",
+      "body_sha256": "9b681986f28e353aa27babcad8ec367b1d58f3b9f276579824782da6a37ee248"
+    },
+    {
+      "doc_id": "langgraph-memory-store",
+      "url": "https://raw.githubusercontent.com/langchain-ai/langgraph/23961cff61a42b52525f3b20b4094d8d2fba1744/docs/docs/concepts/persistence.md",
+      "body_sha256": "82aad8a30853dbf4681f2f05f96a141d9b182ec55bb4a39634ccc188a6c89485"
+    }
+  ]
+}

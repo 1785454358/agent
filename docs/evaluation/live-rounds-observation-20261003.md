@@ -4,7 +4,7 @@
 
 ## 统计口径
 
-来源：[records.json](../../tmp/grounded-handoff-live-answer-20261003/records.json)、[manifest.json](../../tmp/grounded-handoff-live-answer-20261003/manifest.json)。原始records文件SHA256：`e761aa8cf1d6045ecc2e2fa510aa14e884b2144e495ce4661b8f25a1144d01f3`。
+来源：records.json：`../../tmp/grounded-handoff-live-answer-20261003/records.json`（本地实验留样）、manifest.json：`../../tmp/grounded-handoff-live-answer-20261003/manifest.json`（本地实验留样）。原始records文件SHA256：`e761aa8cf1d6045ecc2e2fa510aa14e884b2144e495ce4661b8f25a1144d01f3`。
 
 - 一轮是一次研究员模型调用，不是一个工具，也不是整次用户任务。一轮可调用多个工具；模型传输重试另计Provider attempts，不自动多算研究轮。
 - 用trajectory.model_turns中role=researcher按branch分组计数；本批每运行两个不同查询、无相同查询的多次补查，因此不会把不同分支实例合并。本批模型消息、总模型调用及Provider尝试数一致，未发现研究模型边界失败导致缺失返回轨迹。

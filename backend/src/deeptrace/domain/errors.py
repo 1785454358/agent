@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from deeptrace.domain.execution import ErrorCategory
 
-
 _CATEGORY_BY_CODE: dict[str, ErrorCategory] = {
     # Transient infrastructure failures: retried once inside the gateway.
     "provider_timeout": ErrorCategory.TRANSIENT,
@@ -14,6 +13,7 @@ _CATEGORY_BY_CODE: dict[str, ErrorCategory] = {
     "unsafe_url": ErrorCategory.AGENT_RECOVERABLE,
     "empty_extraction": ErrorCategory.AGENT_RECOVERABLE,
     "empty_page": ErrorCategory.AGENT_RECOVERABLE,
+    "evidence_unavailable": ErrorCategory.AGENT_RECOVERABLE,
     "insufficient_content": ErrorCategory.AGENT_RECOVERABLE,
     "unsupported_content_type": ErrorCategory.AGENT_RECOVERABLE,
     "no_search_results": ErrorCategory.AGENT_RECOVERABLE,
@@ -32,6 +32,7 @@ _CATEGORY_BY_CODE: dict[str, ErrorCategory] = {
     "tool_not_registered": ErrorCategory.POLICY,
     "tool_not_allowed": ErrorCategory.POLICY,
     "url_not_authorized": ErrorCategory.POLICY,
+    "evidence_not_authorized": ErrorCategory.POLICY,
     "unsafe_arguments": ErrorCategory.POLICY,
     "budget_exhausted": ErrorCategory.POLICY,
     # Fatal failures: recorded, never retried, may terminate the branch.
@@ -52,6 +53,7 @@ _MESSAGE_BY_CODE: dict[str, str] = {
     "unsafe_url": "该 URL 不安全或不是公网地址，请改用其他来源。",
     "empty_extraction": "页面未提取到正文，请更换来源。",
     "empty_page": "页面内容为空，请更换来源。",
+    "evidence_unavailable": "该证据不可访问或已删除，请使用其他已授权来源。",
     "insufficient_content": "页面正文过少，请更换来源。",
     "unsupported_content_type": "仅支持 HTML 页面，请更换来源。",
     "no_search_results": "没有搜索到结果，请改用更具体或同义的查询。",
@@ -69,6 +71,7 @@ _MESSAGE_BY_CODE: dict[str, str] = {
     "tool_not_registered": "该工具不可用，请改用其他工具。",
     "tool_not_allowed": "当前角色不允许调用该工具。",
     "url_not_authorized": "该 URL 未获授权抓取，请先通过搜索获得该来源。",
+    "evidence_not_authorized": "该证据未获本次读取授权，请使用本分支已采集或宿主提供的证据。",
     "unsafe_arguments": "参数未通过安全检查，请修正后重试。",
     "budget_exhausted": "工具预算已耗尽，请基于现有资料收尾。",
     "tool_internal_error": "工具内部错误，已记录，请勿重复调用同一请求。",

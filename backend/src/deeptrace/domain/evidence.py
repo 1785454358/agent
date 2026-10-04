@@ -15,7 +15,6 @@ from pydantic import (
     model_validator,
 )
 
-
 MAX_EVIDENCE_ID_LENGTH = 128
 MAX_EVIDENCE_URL_LENGTH = 2_048
 MAX_EVIDENCE_TITLE_LENGTH = 500
@@ -129,11 +128,31 @@ class Evidence(BaseModel):
         return self
 
 
+class EvidenceSupport(BaseModel):
+    """A host-resolved verbatim quote, not a semantic entailment guarantee."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    evidence_id: EvidenceIdentifier
+    version: int = Field(ge=1)
+    content_hash: ContentHash
+    start: int = Field(ge=0, strict=True)
+    end: int = Field(gt=0, strict=True)
+    quote: str = Field(min_length=1, max_length=500)
+
+    @model_validator(mode="after")
+    def valid_range(self) -> EvidenceSupport:
+        if self.end <= self.start or self.end - self.start != len(self.quote):
+            raise ValueError("support_range_mismatch")
+        return self
+
+
 class Finding(BaseModel):
     id: str = Field(min_length=1)
     claim: str = Field(min_length=1)
     evidence_ids: list[str] = Field(min_length=1)
     confidence: float = Field(ge=0.0, le=1.0)
+    supports: list[EvidenceSupport] = Field(default_factory=list, max_length=3)
 
     @field_validator("evidence_ids")
     @classmethod
@@ -141,3 +160,9 @@ class Finding(BaseModel):
         if len(value) != len(set(value)):
             raise ValueError("evidence_ids must be unique")
         return value
+
+    @model_validator(mode="after")
+    def support_sources_are_listed(self) -> Finding:
+        if any(s.evidence_id not in self.evidence_ids for s in self.supports):
+            raise ValueError("support_evidence_not_listed")
+        return self

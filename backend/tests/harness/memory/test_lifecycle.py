@@ -53,6 +53,9 @@ class EvidenceReads:
             raise self.batch_error
         return await self.store.get_many(tenant, ids)
 
+    async def read_body(self, tenant, identity):
+        return await self.store.read_body(tenant, identity)
+
 
 async def _ingest_source(
     fixture, *, tenant="workspace-1", url="source", body="content"
@@ -72,12 +75,49 @@ async def _ingest_source(
     )
 
 
-def _consolidation_state(claims, *, allowed_ids=None):
-    from deeptrace.domain import Finding, ResearchMode, ResearchOutcome
+async def _consolidation_state(fixture, claims, *, allowed_ids=None):
+    from deeptrace.domain import (
+        EvidenceSupport,
+        Finding,
+        ResearchMode,
+        ResearchOutcome,
+        ResearchRequirement,
+    )
+
+    supports_by_id = {}
+    for _, ids in claims:
+        for identity in ids:
+            if identity in supports_by_id:
+                continue
+            try:
+                source = await fixture.evidence_store.get("workspace-1", identity)
+                body = await fixture.evidence_store.read_body("workspace-1", identity)
+                quote = body[:500]
+                supports_by_id[identity] = EvidenceSupport(
+                    evidence_id=identity,
+                    version=source.version,
+                    content_hash=source.content_hash,
+                    start=0,
+                    end=len(quote),
+                    quote=quote,
+                )
+            except KeyError:
+                supports_by_id[identity] = EvidenceSupport(
+                    evidence_id=identity,
+                    version=1,
+                    content_hash="unknown",
+                    start=0,
+                    end=7,
+                    quote="missing",
+                )
 
     return {
         "turn": {
             "research_outcome": ResearchOutcome(
+                evidence_contract_version=2,
+                requirements=[
+                    ResearchRequirement(id="r1", description="boundary fixture")
+                ],
                 mode=ResearchMode.WORKFLOW,
                 evidence_ids=(
                     list(dict.fromkeys(source for _, ids in claims for source in ids))
@@ -88,7 +128,11 @@ def _consolidation_state(claims, *, allowed_ids=None):
                 executed_steps=1,
                 findings=[
                     Finding(
-                        id=f"finding-{i}", claim=claim, evidence_ids=ids, confidence=0.9
+                        id=f"finding-{i}",
+                        claim=claim,
+                        evidence_ids=ids,
+                        confidence=0.9,
+                        supports=[supports_by_id[identity] for identity in ids[:3]],
                     )
                     for i, (claim, ids) in enumerate(claims)
                 ],
@@ -106,7 +150,9 @@ async def test_consolidation_batches_shared_sources_and_limits_findings():
     fixture = build_gateway_fixture()
     source = await _ingest_source(fixture)
     reads = EvidenceReads(fixture.evidence_store)
-    state = _consolidation_state([(f"claim-{i}", [source.id]) for i in range(21)])
+    state = await _consolidation_state(
+        fixture, [(f"claim-{i}", [source.id]) for i in range(21)]
+    )
 
     assert (
         await _consolidate_memory(
@@ -137,14 +183,15 @@ async def test_consolidation_missing_sources_do_not_discard_valid_siblings():
     active = await _ingest_source(fixture, body="updated")
     foreign = await _ingest_source(fixture, tenant="other-workspace", body="foreign")
     reads = EvidenceReads(fixture.evidence_store)
-    state = _consolidation_state(
+    state = await _consolidation_state(
+        fixture,
         [
             ("valid", [active.id]),
             ("missing", ["missing"]),
             ("foreign", [foreign.id]),
             ("superseded", [old.id]),
             ("partly missing", [active.id, "missing"]),
-        ]
+        ],
     )
 
     await _consolidate_memory(
@@ -180,7 +227,7 @@ async def test_consolidation_invalid_candidates_do_not_read_evidence(
     fixture = build_gateway_fixture()
     reads = EvidenceReads(fixture.evidence_store)
     await _consolidate_memory(
-        _consolidation_state([(claim, ids)], allowed_ids=allowed_ids),
+        await _consolidation_state(fixture, [(claim, ids)], allowed_ids=allowed_ids),
         SimpleNamespace(context=replace(fixture.context, evidence_store=reads)),
     )
     assert reads.batches == []
@@ -197,7 +244,9 @@ async def test_consolidation_storage_outage_does_not_retry_each_fact():
     fixture = build_gateway_fixture()
     source = await _ingest_source(fixture)
     reads = EvidenceReads(fixture.evidence_store, batch_error=RuntimeError("offline"))
-    state = _consolidation_state([("first", [source.id]), ("second", [source.id])])
+    state = await _consolidation_state(
+        fixture, [("first", [source.id]), ("second", [source.id])]
+    )
 
     await _consolidate_memory(
         state, SimpleNamespace(context=replace(fixture.context, evidence_store=reads))
@@ -219,7 +268,7 @@ async def test_consolidation_empty_findings_do_not_read_evidence():
     reads = EvidenceReads(fixture.evidence_store)
     assert (
         await _consolidate_memory(
-            _consolidation_state([]),
+            await _consolidation_state(fixture, []),
             SimpleNamespace(context=replace(fixture.context, evidence_store=reads)),
         )
         == {}
@@ -251,7 +300,7 @@ async def test_consolidation_propagates_evidence_read_cancellation(stage):
     )
     with pytest.raises(asyncio.CancelledError):
         await _consolidate_memory(
-            _consolidation_state([("claim", [source.id])]),
+            await _consolidation_state(fixture, [("claim", [source.id])]),
             SimpleNamespace(context=replace(fixture.context, evidence_store=reads)),
         )
     assert (
@@ -283,12 +332,13 @@ async def test_consolidation_isolates_candidate_and_write_failures_before_indexi
     source = await _ingest_source(fixture)
     memory_store = FailOneStore()
     index = RecordedIndex()
-    state = _consolidation_state(
+    state = await _consolidation_state(
+        fixture,
         [
             ("x" * 2001, [source.id]),
             ("write fails", [source.id]),
             ("valid sibling", [source.id]),
-        ]
+        ],
     )
     await _consolidate_memory(
         state,
@@ -316,7 +366,7 @@ async def test_consolidation_replay_keeps_ttl_and_does_not_reactivate_deleted_fa
     source = await _ingest_source(fixture)
     index = RecordedIndex()
     context = replace(fixture.context, memory_retriever=index)
-    state = _consolidation_state([("remember this fact", [source.id])])
+    state = await _consolidation_state(fixture, [("remember this fact", [source.id])])
     namespace = ("workspace", "workspace-1", "facts")
     await _consolidate_memory(state, SimpleNamespace(context=context))
     original = (await fixture.memory_store.list_namespace(namespace))[0]
@@ -350,9 +400,11 @@ async def test_explicit_save_evaluates_admission_once_and_persists(monkeypatch):
     checks = []
 
     class TracedPolicy(MemoryWritePolicy):
-        def can_store(self, record, *, source):
+        def can_store(self, record, *, source, supported_fact=False):
             checks.append(source)
-            return super().can_store(record, source=source)
+            return super().can_store(
+                record, source=source, supported_fact=supported_fact
+            )
 
     monkeypatch.setattr(lifecycle, "MemoryWritePolicy", TracedPolicy)
     fixture = build_gateway_fixture()
@@ -374,7 +426,7 @@ async def test_explicit_admission_rejection_does_not_persist(monkeypatch):
     from deeptrace.harness.memory.write import MemoryWritePolicy
 
     class DeniedPolicy(MemoryWritePolicy):
-        def can_store(self, record, *, source):
+        def can_store(self, record, *, source, supported_fact=False):
             return False
 
     monkeypatch.setattr(lifecycle, "MemoryWritePolicy", DeniedPolicy)
@@ -527,7 +579,6 @@ async def test_consolidation_rejects_fabricated_evidence_ids():
 
 @pytest.mark.asyncio
 async def test_consolidation_preserves_distinct_facts_and_degrades_on_store_failure():
-    from deeptrace.domain import Finding, ResearchMode, ResearchOutcome
     from deeptrace.harness.memory.lifecycle import _consolidate_memory
     from deeptrace.harness.memory.store import InMemoryMemoryStore
     from deeptrace.tools.evidence_store import EvidenceDraft
@@ -546,20 +597,9 @@ async def test_consolidation_preserves_distinct_facts_and_degrades_on_store_fail
         ),
     )
     for claim in ["checkpoint 保存图状态", "预算在工具执行前预留"]:
-        outcome = ResearchOutcome(
-            mode=ResearchMode.WORKFLOW,
-            evidence_ids=[evidence.id],
-            termination_reason="completed",
-            executed_steps=1,
-            findings=[
-                Finding(
-                    id="finding-1",
-                    claim=claim,
-                    evidence_ids=[evidence.id],
-                    confidence=0.9,
-                )
-            ],
-        )
+        outcome = (await _consolidation_state(fixture, [(claim, [evidence.id])]))[
+            "turn"
+        ]["research_outcome"]
         await _consolidate_memory(
             {"turn": {"research_outcome": outcome}},
             SimpleNamespace(context=fixture.context),

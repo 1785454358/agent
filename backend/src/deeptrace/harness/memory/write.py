@@ -18,7 +18,9 @@ class MemoryWriteRejected(ValueError):
 class MemoryWritePolicy:
     """Gate every long-term write; one-off or unsupported content is rejected."""
 
-    def can_store(self, record: MemoryRecord, *, source: str) -> bool:
+    def can_store(
+        self, record: MemoryRecord, *, source: str, supported_fact: bool = False
+    ) -> bool:
         if source not in _ALLOWED_SOURCES:
             return False
         if (
@@ -28,7 +30,7 @@ class MemoryWritePolicy:
             return False
         if record.type is MemoryType.FACT:
             # facts require source evidence support
-            return bool(record.source_evidence_ids)
+            return bool(record.source_evidence_ids) and supported_fact
         if record.type is MemoryType.PREFERENCE:
             return source in {"user_request", "repeated_preference"}
         if record.type is MemoryType.EVIDENCE:
@@ -64,9 +66,10 @@ async def remember(
     policy: MemoryWritePolicy,
     *,
     source: str = "consolidation",
+    supported_fact: bool = False,
 ) -> MemoryRecord:
     """Admission, retention and atomic versioning are one write boundary."""
-    if not policy.can_store(record, source=source):
+    if not policy.can_store(record, source=source, supported_fact=supported_fact):
         raise MemoryWriteRejected("memory_write_rejected")
     if record.type is MemoryType.FACT and record.expires_at is None:
         record = record.model_copy(

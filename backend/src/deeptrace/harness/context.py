@@ -15,7 +15,7 @@ from deeptrace.domain import (
 )
 from deeptrace.domain.memory import MemoryNamespace
 from deeptrace.tools.evidence_store import EvidenceDraft
-from deeptrace.tools.policy import ToolCaller, UrlAuthorization
+from deeptrace.tools.policy import EvidenceAuthorization, ToolCaller, UrlAuthorization
 
 
 class ModelGateway(Protocol):
@@ -38,11 +38,14 @@ class ToolGateway(Protocol):
         authorization: UrlAuthorization | None = None,
         provider_id: str = "default",
         refresh: bool = False,
+        evidence_authorization: EvidenceAuthorization | None = None,
     ) -> ToolResult: ...
 
 
 class EvidenceStore(Protocol):
     async def ingest(self, tenant_id: str, draft: EvidenceDraft) -> Evidence: ...
+
+    async def get(self, tenant_id: str, evidence_id: str) -> Evidence: ...
 
     async def get_many(
         self, tenant_id: str, evidence_ids: Sequence[str]
@@ -120,3 +123,4 @@ class HarnessContext:
     memory_retriever: MemoryRetrieverPort | None = None
     memory_recall_limit: int = 5
     memory_context_tokens: int = 768
+    response_max_content_chars: int | None = None

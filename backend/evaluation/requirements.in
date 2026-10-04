@@ -1,0 +1,5 @@
+# Isolated scorer only: do not install into the production .venv.
+ragas==0.4.3
+# Ragas imports the VertexAI module removed from community 0.4.2.
+langchain-community==0.4.1
+pytest==9.1.1

@@ -4,15 +4,16 @@ from __future__ import annotations
 
 from typing import Annotated, TypedDict
 
-from deeptrace.domain import ResearchOutcome
+from deeptrace.domain import CoverageAssessment, ResearchOutcome, ResearchRequirement
 from deeptrace.domain.evidence import Finding
 from deeptrace.domain.research import ResearchTopicOutcome
-from deeptrace.strategies.plan_execute.models import ExecutorDecision
+from deeptrace.strategies.plan_execute.models import (
+    ExecutorDecision,
+    ReferenceExecutorDecision,
+)
 
 
-def merge_unique_strings(
-    left: list[str] | None, right: list[str] | None
-) -> list[str]:
+def merge_unique_strings(left: list[str] | None, right: list[str] | None) -> list[str]:
     merged: list[str] = list(left or [])
     for value in right or []:
         if value not in merged:
@@ -48,17 +49,29 @@ class PlanExecuteState(TypedDict, total=False):
     conversation_summary: dict
     recent_messages: list[str]
     prior_evidence_ids: list[str]
-    unresolved_gaps: Annotated[list[str], merge_unique_strings]
+    unresolved_gaps: list[str]
     budget: dict
     current_date: str
     timezone: str
+    requirements: list[ResearchRequirement]
+    target_requirement_ids: list[str]
+    query_targets: dict[str, list[str]]
+    evidence_contract_version: int
+    decomposition_degraded: bool
+    coverage: CoverageAssessment | None
+    source_eligibility: dict[str, str]
+    diagnostic_gaps: Annotated[list[str], merge_unique_strings]
+    supplement_targets: dict[str, list[str]]
+    progress_before_supplement: list[str]
+    supplement_completed: bool
+    no_progress: bool
 
     # Loop state (all persisted at checkpoint boundaries).
     plan_tasks: list[str]
     completed_tasks: Annotated[list[str], merge_unique_strings]
     current_task: str | None
     replan_count: int
-    decision: ExecutorDecision | None
+    decision: ExecutorDecision | ReferenceExecutorDecision | None
     topic_outcomes: Annotated[list[ResearchTopicOutcome], merge_topic_outcomes]
     evidence_ids: Annotated[list[str], merge_unique_strings]
     findings: list[Finding]

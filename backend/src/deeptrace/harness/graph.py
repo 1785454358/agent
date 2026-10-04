@@ -372,6 +372,10 @@ def _finalize_turn(state: HarnessState) -> dict[str, Any]:
         research_usable = (
             research is not None and research.termination_reason == "completed"
         )
+        if research_usable and research.evidence_contract_version in (2, 3):
+            from deeptrace.strategies.evidence_evaluation import coverage_complete
+
+            research_usable = coverage_complete(research.model_dump())
     else:
         research_usable = True
     response_usable = response is not None and response.partial_reason is None

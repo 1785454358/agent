@@ -5,15 +5,19 @@ from deeptrace.domain import (
     CitationRef,
     ConversationIntent,
     ConversationSummary,
+    CoverageAssessment,
     ErrorCategory,
     ErrorRecord,
     Evidence,
     EvidenceLifecycleStatus,
+    EvidenceSupport,
     ExecutionStatus,
     Finding,
+    RequirementCoverage,
     ResearchInput,
-    ResearchOutcome,
     ResearchMode,
+    ResearchOutcome,
+    ResearchRequirement,
     ResearchTopicInput,
     ResearchTopicOutcome,
     ResponseInput,
@@ -24,20 +28,49 @@ from deeptrace.domain import (
     ToolResult,
     TopicStepError,
 )
-from deeptrace.strategies.workflow.models import QueryPlan, WorkflowEvaluation
-from deeptrace.strategies.plan_execute.models import ExecutorDecision, TaskPlan
-from deeptrace.strategies.multi_agent.models import SupervisorEvaluation
-from deeptrace.responses.models import ResponseDraft
-
-
 from deeptrace.domain.agent import AgentOutcome
+from deeptrace.domain.evidence_anchor import ReadEvidenceAnchor
 from deeptrace.harness.agent_state import AgentTodo, TodoStatus
+from deeptrace.responses.models import ResponseDraft
+from deeptrace.strategies.evidence_evaluation import FindingDraft, SupportDraft
+from deeptrace.strategies.evidence_references import (
+    ReferenceFindingDraft,
+    ReferenceSupportDraft,
+)
+from deeptrace.strategies.multi_agent.models import (
+    ReferenceSupervisorEvaluation,
+    SupervisorEvaluation,
+)
+from deeptrace.strategies.plan_execute.models import (
+    ExecutorDecision,
+    ReferenceExecutorDecision,
+    TaskPlan,
+)
+from deeptrace.strategies.workflow.models import (
+    QueryPlan,
+    ReferenceWorkflowEvaluation,
+    WorkflowEvaluation,
+)
 
 HARNESS_STATE_MSGPACK_TYPES = (
-    AgentOutcome, AgentTodo, TodoStatus,
+    ReferenceSupportDraft,
+    ReferenceFindingDraft,
+    ReferenceSupervisorEvaluation,
+    ReferenceExecutorDecision,
+    ReferenceWorkflowEvaluation,
+    ReadEvidenceAnchor,
+    AgentOutcome,
+    AgentTodo,
+    TodoStatus,
     ConversationSummary,
     Finding,
+    FindingDraft,
+    SupportDraft,
     ResearchMode,
+    EvidenceSupport,
+    CoverageAssessment,
+    ResearchRequirement,
+    RequirementCoverage,
     ConversationIntent,
     ResponseMode,
     ExecutionStatus,

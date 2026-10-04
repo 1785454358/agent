@@ -1,0 +1,1433 @@
+{
+  "schema_version": 1,
+  "dataset": "research-v1",
+  "data_kind": "real_source",
+  "sources": [
+    {
+      "id": "langchain-context-engineering",
+      "path": "upstream/langchain-context-engineering.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/context-engineering.mdx",
+      "title": "Context engineering in agents",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langchain/context-engineering.mdx",
+      "sha256": "802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "source_group": "langchain-agent",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    },
+    {
+      "id": "langchain-human-in-the-loop",
+      "path": "upstream/langchain-human-in-the-loop.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/human-in-the-loop.mdx",
+      "title": "Human-in-the-loop",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langchain/human-in-the-loop.mdx",
+      "sha256": "21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+      "source_group": "langchain-agent",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    },
+    {
+      "id": "langchain-long-term-memory",
+      "path": "upstream/langchain-long-term-memory.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/long-term-memory.mdx",
+      "title": "Long-term memory",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langchain/long-term-memory.mdx",
+      "sha256": "ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4",
+      "source_group": "langchain-agent",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    },
+    {
+      "id": "langchain-runtime",
+      "path": "upstream/langchain-runtime.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/runtime.mdx",
+      "title": "Runtime",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langchain/runtime.mdx",
+      "sha256": "5e30f854218f941ce302df1d5520e9e0872f854ee075faa8721680c7e4f21acf",
+      "source_group": "langchain-agent",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    },
+    {
+      "id": "langchain-short-term-memory",
+      "path": "upstream/langchain-short-term-memory.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+      "title": "Short-term memory",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langchain/short-term-memory.mdx",
+      "sha256": "e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "source_group": "langchain-agent",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    },
+    {
+      "id": "langchain-structured-output",
+      "path": "upstream/langchain-structured-output.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+      "title": "Structured output",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langchain/structured-output.mdx",
+      "sha256": "2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "source_group": "langchain-agent",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    },
+    {
+      "id": "langchain-tools",
+      "path": "upstream/langchain-tools.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/tools.mdx",
+      "title": "Tools",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langchain/tools.mdx",
+      "sha256": "31ebe09a2320e5224b7cdd36ad701a70f9429e04b3b52e0041d0f00ac27cc1ed",
+      "source_group": "langchain-agent",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    },
+    {
+      "id": "langgraph-checkpointers",
+      "path": "upstream/langgraph-checkpointers.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/checkpointers.mdx",
+      "title": "Checkpointers",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langgraph/checkpointers.mdx",
+      "sha256": "cbcc5a6cdb67c3f9f339c0b584ad9721a693943d168f7393e589dab73f9954d0",
+      "source_group": "langgraph-runtime",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    },
+    {
+      "id": "langgraph-choosing-apis",
+      "path": "upstream/langgraph-choosing-apis.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/choosing-apis.mdx",
+      "title": "Choosing between Graph and Functional APIs",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langgraph/choosing-apis.mdx",
+      "sha256": "fa86960846cebdbeb0d10752c6b4f30e165804eecc432c1d4a25f0e50380fde9",
+      "source_group": "langgraph-runtime",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    },
+    {
+      "id": "langgraph-fault-tolerance",
+      "path": "upstream/langgraph-fault-tolerance.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/fault-tolerance.mdx",
+      "title": "Fault tolerance",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langgraph/fault-tolerance.mdx",
+      "sha256": "4090ae52e261de89b0dfd8d1b7523056ed87bfd02f2493b890494df8458884b8",
+      "source_group": "langgraph-runtime",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    },
+    {
+      "id": "langgraph-interrupts",
+      "path": "upstream/langgraph-interrupts.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/interrupts.mdx",
+      "title": "Interrupts",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langgraph/interrupts.mdx",
+      "sha256": "d31c79657d893d74ead0b5e5055993d257f291ab6e787a2b1251fbe658498646",
+      "source_group": "langgraph-runtime",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    },
+    {
+      "id": "langgraph-persistence",
+      "path": "upstream/langgraph-persistence.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/persistence.mdx",
+      "title": "Persistence",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langgraph/persistence.mdx",
+      "sha256": "f6cbfadf11648afad412b0bc55ae8f6c0a3dc5082fee2f757cfb490b89fd9770",
+      "source_group": "langgraph-runtime",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    },
+    {
+      "id": "langgraph-stores",
+      "path": "upstream/langgraph-stores.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/stores.mdx",
+      "title": "Stores",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langgraph/stores.mdx",
+      "sha256": "72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330",
+      "source_group": "langgraph-runtime",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    },
+    {
+      "id": "langgraph-streaming",
+      "path": "upstream/langgraph-streaming.mdx",
+      "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/streaming.mdx",
+      "title": "Streaming",
+      "publisher": "LangChain",
+      "repo": "langchain-ai/docs",
+      "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+      "upstream_path": "src/oss/langgraph/streaming.mdx",
+      "sha256": "0120476811b30fab1d2bd5d4ca4c6af9adbf3a400f570c400540eefa11780bde",
+      "source_group": "langgraph-runtime",
+      "license": "MIT",
+      "license_path": "LICENSE.txt",
+      "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+      "retrieved_at": "2026-10-02T04:21:23Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "single_hop-dev-01",
+      "category": "single_hop",
+      "split": "dev",
+      "question": "Using only the frozen documentation, at what boundary does a LangGraph checkpointer create full state snapshots, and why must a thread_id be supplied?",
+      "gold_answer": "Full StateSnapshot checkpoints are created at super-step boundaries. thread_id is the primary key for saving and retrieving the thread's checkpoints; without it state cannot be saved or loaded for interrupt resumption. Per-task pending writes are not full snapshots.",
+      "success_requirements": [
+        "Name the super-step boundary",
+        "Explain thread_id lookup",
+        "Do not equate task writes with full snapshots"
+      ],
+      "references": [
+        {
+          "source_id": "langgraph-checkpointers",
+          "start_line": 56,
+          "end_line": 68,
+          "quote": "The checkpointer uses `thread_id` as the primary key for storing and retrieving checkpoints. Without it, the checkpointer cannot save state or resume execution after an [interrupt](/oss/langgraph/interrupts), since the checkpointer uses `thread_id` to load the saved state.\n\n### Checkpoints\n\nThe state of a thread at a particular point in time is called a checkpoint. A checkpoint is a snapshot of the graph state saved at each [super-step](#super-steps) and is represented by a `StateSnapshot` object (see [StateSnapshot fields](#statesnapshot-fields) for the full field reference).\n\n#### Super-steps\n\nLangGraph creates a checkpoint at each **super-step** boundary. A super-step is a single \"tick\" of the graph where all nodes scheduled for that step execute (potentially in parallel). For a sequential graph like `START -> A -> B -> END`, there are separate super-steps for the input, node A, and node B — producing a checkpoint after each one. Understanding super-step boundaries is important for [time travel](/oss/langgraph/use-time-travel), because you can only resume execution from a checkpoint (i.e., a super-step boundary).\n\nIn addition to super-step checkpoints, LangGraph also persists writes at the **node (task) level**. As each node within a super-step finishes, its outputs are written to the checkpointer's `checkpoint_writes` table as task entries linked to the in-progress checkpoint. These per-task writes are what enable [pending writes](#pending-writes) recovery: if another node in the same super-step fails, the successful nodes' writes are already durable and don't need to be re-run on resume. The full state snapshot is then committed once the super-step completes.\n\nLangGraph also persists writes from individual node executions within a super-step. These writes are stored as tasks and used for fault tolerance: if another node in the same super-step fails, successful node writes do not need to be recomputed when you resume. These task writes are not full `StateSnapshot` checkpoints, so time travel resumes from full checkpoints at super-step boundaries.",
+          "claim": "Snapshots are saved at super-step boundaries; thread_id indexes checkpoints.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langgraph-checkpointers"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "single_hop-dev-02",
+      "category": "single_hop",
+      "split": "dev",
+      "question": "Using only the frozen documentation, what prerequisites are required to pause a LangGraph workflow with interrupt()?",
+      "gold_answer": "Supply a checkpointer (durable in production), a thread ID in runtime configuration, and call interrupt() with a JSON-serializable payload at the desired pause point.",
+      "success_requirements": [
+        "Name all three prerequisites",
+        "Distinguish production durability"
+      ],
+      "references": [
+        {
+          "source_id": "langgraph-interrupts",
+          "start_line": 40,
+          "end_line": 43,
+          "quote": "To use @[`interrupt`], you need:\n1. A **checkpointer** to persist the graph state (use a durable checkpointer in production)\n2. A **thread ID** in your config so the runtime knows which state to resume from\n3. To call `interrupt()` where you want to pause (payload must be JSON-serializable)",
+          "claim": "Interrupts need a checkpointer, thread ID and JSON-serializable payload.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langgraph-interrupts"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "single_hop-test-01",
+      "category": "single_hop",
+      "split": "test",
+      "question": "Using only the frozen documentation, where does create_agent return validated structured output, and how does passing a schema type select a strategy?",
+      "gold_answer": "Validated structured output is in the agent state's structured_response key. Passing a schema type selects ProviderStrategy if native structured output is supported, otherwise ToolStrategy. Plain JSON Schema dictionaries are an exception and require an explicit strategy wrapper.",
+      "success_requirements": [
+        "Name structured_response",
+        "Capability-based selection",
+        "Mention dictionary exception"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 13,
+          "end_line": 13,
+          "quote": "LangChain's @[`create_agent`] handles structured output automatically. The user sets their desired structured output schema, and when the model generates the structured data, it's captured, validated, and returned in the `'structured_response'` key of the agent's state.",
+          "claim": "Validated structured output is returned in structured_response.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 29,
+          "end_line": 43,
+          "quote": "Use `response_format` to control how the agent returns structured data:\n\n- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n- `ProviderStrategy` if the model and provider chosen supports native structured output (e.g. [OpenAI](/oss/integrations/providers/openai), [Anthropic (Claude)](/oss/integrations/providers/anthropic), or [xAI (Grok)](/oss/integrations/providers/xai)).\n- `ToolStrategy` for all other models.\n\n<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>",
+          "claim": "Schema types select by capability, while dictionary schemas require wrapping.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langchain-structured-output"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "single_hop-test-02",
+      "category": "single_hop",
+      "split": "test",
+      "question": "Using only the frozen documentation, how can a tool read current conversation state without exposing runtime plumbing in the model-visible tool schema?",
+      "gold_answer": "Add runtime: ToolRuntime to the tool signature. ToolNode injects it at call time, and runtime.state reads conversation state. The runtime parameter is excluded from the tool schema the model sees.",
+      "success_requirements": [
+        "Describe injection",
+        "Read runtime.state",
+        "Runtime hidden from model"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-tools",
+          "start_line": 248,
+          "end_line": 254,
+          "quote": "State represents short-term memory that exists for the duration of a conversation. It includes the message history and any custom fields you define in your [graph state](/oss/langgraph/graph-api#state).\n\n#### Access state\n\nAdd `runtime: ToolRuntime` to your tool signature to access state. At call time, @[`ToolNode`] injects the value automatically; the parameter is not included in the tool schema sent to the model. Use `runtime.state` to read the current conversation state:\n\n```python",
+          "claim": "ToolNode injects ToolRuntime; runtime.state reads current conversation state.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langchain-tools"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "single_hop-test-03",
+      "category": "single_hop",
+      "split": "test",
+      "question": "Using only the frozen documentation, what belongs in Runtime context and why use it instead of hardcoded global dependencies?",
+      "gold_answer": "Runtime context is static information for an agent invocation, such as a user ID, database connection or configuration. Injecting these dependencies through context avoids hardcoded values and global state and makes tools and middleware more testable, reusable and flexible. Context is distinct from Store and execution metadata.",
+      "success_requirements": [
+        "Invocation-scoped static context",
+        "Dependency injection benefits",
+        "Do not confuse Store with Context"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-runtime",
+          "start_line": 13,
+          "end_line": 23,
+          "quote": "LangGraph exposes a @[`Runtime`] object with the following information:\n\n1. **Context**: static information like user id, db connections, or other dependencies for an agent invocation\n2. **Store**: a @[BaseStore] instance used for [long-term memory](/oss/langchain/long-term-memory)\n3. **Stream writer**: an object used for streaming information via the `\"custom\"` stream mode\n4. **Execution info**: identity and retry information for the current execution (thread ID, run ID, attempt number)\n5. **Server info**: server-specific metadata when running on LangGraph Server (assistant ID, graph ID, authenticated user)\n\n:::python\n<Tip>\nRuntime context provides **dependency injection** for your tools and middleware. Instead of hardcoding values or using global state, you can inject runtime dependencies (like database connections, user IDs, or configuration) when invoking your agent. This makes your tools more testable, reusable, and flexible.",
+          "claim": "Runtime separates static Context, long-term Store and execution metadata.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langchain-runtime"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "multi_hop-dev-01",
+      "category": "multi_hop",
+      "split": "dev",
+      "question": "Using only the frozen documentation, design memory for a user whose active conversation must resume after a pause and whose preferences must be available in a new thread. Which persistence mechanisms and identifiers belong where?",
+      "gold_answer": "Use a checkpointer for the active thread's graph state, identified by thread_id. Use a Store for preferences that must survive across threads; the docs illustrate a user-scoped tuple namespace such as (user_id, memories). The checkpointer does not replace cross-thread application memory, and a namespace example is not proof of authorization enforcement.",
+      "success_requirements": [
+        "Separate checkpointer and Store",
+        "thread_id vs user namespace",
+        "No automatic authorization claim"
+      ],
+      "references": [
+        {
+          "source_id": "langgraph-persistence",
+          "start_line": 16,
+          "end_line": 21,
+          "quote": "LangGraph provides two complementary persistence systems:\n\n- **[Checkpointers](/oss/langgraph/checkpointers)** persist a thread's graph state as checkpoints. Use them for short-term, thread-scoped memory, including conversation continuity, human-in-the-loop workflows, time travel, and fault tolerance.\n- **[Stores](/oss/langgraph/stores)** persist application-defined data outside the graph state. Use them for long-term, cross-thread memory, including user preferences, facts, and shared knowledge.\n\nMost applications can use both: a [checkpointer](/oss/langgraph/checkpointers) tracks the current thread, and a [store](/oss/langgraph/stores) tracks durable information across threads.",
+          "claim": "Checkpointers track current threads and Stores track durable cross-thread data.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langgraph-checkpointers",
+          "start_line": 56,
+          "end_line": 68,
+          "quote": "The checkpointer uses `thread_id` as the primary key for storing and retrieving checkpoints. Without it, the checkpointer cannot save state or resume execution after an [interrupt](/oss/langgraph/interrupts), since the checkpointer uses `thread_id` to load the saved state.\n\n### Checkpoints\n\nThe state of a thread at a particular point in time is called a checkpoint. A checkpoint is a snapshot of the graph state saved at each [super-step](#super-steps) and is represented by a `StateSnapshot` object (see [StateSnapshot fields](#statesnapshot-fields) for the full field reference).\n\n#### Super-steps\n\nLangGraph creates a checkpoint at each **super-step** boundary. A super-step is a single \"tick\" of the graph where all nodes scheduled for that step execute (potentially in parallel). For a sequential graph like `START -> A -> B -> END`, there are separate super-steps for the input, node A, and node B — producing a checkpoint after each one. Understanding super-step boundaries is important for [time travel](/oss/langgraph/use-time-travel), because you can only resume execution from a checkpoint (i.e., a super-step boundary).\n\nIn addition to super-step checkpoints, LangGraph also persists writes at the **node (task) level**. As each node within a super-step finishes, its outputs are written to the checkpointer's `checkpoint_writes` table as task entries linked to the in-progress checkpoint. These per-task writes are what enable [pending writes](#pending-writes) recovery: if another node in the same super-step fails, the successful nodes' writes are already durable and don't need to be re-run on resume. The full state snapshot is then committed once the super-step completes.\n\nLangGraph also persists writes from individual node executions within a super-step. These writes are stored as tasks and used for fault tolerance: if another node in the same super-step fails, successful node writes do not need to be recomputed when you resume. These task writes are not full `StateSnapshot` checkpoints, so time travel resumes from full checkpoints at super-step boundaries.",
+          "claim": "thread_id indexes checkpoint state.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langgraph-stores",
+          "start_line": 50,
+          "end_line": 54,
+          "quote": "\n:::python\n```python\nuser_id = \"1\"\nnamespace_for_memory = (user_id, \"memories\")",
+          "claim": "The example uses a user-scoped tuple namespace.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 3,
+      "source_ids": [
+        "langgraph-persistence",
+        "langgraph-checkpointers",
+        "langgraph-stores"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "multi_hop-dev-02",
+      "category": "multi_hop",
+      "split": "dev",
+      "question": "Using only the frozen documentation, a node writes to an external service before interrupt(). How should resumption and duplicate side effects be handled?",
+      "gold_answer": "Resume using the same thread_id and Command(resume=...). The resume value becomes the interrupt return value, but the interrupted node restarts from its beginning. Make pre-interrupt external effects idempotent, for example by enforcing a stable operation key in the external system. Checkpointing alone does not guarantee exactly-once external writes.",
+      "success_requirements": [
+        "Same thread_id",
+        "Node restarts",
+        "Idempotency not exactly-once"
+      ],
+      "references": [
+        {
+          "source_id": "langgraph-checkpointers",
+          "start_line": 56,
+          "end_line": 68,
+          "quote": "The checkpointer uses `thread_id` as the primary key for storing and retrieving checkpoints. Without it, the checkpointer cannot save state or resume execution after an [interrupt](/oss/langgraph/interrupts), since the checkpointer uses `thread_id` to load the saved state.\n\n### Checkpoints\n\nThe state of a thread at a particular point in time is called a checkpoint. A checkpoint is a snapshot of the graph state saved at each [super-step](#super-steps) and is represented by a `StateSnapshot` object (see [StateSnapshot fields](#statesnapshot-fields) for the full field reference).\n\n#### Super-steps\n\nLangGraph creates a checkpoint at each **super-step** boundary. A super-step is a single \"tick\" of the graph where all nodes scheduled for that step execute (potentially in parallel). For a sequential graph like `START -> A -> B -> END`, there are separate super-steps for the input, node A, and node B — producing a checkpoint after each one. Understanding super-step boundaries is important for [time travel](/oss/langgraph/use-time-travel), because you can only resume execution from a checkpoint (i.e., a super-step boundary).\n\nIn addition to super-step checkpoints, LangGraph also persists writes at the **node (task) level**. As each node within a super-step finishes, its outputs are written to the checkpointer's `checkpoint_writes` table as task entries linked to the in-progress checkpoint. These per-task writes are what enable [pending writes](#pending-writes) recovery: if another node in the same super-step fails, the successful nodes' writes are already durable and don't need to be re-run on resume. The full state snapshot is then committed once the super-step completes.\n\nLangGraph also persists writes from individual node executions within a super-step. These writes are stored as tasks and used for fault tolerance: if another node in the same super-step fails, successful node writes do not need to be recomputed when you resume. These task writes are not full `StateSnapshot` checkpoints, so time travel resumes from full checkpoints at super-step boundaries.",
+          "claim": "Checkpoint recovery requires thread_id.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langgraph-interrupts",
+          "start_line": 100,
+          "end_line": 103,
+          "quote": "- You must use the **same thread ID** when resuming that was used when the interrupt occurred\n- The value passed to `Command(resume=...)` becomes the return value of the @[`interrupt`] call\n- The node restarts from the beginning of the node where the @[`interrupt`] was called when resumed, so any code before the @[`interrupt`] runs again\n- You can pass any JSON-serializable value as the resume value, subject to validation when you specify a typed `response_schema`",
+          "claim": "Resumption uses the same thread ID and restarts the node.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langgraph-interrupts",
+          "start_line": 1352,
+          "end_line": 1354,
+          "quote": "### Side effects called before `interrupt` must be idempotent\n\nBecause interrupts work by re-running the nodes they were called from, side effects called before @[`interrupt`] should (ideally) be idempotent. For context, idempotency means that the same operation can be applied multiple times without changing the result beyond the initial execution.",
+          "claim": "Pre-interrupt side effects should be idempotent.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 2,
+      "source_ids": [
+        "langgraph-checkpointers",
+        "langgraph-interrupts"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "multi_hop-test-01",
+      "category": "multi_hop",
+      "split": "test",
+      "question": "Using only the frozen documentation, an agent starts a new conversation thread but must recall a user's durable preference. Is short-term message history enough, and what should be configured?",
+      "gold_answer": "No. Short-term memory is state persisted by a checkpointer with separation between threads. Long-term memory persists across threads and sessions using a Store of JSON documents organized by namespace and key. Pass a store to create_agent for cross-thread memory; a checkpointer can separately preserve each conversation.",
+      "success_requirements": [
+        "Thread separation",
+        "Cross-thread Store",
+        "Both can coexist"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-short-term-memory",
+          "start_line": 29,
+          "end_line": 39,
+          "quote": "\nTo add short-term memory (thread-level persistence) to an agent, you need to specify a `checkpointer` when creating an agent.\n\n<Info>\n    LangChain's agent manages short-term memory as a part of your agent's state.\n\n    By storing these in the graph's state, the agent can access the full context for a given conversation while maintaining separation between different threads.\n\n    State is persisted to a database (or memory) using a checkpointer so the thread can be resumed at any time.\n\n    Short-term memory updates when the agent is invoked or a step (like a tool call) is completed, and the state is read at the start of each step.",
+          "claim": "Checkpointer memory is thread-scoped.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-long-term-memory",
+          "start_line": 23,
+          "end_line": 26,
+          "quote": "Long-term memory lets your agent store and recall information across different conversations and sessions.\nUnlike [short-term memory](/oss/langchain/short-term-memory), which is scoped to a single thread, long-term memory persists across threads and can be recalled at any time.\n\nLong-term memory is built on [LangGraph stores](/oss/langgraph/stores), which save data as JSON documents organized by namespace and key.",
+          "claim": "Long-term memory spans threads and uses namespaced Store documents.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-long-term-memory",
+          "start_line": 25,
+          "end_line": 32,
+          "quote": "\nLong-term memory is built on [LangGraph stores](/oss/langgraph/stores), which save data as JSON documents organized by namespace and key.\n\n## Usage\n\nTo add long-term memory to an agent, create a store and pass it to @[`create_agent`]:\n\n<Tabs>",
+          "claim": "Pass a store to create_agent.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 2,
+      "source_ids": [
+        "langchain-short-term-memory",
+        "langchain-long-term-memory"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "multi_hop-test-02",
+      "category": "multi_hop",
+      "split": "test",
+      "question": "Using only the frozen documentation, separate a tool's mutable conversation state from injected user/database dependencies. How do ToolRuntime and Runtime context contribute?",
+      "gold_answer": "Read mutable conversation fields through runtime.state via injected ToolRuntime; runtime is hidden from the model schema. Supply static invocation dependencies, such as a user ID or database connection, through Runtime context rather than globals. This design does not itself prove that authorization or tenant isolation is implemented.",
+      "success_requirements": [
+        "Separate State and Context",
+        "Runtime injection hidden",
+        "No security guarantee"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-tools",
+          "start_line": 248,
+          "end_line": 254,
+          "quote": "State represents short-term memory that exists for the duration of a conversation. It includes the message history and any custom fields you define in your [graph state](/oss/langgraph/graph-api#state).\n\n#### Access state\n\nAdd `runtime: ToolRuntime` to your tool signature to access state. At call time, @[`ToolNode`] injects the value automatically; the parameter is not included in the tool schema sent to the model. Use `runtime.state` to read the current conversation state:\n\n```python",
+          "claim": "ToolRuntime provides current state and is not part of the model schema.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-runtime",
+          "start_line": 13,
+          "end_line": 23,
+          "quote": "LangGraph exposes a @[`Runtime`] object with the following information:\n\n1. **Context**: static information like user id, db connections, or other dependencies for an agent invocation\n2. **Store**: a @[BaseStore] instance used for [long-term memory](/oss/langchain/long-term-memory)\n3. **Stream writer**: an object used for streaming information via the `\"custom\"` stream mode\n4. **Execution info**: identity and retry information for the current execution (thread ID, run ID, attempt number)\n5. **Server info**: server-specific metadata when running on LangGraph Server (assistant ID, graph ID, authenticated user)\n\n:::python\n<Tip>\nRuntime context provides **dependency injection** for your tools and middleware. Instead of hardcoding values or using global state, you can inject runtime dependencies (like database connections, user IDs, or configuration) when invoking your agent. This makes your tools more testable, reusable, and flexible.",
+          "claim": "Runtime context provides static invocation dependencies.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 2,
+      "source_ids": [
+        "langchain-tools",
+        "langchain-runtime"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "multi_hop-test-03",
+      "category": "multi_hop",
+      "split": "test",
+      "question": "Using only the frozen documentation, combine human-reviewed tool calls with provider-native structured output. Does adding HITL remove the model-capability requirement?",
+      "gold_answer": "No. HITL checks proposed tool calls against policy and may pause with persisted state for a human decision. If tools and native structured output are specified together, the model must support simultaneous use of both. A review middleware is not a substitute for that capability; choose a supported configuration or a compatible alternative.",
+      "success_requirements": [
+        "Explain policy pause",
+        "Simultaneous capability requirement",
+        "Do not claim HITL changes model support"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-human-in-the-loop",
+          "start_line": 7,
+          "end_line": 37,
+          "quote": "The Human-in-the-Loop (HITL) [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) lets you add human oversight to agent tool calls.\nWhen a model proposes an action that might require review—for example, writing to a file or executing SQL—the middleware can pause execution and wait for a decision.\n\nIt does this by checking each tool call against a configurable policy. If intervention is needed, the middleware issues an @[interrupt] that halts execution. The graph state is saved using LangGraph's [persistence layer](/oss/langgraph/persistence), so execution can pause safely and resume later.\n\n:::python\nA human decision then determines what happens next: the action can be approved as-is (`approve`), modified before running (`edit`), rejected with feedback (`reject`), or responded to directly (`respond`) for \"ask user\" style tools.\n:::\n\n:::js\nA human decision then determines what happens next: the action can be approved as-is (`approve`), modified before running (`edit`), or rejected with feedback (`reject`).\n:::\n\n## Interrupt decision types\n\n:::python\nThe [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines four built-in ways a human can respond to an interrupt:\n:::\n\n:::js\nThe [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines three built-in ways a human can respond to an interrupt:\n:::\n\n<HitlDecisionTypesTable />\n\nThe available decision types for each tool depend on the policy you configure in `interrupt_on`.\nWhen multiple tool calls are paused at the same time, each action requires a separate decision.\nDecisions must be provided in the same order as the actions appear in the interrupt request.\n\n:::python\nUse `reject` when the human is denying the requested action. Use `respond` only when the human is acting as the tool, such as answering an `ask_user` prompt. Do not use `respond` to deny side-effecting tools, because its message is treated as a successful tool result.",
+          "claim": "HITL reviews tool calls and persists interrupted state.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 46,
+          "end_line": 54,
+          "quote": "    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```python\n    custom_profile = {\n        \"structured_output\": True,\n        # ...\n    }\n    model = init_chat_model(\"...\", profile=custom_profile)\n    ```\n    If tools are specified, the model must support simultaneous use of tools and structured output.",
+          "claim": "Tools plus structured output require simultaneous model support.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 2,
+      "source_ids": [
+        "langchain-human-in-the-loop",
+        "langchain-structured-output"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "comparison-dev-01",
+      "category": "comparison",
+      "split": "dev",
+      "question": "Using only the frozen documentation, compare Graph API and Functional API for a team needing branching/parallel visualization versus migrating existing procedural code.",
+      "gold_answer": "Both APIs share the same runtime and can coexist. Graph API fits explicit shared state, conditional branches, parallel paths and visual collaboration. Functional API fits minimal changes to procedural code, normal control flow, function-scoped state and rapid prototyping. The guide does not demonstrate an absolute latency winner.",
+      "success_requirements": [
+        "Shared runtime",
+        "Graph strengths",
+        "Functional strengths",
+        "No invented speedup"
+      ],
+      "references": [
+        {
+          "source_id": "langgraph-choosing-apis",
+          "start_line": 6,
+          "end_line": 23,
+          "quote": "LangGraph provides two different APIs to build agent workflows: the **Graph API** and the **Functional API**. Both APIs share the same underlying runtime and can be used together in the same application, but they are designed for different use cases and development preferences.\n\nThis guide will help you understand when to use each API based on your specific requirements.\n\n## Quick decision guide\n\nUse the **Graph API** when you need:\n- **Complex workflow visualization** for debugging and documentation\n- **Explicit state management** with shared data across multiple nodes\n- **Conditional branching** with multiple decision points\n- **Parallel execution paths** that need to merge later\n- **Team collaboration** where visual representation aids understanding\n\nUse the **Functional API** when you want:\n- **Minimal code changes** to existing procedural code\n- **Standard control flow** (if/else, loops, function calls)\n- **Function-scoped state** without explicit state management\n- **Rapid prototyping** with less boilerplate",
+          "claim": "Both APIs share a runtime but target different workflow and coding needs.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langgraph-choosing-apis"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "comparison-dev-02",
+      "category": "comparison",
+      "split": "dev",
+      "question": "Using only the frozen documentation, compare exit, async and sync checkpoint durability for a long-running workflow exposed to process crashes.",
+      "gold_answer": "exit persists on successful, erroneous or HITL exit, avoiding intermediate persistence overhead but cannot recover a mid-execution process crash. async persists while the next step runs and has a small risk of losing checkpoint writes on a crash. sync writes each checkpoint before the next step starts, favoring durability with performance overhead. These are qualitative tradeoffs, not measured throughput figures.",
+      "success_requirements": [
+        "All three persistence timings",
+        "Process-crash risks",
+        "No fabricated benchmark"
+      ],
+      "references": [
+        {
+          "source_id": "langgraph-checkpointers",
+          "start_line": 600,
+          "end_line": 604,
+          "quote": "The durability modes, from least to most durable, are as follows:\n\n* `\"exit\"`: LangGraph persists changes only when graph execution exits — successfully, with an error, or due to a human-in-the-loop interrupt. This provides the best performance for long-running graphs but means intermediate state is not saved, so you cannot recover from system failures (like process crashes) mid-execution.\n* `\"async\"`: LangGraph persists changes asynchronously while the next step executes. This provides good performance and durability, but there is a small risk that LangGraph does not write checkpoints if the process crashes during execution.\n* `\"sync\"`: LangGraph persists changes synchronously before the next step starts. This ensures that LangGraph writes every checkpoint before continuing execution, providing high durability at the cost of some performance overhead.",
+          "claim": "Durability increases from exit through async to sync with differing performance costs.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langgraph-checkpointers"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "comparison-test-01",
+      "category": "comparison",
+      "split": "test",
+      "question": "Using only the frozen documentation, compare ProviderStrategy and ToolStrategy and explain how to select without assuming one is always cheaper.",
+      "gold_answer": "ProviderStrategy uses provider-native structured output; ToolStrategy uses tool calling. With a schema type, the native strategy is selected when supported and the tool strategy otherwise. A plain JSON Schema dictionary must be wrapped explicitly. This documentation gives capability rules, not a universal price or latency ranking.",
+      "success_requirements": [
+        "Native vs tool calling",
+        "Capability selection",
+        "Cost claim unsupported"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 29,
+          "end_line": 43,
+          "quote": "Use `response_format` to control how the agent returns structured data:\n\n- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n- `ProviderStrategy` if the model and provider chosen supports native structured output (e.g. [OpenAI](/oss/integrations/providers/openai), [Anthropic (Claude)](/oss/integrations/providers/anthropic), or [xAI (Grok)](/oss/integrations/providers/xai)).\n- `ToolStrategy` for all other models.\n\n<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>",
+          "claim": "The strategies differ by native structured output versus tool calling.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langchain-structured-output"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "comparison-test-02",
+      "category": "comparison",
+      "split": "test",
+      "question": "Using only the frozen documentation, compare trimming, deleting and summarizing messages for long conversations.",
+      "gold_answer": "Trimming removes selected first/last messages before an LLM call. Deletion permanently removes messages from graph state and can clear history. Summarization replaces earlier messages with a summary. They address context growth but have different state semantics; any resulting history must still satisfy provider message/tool-call constraints.",
+      "success_requirements": [
+        "Before-call trim",
+        "Permanent delete",
+        "Summary replacement",
+        "Protocol validity"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-short-term-memory",
+          "start_line": 173,
+          "end_line": 185,
+          "quote": "## Common patterns\n\nWith [short-term memory](#usage) enabled, long conversations can exceed the LLM's context window. Common solutions are:\n\n<CardGroup cols={2}>\n    <Card title=\"Trim messages\" icon=\"scissors\" href=\"#trim-messages\" arrow>\n        Remove first or last N messages (before calling LLM)\n    </Card>\n    <Card title=\"Delete messages\" icon=\"trash\" href=\"#delete-messages\" arrow>\n        Delete messages from LangGraph state permanently\n    </Card>\n    <Card title=\"Summarize messages\" icon=\"stack-2\" href=\"#summarize-messages\" arrow>\n        Summarize earlier messages in the history and replace them with a summary",
+          "claim": "The guide distinguishes trim, permanent delete and summarization.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-short-term-memory",
+          "start_line": 361,
+          "end_line": 364,
+          "quote": "    When deleting messages, **make sure** that the resulting message history is valid. Check the limitations of the LLM provider you're using. For example:\n\n    * Some providers expect message history to start with a `user` message\n    * Most providers require `assistant` messages with tool calls to be followed by corresponding `tool` result messages.",
+          "claim": "History must remain valid for the provider.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langchain-short-term-memory"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "comparison-test-03",
+      "category": "comparison",
+      "split": "test",
+      "question": "Using only the frozen documentation, when should a human use respond rather than reject, especially for ask_user versus a side-effecting tool?",
+      "gold_answer": "In the Python HITL API, respond is for the human acting as the tool, such as answering ask_user. Use reject to deny an action. Do not use respond to deny a side-effecting tool because its message is treated as a successful tool result. Available decisions also depend on the interrupt_on policy.",
+      "success_requirements": [
+        "respond supplies tool result",
+        "reject denies action",
+        "Policy-specific availability"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-human-in-the-loop",
+          "start_line": 7,
+          "end_line": 37,
+          "quote": "The Human-in-the-Loop (HITL) [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) lets you add human oversight to agent tool calls.\nWhen a model proposes an action that might require review—for example, writing to a file or executing SQL—the middleware can pause execution and wait for a decision.\n\nIt does this by checking each tool call against a configurable policy. If intervention is needed, the middleware issues an @[interrupt] that halts execution. The graph state is saved using LangGraph's [persistence layer](/oss/langgraph/persistence), so execution can pause safely and resume later.\n\n:::python\nA human decision then determines what happens next: the action can be approved as-is (`approve`), modified before running (`edit`), rejected with feedback (`reject`), or responded to directly (`respond`) for \"ask user\" style tools.\n:::\n\n:::js\nA human decision then determines what happens next: the action can be approved as-is (`approve`), modified before running (`edit`), or rejected with feedback (`reject`).\n:::\n\n## Interrupt decision types\n\n:::python\nThe [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines four built-in ways a human can respond to an interrupt:\n:::\n\n:::js\nThe [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines three built-in ways a human can respond to an interrupt:\n:::\n\n<HitlDecisionTypesTable />\n\nThe available decision types for each tool depend on the policy you configure in `interrupt_on`.\nWhen multiple tool calls are paused at the same time, each action requires a separate decision.\nDecisions must be provided in the same order as the actions appear in the interrupt request.\n\n:::python\nUse `reject` when the human is denying the requested action. Use `respond` only when the human is acting as the tool, such as answering an `ask_user` prompt. Do not use `respond` to deny side-effecting tools, because its message is treated as a successful tool result.",
+          "claim": "Python HITL distinguishes responding as a tool from rejecting an action.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langchain-human-in-the-loop"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "version_boundary-dev-01",
+      "category": "version_boundary",
+      "split": "dev",
+      "question": "Using only the frozen documentation, state the package/version boundary for Python per-node timeouts and node-level error handlers without confusing the JavaScript requirement.",
+      "gold_answer": "Python per-node timeouts and node-level error handlers require langgraph>=1.2. The corresponding JavaScript note specifies @langchain/langgraph>=1.4.0. Keep language and package names attached to the requirement and do not claim older versions support these features.",
+      "success_requirements": [
+        "Python >=1.2",
+        "JS separate package >=1.4.0"
+      ],
+      "references": [
+        {
+          "source_id": "langgraph-fault-tolerance",
+          "start_line": 25,
+          "end_line": 32,
+          "quote": "<Note>\nPer-node timeouts and node-level error handlers require `langgraph>=1.2`.\n</Note>\n:::\n\n:::js\n<Note>\nPer-node timeouts and node-level error handlers require `@langchain/langgraph>=1.4.0`.",
+          "claim": "Python and JavaScript have distinct minimum package versions.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langgraph-fault-tolerance"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "version_boundary-dev-02",
+      "category": "version_boundary",
+      "split": "dev",
+      "question": "Using only the frozen documentation, on Python 3.10, what limitations apply to async LLM callback propagation and custom stream writers?",
+      "gold_answer": "Python versions below 3.11 lack the asyncio task context parameter described here. Explicitly pass RunnableConfig into async LLM calls so callbacks propagate. Do not use get_stream_writer in async nodes or tools; pass a writer argument directly. This is a Python-version boundary, not a claim that all streaming is unavailable.",
+      "success_requirements": [
+        "Explicit RunnableConfig",
+        "Direct writer argument",
+        "Not no-streaming claim"
+      ],
+      "references": [
+        {
+          "source_id": "langgraph-streaming",
+          "start_line": 2056,
+          "end_line": 2062,
+          "quote": "### Async with Python < 3.11\n\nIn Python versions < 3.11, [asyncio tasks](https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task) do not support the `context` parameter.\nThis limits LangGraph ability to automatically propagate context, and affects LangGraph's streaming mechanisms in two key ways:\n\n1. You **must** explicitly pass [`RunnableConfig`](https://python.langchain.com/docs/concepts/runnables/#runnableconfig) into async LLM calls (e.g., `ainvoke()`), as callbacks are not automatically propagated.\n2. You **cannot** use @[`get_stream_writer`] in async nodes or tools—you must pass a `writer` argument directly.",
+          "claim": "Python <3.11 needs explicit callback configuration and writer arguments.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langgraph-streaming"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "version_boundary-test-01",
+      "category": "version_boundary",
+      "split": "test",
+      "question": "Using only the frozen documentation, which LangChain version supports dynamic native structured-output capability lookup from model profile data, and what if the data is missing?",
+      "gold_answer": "The guide states langchain>=1.1 reads native structured-output support dynamically from model profile data. If that data is unavailable, use another capability condition or specify the profile manually. If tools are also supplied, verify support for simultaneous tools and structured output.",
+      "success_requirements": [
+        "langchain >=1.1",
+        "Missing-data fallback",
+        "Combined capability"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 46,
+          "end_line": 54,
+          "quote": "    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```python\n    custom_profile = {\n        \"structured_output\": True,\n        # ...\n    }\n    model = init_chat_model(\"...\", profile=custom_profile)\n    ```\n    If tools are specified, the model must support simultaneous use of tools and structured output.",
+          "claim": "Dynamic profile lookup has a version boundary and missing-data fallback.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langchain-structured-output"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "version_boundary-test-02",
+      "category": "version_boundary",
+      "split": "test",
+      "question": "Using only the frozen documentation, what is the version and provider-support boundary for ProviderStrategy strict?",
+      "gold_answer": "The strict parameter requires langchain>=1.2. It is an optional boolean supported by some providers, not universally by all models/providers, and defaults to None (disabled). A package meeting the version minimum does not prove that a particular provider supports strict mode.",
+      "success_requirements": [
+        ">=1.2",
+        "Some providers only",
+        "Default None"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 126,
+          "end_line": 140,
+          "quote": "    The `strict` param requires `langchain>=1.2`.\n</Info>\n\n<ParamField path=\"schema\" required>\n    The schema defining the structured output format. Supports:\n    - **Pydantic models**: `BaseModel` subclasses with field validation. Returns validated Pydantic instance.\n    - **Dataclasses**: Python dataclasses with type annotations. Returns dict.\n    - **TypedDict**: Typed dictionary classes. Returns dict.\n    - **JSON Schema**: Dictionary with JSON schema specification. Must include top-level `title` and `description` keys. Returns dict.\n</ParamField>\n\n<ParamField path=\"strict\">\n    Optional boolean parameter to enable strict schema adherence. Supported by some providers (e.g., [OpenAI](/oss/integrations/chat/openai) and [xAI](/oss/integrations/chat/xai)). Defaults to `None` (disabled).\n</ParamField>\n",
+          "claim": "strict is version-gated and supported only by some providers.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langchain-structured-output"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "version_boundary-test-03",
+      "category": "version_boundary",
+      "split": "test",
+      "question": "Using only the frozen documentation, what does the Python HITL when predicate do, and what minimum version is documented without borrowing the JavaScript threshold?",
+      "gold_answer": "The Python when predicate receives a ToolCallRequest and returns True to interrupt or False to auto-approve, allowing argument-dependent review. It requires langchain>=1.3.3. The JavaScript note uses a separate >=1.4.6 requirement; do not substitute it for Python's boundary.",
+      "success_requirements": [
+        "True pauses False approves",
+        "Python >=1.3.3",
+        "JS boundary distinct"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-human-in-the-loop",
+          "start_line": 154,
+          "end_line": 154,
+          "quote": "    Optional predicate that receives a @[ToolCallRequest] and returns `True` to interrupt or `False` to auto-approve. Use it to gate interrupts on a call's arguments. Requires `langchain>=1.3.3`.",
+          "claim": "Python when predicates require langchain>=1.3.3.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-human-in-the-loop",
+          "start_line": 178,
+          "end_line": 178,
+          "quote": "    Optional predicate that receives a @[ToolCallRequest] and returns `true` to interrupt or `false` to auto-approve. Use it to gate interrupts on a call's arguments. Requires `langchain>=1.4.6`.",
+          "claim": "JavaScript has a separate >=1.4.6 requirement.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langchain-human-in-the-loop"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "conflicting_evidence-dev-01",
+      "category": "conflicting_evidence",
+      "split": "dev",
+      "question": "Using only the frozen documentation, reconcile 'checkpointing keeps your place' with 'interrupt resumption restarts the entire node'. Is the exact Python instruction pointer restored?",
+      "gold_answer": "The statements concern different layers. A checkpointer preserves graph state for the thread, while interrupt resumption re-executes the interrupted node from its beginning, including pre-interrupt code. It does not restore an arbitrary Python instruction pointer. Treat pre-interrupt side effects as replayable/idempotent.",
+      "success_requirements": [
+        "State vs instruction position",
+        "Restart node",
+        "Idempotent side effects"
+      ],
+      "references": [
+        {
+          "source_id": "langgraph-checkpointers",
+          "start_line": 6,
+          "end_line": 6,
+          "quote": "A checkpointer saves a snapshot of graph state at each super-step, organized into **threads**. Compile a graph with a checkpointer to enable human-in-the-loop workflows, time travel debugging, fault-tolerant execution, and conversational memory.",
+          "claim": "Checkpointers snapshot graph state.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langgraph-interrupts",
+          "start_line": 24,
+          "end_line": 25,
+          "quote": "- **Checkpointing keeps your place:** the checkpointer writes the exact graph state so you can resume later, even when in an error state.\n- **`thread_id` is your pointer:** set `config={\"configurable\": {\"thread_id\": ...}}` to tell the checkpointer which state to load.",
+          "claim": "Checkpointing preserves graph state for resumption.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langgraph-interrupts",
+          "start_line": 1010,
+          "end_line": 1010,
+          "quote": "When execution resumes (after you provide the requested input), the runtime restarts the entire node from the beginning—it does not resume from the exact line where @[`interrupt`] was called. This means any code that ran before the @[`interrupt`] will execute again. Because of this, there's a few important rules to follow when working with interrupts to ensure they behave as expected.",
+          "claim": "Interrupt resumption restarts the entire node.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 2,
+      "source_ids": [
+        "langgraph-checkpointers",
+        "langgraph-interrupts"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "conflicting_evidence-dev-02",
+      "category": "conflicting_evidence",
+      "split": "dev",
+      "question": "Using only the frozen documentation, reconcile super-step checkpoint boundaries with durable per-task writes that avoid rerunning successful sibling nodes after a failure.",
+      "gold_answer": "A full StateSnapshot checkpoint is saved at the super-step boundary. Individual completed nodes also persist pending task writes within an in-progress super-step, enabling failure recovery without recomputing successful siblings. Those task writes are not full snapshots for time travel; there is no contradiction between the two boundaries.",
+      "success_requirements": [
+        "Full snapshot vs pending write",
+        "Successful sibling reuse",
+        "Time-travel limitation"
+      ],
+      "references": [
+        {
+          "source_id": "langgraph-checkpointers",
+          "start_line": 56,
+          "end_line": 68,
+          "quote": "The checkpointer uses `thread_id` as the primary key for storing and retrieving checkpoints. Without it, the checkpointer cannot save state or resume execution after an [interrupt](/oss/langgraph/interrupts), since the checkpointer uses `thread_id` to load the saved state.\n\n### Checkpoints\n\nThe state of a thread at a particular point in time is called a checkpoint. A checkpoint is a snapshot of the graph state saved at each [super-step](#super-steps) and is represented by a `StateSnapshot` object (see [StateSnapshot fields](#statesnapshot-fields) for the full field reference).\n\n#### Super-steps\n\nLangGraph creates a checkpoint at each **super-step** boundary. A super-step is a single \"tick\" of the graph where all nodes scheduled for that step execute (potentially in parallel). For a sequential graph like `START -> A -> B -> END`, there are separate super-steps for the input, node A, and node B — producing a checkpoint after each one. Understanding super-step boundaries is important for [time travel](/oss/langgraph/use-time-travel), because you can only resume execution from a checkpoint (i.e., a super-step boundary).\n\nIn addition to super-step checkpoints, LangGraph also persists writes at the **node (task) level**. As each node within a super-step finishes, its outputs are written to the checkpointer's `checkpoint_writes` table as task entries linked to the in-progress checkpoint. These per-task writes are what enable [pending writes](#pending-writes) recovery: if another node in the same super-step fails, the successful nodes' writes are already durable and don't need to be re-run on resume. The full state snapshot is then committed once the super-step completes.\n\nLangGraph also persists writes from individual node executions within a super-step. These writes are stored as tasks and used for fault tolerance: if another node in the same super-step fails, successful node writes do not need to be recomputed when you resume. These task writes are not full `StateSnapshot` checkpoints, so time travel resumes from full checkpoints at super-step boundaries.",
+          "claim": "Per-task writes enable recovery but are not full time-travel checkpoints.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langgraph-checkpointers",
+          "start_line": 23,
+          "end_line": 28,
+          "quote": "- **Human-in-the-loop**: Checkpointers facilitate [human-in-the-loop workflows](/oss/langgraph/interrupts) by allowing humans to inspect, interrupt, and approve graph steps. Checkpointers are needed for these workflows as the person has to be able to view the state of a graph at any point in time, and the graph has to be able to resume execution after the person has made any updates to the state. See [Interrupts](/oss/langgraph/interrupts) for examples.\n- **Memory**: Checkpointers allow for [\"memory\"](/oss/concepts/memory) between interactions. In the case of repeated human interactions (like conversations) any follow up messages can be sent to that thread, which will retain its memory of previous ones. See [Add memory](/oss/langgraph/add-memory) for information on how to add and manage conversation memory using checkpointers.\n- **Time travel**: Checkpointers allow for [\"time travel\"](/oss/langgraph/use-time-travel), allowing users to replay prior graph executions to review and / or debug specific graph steps. In addition, checkpointers make it possible to fork the graph state at arbitrary checkpoints to explore alternative trajectories.\n- **Fault-tolerance**: Checkpointing provides fault-tolerance and error recovery: if one or more nodes fail at a given superstep, you can restart your graph from the last successful step.\n<a id=\"pending-writes\"></a>\n- **Pending writes**: When a graph node fails mid-execution at a given [super-step](#super-steps), LangGraph stores pending checkpoint writes from any other nodes that completed successfully at that super-step. When you resume graph execution from that super-step you don't re-run the successful nodes.",
+          "claim": "Pending writes preserve successful sibling outputs.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langgraph-checkpointers"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "conflicting_evidence-test-01",
+      "category": "conflicting_evidence",
+      "split": "test",
+      "question": "Using only the frozen documentation, the HITL source describes both three and four built-in decisions. Explain the scope difference instead of declaring the document inconsistent.",
+      "gold_answer": "The frozen MDX has separate language sections. Python lists approve, edit, reject and respond, and says four decisions. JavaScript lists approve, edit and reject, and says three. respond is described for ask-user-style tools in Python. Preserve language and policy scope rather than presenting one unqualified count.",
+      "success_requirements": [
+        "Python four",
+        "JavaScript three",
+        "Language-scoped conclusion"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-human-in-the-loop",
+          "start_line": 7,
+          "end_line": 37,
+          "quote": "The Human-in-the-Loop (HITL) [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) lets you add human oversight to agent tool calls.\nWhen a model proposes an action that might require review—for example, writing to a file or executing SQL—the middleware can pause execution and wait for a decision.\n\nIt does this by checking each tool call against a configurable policy. If intervention is needed, the middleware issues an @[interrupt] that halts execution. The graph state is saved using LangGraph's [persistence layer](/oss/langgraph/persistence), so execution can pause safely and resume later.\n\n:::python\nA human decision then determines what happens next: the action can be approved as-is (`approve`), modified before running (`edit`), rejected with feedback (`reject`), or responded to directly (`respond`) for \"ask user\" style tools.\n:::\n\n:::js\nA human decision then determines what happens next: the action can be approved as-is (`approve`), modified before running (`edit`), or rejected with feedback (`reject`).\n:::\n\n## Interrupt decision types\n\n:::python\nThe [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines four built-in ways a human can respond to an interrupt:\n:::\n\n:::js\nThe [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines three built-in ways a human can respond to an interrupt:\n:::\n\n<HitlDecisionTypesTable />\n\nThe available decision types for each tool depend on the policy you configure in `interrupt_on`.\nWhen multiple tool calls are paused at the same time, each action requires a separate decision.\nDecisions must be provided in the same order as the actions appear in the interrupt request.\n\n:::python\nUse `reject` when the human is denying the requested action. Use `respond` only when the human is acting as the tool, such as answering an `ask_user` prompt. Do not use `respond` to deny side-effecting tools, because its message is treated as a successful tool result.",
+          "claim": "Python and JavaScript sections expose different documented decision counts.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langchain-human-in-the-loop"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "conflicting_evidence-test-02",
+      "category": "conflicting_evidence",
+      "split": "test",
+      "question": "Using only the frozen documentation, reconcile automatic strategy choice for a schema type with the warning that JSON Schema dictionaries are not automatically detected.",
+      "gold_answer": "The general rule concerns passing a schema type: native ProviderStrategy when supported, otherwise ToolStrategy. A plain JSON Schema dictionary is a documented exception and must be wrapped in an explicit ProviderStrategy or ToolStrategy. These inputs are different; the warning limits the general statement rather than contradicting it.",
+      "success_requirements": [
+        "Schema type general case",
+        "Dictionary explicit wrapper",
+        "No unsupported automatic inference"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 29,
+          "end_line": 43,
+          "quote": "Use `response_format` to control how the agent returns structured data:\n\n- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n- `ProviderStrategy` if the model and provider chosen supports native structured output (e.g. [OpenAI](/oss/integrations/providers/openai), [Anthropic (Claude)](/oss/integrations/providers/anthropic), or [xAI (Grok)](/oss/integrations/providers/xai)).\n- `ToolStrategy` for all other models.\n\n<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>",
+          "claim": "The automatic schema-type rule has an explicit dictionary exception.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langchain-structured-output"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "conflicting_evidence-test-03",
+      "category": "conflicting_evidence",
+      "split": "test",
+      "question": "Using only the frozen documentation, reconcile removing stale history with the requirement to retain valid tool-call/tool-result message structure.",
+      "gold_answer": "Removing stale information is a context-management technique, not permission to create malformed history. When deleting, respect provider requirements: some require a leading user message, and most require assistant tool calls to be followed by corresponding tool results. Remove coherent units or otherwise maintain valid ordering rather than leaving orphan calls/results.",
+      "success_requirements": [
+        "Context reduction permitted",
+        "Provider validity required",
+        "No orphan tool exchanges"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-short-term-memory",
+          "start_line": 18,
+          "end_line": 22,
+          "quote": "Conversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\n\nEven if your model supports the full context length, most LLMs still perform poorly over long contexts. They get \"distracted\" by stale or off-topic content, all while suffering from slower response times and higher costs.\n\nChat models accept context using [messages](/oss/langchain/messages), which include instructions (a system message) and inputs (human messages). In chat applications, messages alternate between human inputs and model responses, resulting in a list of messages that grows longer over time. Because context windows are limited, many applications can benefit from using techniques to remove or \"forget\" stale information.",
+          "claim": "Stale history may be removed to manage limited context.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-short-term-memory",
+          "start_line": 361,
+          "end_line": 364,
+          "quote": "    When deleting messages, **make sure** that the resulting message history is valid. Check the limitations of the LLM provider you're using. For example:\n\n    * Some providers expect message history to start with a `user` message\n    * Most providers require `assistant` messages with tool calls to be followed by corresponding `tool` result messages.",
+          "claim": "Deleted history must still satisfy provider message constraints.",
+          "kind": "fact"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langchain-short-term-memory"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked each claim against literal pinned source spans. References are documentation facts, not evidence that this project's code implements them. No human adjudication."
+      }
+    },
+    {
+      "id": "insufficient_evidence-dev-01",
+      "category": "insufficient_evidence",
+      "split": "dev",
+      "question": "Using only the frozen documentation, from the persistence overview alone, provide production checkpoint database throughput, per-request cost and a recovery-time SLA. What can actually be concluded?",
+      "gold_answer": "The overview distinguishes thread-scoped checkpoints from cross-thread Stores and their use cases. It does not supply measured database throughput, per-request prices or a recovery-time SLA. Those quantities cannot be determined from this source. A defensible estimate needs a specified backend, workload, storage and failure-recovery benchmark.",
+      "success_requirements": [
+        "Explicitly state missing metrics",
+        "Do not invent numbers",
+        "List required measurement inputs"
+      ],
+      "references": [
+        {
+          "source_id": "langgraph-persistence",
+          "start_line": 16,
+          "end_line": 21,
+          "quote": "LangGraph provides two complementary persistence systems:\n\n- **[Checkpointers](/oss/langgraph/checkpointers)** persist a thread's graph state as checkpoints. Use them for short-term, thread-scoped memory, including conversation continuity, human-in-the-loop workflows, time travel, and fault tolerance.\n- **[Stores](/oss/langgraph/stores)** persist application-defined data outside the graph state. Use them for long-term, cross-thread memory, including user preferences, facts, and shared knowledge.\n\nMost applications can use both: a [checkpointer](/oss/langgraph/checkpointers) tracks the current thread, and a [store](/oss/langgraph/stores) tracks durable information across threads.",
+          "claim": "The source describes persistence roles, not quantitative database benchmarks.",
+          "kind": "scope_boundary"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langgraph-persistence"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked the bounded document scope and absence of the requested measurements. Quoted spans describe scope, not a mathematical proof of absence. No human gold adjudication."
+      }
+    },
+    {
+      "id": "insufficient_evidence-dev-02",
+      "category": "insufficient_evidence",
+      "split": "dev",
+      "question": "Using only the frozen documentation, using the API-choice guide alone, give the percentage latency improvement of Graph API over Functional API.",
+      "gold_answer": "The guide provides qualitative API-selection criteria and states both share a runtime. It provides no controlled latency measurements or percentage improvement. No numeric speedup is supported. Compare equivalent workflows, model/tool workloads and repeated timings before making a performance claim.",
+      "success_requirements": [
+        "No numeric answer supported",
+        "Shared runtime not identical measured latency",
+        "Controlled comparison needed"
+      ],
+      "references": [
+        {
+          "source_id": "langgraph-choosing-apis",
+          "start_line": 6,
+          "end_line": 23,
+          "quote": "LangGraph provides two different APIs to build agent workflows: the **Graph API** and the **Functional API**. Both APIs share the same underlying runtime and can be used together in the same application, but they are designed for different use cases and development preferences.\n\nThis guide will help you understand when to use each API based on your specific requirements.\n\n## Quick decision guide\n\nUse the **Graph API** when you need:\n- **Complex workflow visualization** for debugging and documentation\n- **Explicit state management** with shared data across multiple nodes\n- **Conditional branching** with multiple decision points\n- **Parallel execution paths** that need to merge later\n- **Team collaboration** where visual representation aids understanding\n\nUse the **Functional API** when you want:\n- **Minimal code changes** to existing procedural code\n- **Standard control flow** (if/else, loops, function calls)\n- **Function-scoped state** without explicit state management\n- **Rapid prototyping** with less boilerplate",
+          "claim": "API guidance is qualitative and shares a runtime, not a measured latency comparison.",
+          "kind": "scope_boundary"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langgraph-choosing-apis"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked the bounded document scope and absence of the requested measurements. Quoted spans describe scope, not a mathematical proof of absence. No human gold adjudication."
+      }
+    },
+    {
+      "id": "insufficient_evidence-test-01",
+      "category": "insufficient_evidence",
+      "split": "test",
+      "question": "Using only the frozen documentation, using only the structured-output guide, name the universally cheapest and lowest-latency strategy and give its cost savings.",
+      "gold_answer": "The guide explains native versus tool-calling strategies and capability-based selection. It does not establish a universally cheapest or fastest strategy or measured savings. Model/provider prices, schema size, retries, output length and latency measurements are required; abstain from a numeric or universal ranking.",
+      "success_requirements": [
+        "No universal cost/latency ranking",
+        "Identify missing workload/pricing data",
+        "No fabricated savings"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 29,
+          "end_line": 43,
+          "quote": "Use `response_format` to control how the agent returns structured data:\n\n- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n- `ProviderStrategy` if the model and provider chosen supports native structured output (e.g. [OpenAI](/oss/integrations/providers/openai), [Anthropic (Claude)](/oss/integrations/providers/anthropic), or [xAI (Grok)](/oss/integrations/providers/xai)).\n- `ToolStrategy` for all other models.\n\n<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>",
+          "claim": "The cited strategy-selection rules concern capabilities, not measured costs.",
+          "kind": "scope_boundary"
+        }
+      ],
+      "hops": 1,
+      "source_ids": [
+        "langchain-structured-output"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked the bounded document scope and absence of the requested measurements. Quoted spans describe scope, not a mathematical proof of absence. No human gold adjudication."
+      }
+    },
+    {
+      "id": "insufficient_evidence-test-02",
+      "category": "insufficient_evidence",
+      "split": "test",
+      "question": "Using only the frozen documentation, do the Runtime/context descriptions prove secure tenant isolation and authorization for a deployed agent?",
+      "gold_answer": "No. They describe dependency injection and where static context, conversation state and cross-conversation Store data belong. Passing user IDs or permissions is not proof of enforcement. Authorization policies, store access checks, tenant-scoped queries and adversarial isolation tests are needed to establish deployment security.",
+      "success_requirements": [
+        "Context plumbing is not security proof",
+        "Identify enforcement and test evidence missing"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-runtime",
+          "start_line": 13,
+          "end_line": 23,
+          "quote": "LangGraph exposes a @[`Runtime`] object with the following information:\n\n1. **Context**: static information like user id, db connections, or other dependencies for an agent invocation\n2. **Store**: a @[BaseStore] instance used for [long-term memory](/oss/langchain/long-term-memory)\n3. **Stream writer**: an object used for streaming information via the `\"custom\"` stream mode\n4. **Execution info**: identity and retry information for the current execution (thread ID, run ID, attempt number)\n5. **Server info**: server-specific metadata when running on LangGraph Server (assistant ID, graph ID, authenticated user)\n\n:::python\n<Tip>\nRuntime context provides **dependency injection** for your tools and middleware. Instead of hardcoding values or using global state, you can inject runtime dependencies (like database connections, user IDs, or configuration) when invoking your agent. This makes your tools more testable, reusable, and flexible.",
+          "claim": "Runtime describes dependencies and metadata, not a security verification.",
+          "kind": "scope_boundary"
+        },
+        {
+          "source_id": "langchain-context-engineering",
+          "start_line": 67,
+          "end_line": 69,
+          "quote": "| **Runtime Context** | Static configuration | Conversation-scoped | User ID, API keys, database connections, permissions, environment settings |\n| **State** | Short-term memory | Conversation-scoped | Current messages, uploaded files, authentication status, tool results |\n| **Store** | Long-term memory | Cross-conversation | User preferences, extracted insights, memories, historical data |",
+          "claim": "Context, State and Store have different data lifetimes.",
+          "kind": "scope_boundary"
+        }
+      ],
+      "hops": 2,
+      "source_ids": [
+        "langchain-runtime",
+        "langchain-context-engineering"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked the bounded document scope and absence of the requested measurements. Quoted spans describe scope, not a mathematical proof of absence. No human gold adjudication."
+      }
+    },
+    {
+      "id": "insufficient_evidence-test-03",
+      "category": "insufficient_evidence",
+      "split": "test",
+      "question": "Using only the frozen documentation, derive semantic-memory recall precision and production financial ROI from the memory concept documentation alone.",
+      "gold_answer": "The memory documents define thread-scoped versus cross-thread persistence and describe context-growth problems qualitatively. They do not provide labeled retrieval evaluation results or production financial measurements. Recall precision needs a dataset, relevance labels and a specified memory/retrieval configuration; ROI needs measured costs and business outcomes. Neither numeric result can be inferred here.",
+      "success_requirements": [
+        "No inferred precision or ROI",
+        "Define required labeled eval",
+        "Define required financial measurements"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-long-term-memory",
+          "start_line": 23,
+          "end_line": 26,
+          "quote": "Long-term memory lets your agent store and recall information across different conversations and sessions.\nUnlike [short-term memory](/oss/langchain/short-term-memory), which is scoped to a single thread, long-term memory persists across threads and can be recalled at any time.\n\nLong-term memory is built on [LangGraph stores](/oss/langgraph/stores), which save data as JSON documents organized by namespace and key.",
+          "claim": "The document defines memory scope and storage, not semantic retrieval scores.",
+          "kind": "scope_boundary"
+        },
+        {
+          "source_id": "langchain-short-term-memory",
+          "start_line": 18,
+          "end_line": 22,
+          "quote": "Conversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\n\nEven if your model supports the full context length, most LLMs still perform poorly over long contexts. They get \"distracted\" by stale or off-topic content, all while suffering from slower response times and higher costs.\n\nChat models accept context using [messages](/oss/langchain/messages), which include instructions (a system message) and inputs (human messages). In chat applications, messages alternate between human inputs and model responses, resulting in a list of messages that grows longer over time. Because context windows are limited, many applications can benefit from using techniques to remove or \"forget\" stale information.",
+          "claim": "Context costs and quality are discussed qualitatively without ROI measurements.",
+          "kind": "scope_boundary"
+        }
+      ],
+      "hops": 2,
+      "source_ids": [
+        "langchain-long-term-memory",
+        "langchain-short-term-memory"
+      ],
+      "uncertainty_policy": "Cite frozen-source evidence and preserve language/version scope. Explicitly abstain from unsupported quantities or guarantees; mark implementation recommendations as recommendations.",
+      "review": {
+        "source_verified": true,
+        "human_reviewed": false,
+        "reviewer_kind": "agent_source_check",
+        "reviewed_at": "2026-10-02T04:21:23Z",
+        "note": "Agent checked the bounded document scope and absence of the requested measurements. Quoted spans describe scope, not a mathematical proof of absence. No human gold adjudication."
+      }
+    }
+  ],
+  "expected_counts": {
+    "single_hop": {
+      "dev": 2,
+      "test": 3
+    },
+    "multi_hop": {
+      "dev": 2,
+      "test": 3
+    },
+    "comparison": {
+      "dev": 2,
+      "test": 3
+    },
+    "version_boundary": {
+      "dev": 2,
+      "test": 3
+    },
+    "conflicting_evidence": {
+      "dev": 2,
+      "test": 3
+    },
+    "insufficient_evidence": {
+      "dev": 2,
+      "test": 3
+    }
+  },
+  "limitations": [
+    "Agent-authored questions and reference answers over real primary sources; source_verified does not mean independently human_reviewed.",
+    "Dev uses LangGraph-runtime documents; test uses LangChain-agent documents. Source URLs/groups are disjoint, but publisher and related concepts overlap; this is not broad semantic or publisher holdout.",
+    "All 30 questions are asset-ready, not 30 measured real-API results. Frozen local-document retrieval is not live internet DeepResearch.",
+    "conflicting_evidence covers apparent language, version and semantic-scope tensions within primary documentation, not adjudicated contradictions across independent publishers.",
+    "insufficient_evidence uses bounded-document absence judgments. Exact quotes validate scope, not semantic entailment or exhaustive proof of absence.",
+    "Unmodified MDX contains Python/JavaScript alternatives, links and imported snippet references. Imports are not executed; referenced snippets and linked pages are not included as evidence.",
+    "Snapshot facts are pinned to one upstream commit, not a promise of latest behavior or compatibility with this project's installed dependencies.",
+    "Success requirements, reference spans, gold answers and review annotations are scoring-only; retrieval receives raw documents and public metadata only."
+  ]
+}

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import FrozenInstanceError
 import math
+from dataclasses import FrozenInstanceError
 
 import pytest
 from pydantic import BaseModel, Field
@@ -16,7 +16,7 @@ class SearchArguments(BaseModel):
     query: str = Field(min_length=1)
 
 
-async def _handler(arguments: BaseModel) -> dict[str, str]:
+async def _handler(arguments: BaseModel, _context) -> dict[str, str]:
     return {"query": str(arguments)}
 
 

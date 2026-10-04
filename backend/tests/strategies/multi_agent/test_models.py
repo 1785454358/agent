@@ -8,10 +8,25 @@ from deeptrace.strategies.multi_agent.state import (
     ResearcherBranchState,
 )
 
+_COVERAGE = {
+    "items": [
+        {
+            "requirement_id": "r1",
+            "status": "missing",
+            "reason": "needs sources",
+            "finding_ids": [],
+        }
+    ]
+}
+
 
 def test_supervisor_evaluation_is_strict_and_bounded() -> None:
     evaluation = SupervisorEvaluation(
-        action="complete", reason="资料充足", findings=[], unresolved_gaps=[]
+        action="complete",
+        reason="资料充足",
+        findings=[],
+        unresolved_gaps=[],
+        coverage=_COVERAGE,
     )
     assert evaluation.action == "complete"
     with pytest.raises(ValidationError):
@@ -47,6 +62,11 @@ def test_researcher_branch_state_is_private_per_researcher() -> None:
         "original_task",
         "constraints",
         "context_notes",
+        "requirements",
+        "evidence_contract_version",
+        "target_requirement_ids",
+        "research_gaps",
+        "prior_evidence_ids",
     }
 
 
@@ -55,6 +75,7 @@ def test_supervisor_evaluation_round_trips_through_strict_serializer() -> None:
         "evaluation": SupervisorEvaluation(
             action="follow_up",
             reason="缺少对比来源",
+            coverage=_COVERAGE,
             findings=[],
             unresolved_gaps=["缺口"],
         )

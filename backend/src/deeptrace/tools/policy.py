@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import ipaddress
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Mapping, Protocol
+from typing import Any, Protocol
 from urllib.parse import urlsplit, urlunsplit
 
 from deeptrace.domain import ResearchMode, ResponseMode, ToolName
 from deeptrace.tools.contracts import ToolCapability, ToolSpec
 from deeptrace.tools.registry import ToolRegistry
 from deeptrace.tools.scraper.urls import normalize_url_before_fetch, validate_public_url
-
 
 MAX_CALLER_ID_LENGTH = 128
 _DOMAIN_LABEL = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
@@ -79,12 +79,21 @@ class ToolAllowlistPolicy(Protocol):
     ) -> ToolSpec: ...
 
 
+@dataclass(frozen=True)
+class EvidenceAuthorization:
+    """Explicit host grants; existence in the same workspace is insufficient."""
+
+    evidence_ids: frozenset[str] = frozenset()
+    historical_ids: frozenset[str] = frozenset()
+
+
 _ALLOWED_CAPABILITIES: dict[CallerRole, frozenset[ToolCapability]] = {
     CallerRole.WORKFLOW_GRAPH: frozenset(
         {
             ToolCapability.WEB_SEARCH,
             ToolCapability.PAGE_FETCH,
             ToolCapability.MEMORY_READ,
+            ToolCapability.EVIDENCE_READ,
         }
     ),
     CallerRole.PLAN_EXECUTE_EXECUTOR: frozenset(
@@ -92,6 +101,7 @@ _ALLOWED_CAPABILITIES: dict[CallerRole, frozenset[ToolCapability]] = {
             ToolCapability.WEB_SEARCH,
             ToolCapability.PAGE_FETCH,
             ToolCapability.MEMORY_READ,
+            ToolCapability.EVIDENCE_READ,
         }
     ),
     CallerRole.MULTI_AGENT_RESEARCHER: frozenset(
@@ -99,6 +109,7 @@ _ALLOWED_CAPABILITIES: dict[CallerRole, frozenset[ToolCapability]] = {
             ToolCapability.WEB_SEARCH,
             ToolCapability.PAGE_FETCH,
             ToolCapability.MEMORY_READ,
+            ToolCapability.EVIDENCE_READ,
         }
     ),
     CallerRole.MULTI_AGENT_SUPERVISOR: frozenset(),

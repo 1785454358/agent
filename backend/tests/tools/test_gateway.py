@@ -37,6 +37,80 @@ class SearchArguments(BaseModel):
     limit: int = Field(default=3, ge=1, le=10)
 
 
+@pytest.mark.asyncio
+async def test_host_context_reaches_handler_without_model_identity_arguments():
+    contexts = []
+
+    async def handler(arguments, context):
+        contexts.append(context)
+        return ToolAdapterResult(preview=arguments.query)
+
+    gateway, _, _, _ = _gateway(_spec(handler))
+    result = await gateway.execute(
+        tenant_id="tenant-a", caller=_caller(), request=_request()
+    )
+    assert result.ok
+    assert result.preview == "LangGraph harness"
+    assert contexts[0].tenant_id == "tenant-a"
+    assert contexts[0].run_id == "run-1"
+    assert contexts[0].thread_id == "thread-1"
+    assert contexts[0].caller == _caller()
+    assert contexts[0].evidence_authorization is None
+
+
+@pytest.mark.asyncio
+async def test_preflight_denial_precedes_ledger_and_handler():
+    from dataclasses import replace
+
+    assert "preflight" in ToolSpec.__dataclass_fields__
+
+    async def handler(arguments, context):
+        raise AssertionError("must not execute unauthorized tool")
+
+    async def deny(arguments, context):
+        raise PermissionError("source-not-authorized")
+
+    class NoClaimLedger:
+        async def claim(self, *args, **kwargs):
+            raise AssertionError("must not claim unauthorized tool")
+
+    spec = replace(_spec(handler), preflight=deny)
+    gateway, _, _, _ = _gateway(spec, executions=NoClaimLedger())
+    result = await gateway.execute(
+        tenant_id="tenant-a", caller=_caller(), request=_request()
+    )
+    assert result.error_code == "evidence_not_authorized"
+
+
+@pytest.mark.asyncio
+async def test_preflight_rechecks_committed_replay_and_sanitizes_store_failure():
+    from dataclasses import replace
+
+    assert "preflight" in ToolSpec.__dataclass_fields__
+    allowed = True
+
+    async def handler(arguments, context):
+        return ToolAdapterResult(preview="sensitive-body")
+
+    async def preflight(arguments, context):
+        if not allowed:
+            raise RuntimeError("database-secret")
+
+    gateway, _, _, _ = _gateway(replace(_spec(handler), preflight=preflight))
+    first = await gateway.execute(
+        tenant_id="tenant-a", caller=_caller(), request=_request()
+    )
+    assert first.ok
+    allowed = False
+    replay = await gateway.execute(
+        tenant_id="tenant-a", caller=_caller(), request=_request()
+    )
+    assert not replay.ok
+    assert replay.error_code == "tool_internal_error"
+    assert replay.preview == ""
+    assert "secret" not in replay.model_dump_json()
+
+
 class FetchArguments(BaseModel):
     url: str = Field(min_length=1)
 
@@ -110,7 +184,9 @@ def _gateway(
     events: RecordingEventSink | None = None,
     evidence: InMemoryEvidenceStore | None = None,
     executions=None,
-) -> tuple[AgentToolGateway, InMemoryBudgetManager, RecordingEventSink, InMemoryEvidenceStore]:
+) -> tuple[
+    AgentToolGateway, InMemoryBudgetManager, RecordingEventSink, InMemoryEvidenceStore
+]:
     registry = ToolRegistry()
     registry.register(spec)
     budget = budget or _budget()
@@ -131,7 +207,7 @@ def _gateway(
 
 @pytest.mark.asyncio
 async def test_non_cached_execution_persists_committed_budget_units(tmp_path) -> None:
-    async def handler(_arguments: BaseModel) -> ToolAdapterResult:
+    async def handler(_arguments: BaseModel, _context) -> ToolAdapterResult:
         return ToolAdapterResult(preview="answer")
 
     database = (tmp_path / "gateway-ledger.db").as_posix()
@@ -139,9 +215,7 @@ async def test_non_cached_execution_persists_committed_budget_units(tmp_path) ->
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
     ledger = SqlAlchemyToolExecutionStore(sessions)
-    gateway, _budget, _events, _evidence = _gateway(
-        _spec(handler), executions=ledger
-    )
+    gateway, _budget, _events, _evidence = _gateway(_spec(handler), executions=ledger)
     try:
         result = await gateway.execute(
             tenant_id="tenant-a", caller=_caller(), request=_request()
@@ -152,9 +226,7 @@ async def test_non_cached_execution_persists_committed_budget_units(tmp_path) ->
 
     assert result.ok
     assert usage == {
-        ("workflow", "researcher"): BudgetUnits(
-            tool_calls=1, network_requests=1
-        )
+        ("workflow", "researcher"): BudgetUnits(tool_calls=1, network_requests=1)
     }
 
 
@@ -168,7 +240,9 @@ def _spec(
 ) -> ToolSpec:
     return ToolSpec(
         name=tool,
-        argument_model=(FetchArguments if tool is ToolName.FETCH_PAGE else SearchArguments),
+        argument_model=(
+            FetchArguments if tool is ToolName.FETCH_PAGE else SearchArguments
+        ),
         handler=handler,
         capability=(
             ToolCapability.PAGE_FETCH
@@ -186,7 +260,7 @@ def _spec(
 async def test_rejections_happen_before_budget_and_execution_events() -> None:
     calls = 0
 
-    async def handler(_arguments: BaseModel) -> ToolAdapterResult:
+    async def handler(_arguments: BaseModel, _context) -> ToolAdapterResult:
         nonlocal calls
         calls += 1
         return ToolAdapterResult(preview="unused")
@@ -217,7 +291,7 @@ async def test_rejections_happen_before_budget_and_execution_events() -> None:
 async def test_same_call_replays_without_provider_or_budget_charge() -> None:
     calls = 0
 
-    async def handler(_arguments: BaseModel) -> ToolAdapterResult:
+    async def handler(_arguments: BaseModel, _context) -> ToolAdapterResult:
         nonlocal calls
         calls += 1
         return ToolAdapterResult(preview="answer")
@@ -225,8 +299,12 @@ async def test_same_call_replays_without_provider_or_budget_charge() -> None:
     gateway, budget, events, _evidence = _gateway(_spec(handler))
     request = _request()
 
-    first = await gateway.execute(tenant_id="tenant-a", caller=_caller(), request=request)
-    replay = await gateway.execute(tenant_id="tenant-a", caller=_caller(), request=request)
+    first = await gateway.execute(
+        tenant_id="tenant-a", caller=_caller(), request=request
+    )
+    replay = await gateway.execute(
+        tenant_id="tenant-a", caller=_caller(), request=request
+    )
 
     assert first.ok and not first.replayed
     assert replay.ok and replay.replayed
@@ -245,7 +323,7 @@ async def test_different_calls_share_provider_but_keep_their_own_correlation() -
     started = asyncio.Event()
     release = asyncio.Event()
 
-    async def handler(_arguments: BaseModel) -> ToolAdapterResult:
+    async def handler(_arguments: BaseModel, _context) -> ToolAdapterResult:
         nonlocal calls
         calls += 1
         started.set()
@@ -278,7 +356,7 @@ async def test_different_calls_share_provider_but_keep_their_own_correlation() -
 async def test_page_body_is_stored_as_evidence_and_only_preview_enters_result() -> None:
     body = "正文" * 100
 
-    async def handler(arguments: FetchArguments) -> ToolAdapterResult:
+    async def handler(arguments: FetchArguments, _context) -> ToolAdapterResult:
         return ToolAdapterResult(
             preview=body,
             evidence=EvidenceDraft(
@@ -320,7 +398,7 @@ async def test_page_body_is_stored_as_evidence_and_only_preview_enters_result() 
 
 @pytest.mark.asyncio
 async def test_timeout_is_sanitized_recorded_and_charged() -> None:
-    async def handler(_arguments: BaseModel) -> ToolAdapterResult:
+    async def handler(_arguments: BaseModel, _context) -> ToolAdapterResult:
         await asyncio.sleep(1)
         return ToolAdapterResult(preview="secret-token")
 
@@ -359,7 +437,7 @@ async def test_cancellation_releases_budget_and_same_call_can_be_reclaimed() -> 
     calls = 0
     started = asyncio.Event()
 
-    async def handler(_arguments: BaseModel) -> ToolAdapterResult:
+    async def handler(_arguments: BaseModel, _context) -> ToolAdapterResult:
         nonlocal calls
         calls += 1
         if calls == 1:
@@ -377,9 +455,7 @@ async def test_cancellation_releases_budget_and_same_call_can_be_reclaimed() -> 
     with pytest.raises(asyncio.CancelledError):
         await cancelled
 
-    after_cancel = (await budget.snapshot()).for_scope(
-        BudgetScopeKey.for_run("run-1")
-    )
+    after_cancel = (await budget.snapshot()).for_scope(BudgetScopeKey.for_run("run-1"))
     assert after_cancel.used.is_empty()
     assert after_cancel.reserved.is_empty()
     assert [name for name, _payload in events.events] == [
@@ -403,7 +479,7 @@ async def test_success_cache_is_isolated_by_tenant_for_evidence_references() -> 
     calls = 0
     url = "https://example.com/article"
 
-    async def handler(arguments: FetchArguments) -> ToolAdapterResult:
+    async def handler(arguments: FetchArguments, _context) -> ToolAdapterResult:
         nonlocal calls
         calls += 1
         return ToolAdapterResult(
@@ -452,7 +528,7 @@ async def test_success_cache_is_isolated_by_tenant_for_evidence_references() -> 
 async def test_telemetry_failure_does_not_change_tool_outcome() -> None:
     calls = 0
 
-    async def handler(_arguments: BaseModel) -> ToolAdapterResult:
+    async def handler(_arguments: BaseModel, _context) -> ToolAdapterResult:
         nonlocal calls
         calls += 1
         return ToolAdapterResult(preview="answer")
@@ -482,7 +558,7 @@ async def test_telemetry_failure_does_not_change_tool_outcome() -> None:
 async def test_transient_failure_is_retried_once_inside_the_gateway() -> None:
     calls = 0
 
-    async def handler(_arguments: BaseModel) -> ToolAdapterResult:
+    async def handler(_arguments: BaseModel, _context) -> ToolAdapterResult:
         nonlocal calls
         calls += 1
         return ToolAdapterResult.failure("provider_timeout")
@@ -526,7 +602,7 @@ async def test_transient_failure_is_retried_once_inside_the_gateway() -> None:
 async def test_unhandled_tool_exception_is_fatal_and_never_retried() -> None:
     calls = 0
 
-    async def handler(_arguments: BaseModel) -> ToolAdapterResult:
+    async def handler(_arguments: BaseModel, _context) -> ToolAdapterResult:
         nonlocal calls
         calls += 1
         raise RuntimeError("secret-token")
@@ -561,7 +637,7 @@ async def test_unhandled_tool_exception_is_fatal_and_never_retried() -> None:
 async def test_cache_infrastructure_failure_does_not_consume_network_budget() -> None:
     calls = 0
 
-    async def handler(_arguments: BaseModel) -> ToolAdapterResult:
+    async def handler(_arguments: BaseModel, _context) -> ToolAdapterResult:
         nonlocal calls
         calls += 1
         return ToolAdapterResult(preview="unused")

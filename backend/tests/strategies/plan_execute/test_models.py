@@ -1,22 +1,34 @@
 import pytest
 from pydantic import ValidationError
 
-from deeptrace.domain.evidence import Finding
 from deeptrace.domain.research import ResearchTopicOutcome, TopicStepError
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
+from deeptrace.strategies.evidence_evaluation import FindingDraft
 from deeptrace.strategies.plan_execute.models import ExecutorDecision, TaskPlan
 from deeptrace.strategies.plan_execute.state import PlanExecuteState
 
+_COVERAGE = {
+    "items": [
+        {
+            "requirement_id": "r1",
+            "status": "missing",
+            "reason": "needs sources",
+            "finding_ids": [],
+        }
+    ]
+}
+
 
 def test_task_plan_is_strict_unique_and_bounded() -> None:
-    plan = TaskPlan(queries=["a", "b", "a"])
+    requirements = [{"id": "r1", "description": "task"}]
+    plan = TaskPlan(queries=["a", "b", "a"], requirements=requirements)
     assert plan.queries == ["a", "b"]
     with pytest.raises(ValidationError):
-        TaskPlan(queries=[])
+        TaskPlan(queries=[], requirements=requirements)
     with pytest.raises(ValidationError):
-        TaskPlan(queries=[str(index) for index in range(7)])
+        TaskPlan(queries=[str(index) for index in range(7)], requirements=requirements)
     with pytest.raises(ValidationError):
-        TaskPlan(queries=["ok"], unexpected=1)
+        TaskPlan(queries=["ok"], requirements=requirements, unexpected=1)
 
 
 def test_executor_decision_is_strict_and_bounded() -> None:
@@ -25,6 +37,7 @@ def test_executor_decision_is_strict_and_bounded() -> None:
         reason="资料充足",
         findings=[],
         unresolved_gaps=[],
+        coverage=_COVERAGE,
     )
     assert decision.action == "complete"
     with pytest.raises(ValidationError):
@@ -58,8 +71,9 @@ def test_plan_execute_models_round_trip_through_strict_serializer() -> None:
         "decision": ExecutorDecision(
             action="replan",
             reason="缺少对比来源",
+            coverage=_COVERAGE,
             findings=[
-                Finding(
+                FindingDraft(
                     id="finding-1",
                     claim="claim",
                     evidence_ids=["evidence-1"],

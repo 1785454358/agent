@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
-import re
 from typing import Any
 
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
-from strategies.fixtures import ScriptedModelGateway, build_gateway_fixture
+from strategies.fixtures import (
+    ScriptedModelGateway,
+    build_gateway_fixture,
+    evaluation_payload_from_view,
+)
 
 from deeptrace.application.research import (
     ApplicationResearchRequest,
@@ -38,18 +41,7 @@ from deeptrace.strategies import (
 
 
 def _evaluation_with_prompt_evidence(prompt: str, *, sufficient: bool) -> str:
-    ids = sorted(set(re.findall(r"evidence-[0-9a-f]+", prompt)))
-    findings = [
-        {
-            "id": "finding-1",
-            "claim": "已获得可用资料",
-            "evidence_ids": ids[:1],
-            "confidence": 0.9,
-        }
-    ]
-    return json.dumps(
-        {"findings": findings, "unresolved_gaps": [], "sufficient": sufficient}
-    )
+    return json.dumps(evaluation_payload_from_view(prompt, sufficient=sufficient))
 
 
 def _registries() -> tuple[StrategyRegistry, ResponseGraphRegistry]:
@@ -74,6 +66,12 @@ def _initial_state(user_input: str):
     }
 
 
+_PRIVATE_BODY = (
+    "LangGraph Harness 2026 年的最新进展 unique-evidence-body-a.\n\n"
+    + "Unrelated background.\n\n" * 700
+)
+
+
 def _fixture(model: ScriptedModelGateway):
     return build_gateway_fixture(
         search_results={
@@ -85,7 +83,7 @@ def _fixture(model: ScriptedModelGateway):
             ],
         },
         pages={
-            "https://example.com/a": "unique-evidence-body-a",
+            "https://example.com/a": _PRIVATE_BODY,
             "https://example.com/b": "unique-evidence-body-b",
         },
         model_gateway=model,
@@ -96,7 +94,15 @@ def _fixture(model: ScriptedModelGateway):
 async def test_default_request_returns_a_concise_cited_answer() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["研究 LangGraph Harness"],
+                    "query_targets": {"研究 LangGraph Harness": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),
@@ -129,7 +135,12 @@ async def test_default_request_returns_a_concise_cited_answer() -> None:
 
     snapshot = await graph.aget_state({"configurable": {"thread_id": "thread-1"}})
     serialized = json.dumps(snapshot.values, default=str, ensure_ascii=False)
-    assert "unique-evidence-body-a" not in serialized
+    assert _PRIVATE_BODY not in serialized
+    assert all(
+        len(s.quote) <= 500
+        for f in turn["research_outcome"].findings
+        for s in f.supports
+    )
     for private_key in ("search_result", "loaded_evidence", "topic_input"):
         assert private_key not in snapshot.values
 
@@ -151,7 +162,15 @@ async def test_default_request_returns_a_concise_cited_answer() -> None:
 async def test_explicit_report_request_reuses_research_and_routes_to_report() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["研究 LangGraph Harness"],
+                    "query_targets": {"研究 LangGraph Harness": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),
@@ -163,7 +182,9 @@ async def test_explicit_report_request_reuses_research_and_routes_to_report() ->
     graph = build_agent_runtime_graph(strategies, responses)
 
     result = await graph.ainvoke(
-        _initial_state("请生成报告"),
+        # Fresh conversations need an actual topic; otherwise the scripted
+        # planner invents LangGraph and the source has no relevant visible text.
+        _initial_state("请生成 LangGraph Harness 研究报告"),
         config={"configurable": {"thread_id": "thread-1"}},
         context=fixture.context,
     )
@@ -183,9 +204,17 @@ async def test_explicit_report_request_reuses_research_and_routes_to_report() ->
 async def test_plan_execute_mode_routes_through_application_service() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
-            "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
-                prompt, sufficient=True
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["研究 LangGraph Harness"],
+                    "query_targets": {"研究 LangGraph Harness": ["r1"]},
+                }
+            ),
+            "evaluator": lambda prompt: json.dumps(
+                evaluation_payload_from_view(prompt)
             ),
             "responder": json.dumps({"content": "计划执行结论 [1]。"}),
         }
@@ -240,9 +269,17 @@ async def test_plan_execute_mode_routes_through_application_service() -> None:
 async def test_multi_agent_mode_routes_through_application_service() -> None:
     model = ScriptedModelGateway(
         {
-            "supervisor": json.dumps({"assignments": ["研究方向 A"]}),
-            "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
-                prompt, sufficient=True
+            "supervisor": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "assignments": ["研究方向 A"],
+                    "query_targets": {"研究方向 A": ["r1"]},
+                }
+            ),
+            "evaluator": lambda prompt: json.dumps(
+                evaluation_payload_from_view(prompt)
             ),
             "responder": json.dumps({"content": "多智能体结论 [1]。"}),
         }
@@ -287,7 +324,15 @@ async def test_multi_agent_mode_routes_through_application_service() -> None:
 async def test_follow_up_in_same_thread_answers_without_new_research() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["研究 LangGraph Harness"],
+                    "query_targets": {"研究 LangGraph Harness": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),
@@ -346,7 +391,15 @@ async def test_follow_up_in_same_thread_answers_without_new_research() -> None:
 async def test_report_request_after_research_skips_new_research() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["研究 LangGraph Harness"],
+                    "query_targets": {"研究 LangGraph Harness": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),
@@ -388,7 +441,15 @@ async def test_report_request_after_research_skips_new_research() -> None:
 async def test_incremental_research_runs_again_in_same_thread() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["研究 LangGraph Harness"],
+                    "query_targets": {"研究 LangGraph Harness": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),
@@ -483,7 +544,15 @@ async def test_research_recalls_memories_and_consolidates_findings() -> None:
 
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["研究 LangGraph Harness"],
+                    "query_targets": {"研究 LangGraph Harness": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),
@@ -558,31 +627,36 @@ async def test_harness_uses_semantic_retriever_and_indexes_consolidated_memory()
             self.indexed.extend(records)
 
     def two_findings(prompt: str) -> str:
-        evidence_ids = sorted(set(re.findall(r"evidence-[0-9a-f]+", prompt)))
-        return json.dumps(
-            {
-                "findings": [
-                    {
-                        "id": "finding-1",
-                        "claim": "第一条有来源结论",
-                        "evidence_ids": evidence_ids[:1],
-                        "confidence": 0.9,
-                    },
-                    {
-                        "id": "finding-2",
-                        "claim": "第二条有来源结论",
-                        "evidence_ids": evidence_ids[:1],
-                        "confidence": 0.8,
-                    },
-                ],
-                "unresolved_gaps": [],
-                "sufficient": True,
-            }
+        payload = evaluation_payload_from_view(prompt, sufficient=True)
+        first = payload["findings"][0]
+        second = json.loads(json.dumps(first))
+        second["id"] = "finding-2"
+        # Two literal claims from the visible unit exercise batch indexing,
+        # not semantic quality. The host constructs supports from its short ref.
+        material = json.JSONDecoder().raw_decode(
+            prompt.rsplit("EVIDENCE_VIEW_JSON:", 1)[1].lstrip()
+        )[0]
+        quote = next(
+            p["text"]
+            for p in material["passages"]
+            if p["ref"] == first["supports"][0]["ref"]
         )
+        first["claim"] = quote[:40]
+        second["claim"] = quote[-40:]
+        payload["findings"].append(second)
+        return json.dumps(payload)
 
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["研究 LangGraph Harness"],
+                    "query_targets": {"研究 LangGraph Harness": ["r1"]},
+                }
+            ),
             "evaluator": two_findings,
             "responder": json.dumps({"content": "研究结论 [1]。"}),
         }
@@ -631,7 +705,15 @@ async def test_harness_uses_semantic_retriever_and_indexes_consolidated_memory()
 async def test_follow_up_turns_do_not_recall_memory() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["研究 LangGraph Harness"],
+                    "query_targets": {"研究 LangGraph Harness": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),
@@ -738,7 +820,15 @@ async def test_recalled_memories_reach_planner_and_responder_prompts() -> None:
 
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["研究 LangGraph Harness"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["研究 LangGraph Harness"],
+                    "query_targets": {"研究 LangGraph Harness": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),

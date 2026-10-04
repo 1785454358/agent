@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "dataset": "drb-v1-engineering-5",
+  "repo": "Ayanami0730/deep_research_bench",
+  "commit": "f2735b5c3636759c22f9e936c0232de8bf545b67",
+  "query_path": "upstream/query.jsonl",
+  "upstream_path": "data/prompt_data/query.jsonl",
+  "query_url": "https://github.com/Ayanami0730/deep_research_bench/blob/f2735b5c3636759c22f9e936c0232de8bf545b67/data/prompt_data/query.jsonl",
+  "query_sha256": "62b197a264a027fd4e2e795ff322a82dd6d566f5e350596ccc7572539ec987d1",
+  "license": "Apache-2.0",
+  "license_path": "LICENSE.txt",
+  "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+  "retrieved_at": "2026-10-02T04:25:07Z",
+  "selection_rule": "Within all Software Development / Software tasks, freeze engineering-system/product-implementation eligibility before viewing Agent or upstream reference outputs; select the first five eligible tasks in ascending original numeric ID. This is a purposive engineering subset, not random or representative sampling.",
+  "selected_ids": [
+    17,
+    19,
+    20,
+    66,
+    68
+  ],
+  "candidates": [
+    {
+      "id": 16,
+      "eligible": false,
+      "reason": "Specialized non-contact sensing algorithm/signal accuracy research outside general software-system/product implementation scope."
+    },
+    {
+      "id": 17,
+      "eligible": true,
+      "reason": "Low-code/no-code development workflow and maintenance tradeoffs."
+    },
+    {
+      "id": 18,
+      "eligible": false,
+      "reason": "Specialized robotics convex-region/path-planning algorithm feasibility, outside selected engineering scope."
+    },
+    {
+      "id": 19,
+      "eligible": true,
+      "reason": "Prometheus high-churn observability system implementation and cloud alternatives."
+    },
+    {
+      "id": 20,
+      "eligible": true,
+      "reason": "Streamable HTTP engineering implementation; preserve original attribution/latest wording without treating it as a verified fact."
+    },
+    {
+      "id": 43,
+      "eligible": false,
+      "reason": "Broad software-industry/AI displacement forecasting, not an implementation research task."
+    },
+    {
+      "id": 66,
+      "eligible": true,
+      "reason": "Plugin-based database-view implementation and capability comparison."
+    },
+    {
+      "id": 67,
+      "eligible": false,
+      "reason": "Specialized reinforcement-learning/trajectory-planning research outside general software-system implementation scope."
+    },
+    {
+      "id": 68,
+      "eligible": true,
+      "reason": "Predictive/scheduled Kubernetes node autoscaling implementation."
+    },
+    {
+      "id": 69,
+      "eligible": true,
+      "reason": "A2A/MCP protocol architecture comparison; eligible but outside first-five quota."
+    },
+    {
+      "id": 70,
+      "eligible": true,
+      "reason": "Servlet/Spring software architecture evolution; eligible but outside first-five quota."
+    },
+    {
+      "id": 93,
+      "eligible": false,
+      "reason": "Broad global video-software market analysis, not an implementation research task."
+    }
+  ],
+  "live_execution_supported": false,
+  "reference_answers_available": false,
+  "official_scoring": false,
+  "limitations": [
+    "Imported original tasks only. No upstream reference answers, test outputs or evaluation criteria have been imported or read.",
+    "Not connected to the frozen local-corpus runner. A live-web search/fetch adapter and separate execution approval are required.",
+    "No official RACE/FACT score or DeepResearch Bench ranking. Without reference answers factual correctness is not applicable, never imputed as zero.",
+    "Purposive engineering eligibility is frozen and disclosed, but subjective and not statistically representative of the full benchmark.",
+    "Original latest/attribution wording is retained verbatim, including task 20. Future execution must resolve time scope and verify premises from primary sources.",
+    "No Agent outputs were used to select questions. No public-task outputs or quality metrics exist for this import."
+  ]
+}

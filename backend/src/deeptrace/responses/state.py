@@ -12,4 +12,6 @@ class ResponseState(TypedDict, total=False):
     response_input: ResponseInput
     loaded_evidence: list[Evidence]
     draft: ResponseDraft | None
+    visible_evidence_ids: list[str]
+    grounding_issue: str | None
     outcome: ResponseOutcome | None

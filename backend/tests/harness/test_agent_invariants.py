@@ -5,12 +5,13 @@ from dataclasses import replace
 from typing import Any
 
 import pytest
-from deeptrace.domain import ResearchMode, ResearchTopicInput
-from deeptrace.harness.agent_executor import build_research_agent_graph
-from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
 from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from strategies.fixtures import build_gateway_fixture
+
+from deeptrace.domain import ResearchMode, ResearchTopicInput
+from deeptrace.harness.agent_executor import build_research_agent_graph
+from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
 
 
 class Model:
@@ -335,18 +336,19 @@ async def test_every_strategy_model_call_has_system_original_task_and_constraint
                     )
                 return AIMessage(content="done")
             if role == "evaluator":
-                payload = {"findings": [], "unresolved_gaps": []}
-                payload.update(
-                    {"sufficient": True}
-                    if mode == ResearchMode.WORKFLOW
-                    else {"action": "complete", "reason": "done"}
+                from strategies.fixtures import evaluation_payload_from_view
+
+                payload = evaluation_payload_from_view(
+                    str(messages[-1].content),
+                    sufficient=True if mode == ResearchMode.WORKFLOW else None,
                 )
                 return json.dumps(payload)
             return json.dumps(
                 {
+                    "requirements": [{"id": "r1", "description": "original task"}],
                     "assignments" if mode == ResearchMode.MULTI_AGENT else "queries": [
                         "branch"
-                    ]
+                    ],
                 }
             )
 
@@ -608,7 +610,8 @@ async def test_checkpoint_before_model_keeps_facts_without_a_duplicate_model_vie
 @pytest.mark.asyncio
 async def test_legacy_checkpoint_model_view_is_rebuilt_from_original_facts():
     from langchain_core.messages import HumanMessage
-    from langgraph.graph import START, END, StateGraph
+    from langgraph.graph import END, START, StateGraph
+
     from deeptrace.harness.agent_state import AgentExecutorState
 
     class LegacyState(AgentExecutorState, total=False):

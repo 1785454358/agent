@@ -4,14 +4,27 @@ from datetime import UTC, datetime
 
 import pytest
 
+from deeptrace.domain import ResearchMode
 from deeptrace.models import RawDocument
 from deeptrace.tools.adapters import (
     FetchPageArguments,
     SearchWebArguments,
     _ResearchToolAdapters,
 )
-from deeptrace.tools.search import ToolContext, search_web
+from deeptrace.tools.contracts import ToolCallContext
+from deeptrace.tools.policy import CallerRole, ToolCaller
 from deeptrace.tools.scraper import WebFetchError
+from deeptrace.tools.search import ToolContext, search_web
+
+
+def _context():
+    return ToolCallContext(
+        "workspace-1",
+        "run-1",
+        "thread-1",
+        ToolCaller("researcher", CallerRole.WORKFLOW_GRAPH, ResearchMode.WORKFLOW),
+        None,
+    )
 
 
 class RaisingFetcher:
@@ -47,7 +60,7 @@ async def test_fetch_page_preserves_structured_web_error_code() -> None:
     adapters = _adapters(fetcher)
 
     result = await adapters.fetch_page(
-        FetchPageArguments(url="https://example.com/thin")
+        FetchPageArguments(url="https://example.com/thin"), _context()
     )
 
     assert result.ok is False
@@ -61,7 +74,10 @@ async def test_search_adapter_preserves_provider_error_code() -> None:
     def search(_query: str) -> dict:
         return {
             "ok": False,
-            "error": {"code": "http_failed", "message": "Tavily 请求失败：ConnectError"},
+            "error": {
+                "code": "http_failed",
+                "message": "Tavily 请求失败：ConnectError",
+            },
         }
 
     adapters = _ResearchToolAdapters(
@@ -72,7 +88,9 @@ async def test_search_adapter_preserves_provider_error_code() -> None:
         now=lambda: datetime(2026, 9, 15, tzinfo=UTC),
     )
 
-    result = await adapters.search_web(SearchWebArguments(query="LangGraph"))
+    result = await adapters.search_web(
+        SearchWebArguments(query="LangGraph"), _context()
+    )
 
     assert result.ok is False
     assert result.error_code == "http_failed"
@@ -86,7 +104,7 @@ async def test_unexpected_fetch_exception_is_not_swallowed_by_adapter() -> None:
 
     with pytest.raises(RuntimeError):
         await adapters.fetch_page(
-            FetchPageArguments(url="https://example.com/x")
+            FetchPageArguments(url="https://example.com/x"), _context()
         )
 
 

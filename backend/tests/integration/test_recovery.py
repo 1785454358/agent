@@ -5,12 +5,15 @@ from __future__ import annotations
 
 import asyncio
 import json
-import re
 from typing import Any
 
 import pytest
 from langgraph.errors import NodeCancelledError
-from strategies.fixtures import build_gateway_fixture, scripted_research_response
+from strategies.fixtures import (
+    build_gateway_fixture,
+    evaluation_payload_from_view,
+    scripted_research_response,
+)
 
 from deeptrace.domain import ResearchMode, ResponseMode
 from deeptrace.harness.agent_executor import build_research_agent_graph
@@ -78,21 +81,7 @@ class CrashProxy:
 
 
 def _evaluation(prompt: str) -> str:
-    ids = sorted(set(re.findall(r"evidence-[0-9a-f]+", prompt)))
-    return json.dumps(
-        {
-            "findings": [
-                {
-                    "id": "finding-1",
-                    "claim": "已获得可用资料",
-                    "evidence_ids": ids[:1],
-                    "confidence": 0.9,
-                }
-            ],
-            "unresolved_gaps": [],
-            "sufficient": True,
-        }
-    )
+    return json.dumps(evaluation_payload_from_view(prompt, sufficient=True))
 
 
 def _registries(topic_proxy=None, response_proxy=None):

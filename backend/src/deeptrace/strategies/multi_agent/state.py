@@ -4,15 +4,16 @@ from __future__ import annotations
 
 from typing import Annotated, TypedDict
 
-from deeptrace.domain import ResearchOutcome
+from deeptrace.domain import CoverageAssessment, ResearchOutcome, ResearchRequirement
 from deeptrace.domain.evidence import Finding
 from deeptrace.domain.research import ResearchTopicOutcome
-from deeptrace.strategies.multi_agent.models import SupervisorEvaluation
+from deeptrace.strategies.multi_agent.models import (
+    ReferenceSupervisorEvaluation,
+    SupervisorEvaluation,
+)
 
 
-def merge_unique_strings(
-    left: list[str] | None, right: list[str] | None
-) -> list[str]:
+def merge_unique_strings(left: list[str] | None, right: list[str] | None) -> list[str]:
     merged: list[str] = list(left or [])
     for value in right or []:
         if value not in merged:
@@ -48,10 +49,22 @@ class MultiAgentState(TypedDict, total=False):
     conversation_summary: dict
     recent_messages: list[str]
     prior_evidence_ids: list[str]
-    unresolved_gaps: Annotated[list[str], merge_unique_strings]
+    unresolved_gaps: list[str]
     budget: dict
     current_date: str
     timezone: str
+    requirements: list[ResearchRequirement]
+    target_requirement_ids: list[str]
+    query_targets: dict[str, list[str]]
+    evidence_contract_version: int
+    decomposition_degraded: bool
+    coverage: CoverageAssessment | None
+    source_eligibility: dict[str, str]
+    diagnostic_gaps: Annotated[list[str], merge_unique_strings]
+    supplement_targets: dict[str, list[str]]
+    progress_before_supplement: list[str]
+    supplement_completed: bool
+    no_progress: bool
 
     # Loop state (all persisted at checkpoint boundaries).
     assignments: list[str]
@@ -60,7 +73,7 @@ class MultiAgentState(TypedDict, total=False):
     researcher_outcomes: Annotated[list[ResearchTopicOutcome], merge_topic_outcomes]
     evidence_ids: Annotated[list[str], merge_unique_strings]
     findings: list[Finding]
-    evaluation: SupervisorEvaluation | None
+    evaluation: SupervisorEvaluation | ReferenceSupervisorEvaluation | None
     executed_steps: Annotated[int, add_executed_steps]
     outcome: ResearchOutcome | None
 
@@ -74,5 +87,10 @@ class ResearcherBranchState(TypedDict):
     original_task: str
     constraints: list[str]
     context_notes: list[str]
+    requirements: list[ResearchRequirement]
+    evidence_contract_version: int
+    target_requirement_ids: list[str]
+    research_gaps: list[str]
+    prior_evidence_ids: list[str]
     researcher_index: int
     round_number: int

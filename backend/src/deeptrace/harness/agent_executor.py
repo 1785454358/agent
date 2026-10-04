@@ -20,7 +20,11 @@ from deeptrace.harness.agent_tools import (
     execute_batch,
 )
 from deeptrace.harness.context import HarnessContext
-from deeptrace.harness.policies.agent_context import ContextLimitError, prepare_messages
+from deeptrace.harness.policies.agent_context import (
+    ContextLimitError,
+    message_tokens,
+    prepare_messages_with_diagnostics,
+)
 from deeptrace.harness.policies.execution import ExecutionPolicy
 from deeptrace.harness.token_budget import TokenBudgetConfig
 
@@ -92,15 +96,47 @@ def build_research_agent_graph(
         state: AgentExecutorState, runtime: Runtime[HarnessContext]
     ) -> dict[str, Any]:
         try:
-            messages = prepare_messages(state, RESEARCH_TOOLS, budget)
+            messages, note_diagnostics = prepare_messages_with_diagnostics(
+                state,
+                RESEARCH_TOOLS,
+                budget,
+                remaining_iterations=max_iterations - state.get("iteration", 0),
+            )
         except ContextLimitError:
             return {
                 "stop_reason": "context_limit",
                 "failures": [*state.get("failures", []), _error("context_limit")],
             }
 
-        updates: dict[str, Any] = {"iteration": state.get("iteration", 0) + 1}
+        updates: dict[str, Any] = {
+            "iteration": state.get("iteration", 0) + 1,
+            "research_finding_diagnostics": list(
+                dict.fromkeys(
+                    [
+                        *(state.get("research_finding_diagnostics") or []),
+                        *note_diagnostics,
+                    ]
+                )
+            )[:100],
+        }
         try:
+            try:
+                await runtime.context.event_sink.emit(
+                    "agent.context_view",
+                    {
+                        "run_id": topic_input(state).run_id,
+                        "branch": topic_input(state).query,
+                        "iteration": updates["iteration"],
+                        "estimated_input_tokens": message_tokens(
+                            messages, RESEARCH_TOOLS
+                        ),
+                        "diagnostics": note_diagnostics,
+                    },
+                )
+            except Exception:
+                logging.getLogger(__name__).warning(
+                    "Context telemetry unavailable", exc_info=True
+                )
             response = await runtime.context.model_gateway.invoke(
                 role=RESEARCHER_ROLE,
                 messages=messages,
@@ -176,6 +212,11 @@ def build_research_agent_graph(
         return {
             "outcome": ResearchTopicOutcome(
                 query=topic_input(state).query,
+                read_anchors=state.get("read_anchors") or [],
+                read_anchor_diagnostics=state.get("read_anchor_diagnostics") or [],
+                research_findings=state.get("research_findings") or [],
+                research_finding_diagnostics=state.get("research_finding_diagnostics")
+                or [],
                 agent_outcome=agent,
                 evidence_ids=agent.evidence_ids,
                 attempted_urls=sorted(set(state.get("attempted_urls") or []))[:100],

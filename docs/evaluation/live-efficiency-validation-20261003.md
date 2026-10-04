@@ -86,10 +86,10 @@ MA收集3.14英文、3.11中文与3.14中文三份正文，均落在同一canoni
 
 ## 原始产物与复现
 
-- [运行records](../../tmp/live-efficiency-answer-20261003/records.json)、[实验manifest](../../tmp/live-efficiency-answer-20261003/manifest.json)、[评分输入](../../tmp/live-efficiency-answer-20261003/quality_eval.json)。
-- [原始quality_scores](../../tmp/live-efficiency-answer-20261003-quality/quality_scores.json)，同目录identity.json和attempts.json完整保留；progress.json是最后进度留档，不代表仍在运行。
-- [预登记与源码留样](../../tmp/live-efficiency-freeze-20261003/registration.json)，[预检脚本](../../tmp/live-efficiency-preflight.py)。原运行HEAD为06cdde6加dirty源码身份；后续文档提交不改变冻源内容，不把现HEAD当原运行源码。
-- [字面审计](../../tmp/live-efficiency-audit-20261003.json)、[审计脚本](../../tmp/live-efficiency-audit.py)、[无API来源重放](../../tmp/live-efficiency-source-replay.py)。
+- 运行records：`../../tmp/live-efficiency-answer-20261003/records.json`（本地实验留样）、实验manifest：`../../tmp/live-efficiency-answer-20261003/manifest.json`（本地实验留样）、评分输入：`../../tmp/live-efficiency-answer-20261003/quality_eval.json`（本地实验留样）。
+- 原始quality_scores：`../../tmp/live-efficiency-answer-20261003-quality/quality_scores.json`（本地实验留样），同目录identity.json和attempts.json完整保留；progress.json是最后进度留档，不代表仍在运行。
+- 预登记与源码留样：`../../tmp/live-efficiency-freeze-20261003/registration.json`（本地实验留样），预检脚本：`../../tmp/live-efficiency-preflight.py`（本地实验留样）。原运行HEAD为06cdde6加dirty源码身份；后续文档提交不改变冻源内容，不把现HEAD当原运行源码。
+- 字面审计：`../../tmp/live-efficiency-audit-20261003.json`（本地实验留样）、审计脚本：`../../tmp/live-efficiency-audit.py`（本地实验留样）、无API来源重放：`../../tmp/live-efficiency-source-replay.py`（本地实验留样）。
 
 本批冻源后未修改生产、评测实现、测试、数据或评分器。原始report.md仍含旧“offline corpus”标签，实际manifest为live_web/corpus_sha256=null，轨迹为真实Tavily搜索与网页抓取；本报告明确纠正该展示，不以错误标题冒充冻结资料实验。
 

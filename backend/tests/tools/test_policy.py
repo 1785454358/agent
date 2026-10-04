@@ -24,12 +24,12 @@ class TrapArguments(BaseModel):
     value: str = Field(min_length=1)
 
     @model_validator(mode="after")
-    def count_validation(self) -> "TrapArguments":
+    def count_validation(self) -> TrapArguments:
         type(self).validations += 1
         return self
 
 
-async def _handler(arguments: BaseModel) -> dict[str, str]:
+async def _handler(arguments: BaseModel, _context) -> dict[str, str]:
     raise AssertionError(f"handler must not run during access checks: {arguments}")
 
 
@@ -76,10 +76,22 @@ def registry() -> ToolRegistry:
 @pytest.mark.parametrize(
     ("caller", "tool"),
     [
-        (_caller(CallerRole.WORKFLOW_GRAPH, ResearchMode.WORKFLOW), ToolName.SEARCH_WEB),
-        (_caller(CallerRole.WORKFLOW_GRAPH, ResearchMode.WORKFLOW), ToolName.FETCH_PAGE),
-        (_caller(CallerRole.PLAN_EXECUTE_EXECUTOR, ResearchMode.PLAN_EXECUTE), ToolName.SEARCH_MEMORY),
-        (_caller(CallerRole.MULTI_AGENT_RESEARCHER, ResearchMode.MULTI_AGENT), ToolName.SEARCH_WEB),
+        (
+            _caller(CallerRole.WORKFLOW_GRAPH, ResearchMode.WORKFLOW),
+            ToolName.SEARCH_WEB,
+        ),
+        (
+            _caller(CallerRole.WORKFLOW_GRAPH, ResearchMode.WORKFLOW),
+            ToolName.FETCH_PAGE,
+        ),
+        (
+            _caller(CallerRole.PLAN_EXECUTE_EXECUTOR, ResearchMode.PLAN_EXECUTE),
+            ToolName.SEARCH_MEMORY,
+        ),
+        (
+            _caller(CallerRole.MULTI_AGENT_RESEARCHER, ResearchMode.MULTI_AGENT),
+            ToolName.SEARCH_WEB,
+        ),
     ],
 )
 def test_allowlist_resolves_research_tools_for_authorized_callers(
@@ -127,9 +139,24 @@ def test_unknown_tool_fails_before_argument_validation(registry: ToolRegistry) -
     [
         ("workflow_graph", ResearchMode.WORKFLOW, None, "role must be a CallerRole"),
         (CallerRole.WORKFLOW_GRAPH, "workflow", None, "mode must be a ResearchMode"),
-        (CallerRole.WORKFLOW_GRAPH, ResearchMode.PLAN_EXECUTE, None, "requires mode workflow"),
-        (CallerRole.RESPONSE_GRAPH, ResearchMode.WORKFLOW, None, "requires a response_mode"),
-        (CallerRole.MULTI_AGENT_SUPERVISOR, ResearchMode.MULTI_AGENT, ResponseMode.ANSWER, "cannot set response_mode"),
+        (
+            CallerRole.WORKFLOW_GRAPH,
+            ResearchMode.PLAN_EXECUTE,
+            None,
+            "requires mode workflow",
+        ),
+        (
+            CallerRole.RESPONSE_GRAPH,
+            ResearchMode.WORKFLOW,
+            None,
+            "requires a response_mode",
+        ),
+        (
+            CallerRole.MULTI_AGENT_SUPERVISOR,
+            ResearchMode.MULTI_AGENT,
+            ResponseMode.ANSWER,
+            "cannot set response_mode",
+        ),
     ],
 )
 def test_caller_identity_rejects_inconsistent_or_raw_enums(
@@ -216,11 +243,14 @@ def test_url_policy_accepts_each_trusted_source_without_dns(
         urls=frozenset({"https://example.com/article"}),
     )
 
-    assert policy.validate(
-        ToolName.FETCH_PAGE,
-        {"url": "https://example.com/article"},
-        authorization,
-    )["url"] == "https://example.com/article"
+    assert (
+        policy.validate(
+            ToolName.FETCH_PAGE,
+            {"url": "https://example.com/article"},
+            authorization,
+        )["url"]
+        == "https://example.com/article"
+    )
 
 
 def test_url_policy_leaves_non_fetch_arguments_unchanged() -> None:

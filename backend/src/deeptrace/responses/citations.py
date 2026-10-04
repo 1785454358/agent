@@ -7,11 +7,20 @@ import re
 from deeptrace.domain import CitationRef, ResponseMode, ResponseOutcome
 from deeptrace.responses.models import ResponseDraft
 
-
 _MAX_RESPONSE_INPUT_CHARS = 500
 
 _REPORT_TAIL_FORMS = ("报告形式", "报告格式", "完整报告", "正式报告")
-_BRIEF_WORDS = ("总结", "摘要", "简报", "对比", "归纳", "要点", "brief", "summary", "tldr")
+_BRIEF_WORDS = (
+    "总结",
+    "摘要",
+    "简报",
+    "对比",
+    "归纳",
+    "要点",
+    "brief",
+    "summary",
+    "tldr",
+)
 _REPORT_VERB_PATTERN = re.compile(
     r"\b(generate|write|produce|create|draft)\b[\s\S]{0,20}\breport\b",
     re.IGNORECASE,
@@ -63,24 +72,42 @@ def _fallback_content(draft: ResponseDraft, loaded: list[str]) -> str:
 
 
 def validate_citations(
-    draft: ResponseDraft, *, loaded_evidence_ids: list[str]
+    draft: ResponseDraft,
+    *,
+    loaded_evidence_ids: list[str],
+    visible_evidence_ids: list[str] | None = None,
 ) -> ResponseOutcome:
-    """Keep only citations whose Evidence was loaded; never invent replacements."""
-    known = {index + 1: evidence_id for index, evidence_id in enumerate(loaded_evidence_ids)}
+    """Keep loaded citations and compact their markers to returned-source order."""
+    known = {
+        index + 1: evidence_id for index, evidence_id in enumerate(loaded_evidence_ids)
+    }
+    if visible_evidence_ids is not None:
+        visible = set(visible_evidence_ids)
+        known = {
+            index: identity for index, identity in known.items() if identity in visible
+        }
     cleaned = normalize_citation_brackets(draft.content)
     markers = extract_citation_markers(cleaned)
 
-    citations: list[CitationRef] = []
+    cited_evidence_ids: list[str] = []
     for marker in markers:
         number = int(marker[1:-1])
         evidence_id = known.get(number)
-        if evidence_id is None:
-            cleaned = cleaned.replace(marker, "")
-            continue
-        if all(citation.evidence_id != evidence_id for citation in citations):
-            citations.append(CitationRef(evidence_id=evidence_id, marker=marker))
+        if evidence_id is not None and evidence_id not in cited_evidence_ids:
+            cited_evidence_ids.append(evidence_id)
 
-    if not citations:
+    compact_markers = {
+        evidence_id: f"[{index}]"
+        for index, evidence_id in enumerate(cited_evidence_ids, 1)
+    }
+
+    def replace_marker(match: re.Match[str]) -> str:
+        evidence_id = known.get(int(match.group(1)))
+        return compact_markers.get(evidence_id, "")
+
+    cleaned = _MARKER_PATTERN.sub(replace_marker, cleaned)
+
+    if not cited_evidence_ids:
         return ResponseOutcome(
             response_mode=draft.response_mode,
             content=cleaned,
@@ -88,9 +115,16 @@ def validate_citations(
             cited_evidence_ids=[],
             partial_reason="no_supported_citations",
         )
+    citations = [
+        CitationRef(
+            evidence_id=evidence_id,
+            marker=compact_markers[evidence_id],
+        )
+        for evidence_id in cited_evidence_ids
+    ]
     return ResponseOutcome(
         response_mode=draft.response_mode,
         content=cleaned,
         citations=citations,
-        cited_evidence_ids=[citation.evidence_id for citation in citations],
+        cited_evidence_ids=cited_evidence_ids,
     )

@@ -10,7 +10,9 @@ from langgraph.runtime import Runtime
 from pydantic import ValidationError
 
 from deeptrace.domain import (
+    Evidence,
     EvidenceLifecycleStatus,
+    Finding,
     MemoryRecord,
     MemoryStatus,
     MemoryType,
@@ -32,6 +34,7 @@ from deeptrace.harness.memory.write import (
 )
 from deeptrace.harness.state import HarnessState
 from deeptrace.harness.token_budget import count_tokens
+from deeptrace.tools.evidence_views import support_matches_record
 
 
 def _extract_memory_content(user_input: str) -> str:
@@ -211,13 +214,22 @@ async def _consolidate_memory(
     memory_store = context.memory_store
     turn = state["turn"]
     outcome = turn.get("research_outcome")
-    if outcome is None or not outcome.findings:
+    if (
+        outcome is None
+        or not outcome.findings
+        or outcome.evidence_contract_version not in (2, 3)
+    ):
         return {}
     now = context.clock.now()
     allowed_ids = set(outcome.evidence_ids)
     candidates: list[MemoryRecord] = []
+    candidate_findings: list[Finding] = []
     for finding in outcome.findings[:20]:
-        if not finding.evidence_ids or not set(finding.evidence_ids) <= allowed_ids:
+        if (
+            not finding.supports
+            or not finding.evidence_ids
+            or not set(finding.evidence_ids) <= allowed_ids
+        ):
             continue
         try:
             candidates.append(
@@ -232,6 +244,7 @@ async def _consolidate_memory(
                     updated_at=now,
                 )
             )
+            candidate_findings.append(finding)
         except ValidationError as exc:
             await _degraded(context, "consolidation", exc)
     if not candidates:
@@ -242,18 +255,24 @@ async def _consolidate_memory(
         )
     )
     try:
-        active_ids = await _active_evidence_ids(context, source_ids)
+        sources = await _source_snapshot(context, source_ids)
     except Exception as exc:  # noqa: BLE001 - do not retry an unavailable evidence store
         await _degraded(context, "consolidation", exc)
         return {}
     policy = MemoryWritePolicy()
     stored_records: list[MemoryRecord] = []
-    for record in candidates:
-        if not set(record.source_evidence_ids) <= active_ids:
+    for record, finding in zip(candidates, candidate_findings, strict=True):
+        if not await verify_finding_sources(
+            finding, context, allowed_ids, _sources=sources
+        ):
             continue
         try:
             stored = await remember(
-                memory_store, record, policy, source="consolidation"
+                memory_store,
+                record,
+                policy,
+                source="consolidation",
+                supported_fact=True,
             )
             if stored.status is MemoryStatus.ACTIVE:
                 stored_records.append(stored)
@@ -263,9 +282,9 @@ async def _consolidate_memory(
     return {}
 
 
-async def _active_evidence_ids(
+async def _source_snapshot(
     context: HarnessContext, source_ids: list[str]
-) -> set[str]:
+) -> dict[str, tuple[Evidence, str]]:
     """Batch metadata reads; only missing IDs trigger bounded per-ID fallback."""
     try:
         sources = await context.evidence_store.get_many(
@@ -273,25 +292,58 @@ async def _active_evidence_ids(
         )
     except KeyError as exc:
         await _degraded(context, "consolidation", exc)
-        active_ids: set[str] = set()
+        sources = []
         for source_id in source_ids:
             try:
-                sources = await context.evidence_store.get_many(
+                found = await context.evidence_store.get_many(
                     context.workspace_id, [source_id]
                 )
             except KeyError:
                 continue
-            active_ids.update(
-                source.id
-                for source in sources
-                if source.status is EvidenceLifecycleStatus.ACTIVE
+            sources.extend(found)
+    snapshot = {}
+    for source in sources:
+        if source.status is not EvidenceLifecycleStatus.ACTIVE:
+            continue
+        try:
+            body = await context.evidence_store.read_body(
+                context.workspace_id, source.id
             )
-        return active_ids
-    return {
-        source.id
-        for source in sources
-        if source.status is EvidenceLifecycleStatus.ACTIVE
-    }
+        except Exception as exc:  # noqa: BLE001 - one bad source must not discard valid siblings
+            await _degraded(context, "consolidation", exc)
+            continue
+        snapshot[source.id] = (source, body)
+    return snapshot
+
+
+async def verify_finding_sources(
+    finding: Finding,
+    context: HarnessContext,
+    allowed_ids: set[str],
+    *,
+    _sources: dict[str, tuple[Evidence, str]] | None = None,
+) -> bool:
+    """Host-only admission check, with one shared snapshot per consolidation batch."""
+    if (
+        not finding.supports
+        or not set(finding.evidence_ids) <= allowed_ids
+        or set(finding.evidence_ids) != {s.evidence_id for s in finding.supports}
+    ):
+        return False
+    try:
+        sources = (
+            _sources
+            if _sources is not None
+            else await _source_snapshot(context, finding.evidence_ids)
+        )
+        return all(
+            s.evidence_id in sources
+            and support_matches_record(s, *sources[s.evidence_id])
+            for s in finding.supports
+        )
+    except Exception as exc:  # noqa: BLE001 - optional fact admission fails closed, cancellation propagates
+        await _degraded(context, "consolidation", exc)
+        return False
 
 
 async def _degraded(context: HarnessContext, stage: str, error: Exception) -> None:

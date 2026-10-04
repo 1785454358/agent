@@ -11,7 +11,11 @@ from langgraph.checkpoint.memory import InMemorySaver
 from deeptrace.domain import ResearchInput, ResearchMode
 from deeptrace.harness.agent_executor import build_research_agent_graph
 from deeptrace.strategies.workflow.graph import build_workflow_research_graph
-from strategies.fixtures import ScriptedModelGateway, build_gateway_fixture
+from strategies.fixtures import (
+    ScriptedModelGateway,
+    build_gateway_fixture,
+    evaluation_payload_from_view,
+)
 
 
 def _research_input(question: str = "研究 LangGraph Harness") -> dict[str, Any]:
@@ -29,19 +33,7 @@ def _evidence_ids_from_prompt(prompt: str) -> list[str]:
 
 
 def _evaluation_with_prompt_evidence(prompt: str, *, sufficient: bool) -> str:
-    ids = _evidence_ids_from_prompt(prompt)
-    findings = [
-        {
-            "id": f"finding-{index}",
-            "claim": f"claim {index}",
-            "evidence_ids": [ids[index]],
-            "confidence": 0.9,
-        }
-        for index in range(min(1, len(ids)))
-    ]
-    return json.dumps(
-        {"findings": findings, "unresolved_gaps": [], "sufficient": sufficient}
-    )
+    return json.dumps(evaluation_payload_from_view(prompt, sufficient=sufficient))
 
 
 async def _run_workflow(
@@ -70,7 +62,15 @@ async def _run_workflow(
 async def test_workflow_routes_plan_topics_evaluate_finalize() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["query one", "query two"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["query one", "query two"],
+                    "query_targets": {"query one": ["r1"], "query two": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),
@@ -111,7 +111,22 @@ async def test_workflow_routes_plan_topics_evaluate_finalize() -> None:
 @pytest.mark.asyncio
 async def test_workflow_uses_queries_from_a_real_chat_message() -> None:
     model = ScriptedModelGateway(
-        {"planner": AIMessage(content='{"queries":["official docs"]}')}
+        {
+            "planner": AIMessage(
+                content=json.dumps(
+                    {
+                        "queries": ["official docs"],
+                        "query_targets": {"official docs": ["r1"]},
+                        "requirements": [
+                            {
+                                "id": "r1",
+                                "description": "完整回答原始问题及全部用户约束",
+                            }
+                        ],
+                    }
+                )
+            )
+        }
     )
     fixture = build_gateway_fixture(model_gateway=model)
     result = await _run_workflow(model, fixture)
@@ -152,10 +167,24 @@ async def test_planner_failure_falls_back_to_the_user_question(
 
 
 @pytest.mark.asyncio
-async def test_planner_queries_are_deduplicated_and_bounded() -> None:
+async def test_over_limit_plan_with_unassigned_mapping_keys_degrades_safely() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["q1", "q1", "q2", "q3", "q4", "q5"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["q1", "q1", "q2", "q3", "q4", "q5"],
+                    "query_targets": {
+                        "q1": ["r1"],
+                        "q2": ["r1"],
+                        "q3": ["r1"],
+                        "q4": ["r1"],
+                        "q5": ["r1"],
+                    },
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),
@@ -165,15 +194,24 @@ async def test_planner_queries_are_deduplicated_and_bounded() -> None:
 
     result = await _run_workflow(model, fixture, query_limit=3)
 
-    assert result["queries"] == ["q1", "q2", "q3"]
-    assert fixture.search.calls == ["q1", "q2", "q3"]
+    assert result["queries"] == ["研究 LangGraph Harness"]
+    assert result["decomposition_degraded"] is True
+    assert fixture.search.calls == ["研究 LangGraph Harness"]
 
 
 @pytest.mark.asyncio
 async def test_one_topic_failure_is_a_gap_while_sibling_evidence_survives() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["good query", "doomed query"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["good query", "doomed query"],
+                    "query_targets": {"good query": ["r1"], "doomed query": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),
@@ -198,15 +236,24 @@ async def test_one_topic_failure_is_a_gap_while_sibling_evidence_survives() -> N
     )
     assert empty_branch.evidence_ids == []
     assert empty_branch.agent_outcome.stop_reason == "incomplete_plan"
-    assert "agent_exit:incomplete_plan" in outcome.unresolved_gaps
-    assert outcome.termination_reason == "incomplete_plan"
+    assert "agent_exit:incomplete_plan" in result["diagnostic_gaps"]
+    assert outcome.unresolved_gaps == []
+    assert outcome.termination_reason == "completed"
 
 
 @pytest.mark.asyncio
 async def test_zero_usable_evidence_yields_partial_no_sources() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["q1"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["q1"],
+                    "query_targets": {"q1": ["r1"]},
+                }
+            ),
             "evaluator": "evaluator must not run",
         }
     )
@@ -228,7 +275,15 @@ async def test_zero_usable_evidence_yields_partial_no_sources() -> None:
 async def test_evaluation_cannot_cite_unknown_evidence() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["q1"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["q1"],
+                    "query_targets": {"q1": ["r1"]},
+                }
+            ),
             "evaluator": json.dumps(
                 {
                     "findings": [
@@ -237,10 +292,27 @@ async def test_evaluation_cannot_cite_unknown_evidence() -> None:
                             "claim": "hallucinated",
                             "evidence_ids": ["evidence-not-real"],
                             "confidence": 0.9,
+                            "supports": [
+                                {
+                                    "evidence_id": "evidence-not-real",
+                                    "passage_id": "not-visible",
+                                    "quote": "hallucinated",
+                                }
+                            ],
                         }
                     ],
                     "unresolved_gaps": [],
                     "sufficient": True,
+                    "coverage": {
+                        "items": [
+                            {
+                                "requirement_id": "r1",
+                                "status": "covered",
+                                "reason": "claimed",
+                                "finding_ids": ["finding-1"],
+                            }
+                        ]
+                    },
                 }
             ),
         }
@@ -257,14 +329,23 @@ async def test_evaluation_cannot_cite_unknown_evidence() -> None:
     outcome = result["outcome"]
 
     assert outcome.findings == []
-    assert outcome.termination_reason == "completed"
+    assert outcome.termination_reason == "insufficient_evidence"
+    assert outcome.coverage.items[0].status == "missing"
 
 
 @pytest.mark.asyncio
 async def test_evaluation_parse_failure_yields_deterministic_partial() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["q1"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["q1"],
+                    "query_targets": {"q1": ["r1"]},
+                }
+            ),
             "evaluator": "garbage from the model",
         }
     )
@@ -298,7 +379,15 @@ async def test_topic_execution_failure_is_a_gap_and_siblings_survive() -> None:
 
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["good", "broken"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["good", "broken"],
+                    "query_targets": {"good": ["r1"], "broken": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),
@@ -319,7 +408,7 @@ async def test_topic_execution_failure_is_a_gap_and_siblings_survive() -> None:
     assert len(outcome.evidence_ids) == 1
     assert any(
         "topic_execution_failed" in gap and "broken" in gap
-        for gap in outcome.unresolved_gaps
+        for gap in result["diagnostic_gaps"]
     )
 
 
@@ -327,17 +416,29 @@ async def test_topic_execution_failure_is_a_gap_and_siblings_survive() -> None:
 async def test_workflow_state_keeps_references_and_topic_privacy() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["q1"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["q1"],
+                    "query_targets": {"q1": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),
         }
     )
+    private_body = (
+        "LangGraph Harness unique-private-body-marker.\n\n"
+        + "Unrelated background.\n\n" * 700
+    )
     fixture = build_gateway_fixture(
         search_results={
             "q1": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}]
         },
-        pages={"https://example.com/a": "unique-private-body-marker"},
+        pages={"https://example.com/a": private_body},
         model_gateway=model,
     )
     checkpointer = InMemorySaver()
@@ -350,7 +451,10 @@ async def test_workflow_state_keeps_references_and_topic_privacy() -> None:
     ).aget_state({"configurable": {"thread_id": "workflow-thread"}})
     assert "search_result" not in snapshot.values
     serialized = json.dumps(snapshot.values, default=str, ensure_ascii=False)
-    assert "unique-private-body-marker" not in serialized
+    assert private_body not in serialized
+    assert all(
+        len(s.quote) <= 500 for f in result["outcome"].findings for s in f.supports
+    )
 
 
 class _UnfinishedPlanTopicGraph:
@@ -375,7 +479,15 @@ class _UnfinishedPlanTopicGraph:
 async def test_unfinished_executor_plan_downgrades_completed_to_incomplete() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["q1"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["q1"],
+                    "query_targets": {"q1": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, sufficient=True
             ),

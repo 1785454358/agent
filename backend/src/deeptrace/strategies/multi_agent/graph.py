@@ -8,8 +8,8 @@ from langgraph.graph.state import CompiledStateGraph
 from deeptrace.harness.context import HarnessContext
 from deeptrace.strategies.multi_agent.nodes import (
     aggregate_node,
-    build_follow_up_node,
     build_finalize_node,
+    build_follow_up_node,
     build_researcher_node,
     build_route_after_evaluate,
     build_supervisor_plan_node,
@@ -25,6 +25,7 @@ def build_multi_agent_research_graph(
     *,
     max_researchers: int = 5,
     max_follow_ups: int = 1,
+    max_follow_up_assignments: int = 2,
     checkpointer=None,
 ) -> CompiledStateGraph:
     builder = StateGraph(MultiAgentState, context_schema=HarnessContext)
@@ -32,7 +33,7 @@ def build_multi_agent_research_graph(
     builder.add_node("researcher", build_researcher_node(topic_graph))
     builder.add_node("aggregate", aggregate_node)
     builder.add_node("supervisor_evaluate", supervisor_evaluate_node)
-    builder.add_node("follow_up", build_follow_up_node(max_researchers))
+    builder.add_node("follow_up", build_follow_up_node(max_follow_up_assignments))
     builder.add_node("finalize", build_finalize_node(max_follow_ups))
     builder.add_edge(START, "supervisor_plan")
     builder.add_conditional_edges("supervisor_plan", route_researchers)

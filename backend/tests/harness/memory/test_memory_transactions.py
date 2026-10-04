@@ -122,9 +122,9 @@ async def test_deleted_fact_is_not_resurrected_by_consolidation_replay(store):
             "source_evidence_ids": ["evidence-1"],
         }
     )
-    stored = await remember(store, fact, MemoryWritePolicy())
+    stored = await remember(store, fact, MemoryWritePolicy(), supported_fact=True)
     await forget(store, stored)
-    replay = await remember(store, fact, MemoryWritePolicy())
+    replay = await remember(store, fact, MemoryWritePolicy(), supported_fact=True)
     assert replay.status is MemoryStatus.DELETED
     assert len(await store.list_namespace(fact.namespace, include_inactive=True)) == 1
 

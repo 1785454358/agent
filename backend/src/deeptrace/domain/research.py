@@ -11,12 +11,29 @@ from pydantic import (
     StringConstraints,
     ValidationInfo,
     field_validator,
+    model_validator,
 )
 
-from deeptrace.domain.evidence import EvidenceIdentifier
-from deeptrace.domain.execution import ExecutionIdentifier, ResearchMode
 from deeptrace.domain.agent import AgentOutcome
+from deeptrace.domain.coverage import (
+    CoverageAssessment,
+    RequirementCoverage,
+    ResearchRequirement,
+)
+from deeptrace.domain.evidence import EvidenceIdentifier, Finding
+from deeptrace.domain.evidence_anchor import MAX_READ_ANCHORS, ReadEvidenceAnchor
+from deeptrace.domain.execution import ExecutionIdentifier, ResearchMode
 
+__all__ = [
+    "INCOMPLETE_PLAN_REASON",
+    "CoverageAssessment",
+    "RequirementCoverage",
+    "ResearchRequirement",
+    "ResearchTopicInput",
+    "ResearchTopicOutcome",
+    "TopicStepError",
+    "unfinished_plan_items",
+]
 
 MAX_TOPIC_QUERY_LENGTH = 1_000
 MAX_TOPIC_URL_LENGTH = 2_048
@@ -72,12 +89,37 @@ class ResearchTopicInput(BaseModel):
     original_task: str = ""
     constraints: list[str] = Field(default_factory=list)
     context_notes: list[str] = Field(default_factory=list)
+    evidence_contract_version: int = Field(default=1, ge=1, le=3)
+    requirements: list[ResearchRequirement] = Field(default_factory=list, max_length=6)
+    target_requirement_ids: list[
+        Annotated[str, StringConstraints(pattern=r"^r[1-6]$")]
+    ] = Field(default_factory=list, max_length=6)
+    research_gaps: list[
+        Annotated[str, StringConstraints(min_length=1, max_length=500)]
+    ] = Field(default_factory=list, max_length=6)
+    # Host-populated internal branch field, never part of a model tool schema.
+    authorized_evidence_ids: list[EvidenceIdentifier] = Field(
+        default_factory=list, max_length=100
+    )
+
+    @field_validator("target_requirement_ids", "authorized_evidence_ids")
+    @classmethod
+    def unique_context_ids(cls, values: list[str], info: ValidationInfo) -> list[str]:
+        return _require_unique(values, info.field_name)
+
+    @model_validator(mode="after")
+    def consistent_requirements(self) -> ResearchTopicInput:
+        ids = [requirement.id for requirement in self.requirements]
+        _require_unique(ids, "requirements")
+        if not set(self.target_requirement_ids) <= set(ids):
+            raise ValueError("target_requirement_ids must reference requirements")
+        return self
 
 
 class TopicStepError(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    stage: Literal["search", "fetch"]
+    stage: Literal["search", "fetch", "read"]
     target: str = Field(default="", max_length=MAX_TOPIC_URL_LENGTH)
     code: TopicErrorCode
 
@@ -86,6 +128,14 @@ class ResearchTopicOutcome(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     query: TopicQuery
+    read_anchors: list[ReadEvidenceAnchor] = Field(
+        default_factory=list, max_length=MAX_READ_ANCHORS
+    )
+    read_anchor_diagnostics: list[str] = Field(default_factory=list, max_length=100)
+    research_findings: list[Finding] = Field(default_factory=list, max_length=20)
+    research_finding_diagnostics: list[str] = Field(
+        default_factory=list, max_length=100
+    )
     agent_outcome: AgentOutcome | None = None
     evidence_ids: list[EvidenceIdentifier] = Field(
         default_factory=list,
@@ -134,7 +184,7 @@ class ResearchTopicOutcome(BaseModel):
 
 
 def unfinished_plan_items(
-    outcomes: "list[ResearchTopicOutcome]",
+    outcomes: list[ResearchTopicOutcome],
 ) -> list[str]:
     """Open todo contents across one or more topic outcomes."""
     items: list[str] = []

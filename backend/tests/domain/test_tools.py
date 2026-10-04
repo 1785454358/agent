@@ -12,7 +12,6 @@ from deeptrace.domain.tools import (
     ToolResult,
 )
 
-
 _IDS = {
     "request_id": "request-1",
     "run_id": "run-1",
@@ -25,6 +24,7 @@ def test_tool_name_contains_only_atomic_research_tools() -> None:
     assert {member.value for member in ToolName} == {
         "search_web",
         "fetch_page",
+        "read_evidence",
         "search_memory",
     }
 

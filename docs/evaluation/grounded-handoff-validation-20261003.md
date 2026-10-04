@@ -108,11 +108,11 @@ P&E Faithfulness 扣分的评分轨迹明确指出“所有异常进ExceptionGro
 
 ## 原始产物与复现
 
-- 开发研究：[records.json](../../tmp/grounded-handoff-real-answer-20261003/records.json)、[quality_eval.json](../../tmp/grounded-handoff-real-answer-20261003/quality_eval.json)、[manifest.json](../../tmp/grounded-handoff-real-answer-20261003/manifest.json)。
-- 开发原始评分：[quality_scores.json](../../tmp/grounded-handoff-real-answer-20261003-quality/quality_scores.json)，同目录identity.json、attempts.json及逐指标缓存保留。最终以quality_scores.json为准，progress.json仍可保留最后一个current检查点，不代表评分还在运行。
-- 严格比较：[comparison.md](../../tmp/grounded-handoff-real-answer-20261003-comparison/comparison.md)、[comparison.json](../../tmp/grounded-handoff-real-answer-20261003-comparison/comparison.json)。
-- 联网研究：[records.json](../../tmp/grounded-handoff-live-answer-20261003/records.json)、[manifest.json](../../tmp/grounded-handoff-live-answer-20261003/manifest.json)；联网原始评分：[quality_scores.json](../../tmp/grounded-handoff-live-answer-20261003-quality/quality_scores.json)。
-- 付费前登记：[registration.json](../../tmp/grounded-handoff-freeze-20261003/registration.json)，同目录source_snapshot/为精确源码及测试留样，不含.env。只有HEAD不足以复现，此处必须同时使用dirty源码身份与留样。
-- 只读审计：[grounded-handoff-audit-20261003.json](../../tmp/grounded-handoff-audit-20261003.json)，脚本[grounded-handoff-audit.py](../../tmp/grounded-handoff-audit.py)。[grounded-handoff-summary.py](../../tmp/grounded-handoff-summary.py)汇总原始得分与调用量，均不发API。
+- 开发研究：records.json：`../../tmp/grounded-handoff-real-answer-20261003/records.json`（本地实验留样）、quality_eval.json：`../../tmp/grounded-handoff-real-answer-20261003/quality_eval.json`（本地实验留样）、manifest.json：`../../tmp/grounded-handoff-real-answer-20261003/manifest.json`（本地实验留样）。
+- 开发原始评分：quality_scores.json：`../../tmp/grounded-handoff-real-answer-20261003-quality/quality_scores.json`（本地实验留样），同目录identity.json、attempts.json及逐指标缓存保留。最终以quality_scores.json为准，progress.json仍可保留最后一个current检查点，不代表评分还在运行。
+- 严格比较：comparison.md：`../../tmp/grounded-handoff-real-answer-20261003-comparison/comparison.md`（本地实验留样）、comparison.json：`../../tmp/grounded-handoff-real-answer-20261003-comparison/comparison.json`（本地实验留样）。
+- 联网研究：records.json：`../../tmp/grounded-handoff-live-answer-20261003/records.json`（本地实验留样）、manifest.json：`../../tmp/grounded-handoff-live-answer-20261003/manifest.json`（本地实验留样）；联网原始评分：quality_scores.json：`../../tmp/grounded-handoff-live-answer-20261003-quality/quality_scores.json`（本地实验留样）。
+- 付费前登记：registration.json：`../../tmp/grounded-handoff-freeze-20261003/registration.json`（本地实验留样），同目录source_snapshot/为精确源码及测试留样，不含.env。只有HEAD不足以复现，此处必须同时使用dirty源码身份与留样。
+- 只读审计：grounded-handoff-audit-20261003.json：`../../tmp/grounded-handoff-audit-20261003.json`（本地实验留样），脚本grounded-handoff-audit.py：`../../tmp/grounded-handoff-audit.py`（本地实验留样）。grounded-handoff-summary.py：`../../tmp/grounded-handoff-summary.py`（本地实验留样）汇总原始得分与调用量，均不发API。
 
 真实运行、评分与比较命令保留在执行计划Task8。付费实验已经执行，不应重复运行这些命令来覆盖本批；查看现有产物和只读汇总不消耗模型额度。源码仍在现有dirty工作树中，未把用户已有源码变化整体提交；文档提交不改变上述付费运行身份。

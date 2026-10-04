@@ -99,6 +99,37 @@ def test_full_width_and_lenticular_markers_are_normalized() -> None:
     assert "[1]" in outcome.content and "[2]" in outcome.content
 
 
+def test_validate_citations_compacts_sparse_markers_to_source_order() -> None:
+    draft = ResponseDraft(
+        response_mode=ResponseMode.ANSWER,
+        content="第一项 [1]，第三项 [3]，第六项 [6]，再次引用第三项 [3]。",
+    )
+
+    outcome = validate_citations(
+        draft,
+        loaded_evidence_ids=[
+            "evidence-a",
+            "evidence-b",
+            "evidence-c",
+            "evidence-d",
+            "evidence-e",
+            "evidence-f",
+        ],
+    )
+
+    assert outcome.cited_evidence_ids == [
+        "evidence-a",
+        "evidence-c",
+        "evidence-f",
+    ]
+    assert [citation.marker for citation in outcome.citations] == [
+        "[1]",
+        "[2]",
+        "[3]",
+    ]
+    assert outcome.content == "第一项 [1]，第三项 [2]，第六项 [3]，再次引用第三项 [2]。"
+
+
 def test_validate_citations_without_loaded_sources_yields_partial() -> None:
     draft = ResponseDraft(
         response_mode=ResponseMode.REPORT,

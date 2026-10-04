@@ -69,6 +69,30 @@ flowchart TB
 
 [strategies/common.py](../../backend/src/deeptrace/strategies/common.py) 统一输入归一化、研究分支调用、Outcome 校验、取消传播和部分完成的判定。策略节点只处理自己的计划、调度与状态更新，不再跨策略导入 Workflow 的公共函数。
 
+## 研究到回答的共享证据交接
+
+三种调度模式复用同一条证据管道，不各自复制评估和引用逻辑：
+
+```text
+成功 read_evidence → 元数据锚点 → 当前原文取材 → 当次可见短编号
+                                                ↓
+模型选择编号/判断语义 → 宿主构造原文支持 → 覆盖门禁 → Answer / Report
+```
+
+职责对应到独立模块：
+
+| 职责 | 模块 | 边界 |
+| --- | --- | --- |
+| 读取交接 | domain/evidence_anchor.py、harness/read_anchors.py | 仅保存实际成功预览的来源版本/哈希/坐标；每分支64个唯一锚点，可checkpoint恢复，不直接证明事实 |
+| 原文取材 | tools/evidence_units.py | 验收支持优先，其次读锚点，最后旧选择器；片段不跨缺口拼接，不改写正文 |
+| 有界可见视图 | strategies/evaluation_materials.py | 最多8来源、每来源3000字符、128单位、每单位500字符；整体JSON再次验算token，仅当次可见单位有编号 |
+| 引用解析 | strategies/evidence_references.py | 模型只返回如p1的短编号，宿主生成完整EvidenceSupport；未知编号与重复finding ID拒绝 |
+| 语义与完成门禁 | strategies/evidence_evaluation.py | 保留固定requirements、covered/missing/conflicting检查及既有策略动作，不把编号合法当成语义证明 |
+
+新研究契约为v3；旧完成v2可读取，旧中途状态不能以新契约继续派发。短编号仅属于一次模型调用，不能作为持久证据；持久支持仍使用evidence_id/version/content_hash/原文坐标和quote。Writer将材料省略、验证失败等诊断与事实缺口分开，不将其解释为完整文档缺少相关说明。事实记忆仍需原有来源与原文支持准入。
+
+这条管道解决“研究者读过，评估器却未收到”和模型复制引文出错的问题；它不保证检索相关性、模型蕴含判断或最终回答正确性。真实效果以[受控复测记录](../evaluation/evidence-delivery-validation-20261003.md)为准。
+
 ## Shared Agent Loop
 
 循环节点为：
@@ -85,11 +109,16 @@ prepare_context
 
 历史消息不会被原地截断；系统按完整的 assistant tool-call 批次及其 ToolMessage 结果成组裁剪，避免产生半个工具交换。节点名与工具执行后的恢复边界保持兼容。这与 [LangGraph 的原始状态和提示视图区分](https://docs.langchain.com/oss/python/langgraph/thinking-in-langgraph) 一致。
 
-模型当前可见三个工具：
+模型当前可见四个工具：
 
 - `write_todos`：循环内计划状态工具，只修改可恢复 State，不经过外部 ToolGateway。
 - `search_web`：外部搜索工具，必须经过 ToolGateway。
 - `fetch_page`：外部抓取工具，必须经过 ToolGateway，并要求 URL 已由搜索结果或已抓取页面授权。
+- `read_evidence`：只读已授权保存证据，返回带版本/哈希/坐标的有界完整JSON；实际成功读取锚点由宿主捕获。
+
+共享循环采用证据优先路径：定位来源 → 抓取 → 读取完整相关原文 → `finish_research`。宿主收尾要求实际已读锚点当前仍已授权、ACTIVE且版本/哈希/坐标有效，已有todo必须完成；只抓取未阅读不能收尾。`record_findings`仍兼容旧轨迹，但不再是必经步骤。分支完成不代表全局充分：统一评估直接从原文抽取结论并核对固定需求，缺口仍走定向补查，Writer使用已接受findings。
+
+原文阅读组与最多500字符的短引用分开；工具编号与评估预算按完整阅读组保留/省略，不将某条短引用本身视为完整语义证明。候选claim/confidence留档，但不再输入全局评估视图。
 
 如果模型在计划未完成或没有足够证据时提前结束，Execution Policy 可以发送有界 completion nudge。达到迭代上限、连续错误上限、上下文上限、预算边界或取消条件时，循环进入 `finalize`。
 
@@ -102,6 +131,8 @@ prepare_context
 3. current constraints。
 
 [Context Policy](../../backend/src/deeptrace/harness/policies/agent_context.py) 在预算内固定保留这些内容，[ModelGateway](../../backend/src/deeptrace/harness/model_gateway.py) 在调用 Provider 前再次校验信封。较早的完整工具交换和可选背景可以被裁剪，任务与约束不能被裁剪。
+
+研究循环通常发送最近三组完整工具交换，并额外保留最多三份去重的较早实际读取预览，不用候选结论代替原文。8k输入为软目标，必要已读原文和最新交换不为满足软目标而裁断，硬上下文预算仍不可越过。持久轨迹与checkpoint不裁剪。版本匹配及语义充分性仍需实测，模型声称covered不构成确定性证明。
 
 Session Graph 的长期上下文采用滑动窗口和结构化摘要。摘要失败时仍执行确定性窗口裁剪，避免上下文无限增长。
 
@@ -126,6 +157,8 @@ Session Graph 的长期上下文采用滑动窗口和结构化摘要。摘要失
 - 执行账本与幂等重放；
 - 超时、transport retry 和结构化失败；
 - Evidence 持久化。
+
+抓取来源键使用已通过安全边界的final URL（缺失则requested URL）。现有`canonical_url`字段承载实际来源键，发布者HTML canonical仅保存在metadata；不同版本/语言页面不再互相作废，同一实际URL正文更新仍supersede，不复活历史失效证据。
 
 同一批调用中，无依赖调用通过信号量有界并行。`fetch_page` 如果依赖同批 `search_web` 产生的 URL 授权，会等待相关搜索结果。执行完成后，ToolMessage 按模型原始调用顺序写回，保证轨迹稳定。
 

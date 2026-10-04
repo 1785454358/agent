@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import inspect
 import json
-import re
 from typing import Any
 
 import pytest
@@ -11,7 +10,11 @@ from langgraph.checkpoint.memory import InMemorySaver
 from deeptrace.domain import ResearchMode
 from deeptrace.harness.agent_executor import build_research_agent_graph
 from deeptrace.strategies.multi_agent.graph import build_multi_agent_research_graph
-from strategies.fixtures import ScriptedModelGateway, build_gateway_fixture
+from strategies.fixtures import (
+    ScriptedModelGateway,
+    build_gateway_fixture,
+    evaluation_payload_from_view,
+)
 
 
 def _research_input(question: str) -> dict[str, Any]:
@@ -29,27 +32,7 @@ def _research_input(question: str) -> dict[str, Any]:
 
 
 def _evaluation_with_prompt_evidence(prompt: str, *, action: str = "complete") -> str:
-    ids = sorted(set(re.findall(r"evidence-[0-9a-f]+", prompt)))
-    findings = (
-        [
-            {
-                "id": "finding-1",
-                "claim": "claim",
-                "evidence_ids": ids[:1],
-                "confidence": 0.9,
-            }
-        ]
-        if ids
-        else []
-    )
-    return json.dumps(
-        {
-            "action": action,
-            "reason": "ok",
-            "findings": findings,
-            "unresolved_gaps": [],
-        }
-    )
+    return json.dumps(evaluation_payload_from_view(prompt, action=action))
 
 
 async def _run_multi_agent(
@@ -80,7 +63,15 @@ async def _run_multi_agent(
 async def test_supervisor_plans_and_researchers_fan_out_concurrently() -> None:
     model = ScriptedModelGateway(
         {
-            "supervisor": json.dumps({"assignments": ["研究方向 A", "研究方向 B"]}),
+            "supervisor": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "assignments": ["研究方向 A", "研究方向 B"],
+                    "query_targets": {"研究方向 A": ["r1"], "研究方向 B": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(prompt),
         }
     )
@@ -120,7 +111,15 @@ async def test_supervisor_plans_and_researchers_fan_out_concurrently() -> None:
 async def test_researcher_failure_is_task_local_and_siblings_survive() -> None:
     model = ScriptedModelGateway(
         {
-            "supervisor": json.dumps({"assignments": ["好方向", "坏方向"]}),
+            "supervisor": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "assignments": ["好方向", "坏方向"],
+                    "query_targets": {"好方向": ["r1"], "坏方向": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(prompt),
         }
     )
@@ -140,7 +139,7 @@ async def test_researcher_failure_is_task_local_and_siblings_survive() -> None:
     outcome = result["outcome"]
 
     assert len(outcome.evidence_ids) == 1
-    assert any("坏方向" in gap for gap in outcome.unresolved_gaps)
+    assert any("坏方向" in gap for gap in result["diagnostic_gaps"])
     assert outcome.termination_reason == "tool_error"
 
 
@@ -148,7 +147,15 @@ async def test_researcher_failure_is_task_local_and_siblings_survive() -> None:
 async def test_supervisor_never_touches_the_tool_gateway() -> None:
     model = ScriptedModelGateway(
         {
-            "supervisor": json.dumps({"assignments": ["方向 A"]}),
+            "supervisor": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "assignments": ["方向 A"],
+                    "query_targets": {"方向 A": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(prompt),
         }
     )
@@ -172,7 +179,15 @@ async def test_supervisor_never_touches_the_tool_gateway() -> None:
 async def test_researcher_branches_are_isolated_per_assignment() -> None:
     model = ScriptedModelGateway(
         {
-            "supervisor": json.dumps({"assignments": ["方向 A", "方向 B"]}),
+            "supervisor": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "assignments": ["方向 A", "方向 B"],
+                    "query_targets": {"方向 A": ["r1"], "方向 B": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(prompt),
         }
     )
@@ -213,11 +228,28 @@ async def test_follow_up_rounds_are_bounded() -> None:
 
     def follow_up_planner(prompt: str) -> str:
         follow_calls["n"] += 1
-        return json.dumps({"assignments": [f"补充方向-{follow_calls['n']}"]})
+        return json.dumps(
+            {
+                "tasks": [
+                    {
+                        "query": f"补充方向-{follow_calls['n']}",
+                        "target_requirement_ids": ["r1"],
+                    }
+                ]
+            }
+        )
 
     model = ScriptedModelGateway(
         {
-            "supervisor": json.dumps({"assignments": ["初始方向"]}),
+            "supervisor": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "assignments": ["初始方向"],
+                    "query_targets": {"初始方向": ["r1"]},
+                }
+            ),
             "evaluator": evaluator,
             "follow_up": follow_up_planner,
         }
@@ -250,11 +282,26 @@ async def test_follow_up_assignments_skip_already_dispatched_queries() -> None:
     actions = iter(["follow_up", "complete"])
     model = ScriptedModelGateway(
         {
-            "supervisor": json.dumps({"assignments": ["初始方向"]}),
+            "supervisor": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "assignments": ["初始方向"],
+                    "query_targets": {"初始方向": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, action=next(actions)
             ),
-            "follow_up": json.dumps({"assignments": ["初始方向", "新方向"]}),
+            "follow_up": json.dumps(
+                {
+                    "tasks": [
+                        {"query": q, "target_requirement_ids": ["r1"]}
+                        for q in ["初始方向", "新方向"]
+                    ]
+                }
+            ),
         }
     )
     fixture = build_gateway_fixture(
@@ -305,15 +352,27 @@ async def test_supervisor_plan_failure_falls_back_to_the_question() -> None:
 async def test_loop_state_is_checkpointed_without_handwritten_loops() -> None:
     model = ScriptedModelGateway(
         {
-            "supervisor": json.dumps({"assignments": ["方向 A"]}),
+            "supervisor": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "assignments": ["方向 A"],
+                    "query_targets": {"方向 A": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(prompt),
         }
+    )
+    private_body = (
+        "LangGraph Harness 方向 A unique-ma-body-a.\n\n"
+        + "Unrelated background.\n\n" * 700
     )
     fixture = build_gateway_fixture(
         search_results={
             "方向 A": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}]
         },
-        pages={"https://example.com/a": "unique-ma-body-a"},
+        pages={"https://example.com/a": private_body},
         model_gateway=model,
     )
     checkpointer = InMemorySaver()
@@ -327,7 +386,10 @@ async def test_loop_state_is_checkpointed_without_handwritten_loops() -> None:
     for field in ("assignments", "round_number", "researcher_outcomes"):
         assert field in snapshot.values
     serialized = json.dumps(snapshot.values, default=str, ensure_ascii=False)
-    assert "unique-ma-body-a" not in serialized
+    assert private_body not in serialized
+    assert all(
+        len(s.quote) <= 500 for f in result["outcome"].findings for s in f.supports
+    )
 
     from deeptrace.strategies.multi_agent import graph as ma_graph_module
 
@@ -356,7 +418,15 @@ class _UnfinishedPlanTopicGraph:
 async def test_unfinished_researcher_plan_downgrades_completed_to_incomplete() -> None:
     model = ScriptedModelGateway(
         {
-            "supervisor": json.dumps({"assignments": ["方向 A"]}),
+            "supervisor": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "assignments": ["方向 A"],
+                    "query_targets": {"方向 A": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(prompt),
         }
     )

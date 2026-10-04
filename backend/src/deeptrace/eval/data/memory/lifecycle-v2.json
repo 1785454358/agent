@@ -1,0 +1,54 @@
+[
+  {"id":"preference-language","category":"preference_continuity","stages":[
+    {"question":"请记住，回答请用中文"},
+    {"question":"请用英文分析资料结论","probe":true,"expected_contents":["回答请用中文"],"gold_note":"gold_canary_73d8"}
+  ]},
+  {"id":"preference-detail","category":"preference_continuity","stages":[
+    {"question":"请记住，回答要简洁"},
+    {"question":"分析资料结论","probe":true,"expected_contents":["回答要简洁"]}
+  ]},
+  {"id":"cross-session-language","category":"cross_session","stages":[
+    {"question":"请记住，回答请用中文"},
+    {"question":"分析资料结论","workspace_id":"other-workspace","probe":true,"expected_contents":["回答请用中文"]}
+  ]},
+  {"id":"cross-session-format","category":"cross_session","stages":[
+    {"question":"请记住，回答使用表格"},
+    {"question":"分析资料结论","workspace_id":"other-workspace","probe":true,"expected_contents":["回答使用表格"]}
+  ]},
+  {"id":"reuse-fact","category":"background_reuse","stages":[
+    {"question":"分析资料结论"},
+    {"question":"资料结论的背景","probe":true,"expected_contents":["This is a synthetic background fixture, not a factual benchmark. 分析资料结论 请用英文分析资料结论 资料结论的背景 研究资料背景 重新研究资料结论"]}
+  ]},
+  {"id":"reuse-background","category":"background_reuse","stages":[
+    {"question":"研究资料背景"},
+    {"question":"重新研究资料结论","probe":true,"expected_contents":["This is a synthetic background fixture, not a factual benchmark. 分析资料结论 请用英文分析资料结论 资料结论的背景 研究资料背景 重新研究资料结论"]}
+  ]},
+  {"id":"expiry-boundary","category":"expiry","stages":[
+    {"question":"分析资料结论"},
+    {"action":"advance","days":30},
+    {"question":"分析资料结论","probe":true,"forbidden_contents":["This is a synthetic background fixture, not a factual benchmark. 分析资料结论 请用英文分析资料结论 资料结论的背景 研究资料背景 重新研究资料结论"]}
+  ]},
+  {"id":"expiry-after","category":"expiry","stages":[
+    {"question":"分析资料结论"},
+    {"action":"advance","days":31},
+    {"question":"分析资料结论","probe":true,"forbidden_contents":["This is a synthetic background fixture, not a factual benchmark. 分析资料结论 请用英文分析资料结论 资料结论的背景 研究资料背景 重新研究资料结论"]}
+  ]},
+  {"id":"update-language","category":"update_forget","stages":[
+    {"question":"请记住，回答请用中文"},
+    {"question":"请记住，回答请用英文"},
+    {"question":"分析资料结论","probe":true,"expected_contents":["回答请用英文"],"forbidden_contents":["回答请用中文"]}
+  ]},
+  {"id":"forget-logical","category":"update_forget","stages":[
+    {"question":"请记住，回答要简洁"},
+    {"action":"forget","target_content":"回答要简洁"},
+    {"question":"分析资料结论","probe":true,"forbidden_contents":["回答要简洁"]}
+  ]},
+  {"id":"isolate-user","category":"namespace_isolation","stages":[
+    {"question":"请记住，回答请用中文"},
+    {"question":"分析资料结论","user_id":"other-user","probe":true,"forbidden_contents":["回答请用中文"]}
+  ]},
+  {"id":"isolate-workspace","category":"namespace_isolation","stages":[
+    {"question":"分析资料结论"},
+    {"question":"分析资料结论","workspace_id":"other-workspace","probe":true,"forbidden_contents":["This is a synthetic background fixture, not a factual benchmark. 分析资料结论 请用英文分析资料结论 资料结论的背景 研究资料背景 重新研究资料结论"]}
+  ]}
+]

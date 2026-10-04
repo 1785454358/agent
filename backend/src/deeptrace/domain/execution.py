@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
 from deeptrace.domain.conversation import ConversationSummary
+from deeptrace.domain.coverage import CoverageAssessment, ResearchRequirement
 from deeptrace.domain.evidence import Finding
 
-
 MAX_EXECUTION_ID_LENGTH = 128
+
+
+class RequestBudgetExceeded(RuntimeError):
+    """An outer request ceiling rejected dispatch before provider execution."""
+
 
 ExecutionIdentifier = Annotated[
     str,
@@ -119,6 +124,13 @@ class ResearchInput(BaseModel):
 
 
 class ResearchOutcome(BaseModel):
+    source_eligibility: (
+        dict[str, Literal["eligible", "ineligible", "uncertain"]] | None
+    ) = Field(default=None, max_length=100)
+    evidence_contract_version: int = Field(default=1, ge=1, le=3)
+    requirements: list[ResearchRequirement] = Field(default_factory=list, max_length=6)
+    coverage: CoverageAssessment | None = None
+    decomposition_degraded: bool = False
     mode: ResearchMode
     evidence_ids: list[str] = Field(default_factory=list)
     findings: list[Finding] = Field(default_factory=list)

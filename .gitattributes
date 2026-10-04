@@ -1,0 +1,5 @@
+# Preserve frozen upstream bytes: provenance hashes must survive Windows checkout.
+backend/src/deeptrace/eval/data/benchmarks/research-v1/upstream/*.mdx -text whitespace=-blank-at-eof
+backend/src/deeptrace/eval/data/benchmarks/research-v1/LICENSE.txt -text
+backend/src/deeptrace/eval/data/public/drb-v1/upstream/query.jsonl -text
+backend/src/deeptrace/eval/data/public/drb-v1/LICENSE.txt -text

@@ -8,11 +8,14 @@ a repeatable baseline. Real-provider evaluation runs via the `real` marker.
 from __future__ import annotations
 
 import json
-import re
 from typing import Any
 
 from langgraph.checkpoint.memory import InMemorySaver
-from strategies.fixtures import build_gateway_fixture, scripted_research_response
+from strategies.fixtures import (
+    build_gateway_fixture,
+    evaluation_payload_from_view,
+    scripted_research_response,
+)
 
 from deeptrace.domain import ResearchMode
 from deeptrace.harness.agent_executor import build_research_agent_graph
@@ -38,21 +41,7 @@ SEARCH_RESULTS = {
 
 
 def _evaluation(prompt: str) -> str:
-    ids = sorted(set(re.findall(r"evidence-[0-9a-f]+", prompt)))
-    return json.dumps(
-        {
-            "findings": [
-                {
-                    "id": "finding-1",
-                    "claim": "checkpoint 支持恢复",
-                    "evidence_ids": ids[:1],
-                    "confidence": 0.9,
-                }
-            ],
-            "unresolved_gaps": [],
-            "sufficient": True,
-        }
-    )
+    return json.dumps(evaluation_payload_from_view(prompt, sufficient=True))
 
 
 def _evaluate_mode(mode: ResearchMode) -> dict[str, object]:
@@ -67,27 +56,22 @@ def _evaluate_mode(mode: ResearchMode) -> dict[str, object]:
                 return scripted_research_response(messages, tools)
             prompt = str(messages[-1].content)
             if role == "planner":
-                return json.dumps({"queries": [QUESTION]})
+                return json.dumps(
+                    {
+                        "queries": [QUESTION],
+                        "requirements": [{"id": "r1", "description": "回答完整问题"}],
+                    }
+                )
             if role == "supervisor":
-                return json.dumps({"assignments": [QUESTION]})
+                return json.dumps(
+                    {
+                        "assignments": [QUESTION],
+                        "requirements": [{"id": "r1", "description": "回答完整问题"}],
+                    }
+                )
             if role == "evaluator":
                 if "action" in prompt:
-                    ids = sorted(set(re.findall(r"evidence-[0-9a-f]+", prompt)))
-                    return json.dumps(
-                        {
-                            "action": "complete",
-                            "reason": "资料充足",
-                            "findings": [
-                                {
-                                    "id": "finding-1",
-                                    "claim": "checkpoint 支持恢复",
-                                    "evidence_ids": ids[:1],
-                                    "confidence": 0.9,
-                                }
-                            ],
-                            "unresolved_gaps": [],
-                        }
-                    )
+                    return json.dumps(evaluation_payload_from_view(prompt))
                 return _evaluation(prompt)
             return json.dumps({"content": "结论 [1]。"})
 

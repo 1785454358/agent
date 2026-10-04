@@ -6,9 +6,13 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
-from deeptrace.domain.evidence import Finding
+from deeptrace.domain import CoverageAssessment
+from deeptrace.strategies.evidence_evaluation import FindingDraft
+from deeptrace.strategies.evidence_references import (
+    ReferenceFindingDraft,
+    ReferenceSourceCheck,
+)
 from deeptrace.strategies.workflow.models import MAX_WORKFLOW_GAPS, WorkflowGap
-
 
 MAX_MA_RESEARCHERS = 5
 
@@ -21,11 +25,23 @@ class SupervisorEvaluation(BaseModel):
         str,
         StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
     ]
-    findings: list[Finding] = Field(
+    findings: list[FindingDraft] = Field(
         default_factory=list,
         max_length=MAX_WORKFLOW_GAPS,
     )
+    coverage: CoverageAssessment
     unresolved_gaps: list[WorkflowGap] = Field(
         default_factory=list,
         max_length=MAX_WORKFLOW_GAPS,
+    )
+
+
+class ReferenceSupervisorEvaluation(SupervisorEvaluation):
+    """Live v3 output; SupervisorEvaluation remains the historical v2 DTO."""
+
+    findings: list[ReferenceFindingDraft] = Field(
+        default_factory=list, max_length=MAX_WORKFLOW_GAPS
+    )
+    source_checks: list[ReferenceSourceCheck] = Field(
+        default_factory=list, max_length=8
     )

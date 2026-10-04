@@ -36,9 +36,40 @@ def branch_context(state):
         "constraints": list(
             summary.get("user_constraints") or state.get("constraints") or []
         ),
-        "context_notes": list(summary.get("established_facts") or [])
+        "context_notes": list(state.get("context_notes") or [])
+        + list(summary.get("established_facts") or [])
         + list(state.get("recent_messages") or []),
+        "requirements": list(state.get("requirements") or [])[:6],
+        "evidence_contract_version": state.get("evidence_contract_version", 1),
+        "target_requirement_ids": list(state.get("target_requirement_ids") or [])[:6],
+        "research_gaps": [
+            gap[:500]
+            for gap in (
+                state.get("research_gaps") or state.get("unresolved_gaps") or []
+            )[:6]
+        ],
     }
+
+
+def assigned_targets(state, query):
+    """Validated supplement responsibility overrides initial responsibility."""
+    for field in ("supplement_targets", "query_targets"):
+        mapping = state.get(field) or {}
+        if query in mapping:
+            return list(mapping[query])
+    return list(state.get("target_requirement_ids") or [])
+
+
+def parent_evidence_candidates(state):
+    """Only host-selected conversation/parent results, never arbitrary grants."""
+    return list(
+        dict.fromkeys(
+            [
+                *(state.get("prior_evidence_ids") or []),
+                *(state.get("evidence_ids") or []),
+            ]
+        )
+    )[:100]
 
 
 def research_messages(research_input, prompt):

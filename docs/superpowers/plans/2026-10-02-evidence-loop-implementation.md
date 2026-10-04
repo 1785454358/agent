@@ -10,7 +10,17 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-02-reliable-research-loop-design.md`，只实施第 4 节及第 5.2 节的 A 范围；B/C 不在本计划中。
 
-## Global Constraints
+## 2026-10-02 执行状态
+
+A 的核心行为已实现并通过离线验证：最终 `913 passed, 2 deselected`，隔离评分适配 `34 passed`；最终代码快照的三模式 Answer 合成 smoke 为 9 次运行、9 次 completed，不能解释为真实质量指标。完整依据见 [实现与验证记录](../../evaluation/evidence-loop-validation-20261002.md)。
+
+Task 1–10 的实施/测试步骤与 Task 11 的矩阵/契约适配已完成；每个 Step 5 的提交仍未执行。当前工作区包含用户既有部署与评测改动，不将混合工作区整体提交。已做当前会话自审，不伪称有独立子代理审查。
+
+Task 11 Step 4 只部分通过：pytest、独立评分适配、定向 Ruff 均通过；全仓库 Ruff 仍有 115 项告警/错误，故总质量闸不勾选完成。Task 11 Step 5 包含未完成提交，仍保留未勾选。B/C、真实语义评分、远端 CI 和生产就绪不在本轮完成声明中。
+
+实施调整：覆盖 DTO 独立模块避免循环依赖；降级 discovery query 遵守 1000 字符上限，但原始任务/约束不截断；writer 预算补计完整消息外层，metadata/body 单来源 IO 异常隔离并保留取消传播；受控记忆资产新增 v2、不覆盖 v1。这些变更的边界与 RED/GREEN 依据写在验证记录中。
+
+## Global Constraints（实施约束）
 
 - 不自动改 API 默认模式，也不自动在模式之间切换。
 - 本阶段保留 Plan-and-Execute 每批最多 6 项、Multi-Agent 最多 5 个研究员的现有代码上限。
@@ -64,7 +74,7 @@
 
 **Interfaces:** 保留 `SourceRange`、`SourceExcerpt`、`select_source_excerpt(body: str, question: str, limit: int) -> SourceExcerpt` 的字段、返回值与选段行为；新模块不得导入 responses 或 eval。
 
-- [ ] **Step 1: 添加迁移回归。** 测试文件内容：
+- [x] **Step 1: 添加迁移回归。** 测试文件内容：
 
 ```python
 from deeptrace.tools.evidence_views import select_source_excerpt
@@ -81,8 +91,8 @@ def test_tail_selector_has_one_implementation_and_verbatim_offsets():
     assert all(body[r.start:r.end] in selected.text for r in selected.ranges)
 ```
 
-- [ ] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/tools/test_evidence_views.py -q`，预期新模块尚不存在导致导入失败；不是模型/网络失败。
-- [ ] **Step 3: 原算法完整移到 tools/evidence_views.py，响应图改用新路径。** 原模块只留实际兼容导出：
+- [x] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/tools/test_evidence_views.py -q`，预期新模块尚不存在导致导入失败；不是模型/网络失败。
+- [x] **Step 3: 原算法完整移到 tools/evidence_views.py，响应图改用新路径。** 原模块只留实际兼容导出：
 
 ```python
 from deeptrace.tools.evidence_views import SourceExcerpt, SourceRange, select_source_excerpt
@@ -90,7 +100,7 @@ from deeptrace.tools.evidence_views import SourceExcerpt, SourceRange, select_so
 __all__ = ["SourceExcerpt", "SourceRange", "select_source_excerpt"]
 ```
 
-- [ ] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/tools/test_evidence_views.py tests/responses/test_excerpts.py tests/responses/test_output_budget.py -q`；全部通过，源正文/旧坐标不变。
+- [x] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/tools/test_evidence_views.py tests/responses/test_excerpts.py tests/responses/test_output_budget.py -q`；全部通过，源正文/旧坐标不变。
 - [ ] **Step 5: 审查并提交拥有的迁移补丁。** `git commit -m "refactor: share deterministic evidence excerpt selection"`。不混入下面的行为增强。
 
 ### Task 2: 固定需求、原文支持与覆盖领域契约
@@ -143,7 +153,7 @@ CoverageAssessment 拒绝重复 requirement_id；Finding ID 列表拒绝重复�
 
 ResearchOutcome 新字段：`evidence_contract_version: int = Field(default=1, ge=1, le=2)`、`requirements: list[ResearchRequirement] = Field(default_factory=list, max_length=6)`、`coverage: CoverageAssessment | None = None`、`decomposition_degraded: bool = False`。版本 1 只为旧记录解码；新运行明确写 2，缺需求/缺 coverage 不获 completed。Checkpoint 允许上述模型；不注册正文视图/Store 实例、不存全文。
 
-- [ ] **Step 1: 写范围与旧记录测试。**
+- [x] **Step 1: 写范围与旧记录测试。**
 
 ```python
 import pytest
@@ -168,9 +178,9 @@ def test_legacy_finding_can_load_but_does_not_gain_support():
     assert finding.supports == []
 ```
 
-- [ ] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/domain/test_research_coverage.py -q`；新类型缺失/字段缺失。
-- [ ] **Step 3: 实现上面的类型和校验，注册序列化类型。** 加入实际 serializer `dumps_typed` / `loads_typed` 往返测试，断言支持位置、coverage 状态及默认旧字段保留。
-- [ ] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/domain tests/harness/test_state.py tests/harness/test_public_contracts.py -q`。
+- [x] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/domain/test_research_coverage.py -q`；新类型缺失/字段缺失。
+- [x] **Step 3: 实现上面的类型和校验，注册序列化类型。** 加入实际 serializer `dumps_typed` / `loads_typed` 往返测试，断言支持位置、coverage 状态及默认旧字段保留。
+- [x] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/domain tests/harness/test_state.py tests/harness/test_public_contracts.py -q`。
 - [ ] **Step 5: 审查并提交。** `git commit -m "feat: define bounded research requirements and source support"`。
 
 ### Task 3: 统一可信工具调用上下文，为读取授权提供前置边界
@@ -202,7 +212,7 @@ ToolPreflight = Callable[[BaseModel, ToolCallContext], Awaitable[None]]
 
 `AgentToolGateway.execute(self, *, tenant_id: str, caller: ToolCaller, request: ToolRequest, authorization: UrlAuthorization | None = None, provider_id: str = "default", refresh: bool = False, evidence_authorization: EvidenceAuthorization | None = None) -> ToolResult` 及 Harness ToolGateway Protocol 同步修改。所有正式 adapter 和测试 handler 统一接受第二个参数（不使用时命名 `_context`）；不加运行时 inspect 判断一参/两参，也不向模型参数注入身份。ToolSpec 对非空 preflight 做与 handler 相同的 async 校验。
 
-- [ ] **Step 1: 在 test_gateway.py 添加上下文/前置拒绝测试。** 复用同文件已有 `_gateway`、`_request`、`_caller`、`_spec`：
+- [x] **Step 1: 在 test_gateway.py 添加上下文/前置拒绝测试。** 复用同文件已有 `_gateway`、`_request`、`_caller`、`_spec`：
 
 ```python
 @pytest.mark.asyncio
@@ -249,8 +259,8 @@ async def test_preflight_rejects_before_handler_and_ledger_claim():
     assert calls == []
 ```
 
-- [ ] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/tools/test_gateway.py::test_trusted_context_is_host_owned_and_preflight_precedes_execution -q`；旧 handler 调用缺第二参数。
-- [ ] **Step 3: 统一调用链。** 在 schema/URL validation 后、Ledger claim 前构造可信上下文并调用 spec.preflight；preflight 的 PermissionError 返回 `evidence_not_authorized`，KeyError 返回 `evidence_unavailable`，其他基础设施异常清洗为 `tool_internal_error`，取消原样传播。REPLAY 直接返回前仍走前置验证；FOLLOWER 等待后再验证一次，防止等待期间删除。所有 `_invoke` / `_invoke_once` 传同一 context，最终调用：
+- [x] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/tools/test_gateway.py::test_trusted_context_is_host_owned_and_preflight_precedes_execution -q`；旧 handler 调用缺第二参数。
+- [x] **Step 3: 统一调用链。** 在 schema/URL validation 后、Ledger claim 前构造可信上下文并调用 spec.preflight；preflight 的 PermissionError 返回 `evidence_not_authorized`，KeyError 返回 `evidence_unavailable`，其他基础设施异常清洗为 `tool_internal_error`，取消原样传播。REPLAY 直接返回前仍走前置验证；FOLLOWER 等待后再验证一次，防止等待期间删除。所有 `_invoke` / `_invoke_once` 传同一 context，最终调用：
 
 ```python
 if spec.preflight is not None:
@@ -260,7 +270,7 @@ adapter_result = await spec.handler(arguments, call_context)
 ```
 
 增加 preflight 抛错时 handler/Ledger claim 次数均为 0 的测试，及非读取工具回归；模型 schema 无 tenant/run/caller/authorization 字段。
-- [ ] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/tools tests/test_module_layout.py -q`。此任务尚不注册 read_evidence。
+- [x] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/tools tests/test_module_layout.py -q`。此任务尚不注册 read_evidence。
 - [ ] **Step 5: 审查并提交。** `git commit -m "refactor: pass trusted tool context through gateway"`。
 
 ### Task 4: 有界、完整 JSON 的 read_evidence 工具
@@ -326,7 +336,7 @@ preflight 必须有显式 authorization 且 ID 属于允许集合，用 context.
 
 JSON preview 结构固定为 evidence_id/version/content_hash/historical/passages/selection；passages 含上述定位字段，selection 含 strategy/body_length/omitted（布尔值，不列无限范围）。序列化 `ensure_ascii=False` 仍要处理引号、反斜杠、换行膨胀：先生成完整 JSON，超 4000 时依次移除末段或缩短最后一段原文字符并重算 end/行号/passage_id，直到完整 JSON 达标；最小 metadata 超限则明确失败。不会靠 Gateway `preview[:4000]` 截 JSON。`data_ref=evidence://<id>/body`，ToolResult.evidence_ids 保持空，避免把读操作算成新采集。
 
-- [ ] **Step 1: 写参数失败测试。**
+- [x] **Step 1: 写参数失败测试。**
 
 ```python
 import pytest
@@ -343,9 +353,9 @@ def test_read_rejects_invalid_or_identity_arguments(extra):
         ReadEvidenceArguments.model_validate({"evidence_id": "e-1", **extra})
 ```
 
-- [ ] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/tools/test_evidence_read.py -q`；读取契约缺失。
-- [ ] **Step 3: 按上述算法实现 adapter / registry。** 复用 test_gateway.py 的真实 Gateway 模式，添加以下断言，不能仅测试 adapter 绕过授权：授权同 workspace ID 成功；同 workspace 未授权 ID 拒绝；跨 workspace 拒绝；已提交 read 在撤销授权/标 deleted 后用相同 call_id 仍拒绝；合法重放 preview 相同、没有第二次消费。对正文 `('"\\\n🙂中文' * 1000)` assert `json.loads(result.preview)` 成功、`len(preview)<=4000`，每个返回范围和 quote 逐字吻合。原文正文和版本哈希不变。
-- [ ] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/tools tests/application tests/eval/test_env.py -q`。用 Ledger.tool_usage_for_run 断言 read 消费 `BudgetUnits(tool_calls=1)`，network_requests/fetched_pages 为 0；start 越界返回 empty passages + omitted，不返回虚构事实。
+- [x] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/tools/test_evidence_read.py -q`；读取契约缺失。
+- [x] **Step 3: 按上述算法实现 adapter / registry。** 复用 test_gateway.py 的真实 Gateway 模式，添加以下断言，不能仅测试 adapter 绕过授权：授权同 workspace ID 成功；同 workspace 未授权 ID 拒绝；跨 workspace 拒绝；已提交 read 在撤销授权/标 deleted 后用相同 call_id 仍拒绝；合法重放 preview 相同、没有第二次消费。对正文 `('"\\\n🙂中文' * 1000)` assert `json.loads(result.preview)` 成功、`len(preview)<=4000`，每个返回范围和 quote 逐字吻合。原文正文和版本哈希不变。
+- [x] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/tools tests/application tests/eval/test_env.py -q`。用 Ledger.tool_usage_for_run 断言 read 消费 `BudgetUnits(tool_calls=1)`，network_requests/fetched_pages 为 0；start 越界返回 empty passages + omitted，不返回虚构事实。
 - [ ] **Step 5: 审查并提交。** `git commit -m "feat: add authorized bounded evidence reading"`。
 
 ### Task 5: 三模式研究 Agent 接入读取、父证据与缺口上下文
@@ -354,7 +364,7 @@ def test_read_rejects_invalid_or_identity_arguments(extra):
 
 **Interfaces:** ResearchTopicInput 新增 `requirements`（最多 6）、`target_requirement_ids`（最多 6、唯一）、`research_gaps`（最多 6、每条最多 500 字符）、`authorized_evidence_ids`（最多 100、唯一）；全部默认空。`branch_context(state)` 输出这些字段，宿主传前校验 prior_evidence_ids；`research_input_from_state` 不再把当前缺口硬编码为 []。外部 DTO 中的任意 ID 不自动成为授权，必须通过当前 workspace Store 验证和宿主选择。
 
-- [ ] **Step 1: 添加真实 Agent 工具链用例。** 在新测试中使用共享 build_gateway_fixture 与 AIMessage/ToolMessage，研究模型按观察消息依次 search→fetch→read→finish；读取只用 fetch 结果返回的 ID，不从 gold/fixture 全局 ID 取得。
+- [x] **Step 1: 添加真实 Agent 工具链用例。** 在新测试中使用共享 build_gateway_fixture 与 AIMessage/ToolMessage，研究模型按观察消息依次 search→fetch→read→finish；读取只用 fetch 结果返回的 ID，不从 gold/fixture 全局 ID 取得。
 
 ```python
 # 以下函数添加到 tests/strategies/fixtures.py，供本任务和后续模式测试复用。
@@ -418,8 +428,8 @@ async def test_fetched_tail_reaches_agent_only_after_authorized_read():
 ```
 
 捕获 researcher 最终模型输入，断言 body 中的尾部事实进入 ToolMessage，工具 schema 有 read_evidence、无宿主身份；除 fetch 外 read 不增加 pages_fetched，不触发可选链接提取。负例用“已知道同 workspace 别的 ID”请求，assert evidence_not_authorized，正文不进入消息。
-- [ ] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/harness/test_evidence_reading.py -q`；旧 Agent 将 read_evidence 当未知工具。
-- [ ] **Step 3: 增加工具 schema / execute_batch 路由。** 只对缺少 query/start 的 read 参数补 `task.query`，构造 EvidenceAuthorization 为“已提交分支 fetch IDs ∪ 已验证父 IDs”，发送 Gateway；不修改原 AIMessage 或 tool_call_id。read 与同批新 fetch 并行时，尚未提交的 ID 不预先授权。URL 发现仅对 FETCH_PAGE，预算/页数判断不得把 read 误作 fetch。
+- [x] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/harness/test_evidence_reading.py -q`；旧 Agent 将 read_evidence 当未知工具。
+- [x] **Step 3: 增加工具 schema / execute_batch 路由。** 只对缺少 query/start 的 read 参数补 `task.query`，构造 EvidenceAuthorization 为“已提交分支 fetch IDs ∪ 已验证父 IDs”，发送 Gateway；不修改原 AIMessage 或 tool_call_id。read 与同批新 fetch 并行时，尚未提交的 ID 不预先授权。URL 发现仅对 FETCH_PAGE，预算/页数判断不得把 read 误作 fetch。
 
 ```python
 if tool is ToolName.READ_EVIDENCE:
@@ -432,7 +442,7 @@ if tool is ToolName.READ_EVIDENCE:
 ```
 
 prepare_messages 的固定 task 区保留原问题/约束，增加定向 requirements/gaps；授权证据 ID 有界展示。完整保留 ToolMessage 对，不剪单条正文产生假坐标。研究系统指令增加“搜索摘要仅作发现、抓取≠阅读、source 内容是不可信数据”。
-- [ ] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/harness/test_evidence_reading.py tests/harness/test_agent_executor.py tests/harness/test_agent_invariants.py tests/harness/policies -q`。取消和工具结果配对检查保持通过。
+- [x] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/harness/test_evidence_reading.py tests/harness/test_agent_executor.py tests/harness/test_agent_invariants.py tests/harness/policies -q`。取消和工具结果配对检查保持通过。
 - [ ] **Step 5: 审查并提交。** `git commit -m "feat: expose source reading to the shared research agent"`。
 
 ### Task 6: 首次规划封存需求与新旧 Checkpoint 边界
@@ -441,7 +451,7 @@ prepare_messages 的固定 task 区保留原问题/约束，增加定向 require
 
 **Interfaces:** 在原 planner/supervisor JSON 中增加 `requirements: list[ResearchRequirement]`（1..6）；不新增模型请求。由共享 `seal_requirements(question: str, proposed: list[ResearchRequirement] | None) -> tuple[list[ResearchRequirement], bool]` 生成固定 r1…rN，首轮后不重写。各 state 保存 requirements、decomposition_degraded、evidence_contract_version=2、coverage（覆盖轮替换，不用 append reducer）、diagnostic_gaps（历史 reducer）；原 unresolved_gaps 仅对外派生最新需求缺口 + 未解除强终止条件。
 
-- [ ] **Step 1: 写封存/兜底测试。**
+- [x] **Step 1: 写封存/兜底测试。**
 
 ```python
 from deeptrace.domain.research import ResearchRequirement
@@ -466,8 +476,8 @@ def test_valid_requirements_get_fixed_sequential_ids():
     assert degraded is False
 ```
 
-- [ ] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/strategies/test_requirements.py -q`；封存函数缺失。
-- [ ] **Step 3: 实现固定 ID 的宿主重编号。**
+- [x] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/strategies/test_requirements.py -q`；封存函数缺失。
+- [x] **Step 3: 实现固定 ID 的宿主重编号。**
 
 ```python
 def seal_requirements(question, proposed):
@@ -479,7 +489,7 @@ def seal_requirements(question, proposed):
 ```
 
 原问题本身不截断成 500 字符，始终存在 pinned 原任务；聚合描述指回完整任务。规划 JSON 缺 requirements/无效时使用原查询兜底与上述整体需求，并记录 degraded，不因旧 fixture 缺字段伪装完整分解。三个策略首轮建立 contract=2，replan/follow_up 只消费；恢复到中间节点且没有 version=2/封存需求时拒绝新增研究，`incompatible_evidence_contract` 明确提示使用原运行版本，不删除历史记录。直接复用响应器读取旧已完成记录可以解码，但不能重新通过新 completed/事实写入门槛。
-- [ ] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/strategies/test_requirements.py tests/strategies/plan_execute/test_models.py tests/strategies/multi_agent/test_models.py tests/harness/test_state.py -q`；新增序列化往返和中间节点旧快照拒绝测试。
+- [x] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/strategies/test_requirements.py tests/strategies/plan_execute/test_models.py tests/strategies/multi_agent/test_models.py tests/harness/test_state.py -q`；新增序列化往返和中间节点旧快照拒绝测试。
 - [ ] **Step 5: 审查并提交。** `git commit -m "feat: seal research requirements at initial planning"`。
 
 ### Task 7: 三模式共享正文装配与实际可见支持核验
@@ -514,7 +524,7 @@ class FindingDraft(BaseModel):
 
 三个 evaluation schema 显式增加 `coverage: CoverageAssessment`，原 action/sufficient/reason 字段仍用于模式决策，但不能覆盖宿主校验。材料 JSON 加固定 `EVIDENCE_VIEW_JSON:` 前缀，随后完整对象含 requirements/passages；脚本只用 json.JSONDecoder.raw_decode 解析该对象，不用正则从正文猜证据 ID。
 
-- [ ] **Step 1: 写不存在/歧义/不可见 quote 负例。**
+- [x] **Step 1: 写不存在/歧义/不可见 quote 负例。**
 
 ```python
 from deeptrace.tools.evidence_views import EvidencePassage
@@ -532,8 +542,8 @@ def test_quote_must_be_unique_in_the_exact_visible_passage():
     assert (support.start, support.end, support.version) == (10, 17, 2)
 ```
 
-- [ ] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/strategies/test_evidence_evaluation.py -q`；共享 draft / resolver 尚未实现。
-- [ ] **Step 3: 实现唯一匹配和共同材料装配。**
+- [x] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/strategies/test_evidence_evaluation.py -q`；共享 draft / resolver 尚未实现。
+- [x] **Step 3: 实现唯一匹配和共同材料装配。**
 
 ```python
 def resolve_support(draft, passages):
@@ -555,7 +565,7 @@ def resolve_support(draft, passages):
 可见集合只取 allocation.included 中完整出现的 passage；unread_ids 覆盖失败/超八份/预算丢弃，不能只报 selector 前范围。记录 `evidence.view` 事件 stage/evidence_id/version/hash/start/end/passage_id/visibility，不记录正文全文。覆盖集合校验失败则所有固定需求构造 missing，不接受删难题的 JSON；normalize_coverage 只允许指向通过核验、唯一 finding.id 的支持发现，无效 draft 丢弃并保留缺口原因。规范化 Finding.evidence_ids 从有效 supports 的 ID 稳定去重生成，不能把 draft 附加的未支持 ID 留作事实来源；quote 仅用于定位，claim 的语义支持仍由 evaluator 判断。
 
 三模式原有模型调用角色/格式失败策略不变。Workflow 保留最多一次格式修复，修复也用同一材料（token 预算加入纠错数据后重新计算可见集合，不能拿首轮已丢弃段认证）。P&E/MA 无新修复调用；无法解析降 partial。零 evidence 确定性生成全部 missing，不发空材料 evaluator。把 quote 实际位置检验与语义判断分开，原文出现不自动证明 claim 蕴含。
-- [ ] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/strategies/test_evidence_evaluation.py tests/strategies/workflow/test_nodes.py tests/harness/test_token_budget.py -q`。追加 covered 无 supports→missing、未知/漏 requirement→missing、token 丢弃 quote 不能核验、尾部选段、版本/hash/Unicode 原文测试。
+- [x] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/strategies/test_evidence_evaluation.py tests/strategies/workflow/test_nodes.py tests/harness/test_token_budget.py -q`。追加 covered 无 supports→missing、未知/漏 requirement→missing、token 丢弃 quote 不能核验、尾部选段、版本/hash/Unicode 原文测试。
 - [ ] **Step 5: 审查并提交。** `git commit -m "feat: evaluate requirement coverage against visible source passages"`。
 
 ### Task 8: 把既有重规划变为缺口驱动、有界且可判断进展
@@ -568,7 +578,7 @@ def resolve_support(draft, passages):
 
 `progress_keys(records: list[Evidence], findings: list[Finding], coverage: CoverageAssessment) -> frozenset[str]`：来源键为 canonical_url+content_hash，支持键为 id/version/hash/start/end，覆盖键仅 covered requirement。state `progress_before_supplement: list[str]`（最多 256 项，每项最多 2300 字符）、`supplement_completed: bool`、`no_progress: bool` 用有界字符串，不存全文，计入 checkpoint；保留证据集合 union / 历史诊断，coverage 当前替换。
 
-- [ ] **Step 1: 写同源新读取也算进展的断言。**
+- [x] **Step 1: 写同源新读取也算进展的断言。**
 
 ```python
 from deeptrace.domain.evidence import EvidenceSupport, Finding
@@ -586,8 +596,8 @@ def test_valid_new_support_is_progress_without_new_url():
     assert progress_keys([], [finding], coverage) - before
 ```
 
-- [ ] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/strategies/test_evidence_progress.py -q`；进展键函数缺失。
-- [ ] **Step 3: 实现原有循环增强。**
+- [x] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/strategies/test_evidence_progress.py -q`；进展键函数缺失。
+- [x] **Step 3: 实现原有循环增强。**
 
 ```python
 # 在一次完整补查+再评估完成后才检查：初评不能被 no_progress 提前拦截。
@@ -604,7 +614,7 @@ can_complete = covered and bool(findings) and not strong_exit_reasons
 首次不足且可继续→既有补查；补查一整轮后仍无进展→finalize / no_research_progress。证据全空但来源失败可恢复且有额度→补查；fatal/cancel/budget/incomplete todo 不被“另有 URL”清除。未解除 strong exit 单独保存，不混为历史 coverage gap；取消继续抛出。缺口已解决时当前 outcome 不携带早期 missing，历史 diagnostic_gaps/topic_outcomes 仍留存。Workflow 始终 evaluate→finalize，不新增外循环。
 
 对 P&E `build_route_after_evaluate` 与 MA 同名路由增加 `coverage/strong_exit/no_progress/轮数` 检查；格式失败仍直接降级、不强行循环修复。模式 finalize 统一带 contract=2、requirements/coverage，未覆盖不能 completed。
-- [ ] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/strategies -q`。新增真实图脚本：首次只有 Checkpoints、Store gap；P&E/MA 下一方向必须 target=r2、实际搜 Store 并读取，重新覆盖后旧 gap 关闭；Workflow partial。再覆盖全空替代、重复 query、同 URL 新 span、原来源 cached-only 无进展、预算/取消/格式失败、最多 2/1 轮与每补充批 2 项。
+- [x] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/strategies -q`。新增真实图脚本：首次只有 Checkpoints、Store gap；P&E/MA 下一方向必须 target=r2、实际搜 Store 并读取，重新覆盖后旧 gap 关闭；Workflow partial。再覆盖全空替代、重复 query、同 URL 新 span、原来源 cached-only 无进展、预算/取消/格式失败、最多 2/1 轮与每补充批 2 项。
 - [ ] **Step 5: 审查并提交。** `git commit -m "feat: target existing research loops at unresolved requirements"`。
 
 ### Task 9: Answer / Report 保持出处、需求和最终状态一致
@@ -613,7 +623,7 @@ can_complete = covered and bool(findings) and not strong_exit_reasons
 
 **Interfaces:** 消费 Task 7 已实现的 `select_supported_passages(record: Evidence, body: str, supports: list[EvidenceSupport], *, question: str, limit: int) -> tuple[EvidencePassage,...]`，把其结果与实际 writer token 分配绑定。不改变既有 content/citation schema、citation 编号规则或一次格式/长度修复上限。
 
-- [ ] **Step 1: 写关键词不命中但支持必须入选的断言。**
+- [x] **Step 1: 写关键词不命中但支持必须入选的断言。**
 
 ```python
 # 添加到 tests/responses/test_supported_findings.py；复用实际 Store seed helper。
@@ -665,11 +675,11 @@ async def test_support_beats_generic_query_prefix():
     assert quote in model.calls[0][1]
 ```
 
-- [ ] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/responses/test_supported_findings.py -q`；selector 单元检查已通过，但实际 writer 仍用 question-only 选段，最后一条实际输入断言失败。
-- [ ] **Step 3: 支持范围优先选段。** 无效/已删除来源的旧支持不进入 writer 事实清单；记录具体问题并 partial。原问题/用户约束/固定需求 pinned；最新 coverage 与有效 findings 明确给 writer，missing/conflicting 要输出缺口，不能补常识或省掉问题。保留同次生成+最多一次合并修复，用本次最终可见片段记录响应 events；原 excerpt/token 事件兼容字段仍保留。
+- [x] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/responses/test_supported_findings.py -q`；selector 单元检查已通过，但实际 writer 仍用 question-only 选段，最后一条实际输入断言失败。
+- [x] **Step 3: 支持范围优先选段。** 无效/已删除来源的旧支持不进入 writer 事实清单；记录具体问题并 partial。原问题/用户约束/固定需求 pinned；最新 coverage 与有效 findings 明确给 writer，missing/conflicting 要输出缺口，不能补常识或省掉问题。保留同次生成+最多一次合并修复，用本次最终可见片段记录响应 events；原 excerpt/token 事件兼容字段仍保留。
 
 Answer 和 Report 分别用原有 per-source/output caps，不共用得分身份。若 contract=2 研究 outcome 非 completed，或 coverage 有 missing/conflicting，则即使引用编号合法，应用状态不得 completed；baseline 没有 coverage 的固定流程仍可响应，但不能生成虚假的 Harness covered。旧回答历史允许只读展示，不拿旧 findings 空 supports 作为新证据。
-- [ ] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/responses tests/harness/test_workflow_response_slice.py -q`。增加 Answer/Report 参数化的未覆盖→partial、当前缺口可见、支持范围入输入、修复复用正文/裁剪重新记录、citation 编号不回归测试；不能以脚本输出合法引用证明语义正确。
+- [x] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/responses tests/harness/test_workflow_response_slice.py -q`。增加 Answer/Report 参数化的未覆盖→partial、当前缺口可见、支持范围入输入、修复复用正文/裁剪重新记录、citation 编号不回归测试；不能以脚本输出合法引用证明语义正确。
 - [ ] **Step 5: 审查并提交。** `git commit -m "feat: ground responses in accepted support and current coverage"`。
 
 ### Task 10: 未支持结论不得进入新事实记忆
@@ -678,7 +688,7 @@ Answer 和 Report 分别用原有 per-source/output caps，不共用得分身份
 
 **Interfaces:** `MemoryWritePolicy.can_store(self, record: MemoryRecord, *, source: str, supported_fact: bool = False) -> bool`、`async remember(store: MemoryStorePort, record: MemoryRecord, policy: MemoryWritePolicy, *, source: str = "consolidation", supported_fact: bool = False) -> MemoryRecord`。FACT 同时要求 source IDs 与宿主 verified fact；PREFERENCE/EVIDENCE/EPISODE 原规则不变。新增 `async verify_finding_sources(finding: Finding, context: HarnessContext, allowed_ids: set[str]) -> bool` 在 lifecycle 中检查规范化支持是否仍对应 ACTIVE 同版本/hash 原文，Store 异常 fail closed，只跳过候选不抹掉研究结果。
 
-- [ ] **Step 1: 添加仅 ID 不足的 policy 测试。** MemoryRecord 的实际字段使用下方完整记录：
+- [x] **Step 1: 添加仅 ID 不足的 policy 测试。** MemoryRecord 的实际字段使用下方完整记录：
 
 ```python
 from datetime import UTC, datetime
@@ -697,8 +707,8 @@ def test_source_ids_without_host_checked_support_do_not_admit_fact():
     assert policy.can_store(record, source="consolidation", supported_fact=True) is True
 ```
 
-- [ ] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/harness/memory/test_supported_fact_admission.py -q`；旧规则仅凭 ID 返回 True。
-- [ ] **Step 3: 加入新事实准入。**
+- [x] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/harness/memory/test_supported_fact_admission.py -q`；旧规则仅凭 ID 返回 True。
+- [x] **Step 3: 加入新事实准入。**
 
 ```python
 if record.type is MemoryType.FACT:
@@ -708,7 +718,7 @@ if record.type is MemoryType.FACT:
 ```
 
 verify 检查非空 supports、每个 source 允许/ACTIVE、版本/hash 与正文逐字范围有效；旧 supports=[] 返回 False。Task 7 的可见性校验先成立，写入时再校验当前 Store，不能用客户端布尔值绕过。用户显式事实写入若没有支持同样不能写 FACT（可以保留用户原话为背景，不当证据）；偏好路径仍正常。已有事实不批量删除，TTL/原子 upsert/索引 best-effort 不改。历史 memory 再进入当前覆盖仍必须读来源，而不是直接 covered。
-- [ ] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/harness/memory -q`。追加真实 `_consolidate_memory` 调用：unsupported/篡改位置/hash变化/deleted 不写、合法支持写一次且默认 30 天 TTL、store 异常降级、偏好/删除/隔离保持。
+- [x] **Step 4: GREEN。** `.venv/Scripts/python.exe -m pytest tests/harness/memory -q`。追加真实 `_consolidate_memory` 调用：unsupported/篡改位置/hash变化/deleted 不写、合法支持写一次且默认 30 天 TTL、store 异常降级、偏好/删除/隔离保持。
 - [ ] **Step 5: 审查并提交。** `git commit -m "fix: reject unsupported findings from fact memory"`。
 
 ### Task 11: 三模式离线验收、评测契约适配与完整轨迹
@@ -717,7 +727,7 @@ verify 检查非空 supports、每个 source 允许/ACTIVE、版本/hash 与正�
 
 **Interfaces:** 不改 run_matrix/真实裁判 public API；scripted 模型只从实际 prompt/view 的 passage 复制支持，不能从 EvalQuestion.gold_answer、gold_urls、supporting_quotes 构造研究/正文读取/回答输入。baseline 使用同一 selector/writer 固定流程，不增加 gap loop。
 
-- [ ] **Step 1: 增加三模式契约矩阵。** 先扩展故障 helper 参数，不把模式名仅作为标签：
+- [x] **Step 1: 增加三模式契约矩阵。** 先扩展故障 helper 参数，不把模式名仅作为标签：
 
 ```python
 # tests/eval/test_faults.py；增加 import pytest，原 _run 的 modes 参数改为显式输入。
@@ -732,8 +742,8 @@ def test_no_source_cannot_be_completed_in_any_mode(mode):
 ```
 
 RunRecord.mode 当前是 str，使用 mode.value 比较。新 integration 用真实三种 graph builder、真实 Gateway/Store 与 scripted 模型，assert P&E/MA 实际调用补查 role 和 Store search/read；Workflow 不调用补查。以 question/mode/response_mode/fault 点构成 case identity。Answer 和 Report 都参数化，主结果顺序 PlanExecute→Workflow→MultiAgent→Baseline，不平均成“总体正确率”。
-- [ ] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/integration/test_evidence_loop_modes.py tests/eval/test_faults.py -q`；记录尚不满足真实读取/逐项缺口的具体失败，先修根因再改 fixture。当前空来源旧逻辑可能已通过，必须以新增未覆盖完成/Store 定向补查断言证明 RED，不宣称每条旧回归都失败。
-- [ ] **Step 3: 完成脚本契约适配和 events。** 研究 script 增 read；planner requirements；evaluator 用实际可见 JSON passages 产生 draft/coverage，不能只 regex Evidence ID 填 confidence=1。诊断存 ID/hash/范围/visibility/gap change/supplement reason，无默认全文审计。测试修改 gold 答案与 URLs 后比较实际研究 queries/read args/model inputs 保持相同；评测评分输入允许不同。未读/被 token 丢弃明确标记，不能评分侧补入 gold context。
+- [x] **Step 2: RED。** `.venv/Scripts/python.exe -m pytest tests/integration/test_evidence_loop_modes.py tests/eval/test_faults.py -q`；记录尚不满足真实读取/逐项缺口的具体失败，先修根因再改 fixture。当前空来源旧逻辑可能已通过，必须以新增未覆盖完成/Store 定向补查断言证明 RED，不宣称每条旧回归都失败。
+- [x] **Step 3: 完成脚本契约适配和 events。** 研究 script 增 read；planner requirements；evaluator 用实际可见 JSON passages 产生 draft/coverage，不能只 regex Evidence ID 填 confidence=1。诊断存 ID/hash/范围/visibility/gap change/supplement reason，无默认全文审计。测试修改 gold 答案与 URLs 后比较实际研究 queries/read args/model inputs 保持相同；评测评分输入允许不同。未读/被 token 丢弃明确标记，不能评分侧补入 gold context。
 - [ ] **Step 4: 分组 GREEN，再全套离线回归。**
 
 ```powershell

@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import json
-import re
 
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
-from strategies.fixtures import ScriptedModelGateway, build_gateway_fixture
+from strategies.fixtures import (
+    ScriptedModelGateway,
+    build_gateway_fixture,
+    evaluation_payload_from_view,
+)
 
 from deeptrace.application.research import (
     ApplicationResearchRequest,
@@ -36,21 +39,7 @@ from deeptrace.strategies import (
 
 
 def _evaluation(prompt: str) -> str:
-    ids = sorted(set(re.findall(r"evidence-[0-9a-f]+", prompt)))
-    return json.dumps(
-        {
-            "findings": [
-                {
-                    "id": "finding-1",
-                    "claim": "已获得可用资料",
-                    "evidence_ids": ids[:1],
-                    "confidence": 0.9,
-                }
-            ],
-            "unresolved_gaps": [],
-            "sufficient": True,
-        }
-    )
+    return json.dumps(evaluation_payload_from_view(prompt, sufficient=True))
 
 
 def _fixture(model: ScriptedModelGateway):
@@ -94,7 +83,15 @@ def _request(question: str, thread_id: str = "thread-1") -> ApplicationResearchR
 def test_exit_gate_default_request_produces_cited_answer_with_typed_tools() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["LangGraph Harness"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["LangGraph Harness"],
+                    "query_targets": {"LangGraph Harness": ["r1"]},
+                }
+            ),
             "evaluator": _evaluation,
             "responder": json.dumps({"content": "研究结论 [1]。"}),
         }
@@ -148,7 +145,15 @@ def test_exit_gate_default_request_produces_cited_answer_with_typed_tools() -> N
 def test_exit_gate_report_request_reuses_research_and_evidence() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["LangGraph Harness"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["LangGraph Harness"],
+                    "query_targets": {"LangGraph Harness": ["r1"]},
+                }
+            ),
             "evaluator": _evaluation,
             "responder": json.dumps({"content": "# 研究报告\n结论 [1]。"}),
         }

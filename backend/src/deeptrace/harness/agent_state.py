@@ -14,6 +14,8 @@ from deeptrace.domain import (
     TopicStepError,
 )
 from deeptrace.domain.agent import AgentStopReason
+from deeptrace.domain.evidence_anchor import ReadEvidenceAnchor
+from deeptrace.domain.evidence import Finding
 
 MAX_TODOS = 20
 MAX_TODO_CONTENT_CHARS = 500
@@ -62,8 +64,14 @@ class AgentExecutorState(TypedDict, total=False):
     iteration: int
     consecutive_errors: int
     completion_nudges: int
+    completion_summary: str
     todos: list[AgentTodo]
     evidence_ids: Annotated[list[str], _merge_unique]
+    read_anchors: list[ReadEvidenceAnchor]
+    read_anchor_diagnostics: list[str]
+    research_refs: dict[str, ReadEvidenceAnchor]
+    research_findings: list[Finding]
+    research_finding_diagnostics: list[str]
     attempted_urls: Annotated[list[str], _merge_unique]
     seen_urls: list[str]
     errors: Annotated[list[TopicStepError], _merge_errors]

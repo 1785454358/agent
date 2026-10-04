@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
 from typing import Any
 
 import pytest
@@ -10,7 +9,11 @@ from langgraph.checkpoint.memory import InMemorySaver
 from deeptrace.domain import ResearchMode
 from deeptrace.harness.agent_executor import build_research_agent_graph
 from deeptrace.strategies.plan_execute.graph import build_plan_execute_research_graph
-from strategies.fixtures import ScriptedModelGateway, build_gateway_fixture
+from strategies.fixtures import (
+    ScriptedModelGateway,
+    build_gateway_fixture,
+    evaluation_payload_from_view,
+)
 
 
 def _research_input(question: str) -> dict[str, Any]:
@@ -28,27 +31,7 @@ def _research_input(question: str) -> dict[str, Any]:
 
 
 def _evaluation_with_prompt_evidence(prompt: str, *, action: str = "complete") -> str:
-    ids = sorted(set(re.findall(r"evidence-[0-9a-f]+", prompt)))
-    findings = (
-        [
-            {
-                "id": "finding-1",
-                "claim": "claim",
-                "evidence_ids": ids[:1],
-                "confidence": 0.9,
-            }
-        ]
-        if ids
-        else []
-    )
-    return json.dumps(
-        {
-            "action": action,
-            "reason": "ok",
-            "findings": findings,
-            "unresolved_gaps": [],
-        }
-    )
+    return json.dumps(evaluation_payload_from_view(prompt, action=action))
 
 
 async def _run_plan_execute(
@@ -79,7 +62,15 @@ async def _run_plan_execute(
 async def test_plan_select_execute_evaluate_completes() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["任务一", "任务二"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["任务一", "任务二"],
+                    "query_targets": {"任务一": ["r1"], "任务二": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(prompt),
         }
     )
@@ -139,7 +130,15 @@ async def test_planner_failure_falls_back_to_the_question() -> None:
 async def test_task_failure_becomes_gap_but_sibling_evidence_survives() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["好任务", "空任务"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["好任务", "空任务"],
+                    "query_targets": {"好任务": ["r1"], "空任务": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(prompt),
         }
     )
@@ -159,16 +158,26 @@ async def test_task_failure_becomes_gap_but_sibling_evidence_survives() -> None:
         branch for branch in result["topic_outcomes"] if branch.query == "空任务"
     )
     assert empty_branch.agent_outcome.stop_reason == "incomplete_plan"
-    assert "agent_exit:incomplete_plan" in outcome.unresolved_gaps
-    assert outcome.termination_reason == "incomplete_plan"
+    assert "agent_exit:incomplete_plan" in result["diagnostic_gaps"]
+    assert outcome.unresolved_gaps == []
+    assert outcome.termination_reason == "completed"
 
 
 @pytest.mark.asyncio
 async def test_zero_evidence_terminates_as_no_sources_without_evaluation() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["q1"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["q1"],
+                    "query_targets": {"q1": ["r1"]},
+                }
+            ),
             "evaluator": "must not run",
+            "replanner": json.dumps({"tasks": []}),
         }
     )
     fixture = build_gateway_fixture(default_search_results=[], model_gateway=model)
@@ -181,6 +190,7 @@ async def test_zero_evidence_terminates_as_no_sources_without_evaluation() -> No
     assert [role for role, _ in model.calls] == [
         "planner",
         *("researcher" for _ in range(4)),
+        "replanner",
     ]
 
 
@@ -196,11 +206,28 @@ async def test_replanning_is_bounded_and_terminates_deterministically() -> None:
 
     def replanner(prompt: str) -> str:
         replan_calls["n"] += 1
-        return json.dumps({"queries": [f"新任务-{replan_calls['n']}"]})
+        return json.dumps(
+            {
+                "tasks": [
+                    {
+                        "query": f"新任务-{replan_calls['n']}",
+                        "target_requirement_ids": ["r1"],
+                    }
+                ]
+            }
+        )
 
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["q1"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["q1"],
+                    "query_targets": {"q1": ["r1"]},
+                }
+            ),
             "evaluator": evaluator,
             "replanner": replanner,
         }
@@ -231,11 +258,26 @@ async def test_replan_produces_new_tasks_and_completes() -> None:
     actions = iter(["replan", "complete"])
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["首任务"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["首任务"],
+                    "query_targets": {"首任务": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(
                 prompt, action=next(actions)
             ),
-            "replanner": json.dumps({"queries": ["首任务", "补充任务"]}),
+            "replanner": json.dumps(
+                {
+                    "tasks": [
+                        {"query": q, "target_requirement_ids": ["r1"]}
+                        for q in ["首任务", "补充任务"]
+                    ]
+                }
+            ),
         }
     )
     fixture = build_gateway_fixture(
@@ -265,7 +307,15 @@ async def test_replan_produces_new_tasks_and_completes() -> None:
 async def test_evaluator_parse_failure_yields_deterministic_partial() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["q1"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["q1"],
+                    "query_targets": {"q1": ["r1"]},
+                }
+            ),
             "evaluator": "garbage",
         }
     )
@@ -288,7 +338,15 @@ async def test_evaluator_parse_failure_yields_deterministic_partial() -> None:
 async def test_decision_cannot_cite_unknown_evidence() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["q1"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["q1"],
+                    "query_targets": {"q1": ["r1"]},
+                }
+            ),
             "evaluator": json.dumps(
                 {
                     "action": "complete",
@@ -299,9 +357,26 @@ async def test_decision_cannot_cite_unknown_evidence() -> None:
                             "claim": "hallucinated",
                             "evidence_ids": ["evidence-bogus"],
                             "confidence": 0.9,
+                            "supports": [
+                                {
+                                    "evidence_id": "evidence-bogus",
+                                    "passage_id": "not-visible",
+                                    "quote": "hallucinated",
+                                }
+                            ],
                         }
                     ],
                     "unresolved_gaps": [],
+                    "coverage": {
+                        "items": [
+                            {
+                                "requirement_id": "r1",
+                                "status": "covered",
+                                "reason": "claimed",
+                                "finding_ids": ["finding-1"],
+                            }
+                        ]
+                    },
                 }
             ),
         }
@@ -318,14 +393,23 @@ async def test_decision_cannot_cite_unknown_evidence() -> None:
     outcome = result["outcome"]
 
     assert outcome.findings == []
-    assert outcome.termination_reason == "completed"
+    assert outcome.termination_reason != "completed"
+    assert outcome.coverage.items[0].status == "missing"
 
 
 @pytest.mark.asyncio
 async def test_loop_state_is_checkpointed_without_handwritten_loops() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["q1", "q2"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["q1", "q2"],
+                    "query_targets": {"q1": ["r1"], "q2": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(prompt),
         }
     )
@@ -335,7 +419,7 @@ async def test_loop_state_is_checkpointed_without_handwritten_loops() -> None:
             "q2": [{"url": "https://example.com/b", "title": "B", "snippet": "s"}],
         },
         pages={
-            "https://example.com/a": "unique-pe-body-a",
+            "https://example.com/a": "unique-pe-body-a" + " background" * 700,
             "https://example.com/b": "unique-pe-body-b",
         },
         model_gateway=model,
@@ -351,7 +435,10 @@ async def test_loop_state_is_checkpointed_without_handwritten_loops() -> None:
     for field in ("plan_tasks", "completed_tasks", "replan_count", "decision"):
         assert field in snapshot.values
     serialized = json.dumps(snapshot.values, default=str, ensure_ascii=False)
-    assert "unique-pe-body-a" not in serialized
+    assert "unique-pe-body-a" + " background" * 700 not in serialized
+    assert all(
+        len(s.quote) <= 500 for f in result["outcome"].findings for s in f.supports
+    )
 
     import inspect
 
@@ -383,7 +470,15 @@ class _UnfinishedPlanTopicGraph:
 async def test_unfinished_executor_plan_downgrades_completed_to_incomplete() -> None:
     model = ScriptedModelGateway(
         {
-            "planner": json.dumps({"queries": ["q1"]}),
+            "planner": json.dumps(
+                {
+                    "requirements": [
+                        {"id": "r1", "description": "完整回答原始问题及全部用户约束"}
+                    ],
+                    "queries": ["q1"],
+                    "query_targets": {"q1": ["r1"]},
+                }
+            ),
             "evaluator": lambda prompt: _evaluation_with_prompt_evidence(prompt),
         }
     )

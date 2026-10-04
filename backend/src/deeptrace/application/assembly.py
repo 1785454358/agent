@@ -17,9 +17,9 @@ from tavily import TavilyClient
 from deeptrace.application.research import ResearchApplicationService
 from deeptrace.config import Settings
 from deeptrace.domain import ResearchMode, ResponseMode
+from deeptrace.harness.agent_executor import build_research_agent_graph
 from deeptrace.harness.context import HarnessContext
 from deeptrace.harness.graph import build_agent_runtime_graph
-from deeptrace.persistence.memory_store import SqlAlchemyMemoryStore
 from deeptrace.harness.model_gateway import ChatModelGateway
 from deeptrace.harness.registry import (
     ResponseGraphRegistry,
@@ -27,14 +27,14 @@ from deeptrace.harness.registry import (
     StrategyRegistration,
     StrategyRegistry,
 )
+from deeptrace.harness.token_budget import TokenBudgetConfig
 from deeptrace.observability.events import HarnessEventRecorder
+from deeptrace.persistence.memory_store import SqlAlchemyMemoryStore
 from deeptrace.responses import (
     build_answer_graph,
     build_brief_graph,
     build_report_graph,
 )
-from deeptrace.harness.agent_executor import build_research_agent_graph
-from deeptrace.harness.token_budget import TokenBudgetConfig
 from deeptrace.strategies import (
     build_multi_agent_research_graph,
     build_plan_execute_research_graph,
@@ -95,9 +95,9 @@ class _SeededBudgets:
                             BudgetScopeKey.for_agent(self._run_id, mode, caller)
                         ] = units
                         run_total = run_total.plus(units)
-                        mode_totals[mode] = mode_totals.get(
-                            mode, BudgetUnits()
-                        ).plus(units)
+                        mode_totals[mode] = mode_totals.get(mode, BudgetUnits()).plus(
+                            units
+                        )
                     expanded[BudgetScopeKey.for_run(self._run_id)] = run_total
                     for mode, units in mode_totals.items():
                         expanded[BudgetScopeKey.for_mode(self._run_id, mode)] = units
@@ -130,9 +130,7 @@ def _budgets_for_run(run_id: str) -> InMemoryBudgetManager:
         for caller in ("workflow-graph", "plan-execute-executor"):
             scopes.append(BudgetScopeKey.for_agent(run_id, mode, caller))
         for index in range(6):
-            scopes.append(
-                BudgetScopeKey.for_agent(run_id, mode, f"researcher-{index}")
-            )
+            scopes.append(BudgetScopeKey.for_agent(run_id, mode, f"researcher-{index}"))
     return InMemoryBudgetManager({scope: limit for scope in scopes})
 
 
@@ -280,7 +278,9 @@ def _ensure_sqlite_schema(db_path: Path) -> None:
             "PRAGMA table_info(evidence_records)"
         )  # ensure the file exists before CREATE IF NOT EXISTS runs
         for statement in table_statements:
-            connection.execute(statement.replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS"))
+            connection.execute(
+                statement.replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS")
+            )
 
         def _columns(table: str) -> set[str]:
             return {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
@@ -294,8 +294,7 @@ def _ensure_sqlite_schema(db_path: Path) -> None:
         )
         if "canonical_url_hash" not in evidence_columns:
             connection.execute(
-                "ALTER TABLE evidence_records "
-                "ADD COLUMN canonical_url_hash VARCHAR(64)"
+                "ALTER TABLE evidence_records ADD COLUMN canonical_url_hash VARCHAR(64)"
             )
             connection.execute(
                 "UPDATE evidence_records "
@@ -357,8 +356,9 @@ def _ensure_sqlite_schema(db_path: Path) -> None:
 
         for statement in index_statements:
             connection.execute(
-                statement.replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS")
-                .replace("CREATE UNIQUE INDEX", "CREATE UNIQUE INDEX IF NOT EXISTS")
+                statement.replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS").replace(
+                    "CREATE UNIQUE INDEX", "CREATE UNIQUE INDEX IF NOT EXISTS"
+                )
             )
         connection.commit()
     finally:
@@ -415,8 +415,8 @@ def build_harness_runtime(
     is configured, otherwise a SQLite file under ``runs_dir``), so any run can
     resume node-by-node after a crash or restart.
     """
-    saver, ledger, memory_store, evidence_store, engine = (
-        _build_durable_stores(settings, runs_dir)
+    saver, ledger, memory_store, evidence_store, engine = _build_durable_stores(
+        settings, runs_dir
     )
     memory_retriever = _build_memory_retriever(
         settings, memory_store, runs_dir=runs_dir
@@ -430,7 +430,9 @@ def build_harness_runtime(
         max_retries=0,
         max_tokens=settings.openai_max_tokens,
     )
-    model_gateway = ChatModelGateway(model, timeout_seconds=settings.planner_timeout_seconds)
+    model_gateway = ChatModelGateway(
+        model, timeout_seconds=settings.planner_timeout_seconds
+    )
 
     fetcher = AsyncWebFetcher(
         min_chars=settings.min_extracted_chars,
@@ -441,9 +443,11 @@ def build_harness_runtime(
 
     strategies = StrategyRegistry()
     executor = build_research_agent_graph(
-        token_budget=TokenBudgetConfig(context_tokens=settings.model_context_tokens,
-                                       output_reserve_tokens=settings.openai_max_tokens or 4096,
-                                       safety_tokens=settings.context_safety_tokens),
+        token_budget=TokenBudgetConfig(
+            context_tokens=settings.model_context_tokens,
+            output_reserve_tokens=settings.openai_max_tokens or 4096,
+            safety_tokens=settings.context_safety_tokens,
+        ),
         max_iterations=settings.agent_max_iterations,
         consecutive_error_limit=settings.agent_consecutive_error_limit,
         completion_nudge_limit=settings.agent_completion_nudge_limit,
@@ -474,19 +478,13 @@ def build_harness_runtime(
     )
     responses = ResponseGraphRegistry()
     responses.register(
-        ResponseRegistration(
-            ResponseMode.ANSWER, build_answer_graph(response_budget)
-        )
+        ResponseRegistration(ResponseMode.ANSWER, build_answer_graph(response_budget))
     )
     responses.register(
-        ResponseRegistration(
-            ResponseMode.BRIEF, build_brief_graph(response_budget)
-        )
+        ResponseRegistration(ResponseMode.BRIEF, build_brief_graph(response_budget))
     )
     responses.register(
-        ResponseRegistration(
-            ResponseMode.REPORT, build_report_graph(response_budget)
-        )
+        ResponseRegistration(ResponseMode.REPORT, build_report_graph(response_budget))
     )
     graph = build_agent_runtime_graph(strategies, responses, checkpointer=saver)
     service = ResearchApplicationService(graph)
@@ -499,9 +497,7 @@ def build_harness_runtime(
         recorder = HarnessEventRecorder(run_id=run_id)
         if on_event is not None:
             recorder.on_sync_event = on_event
-        tool_context = ToolContext(
-            tavily=TavilyClient(api_key=settings.tavily_api_key)
-        )
+        tool_context = ToolContext(tavily=TavilyClient(api_key=settings.tavily_api_key))
 
         def run_search(query: str) -> Any:
             return search_web(tool_context, query, max_results=5)
@@ -509,6 +505,7 @@ def build_harness_runtime(
         registry = build_research_tool_registry(
             search=run_search,
             fetcher=fetcher,
+            evidence_store=evidence_store,
         )
         # Crash-safe budgeting: when the ledger is durable, consumed units are
         # seeded from it once before the first reservation, so a resumed run
@@ -550,6 +547,4 @@ def build_harness_runtime(
             memory_recall_limit=settings.memory_top_k,
         )
 
-    return HarnessRuntimeBundle(
-        service, context_factory, [engine, fetcher]
-    )
+    return HarnessRuntimeBundle(service, context_factory, [engine, fetcher])

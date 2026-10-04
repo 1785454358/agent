@@ -24,6 +24,7 @@ from deeptrace.tools.cache import (
 from deeptrace.tools.contracts import (
     CachePolicy,
     ToolAdapterResult,
+    ToolCallContext,
     ToolCapability,
     ToolSpec,
 )
@@ -34,6 +35,7 @@ from deeptrace.tools.execution_store import (
     ToolExecutionStore,
 )
 from deeptrace.tools.policy import (
+    EvidenceAuthorization,
     ToolAllowlistPolicy,
     ToolCaller,
     UrlAuthorization,
@@ -94,6 +96,7 @@ class AgentToolGateway:
         authorization: UrlAuthorization | None = None,
         provider_id: str = "default",
         refresh: bool = False,
+        evidence_authorization: EvidenceAuthorization | None = None,
     ) -> ToolResult:
         if not isinstance(request, ToolRequest):
             raise TypeError("request must be a ToolRequest")
@@ -126,6 +129,13 @@ class AgentToolGateway:
         except (TypeError, ValueError, ValidationError):
             return _failure(request, "unsafe_arguments")
 
+        call_context = ToolCallContext(
+            tenant, request.run_id, request.thread_id, caller, evidence_authorization
+        )
+        denied = await self._preflight(spec, arguments, call_context, request)
+        if denied is not None:
+            return denied
+
         claim = await self._executions.claim(
             tenant,
             request,
@@ -140,6 +150,9 @@ class AgentToolGateway:
                 result = await self._executions.wait(claim)
             except ExecutionAbandonedError:
                 return _failure(request, "execution_abandoned")
+            denied = await self._preflight(spec, arguments, call_context, request)
+            if denied is not None:
+                return denied
             return result.model_copy(update={"replayed": True}, deep=True)
 
         scope = _budget_scope(request, caller)
@@ -158,22 +171,16 @@ class AgentToolGateway:
                 result = (
                     await self._cache.get_or_execute(
                         cache_key,
-                        lambda: self._invoke(
-                            tenant, caller, request, spec, arguments
-                        ),
+                        lambda: self._invoke(call_context, request, spec, arguments),
                         refresh=True,
                     )
                     if cache_key is not None
-                    else await self._invoke(
-                        tenant, caller, request, spec, arguments
-                    )
+                    else await self._invoke(call_context, request, spec, arguments)
                 )
             else:
                 result = await self._cache.get_or_execute(
                     cache_key,
-                    lambda: self._invoke(
-                        tenant, caller, request, spec, arguments
-                    ),
+                    lambda: self._invoke(call_context, request, spec, arguments),
                 )
 
             result = _rebind(result, request)
@@ -183,9 +190,7 @@ class AgentToolGateway:
             else:
                 await self._budgets.commit(reservation, requested_units)
                 consumed = requested_units
-                await self._emit_completed(
-                    caller, result, requested_units, started_at
-                )
+                await self._emit_completed(caller, result, requested_units, started_at)
             await self._executions.complete(claim, result, consumed=consumed)
             return result
         except asyncio.CancelledError:
@@ -201,39 +206,56 @@ class AgentToolGateway:
             result = _failure(request, "shared_execution_failed")
             await self._executions.complete(claim, result, consumed=BudgetUnits())
             return result
-        except Exception:
+        except Exception:  # noqa: BLE001 - sanitize infrastructure boundary failures
             # Infrastructure failures are sanitized at the gateway boundary.
             await self._budgets.release(reservation)
             result = _failure(request, "tool_internal_error")
             await self._executions.complete(claim, result, consumed=BudgetUnits())
             return result
 
+    async def _preflight(
+        self,
+        spec: ToolSpec,
+        arguments: BaseModel,
+        context: ToolCallContext,
+        request: ToolRequest,
+    ) -> ToolResult | None:
+        if spec.preflight is None:
+            return None
+        try:
+            async with asyncio.timeout(spec.timeout_seconds):
+                await spec.preflight(arguments, context)
+        except PermissionError:
+            return _failure(request, "evidence_not_authorized")
+        except KeyError:
+            return _failure(request, "evidence_unavailable")
+        except TimeoutError:
+            return _failure(request, "provider_timeout")
+        except asyncio.CancelledError:
+            raise
+        except Exception:  # noqa: BLE001 - never expose preflight exception details
+            return _failure(request, "tool_internal_error")
+        return None
+
     async def _invoke(
         self,
-        tenant_id: str,
-        caller: ToolCaller,
+        context: ToolCallContext,
         request: ToolRequest,
         spec: ToolSpec,
         arguments: BaseModel,
     ) -> ToolResult:
         await self._emit_event(
             "tool.started",
-            _event_payload(caller, request),
+            _event_payload(context.caller, request),
         )
         for attempt in range(1, self._retry_attempts + 1):
-            result = await self._invoke_once(
-                tenant_id, request, spec, arguments
-            )
-            if (
-                result.ok
-                or not result.retryable
-                or attempt >= self._retry_attempts
-            ):
+            result = await self._invoke_once(context, request, spec, arguments)
+            if result.ok or not result.retryable or attempt >= self._retry_attempts:
                 return result
             await self._emit_event(
                 "tool.retry",
                 {
-                    **_event_payload(caller, request),
+                    **_event_payload(context.caller, request),
                     "attempt": attempt,
                     "error_code": result.error_code,
                     "error_category": (
@@ -248,18 +270,18 @@ class AgentToolGateway:
 
     async def _invoke_once(
         self,
-        tenant_id: str,
+        context: ToolCallContext,
         request: ToolRequest,
         spec: ToolSpec,
         arguments: BaseModel,
     ) -> ToolResult:
         try:
             async with asyncio.timeout(spec.timeout_seconds):
-                adapter_result = await spec.handler(arguments)
+                adapter_result = await spec.handler(arguments, context)
             if not isinstance(adapter_result, ToolAdapterResult):
                 return _failure(request, "invalid_adapter_result")
             return await self._project_result(
-                tenant_id, request, spec, adapter_result
+                context.tenant_id, request, spec, adapter_result
             )
         except TimeoutError:
             return _failure(request, "provider_timeout")
@@ -343,12 +365,10 @@ class AgentToolGateway:
         )
         await self._emit_event("tool.completed", payload)
 
-    async def _emit_event(
-        self, event_type: str, payload: dict[str, Any]
-    ) -> None:
+    async def _emit_event(self, event_type: str, payload: dict[str, Any]) -> None:
         try:
             await self._event_sink.emit(event_type, payload)
-        except Exception:
+        except Exception:  # noqa: BLE001 - telemetry must not alter execution results
             # Telemetry is deliberately isolated from the execution outcome.
             return
 
@@ -390,12 +410,14 @@ def _cache_key(
     else:
         return None
     digest = hashlib.sha256(
-        f"{tenant_id}\0{base_key.namespace}\0{base_key.digest}".encode("utf-8")
+        f"{tenant_id}\0{base_key.namespace}\0{base_key.digest}".encode()
     ).hexdigest()
     return ToolCacheKey(namespace=base_key.namespace, digest=digest)
 
 
-def _event_payload(caller: ToolCaller, value: ToolRequest | ToolResult) -> dict[str, Any]:
+def _event_payload(
+    caller: ToolCaller, value: ToolRequest | ToolResult
+) -> dict[str, Any]:
     return {
         "request_id": value.request_id,
         "run_id": value.run_id,

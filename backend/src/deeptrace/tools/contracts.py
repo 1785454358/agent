@@ -1,17 +1,20 @@
 from __future__ import annotations
 
+import inspect
+import math
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import StrEnum
-import inspect
-import math
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
 from deeptrace.domain import ToolName
 from deeptrace.domain.tools import MAX_TOOL_PREVIEW_LENGTH
 from deeptrace.tools.evidence_store import EvidenceDraft
+
+if TYPE_CHECKING:
+    from deeptrace.tools.policy import EvidenceAuthorization, ToolCaller
 
 
 class ToolCapability(StrEnum):
@@ -27,7 +30,19 @@ class CachePolicy(StrEnum):
     SUCCESS = "success"
 
 
-ToolHandler = Callable[[BaseModel], Awaitable[Any]]
+@dataclass(frozen=True)
+class ToolCallContext:
+    """Host-only identity and evidence grants, never model tool arguments."""
+
+    tenant_id: str
+    run_id: str
+    thread_id: str
+    caller: ToolCaller
+    evidence_authorization: EvidenceAuthorization | None
+
+
+ToolHandler = Callable[[BaseModel, ToolCallContext], Awaitable[Any]]
+ToolPreflight = Callable[[BaseModel, ToolCallContext], Awaitable[None]]
 
 
 @dataclass(frozen=True)
@@ -80,6 +95,7 @@ class ToolSpec:
     timeout_seconds: float
     preview_limit: int
     stores_evidence: bool
+    preflight: ToolPreflight | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.name, ToolName):
@@ -91,7 +107,8 @@ class ToolSpec:
             raise TypeError("argument_model must be a Pydantic BaseModel type")
         if not callable(self.handler) or not (
             inspect.iscoroutinefunction(self.handler)
-            or inspect.iscoroutinefunction(getattr(self.handler, "__call__", None))
+            # Inspect coroutine callable instances, not ordinary callability.
+            or inspect.iscoroutinefunction(getattr(self.handler, "__call__", None))  # noqa: B004
         ):
             raise TypeError("handler must be async")
         if not isinstance(self.capability, ToolCapability):
@@ -106,13 +123,18 @@ class ToolSpec:
             raise ValueError("timeout_seconds must be finite")
         if self.timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be greater than zero")
-        if not isinstance(self.preview_limit, int) or isinstance(self.preview_limit, bool):
+        if not isinstance(self.preview_limit, int) or isinstance(
+            self.preview_limit, bool
+        ):
             raise TypeError("preview_limit must be an int")
         if self.preview_limit < 0:
             raise ValueError("preview_limit cannot be negative")
         if self.preview_limit > MAX_TOOL_PREVIEW_LENGTH:
-            raise ValueError(
-                f"preview_limit cannot exceed {MAX_TOOL_PREVIEW_LENGTH}"
-            )
+            raise ValueError(f"preview_limit cannot exceed {MAX_TOOL_PREVIEW_LENGTH}")
         if not isinstance(self.stores_evidence, bool):
             raise TypeError("stores_evidence must be a bool")
+        if self.preflight is not None and not (
+            inspect.iscoroutinefunction(self.preflight)
+            or inspect.iscoroutinefunction(getattr(self.preflight, "__call__", None))  # noqa: B004
+        ):
+            raise TypeError("preflight must be async")

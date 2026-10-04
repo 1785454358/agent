@@ -217,9 +217,7 @@ def _to_model(record: EvidenceRecordRow) -> Evidence:
         fetched_at=fetched_at,
         published_at=published_at,
         source_quality=record.source_quality,
-        status=EvidenceLifecycleStatus.ACTIVE
-        if record.status == "active"
-        else EvidenceLifecycleStatus.SUPERSEDED,
+        status=EvidenceLifecycleStatus(record.status),
         version=record.version,
         supersedes=record.supersedes,
         metadata=record.metadata_json or {},

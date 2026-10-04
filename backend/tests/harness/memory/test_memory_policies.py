@@ -47,7 +47,9 @@ def test_q1_when_to_store_user_request_and_sourced_findings() -> None:
     )
     # research consolidation → facts require evidence support
     assert (
-        policy.can_store(_record(type=MemoryType.FACT), source="consolidation")
+        policy.can_store(
+            _record(type=MemoryType.FACT), source="consolidation", supported_fact=True
+        )
         is True
     )
     assert (
@@ -58,12 +60,8 @@ def test_q1_when_to_store_user_request_and_sourced_findings() -> None:
         is False
     )
     # failed calls / transient intermediates are never stored
-    assert (
-        policy.can_store(_record(), source="failed_call") is False
-    )
-    assert (
-        policy.can_store(_record(), source="intermediate") is False
-    )
+    assert policy.can_store(_record(), source="failed_call") is False
+    assert policy.can_store(_record(), source="intermediate") is False
 
 
 # ── Q2: what to store ────────────────────────────────────────────────────────
@@ -176,7 +174,7 @@ def test_q5_updates_are_versioned_with_supersedes_chain() -> None:
     store = InMemoryMemoryStore()
     policy = MemoryWritePolicy()
 
-    first = asyncio.run(remember(store, _record(), policy))
+    first = asyncio.run(remember(store, _record(), policy, supported_fact=True))
     updated = asyncio.run(
         remember(
             store,
@@ -185,6 +183,7 @@ def test_q5_updates_are_versioned_with_supersedes_chain() -> None:
                 confidence=0.95,
             ),
             policy,
+            supported_fact=True,
         )
     )
 
@@ -193,11 +192,11 @@ def test_q5_updates_are_versioned_with_supersedes_chain() -> None:
     assert updated.id != first.id
     # the superseded version remains queryable for the audit trail
     history = asyncio.run(
-        store.list_namespace(("workspace", "workspace-1", "facts"), include_inactive=True)
+        store.list_namespace(
+            ("workspace", "workspace-1", "facts"), include_inactive=True
+        )
     )
-    old_version = next(
-        record for record in history if record.version == first.version
-    )
+    old_version = next(record for record in history if record.version == first.version)
     assert old_version.status is MemoryStatus.SUPERSEDED
     # identical content is idempotent
     duplicate = asyncio.run(
@@ -208,6 +207,7 @@ def test_q5_updates_are_versioned_with_supersedes_chain() -> None:
                 confidence=0.95,
             ),
             policy,
+            supported_fact=True,
         )
     )
     assert duplicate.id == updated.id

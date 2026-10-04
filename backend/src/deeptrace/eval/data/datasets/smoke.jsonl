@@ -1,0 +1,3 @@
+{"id": "q-checkpoint", "question": "LangGraph checkpoint 如何支持崩溃恢复？", "gold_answer": "checkpoint 保存可恢复状态，崩溃后用执行账本重放已提交结果。", "gold_urls": ["https://corpus.example/langgraph-checkpoint"], "category": "runtime", "hops": 1}
+{"id": "q-gateway", "question": "ToolGateway 如何执行工具白名单与预算治理？", "gold_answer": "ToolGateway 统一执行白名单、URL 校验、预算预留、缓存、账本与证据落库。", "gold_urls": ["https://corpus.example/tool-gateway"], "category": "governance", "hops": 1}
+{"id": "q-multi-agent", "question": "Multi-Agent 中 Supervisor 与 Researcher 如何协作？", "gold_answer": "Supervisor 拆解方向，Researcher 并行研究，随后聚合与评估。", "gold_urls": ["https://corpus.example/multi-agent"], "category": "orchestration", "hops": 2}

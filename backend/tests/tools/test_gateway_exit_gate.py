@@ -85,21 +85,20 @@ async def test_unified_gateway_exit_gate() -> None:
         }
 
     fetcher = Fetcher("large evidence body " * 1_000)
+    evidence = InMemoryEvidenceStore()
     registry = build_research_tool_registry(
         search=search,
         fetcher=fetcher,
         memory=None,
+        evidence_store=evidence,
     )
     run_scope = BudgetScopeKey.for_run("run-1")
     mode_scope = BudgetScopeKey.for_mode("run-1", ResearchMode.WORKFLOW)
-    agent_scope = BudgetScopeKey.for_agent(
-        "run-1", ResearchMode.WORKFLOW, "researcher"
-    )
+    agent_scope = BudgetScopeKey.for_agent("run-1", ResearchMode.WORKFLOW, "researcher")
     limit = BudgetUnits(tool_calls=10, network_requests=10, fetched_pages=10)
     budgets = InMemoryBudgetManager(
         {run_scope: limit, mode_scope: limit, agent_scope: limit}
     )
-    evidence = InMemoryEvidenceStore()
     events = EventSink()
     gateway = AgentToolGateway(
         registry=registry,
@@ -132,9 +131,7 @@ async def test_unified_gateway_exit_gate() -> None:
         caller=supervisor,
         request=_request("denied", ToolName.SEARCH_WEB, {"query": "harness"}),
     )
-    first_request = _request(
-        "search-1", ToolName.SEARCH_WEB, {"query": "harness"}
-    )
+    first_request = _request("search-1", ToolName.SEARCH_WEB, {"query": "harness"})
     first_task = asyncio.create_task(
         gateway.execute(tenant_id="tenant-a", caller=caller, request=first_request)
     )
@@ -143,9 +140,7 @@ async def test_unified_gateway_exit_gate() -> None:
         gateway.execute(
             tenant_id="tenant-a",
             caller=caller,
-            request=_request(
-                "search-2", ToolName.SEARCH_WEB, {"query": "harness"}
-            ),
+            request=_request("search-2", ToolName.SEARCH_WEB, {"query": "harness"}),
         )
     )
     await asyncio.sleep(0)
@@ -168,7 +163,7 @@ async def test_unified_gateway_exit_gate() -> None:
         ),
     )
 
-    assert registry.names() == tuple(ToolName)
+    assert set(registry.names()) == set(ToolName)
     assert malformed.error_code == "invalid_arguments"
     assert denied.error_code == "tool_not_allowed"
     assert search_calls == 1

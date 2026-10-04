@@ -21,7 +21,6 @@ from deeptrace.domain.errors import (
 )
 from deeptrace.domain.execution import ErrorCategory
 
-
 MAX_TOOL_ID_LENGTH = 128
 MAX_TOOL_ARGUMENTS_BYTES = 32 * 1024
 MAX_TOOL_PREVIEW_LENGTH = 4_000
@@ -59,6 +58,7 @@ DataReference = Annotated[
 class ToolName(StrEnum):
     SEARCH_WEB = "search_web"
     FETCH_PAGE = "fetch_page"
+    READ_EVIDENCE = "read_evidence"
     SEARCH_MEMORY = "search_memory"
 
 

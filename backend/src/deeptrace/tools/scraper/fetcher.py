@@ -3,28 +3,28 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import hashlib
 import ipaddress
+import re
 import socket
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urljoin, urlsplit
 
-from bs4 import BeautifulSoup
 import httpx
 import tiktoken
+from bs4 import BeautifulSoup, Comment, Declaration, Doctype, ProcessingInstruction, Tag
 from trafilatura import extract
 
 from deeptrace.models import RawDocument, ScraperUsed
+from deeptrace.tools.scraper.metadata import extract_source_metadata
 from deeptrace.tools.scraper.urls import (
     normalize_url_before_fetch,
     resolve_document_identity,
     validate_public_url,
 )
-from deeptrace.tools.scraper.metadata import extract_source_metadata
-
 
 MAX_RESPONSE_BYTES = 2_000_000
 DEFAULT_USER_AGENT = (
@@ -88,10 +88,16 @@ def is_allowed_dns_resolution(
 
 def select_best_extraction(
     candidates: list[ExtractionCandidate],
+    *,
+    is_usable: Callable[[str], bool] | None = None,
 ) -> ExtractionCandidate:
-    """选最长正文；长度相同时保留更早的低成本路径。"""
+    """Prefer the first usable extraction; retain longest failure diagnostics."""
     if not candidates:
         raise ValueError("至少需要一个正文候选")
+    if is_usable is not None:
+        for candidate in candidates:
+            if is_usable(candidate.text):
+                return candidate
     return max(candidates, key=lambda item: len(item.text.strip()))
 
 
@@ -149,7 +155,11 @@ class AsyncWebFetcher:
         except WebFetchError as exc:
             http_error = exc
 
-        best = select_best_extraction(candidates) if candidates else None
+        best = (
+            select_best_extraction(candidates, is_usable=self._is_usable)
+            if candidates
+            else None
+        )
         if best is None or not self._is_usable(best.text):
             try:
                 html, final_url = await self._fetch_playwright(normalized)
@@ -162,7 +172,7 @@ class AsyncWebFetcher:
 
         if not candidates:
             raise http_error or WebFetchError("empty_extraction", "未提取到正文")
-        best = select_best_extraction(candidates)
+        best = select_best_extraction(candidates, is_usable=self._is_usable)
         if not self._is_usable(best.text):
             raise WebFetchError(
                 "insufficient_content",
@@ -183,7 +193,7 @@ class AsyncWebFetcher:
             title=best.title or final_url,
             content=full_content[: self._max_page_chars],
             content_hash=content_hash,
-            fetched_at=datetime.now(timezone.utc),
+            fetched_at=datetime.now(UTC),
             scraper_used=best.scraper_used,
             status="success",
             source_published_at=best.source_published_at,
@@ -321,9 +331,7 @@ class AsyncWebFetcher:
         except socket.gaierror as exc:
             raise WebFetchError("dns_failed", "域名解析失败", url=url) from exc
         is_public = bool(records) and all(
-            is_allowed_dns_resolution(
-                record[4][0], self._allow_benchmark_dns_proxy
-            )
+            is_allowed_dns_resolution(record[4][0], self._allow_benchmark_dns_proxy)
             for record in records
         )
         self._dns_cache[hostname] = is_public
@@ -341,6 +349,7 @@ class AsyncWebFetcher:
             include_comments=False,
             include_tables=False,
             favor_precision=True,
+            output_format="markdown",
         )
         trafilatura_used = (
             ScraperUsed.PLAYWRIGHT_TRAFILATURA
@@ -389,16 +398,89 @@ class AsyncWebFetcher:
         ):
             tag.decompose()
         root = soup.find("article") or soup.find("main") or soup.body or soup
-        return "\n".join(
-            line
-            for line in (part.strip() for part in root.get_text("\n").splitlines())
-            if line
-        )
+        blocks = {
+            "article",
+            "main",
+            "body",
+            "section",
+            "div",
+            "p",
+            "li",
+            "ul",
+            "ol",
+            "dl",
+            "dt",
+            "dd",
+            "blockquote",
+            "pre",
+            "table",
+            "thead",
+            "tbody",
+            "tr",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+        }
+
+        def clean(text: str) -> str:
+            return re.sub(r"\s+", " ", text).strip()
+
+        paragraphs, inline = [], []
+
+        def flush():
+            text = clean("".join(inline))
+            inline.clear()
+            if text:
+                paragraphs.append(text)
+
+        # Iterate rather than recurse: page markup is untrusted and can be deep.
+        pending = [("visit", root)]
+        while pending:
+            action, node = pending.pop()
+            if action == "boundary":
+                flush()
+                continue
+            if isinstance(node, (Comment, Declaration, Doctype, ProcessingInstruction)):
+                continue
+            if not isinstance(node, Tag):
+                inline.append(str(node))
+                continue
+            if node.name == "pre":
+                flush()
+                text = node.get_text("", strip=False).strip("\r\n")
+                if text.strip():
+                    paragraphs.append("```\n" + text + "\n```")
+                continue
+            if node.name in {"h1", "h2", "h3", "h4", "h5", "h6"}:
+                flush()
+                text = clean(node.get_text("", strip=False))
+                if text:
+                    paragraphs.append("#" * int(node.name[1]) + " " + text)
+                continue
+            if node.name == "tr":
+                flush()
+                cells = node.find_all(["td", "th"], recursive=False)
+                text = " | ".join(clean(c.get_text("", strip=False)) for c in cells)
+                if text:
+                    paragraphs.append(text)
+                continue
+            if node.name == "br":
+                flush()
+                continue
+            if node.name in blocks:
+                flush()
+                if node.name == "li":
+                    inline.append("- ")
+                pending.append(("boundary", None))
+            pending.extend(("visit", child) for child in reversed(list(node.children)))
+        flush()
+        return "\n\n".join(paragraphs)
 
     @staticmethod
-    def _safe_canonical_url(
-        canonical_url: str | None, final_url: str
-    ) -> str | None:
+    def _safe_canonical_url(canonical_url: str | None, final_url: str) -> str | None:
         if not canonical_url:
             return None
         try:

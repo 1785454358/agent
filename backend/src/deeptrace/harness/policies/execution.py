@@ -53,7 +53,7 @@ class ExecutionPolicy:
             status = reason
         elif not evidence and reason in {"model_error", "tool_error", "context_limit"}:
             status = "failed"
-        summary = next(
+        summary = state.get("completion_summary") or next(
             (
                 str(m.content)
                 for m in reversed(state.get("messages") or [])

@@ -15,10 +15,12 @@ from deeptrace.models import RawDocument
 from deeptrace.tools.contracts import (
     CachePolicy,
     ToolAdapterResult,
+    ToolCallContext,
     ToolCapability,
     ToolSpec,
 )
-from deeptrace.tools.evidence_store import EvidenceDraft
+from deeptrace.tools.evidence_read import ReadEvidenceAdapter, ReadEvidenceArguments
+from deeptrace.tools.evidence_store import EvidenceDraft, EvidenceStore
 from deeptrace.tools.registry import ToolRegistry
 from deeptrace.tools.scraper import WebFetchError, normalize_url_before_fetch
 
@@ -71,7 +73,9 @@ class _ResearchToolAdapters:
         self._memory_max_age_days = memory_max_age_days
         self._now = now
 
-    async def search_web(self, arguments: BaseModel) -> ToolAdapterResult:
+    async def search_web(
+        self, arguments: BaseModel, _context: ToolCallContext
+    ) -> ToolAdapterResult:
         if not isinstance(arguments, SearchWebArguments):
             raise TypeError("search arguments have the wrong type")
         query = arguments.query.strip()
@@ -99,16 +103,16 @@ class _ResearchToolAdapters:
                 {
                     "url": url,
                     "title": str(item.get("title", ""))[:300],
-                    "snippet": str(
-                        item.get("snippet", item.get("content", ""))
-                    )[:500],
+                    "snippet": str(item.get("snippet", item.get("content", "")))[:500],
                 }
             )
             if len(results) >= arguments.limit:
                 break
         return ToolAdapterResult(preview=_json_preview({"results": results}))
 
-    async def fetch_page(self, arguments: BaseModel) -> ToolAdapterResult:
+    async def fetch_page(
+        self, arguments: BaseModel, _context: ToolCallContext
+    ) -> ToolAdapterResult:
         if not isinstance(arguments, FetchPageArguments):
             raise TypeError("fetch arguments have the wrong type")
         try:
@@ -117,9 +121,9 @@ class _ResearchToolAdapters:
             return ToolAdapterResult.failure(exc.code, message=str(exc))
         if document.status != "success" or not document.content.strip():
             return ToolAdapterResult.failure("empty_page")
-        source_url = (
-            document.canonical_url or document.final_url or document.requested_url
-        )
+        # Publisher canonical links may merge different editions/languages.
+        # The store versions the actual retrieved resource, not that SEO hint.
+        source_url = document.final_url or document.requested_url
         draft = EvidenceDraft(
             canonical_url=source_url,
             title=document.title.strip() or source_url,
@@ -131,6 +135,7 @@ class _ResearchToolAdapters:
             metadata={
                 "requested_url": document.requested_url,
                 "final_url": document.final_url,
+                "publisher_canonical_url": document.canonical_url,
                 "scraper_used": document.scraper_used.value,
                 "publisher": document.publisher,
             },
@@ -151,7 +156,9 @@ class _ResearchToolAdapters:
             evidence=draft,
         )
 
-    async def search_memory(self, arguments: BaseModel) -> ToolAdapterResult:
+    async def search_memory(
+        self, arguments: BaseModel, _context: ToolCallContext
+    ) -> ToolAdapterResult:
         if not isinstance(arguments, SearchMemoryArguments):
             raise TypeError("memory arguments have the wrong type")
         if self._memory is None:
@@ -159,11 +166,7 @@ class _ResearchToolAdapters:
         entries = await asyncio.to_thread(self._memory.entries)
         cutoff = _as_utc(self._now()) - timedelta(days=self._memory_max_age_days)
         tokens = _tokens(arguments.query)
-        recent = [
-            entry
-            for entry in entries
-            if _as_utc(entry.fetched_at) >= cutoff
-        ]
+        recent = [entry for entry in entries if _as_utc(entry.fetched_at) >= cutoff]
         ranked = sorted(
             recent,
             key=lambda entry: (
@@ -196,6 +199,7 @@ def build_research_tool_registry(
     memory: PageMemory | None = None,
     memory_max_age_days: int = 7,
     now: ClockCallable | None = None,
+    evidence_store: EvidenceStore | None = None,
 ) -> ToolRegistry:
     if not callable(search):
         raise TypeError("search must be callable")
@@ -254,14 +258,31 @@ def build_research_tool_registry(
             stores_evidence=False,
         )
     )
+    if evidence_store is not None:
+        reader = ReadEvidenceAdapter(evidence_store)
+        registry.register(
+            ToolSpec(
+                name=ToolName.READ_EVIDENCE,
+                argument_model=ReadEvidenceArguments,
+                handler=reader.read,
+                preflight=reader.preflight,
+                capability=ToolCapability.EVIDENCE_READ,
+                cache_policy=CachePolicy.NONE,
+                timeout_seconds=5.0,
+                preview_limit=4000,
+                stores_evidence=False,
+            )
+        )
     return registry
 
 
 async def _call_search(search: SearchCallable, query: str) -> Any:
     async_call = inspect.iscoroutinefunction(search) or inspect.iscoroutinefunction(
-        getattr(search, "__call__", None)
+        getattr(search, "__call__", None)  # noqa: B004 - async callable instances
     )
-    response = await search(query) if async_call else await asyncio.to_thread(search, query)
+    response = (
+        await search(query) if async_call else await asyncio.to_thread(search, query)
+    )
     if inspect.isawaitable(response):
         return await response
     return response

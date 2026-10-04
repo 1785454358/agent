@@ -57,11 +57,15 @@ async def test_real_workflow_run_returns_cited_answer(tmp_path) -> None:
                 from pydantic import ValidationError
 
                 from deeptrace.strategies.model_io import payload_text
-                from deeptrace.strategies.workflow.models import WorkflowEvaluation
+                from deeptrace.strategies.workflow.models import (
+                    ReferenceWorkflowEvaluation,
+                )
 
                 errors = []
                 try:
-                    WorkflowEvaluation.model_validate_json(payload_text(response))
+                    ReferenceWorkflowEvaluation.model_validate_json(
+                        payload_text(response)
+                    )
                 except ValidationError as exc:
                     errors = [
                         {

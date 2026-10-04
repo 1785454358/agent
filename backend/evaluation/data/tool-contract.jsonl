@@ -1,0 +1,1 @@
+{"id":"contract-checkpoint","question":"LangGraph checkpoint 如何支持崩溃恢复？","category":"tool_contract_only","gold_urls":["https://corpus.example/langgraph-checkpoint"],"reference_tool_calls":[{"name":"search_web","args":{"query":"LangGraph checkpoint 如何支持崩溃恢复？","limit":5}},{"name":"fetch_page","args":{"url":"https://corpus.example/langgraph-checkpoint"}}],"strict_tool_order":true}
