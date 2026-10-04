@@ -11,7 +11,9 @@ DeepResearch 是基于 LangGraph 的多模式深度研究 Agent。它将问题�
 
 [快速体验](#快速体验) · [真实研究案例](docs/showcase/case-asyncio.md) · [架构设计](docs/architecture/agent-harness.md) · [设计参考](docs/showcase/mature-projects.md)
 
-![DeepResearch 工作台](docs/assets/deepresearch-workbench.png)
+![DeepResearch 真实研究案例：问题、研究过程、回答与官方来源](docs/assets/deepresearch-case-preview.svg)
+
+基于已留存真实运行重新排版的案例摘要，完整回答与原始记录见[案例文档](docs/showcase/case-asyncio.md)。
 
 ## 可以用它做什么
 

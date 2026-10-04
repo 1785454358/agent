@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="858" viewBox="0 0 960 858" role="img" aria-labelledby="title description">
+  <title id="title">DeepResearch 真实研究案例：Python asyncio</title>
+  <desc id="description">依据留存的 Plan-and-Execute 真实运行，展示研究问题、过程摘要、TaskGroup 与 gather 的回答要点及 Python 3.11 官方文档来源。子任务发生普通异常时，TaskGroup 取消其余未完成任务并聚合异常，gather 默认不取消其它任务并立即传播首个异常。此图为案例摘要重新排版，不是工作台截图。</desc>
+  <defs>
+    <style>
+      text { font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #183251; }
+      .muted { fill: #526981; }
+      .label { font-size: 17px; font-weight: 600; }
+      .body { font-size: 20px; }
+      .detail { font-size: 17px; fill: #526981; }
+      .section { font-size: 23px; font-weight: 700; }
+    </style>
+  </defs>
+
+  <rect width="960" height="858" rx="20" fill="#f5f8fd"/>
+  <rect x="1" y="1" width="958" height="856" rx="19" fill="none" stroke="#dce5f0"/>
+
+  <!-- Product identity and the provenance of this view. -->
+  <rect x="32" y="27" width="34" height="34" rx="10" fill="#235ed0"/>
+  <path d="M43 36h6a7 7 0 0 1 0 14h-6z" fill="none" stroke="#fff" stroke-width="2.8"/>
+  <circle cx="54" cy="51" r="3" fill="#83dbce"/>
+  <text x="78" y="51" font-size="24" font-weight="700">DeepResearch</text>
+  <rect x="743" y="30" width="185" height="31" rx="15" fill="#e5f3ed"/>
+  <circle cx="760" cy="45" r="4" fill="#238462"/>
+  <text x="772" y="51" font-size="16" fill="#23694f">真实运行 · completed</text>
+
+  <text x="32" y="110" font-size="35" font-weight="700">从一个问题，到一份有依据的回答</text>
+  <text x="32" y="146" font-size="19" class="muted">问题拆解 → 联网搜索 → 原文阅读 → 回答与来源</text>
+
+  <!-- The same question as the documented, real online case. -->
+  <rect x="32" y="171" width="896" height="121" rx="14" fill="#eaf1ff" stroke="#cbdcf7"/>
+  <text x="54" y="202" class="label" fill="#2c5cad">研究问题</text>
+  <rect x="721" y="184" width="187" height="29" rx="7" fill="#fff"/>
+  <text x="735" y="204" font-size="16" font-weight="600" fill="#345d98">Plan-and-Execute</text>
+  <text x="54" y="239" font-size="27" font-weight="700">Python 3.11：TaskGroup 与 gather</text>
+  <text x="54" y="273" class="body">子任务异常时，如何取消、传播异常与完成清理？</text>
+
+  <!-- Summarized process; no invented raw log or individual timings. -->
+  <rect x="32" y="314" width="300" height="401" rx="14" fill="#fff" stroke="#dce5f0"/>
+  <text x="54" y="350" class="section">研究过程</text>
+  <text x="54" y="378" class="detail">按留存运行材料整理</text>
+  <path d="M65 415v230" stroke="#c9dbf3" stroke-width="2"/>
+  <g>
+    <circle cx="65" cy="418" r="12" fill="#235ed0"/>
+    <path d="m60 418 3 3 6-7" fill="none" stroke="#fff" stroke-width="2"/>
+    <text x="88" y="424" class="body" font-weight="600">拆分 3 个研究方向</text>
+    <text x="88" y="451" class="detail">异常传播、任务取消、清理</text>
+  </g>
+  <g>
+    <circle cx="65" cy="493" r="12" fill="#235ed0"/>
+    <path d="m60 493 3 3 6-7" fill="none" stroke="#fff" stroke-width="2"/>
+    <text x="88" y="499" class="body" font-weight="600">搜索与抓取官方资料</text>
+    <text x="88" y="526" class="detail">来源限定为 Python 3.11</text>
+  </g>
+  <g>
+    <circle cx="65" cy="568" r="12" fill="#235ed0"/>
+    <path d="m60 568 3 3 6-7" fill="none" stroke="#fff" stroke-width="2"/>
+    <text x="88" y="574" class="body" font-weight="600">阅读原文与评估证据</text>
+    <text x="88" y="601" class="detail">3 次原文阅读</text>
+  </g>
+  <g>
+    <circle cx="65" cy="643" r="12" fill="#238462"/>
+    <path d="m60 643 3 3 6-7" fill="none" stroke="#fff" stroke-width="2"/>
+    <text x="88" y="649" class="body" font-weight="600">生成回答并保留出处</text>
+    <text x="88" y="676" class="detail">已完成 · 116.29 秒</text>
+  </g>
+
+  <!-- An editorial summary of the recorded answer. -->
+  <rect x="352" y="314" width="576" height="401" rx="14" fill="#fff" stroke="#dce5f0"/>
+  <text x="374" y="350" class="section">回答要点</text>
+  <text x="374" y="378" class="detail">场景：一个子任务抛出普通异常（非取消异常）</text>
+
+  <rect x="374" y="396" width="532" height="99" rx="9" fill="#eef4ff"/>
+  <rect x="374" y="408" width="4" height="75" rx="2" fill="#235ed0"/>
+  <text x="394" y="424" font-size="22" font-weight="700" fill="#2355a5">TaskGroup</text>
+  <text x="394" y="454" class="body">取消其余未完成任务</text>
+  <text x="394" y="481" font-size="19" class="muted">等待任务结束，聚合异常再抛出</text>
+
+  <rect x="374" y="509" width="532" height="99" rx="9" fill="#edf7f4"/>
+  <rect x="374" y="521" width="4" height="75" rx="2" fill="#238462"/>
+  <text x="394" y="537" font-size="22" font-weight="700" fill="#23694f">gather（默认参数）</text>
+  <text x="394" y="567" class="body">其他子任务不会被取消</text>
+  <text x="394" y="594" font-size="19" class="muted">首个异常立即传播给调用方</text>
+
+  <text x="374" y="642" font-size="20" font-weight="600">捕获 CancelledError 后</text>
+  <text x="374" y="671" font-size="19">完成清理，再重新抛出；确需抑制时，移除取消状态。</text>
+  <text x="374" y="696" font-size="16" class="muted">完整回答与条件说明见案例文档。</text>
+
+  <rect x="32" y="735" width="896" height="76" rx="12" fill="#fff" stroke="#cbdcf7"/>
+  <rect x="50" y="755" width="36" height="36" rx="9" fill="#eaf1ff"/>
+  <path d="M60 763h12l4 4v16H60z M72 763v5h4 M64 773h8 M64 778h8" fill="none" stroke="#235ed0" stroke-width="1.7"/>
+  <text x="101" y="768" font-size="20" font-weight="600">官方来源 · Python 3.11「协程与任务」</text>
+  <text x="101" y="794" font-size="17" class="muted">docs.python.org/zh-tw/3.11/library/asyncio-task.html</text>
+  <text x="32" y="839" font-size="14" class="muted">2026-10-04 · 单道真实运行案例的摘要展示 · 过程与答案重新排版，非界面截图</text>
+</svg>
