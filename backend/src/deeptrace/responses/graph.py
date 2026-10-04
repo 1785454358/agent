@@ -220,18 +220,20 @@ def _fallback_outcome(
 def _extract_content(raw_text: str) -> str:
     """Pull the content string out of the model's JSON envelope.
 
-    Primary path is strict JSON; one tolerant fallback slices the outermost
-    {...} block when the model wraps JSON in prose or a code fence remnant.
+    Keep the object structure strict but accept literal line breaks in strings.
+    A fallback slices the outermost {...} block for prose/code fence wrappers.
     """
     try:
-        payload = json.loads(raw_text)
+        payload = json.loads(raw_text, strict=False)
     except (TypeError, ValueError):
         start, end = raw_text.find("{"), raw_text.rfind("}")
         if start == -1 or end <= start:
             raise
-        payload = json.loads(raw_text[start : end + 1])
+        payload = json.loads(raw_text[start : end + 1], strict=False)
     if not isinstance(payload, dict) or not isinstance(payload.get("content"), str):
         raise TypeError("model payload is not a content object")
+    if any(ord(char) < 32 and char not in "\r\n\t" for char in payload["content"]):
+        raise ValueError("invalid control character in answer")
     return payload["content"]
 
 

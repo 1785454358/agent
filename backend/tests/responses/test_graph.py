@@ -44,6 +44,38 @@ class ScriptedModelGateway:
 
 
 @pytest.mark.asyncio
+async def test_literal_newlines_in_json_answer_do_not_repeat_model_generation():
+    body = '原文支持第一项结论 [1]。\n\n原文支持第二项结论 [1]。'
+    model = ScriptedModelGateway({'responder': '{"content": "' + body + '"}'})
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(store, [('https://example.com/a', 'source', 'facts')])
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+    result = await _run_response(build_answer_graph(), model, _response_input(ids), fixture)
+    assert result['outcome'].content == body
+    assert result['outcome'].partial_reason is None
+    assert len(model.calls) == 1
+
+
+def test_response_json_compatibility_does_not_accept_broken_structure():
+    from deeptrace.responses.graph import _extract_content
+    for payload in ('{"content": "unterminated', '{"content": 123}', '{"wrong": "answer"}', '{"content": "bad\x00text"}'):
+        with pytest.raises((ValueError, TypeError)):
+            _extract_content(payload)
+
+
+@pytest.mark.asyncio
+async def test_literal_newline_compatibility_keeps_unsupported_citation_rejection():
+    model = ScriptedModelGateway({'responder': '{"content": "结论 [99]。\n另一段。"}'})
+    store = InMemoryEvidenceStore()
+    ids = await _seed_evidence(store, [('https://example.com/a', 'source', 'facts')])
+    fixture = build_gateway_fixture(model_gateway=model, evidence_store=store)
+    result = await _run_response(build_answer_graph(), model, _response_input(ids), fixture)
+    assert result['outcome'].partial_reason == 'no_supported_citations'
+    assert '[99]' not in result['outcome'].content
+    assert len(model.calls) == 1
+
+
+@pytest.mark.asyncio
 async def test_run_budget_denial_returns_evidence_backed_partial_instead_of_crashing():
     store = InMemoryEvidenceStore()
     ids = await _seed_evidence(store, [("https://example.com/a", "source", "supported fact")])

@@ -558,6 +558,8 @@ async def run_evidence_evaluation(
         "不能据此把实际旧版/新版或镜像当成指定版本官方来源。没有来源限制时不额外增加限制。"
         "无法确认用uncertain；无可见原文不能eligible。"
         "只有eligible来源可支持findings，不合格来源对应的需求仍missing，定向补查正确来源。"
+        "输出保持精简：每条需求只保留足够建立支持或冲突的最少独立结论，合并重复发现；"
+        "保留所有必要条件、否定和版本信息。reason只写关键判断，不复述研究过程或完整原文。"
         "只输出符合以下 JSON Schema 的 JSON 对象（id 如 finding-1 为字符串）。JSON Schema：\n"
         + json.dumps(schema.model_json_schema(), ensure_ascii=False)
     )

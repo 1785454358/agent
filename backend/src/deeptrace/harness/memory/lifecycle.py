@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
+from time import perf_counter
 from typing import Any
 
 from langgraph.runtime import Runtime
@@ -211,6 +213,25 @@ async def _consolidate_memory(
     context = runtime.context
     if context is None or context.memory_store is None:
         return {}
+    started = perf_counter()
+    status = "failed"
+    try:
+        updates = await _consolidate_memory_impl(state, runtime)
+        status = "completed"
+        return updates
+    except asyncio.CancelledError:
+        status = "cancelled"
+        raise
+    finally:
+        await _memory_timing(context, "memory.consolidation.completed", started, status=status)
+
+
+async def _consolidate_memory_impl(
+    state: HarnessState, runtime: Runtime[HarnessContext]
+) -> dict[str, Any]:
+    context = runtime.context
+    if context is None or context.memory_store is None:
+        return {}
     memory_store = context.memory_store
     turn = state["turn"]
     outcome = turn.get("research_outcome")
@@ -365,9 +386,30 @@ async def _index_memory_best_effort(
 ) -> None:
     if context.memory_retriever is None or not records:
         return
+    started = perf_counter()
+    status = "completed"
     try:
         await context.memory_retriever.index(records)
+    except asyncio.CancelledError:
+        status = "cancelled"
+        raise
     except Exception:
+        status = "degraded"
         logging.getLogger(__name__).exception(
             "memory stored in authoritative store but Chroma indexing failed"
         )
+    finally:
+        await _memory_timing(
+            context, "memory.index.completed", started, records=len(records), status=status
+        )
+
+
+async def _memory_timing(
+    context: HarnessContext, event_type: str, started: float, **details: Any
+) -> None:
+    try:
+        await context.event_sink.emit(
+            event_type, {"elapsed_seconds": perf_counter() - started, **details}
+        )
+    except Exception:
+        logging.getLogger(__name__).debug("Memory timing unavailable", exc_info=True)

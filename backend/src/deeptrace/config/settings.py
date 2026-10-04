@@ -143,6 +143,7 @@ class Settings:
     input_cost_per_million: Decimal | None = None
     output_cost_per_million: Decimal | None = None
     openai_max_tokens: int | None = None
+    model_thinking: str = "auto"
     # 开发模式：run.completed 事件输出各角色 Token/耗时明细表。
     show_usage_report: bool = False
     # 详细事件：推送 tool.started/tool.completed 等细粒度过程事件。
@@ -186,6 +187,10 @@ class Settings:
             openai_api_key=_required("OPENAI_API_KEY"),
             openai_base_url=_required("OPENAI_BASE_URL"),
             openai_model=_required("OPENAI_MODEL"),
+            model_thinking=_choice(
+                "DEEPTRACE_MODEL_THINKING", "auto",
+                {"auto", "provider_default", "enabled", "disabled"},
+            ),
             tavily_api_key=_required("TAVILY_API_KEY"),
             runtime_mode=runtime_mode,
             mysql_dsn=mysql_dsn,

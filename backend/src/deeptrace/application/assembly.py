@@ -427,6 +427,16 @@ def build_harness_runtime(
         settings, memory_store, runs_dir=runs_dir
     )
 
+    thinking = settings.model_thinking
+    if thinking == "auto":
+        thinking = (
+            "disabled"
+            if settings.openai_model.lower().startswith(
+                ("doubao-seed-2.0-lite", "doubao-seed-2-0-lite")
+            )
+            else "provider_default"
+        )
+    extra_body = None if thinking == "provider_default" else {"thinking": {"type": thinking}}
     model = ChatOpenAI(
         api_key=settings.openai_api_key,
         base_url=settings.openai_base_url,
@@ -434,6 +444,7 @@ def build_harness_runtime(
         temperature=0,
         max_retries=0,
         max_tokens=settings.openai_max_tokens,
+        extra_body=extra_body,
     )
     model_gateway = ChatModelGateway(
         model, timeout_seconds=settings.planner_timeout_seconds, retry_attempts=1,

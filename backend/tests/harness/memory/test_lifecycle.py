@@ -318,6 +318,43 @@ class RecordedIndex:
 
 
 @pytest.mark.asyncio
+async def test_memory_consolidation_reports_completed_index_and_total_wall_time():
+    from deeptrace.harness.memory.lifecycle import _consolidate_memory
+    from deeptrace.harness.memory.store import InMemoryMemoryStore
+    fixture = build_gateway_fixture()
+    source = await _ingest_source(fixture)
+    index = RecordedIndex()
+    state = await _consolidation_state(fixture, [('supported fact', [source.id])])
+    context = replace(fixture.context, memory_store=InMemoryMemoryStore(), memory_retriever=index)
+    await _consolidate_memory(state, SimpleNamespace(context=context))
+    events = dict(fixture.events.events)
+    assert events['memory.index.completed']['records'] == len(index.batches[0]) == 1
+    assert events['memory.index.completed']['status'] == 'completed'
+    assert events['memory.consolidation.completed']['elapsed_seconds'] >= events['memory.index.completed']['elapsed_seconds'] >= 0
+
+
+@pytest.mark.asyncio
+async def test_memory_timing_does_not_report_cancelled_index_as_success():
+    import asyncio
+    from deeptrace.harness.memory.lifecycle import _consolidate_memory
+    from deeptrace.harness.memory.store import InMemoryMemoryStore
+
+    class CancelledIndex:
+        async def index(self, records):
+            raise asyncio.CancelledError()
+
+    fixture = build_gateway_fixture()
+    source = await _ingest_source(fixture)
+    state = await _consolidation_state(fixture, [('supported fact', [source.id])])
+    context = replace(fixture.context, memory_store=InMemoryMemoryStore(), memory_retriever=CancelledIndex())
+    with pytest.raises(asyncio.CancelledError):
+        await _consolidate_memory(state, SimpleNamespace(context=context))
+    events = dict(fixture.events.events)
+    assert events['memory.index.completed']['status'] == 'cancelled'
+    assert events['memory.consolidation.completed']['status'] == 'cancelled'
+
+
+@pytest.mark.asyncio
 async def test_consolidation_isolates_candidate_and_write_failures_before_indexing():
     from deeptrace.harness.memory.lifecycle import _consolidate_memory
     from deeptrace.harness.memory.store import InMemoryMemoryStore

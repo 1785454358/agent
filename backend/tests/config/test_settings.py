@@ -49,6 +49,20 @@ def test_basic_defaults(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     assert not hasattr(settings, "query_loop_threshold")
 
 
+@pytest.mark.parametrize('value', ['auto', 'provider_default', 'enabled', 'disabled'])
+def test_model_thinking_configuration(monkeypatch, tmp_path, value):
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv('DEEPTRACE_MODEL_THINKING', value)
+    assert Settings.from_env().model_thinking == value
+
+
+def test_model_thinking_rejects_unsupported_value(monkeypatch, tmp_path):
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv('DEEPTRACE_MODEL_THINKING', 'fast')
+    with pytest.raises(RuntimeError, match='DEEPTRACE_MODEL_THINKING'):
+        Settings.from_env()
+
+
 def test_branch_and_run_limits_can_be_overridden(monkeypatch, tmp_path):
     _set_required_environment(monkeypatch, tmp_path)
     monkeypatch.setenv("DEEPTRACE_AGENT_MAX_PAGES", "6")

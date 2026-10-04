@@ -28,6 +28,8 @@ docker run --rm --name deepresearch -p 127.0.0.1:8000:8000 --env-file backend/.e
 
 每个研究子任务由程序批量检索、去重、抓取和读取原文，再调用模型集中整理一次。Plan-and-Execute 与 Multi-Agent 在核对证据后按缺口安排补查，最多补查两轮。以下配置可在运行环境文件中调整，修改后重启 API；分布式模式同时重启 Worker。
 
+`DEEPTRACE_MODEL_THINKING=auto` 对豆包 Seed 2.0 Lite 关闭额外深度思考生成，其他模型保持服务商默认；可使用 `provider_default` 恢复默认，或对支持该参数的服务使用 `enabled` / `disabled` 显式控制。来源、原文与引用校验继续执行。真实完整链路采样见[运行实测](../showcase/case-research-latency.md)。
+
 | 环境变量 | 默认值 | 范围与含义 |
 | --- | --- | --- |
 | `DEEPTRACE_RESEARCH_SOURCE_TARGET` | 3 | 1–8，每个子任务本批取材的来源目标；失败时尝试同批候选的替代来源 |

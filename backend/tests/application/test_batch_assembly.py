@@ -28,6 +28,28 @@ class ResearchModel(BatchModel):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('model,mode,expected', [
+    ('doubao-seed-2.0-lite', 'auto', {'thinking': {'type': 'disabled'}}),
+    ('doubao-seed-2-0-lite-260428', 'auto', {'thinking': {'type': 'disabled'}}),
+    ('generic-chat-model', 'auto', None),
+    ('doubao-seed-2.0-pro', 'auto', None),
+    ('doubao-seed-2.0-lite', 'provider_default', None),
+    ('doubao-seed-2.0-lite', 'enabled', {'thinking': {'type': 'enabled'}}),
+])
+async def test_production_provider_payload_respects_thinking_mode(tmp_path, model, mode, expected):
+    from langchain_core.messages import HumanMessage
+    settings = Settings('test', 'https://example.com/v1', model, 'test',
+                        memory_retrieval='lexical', model_thinking=mode)
+    bundle = assembly.build_harness_runtime(settings, runs_dir=tmp_path)
+    try:
+        provider = bundle.context_factory('run-1').model_gateway.inner._model
+        payload = provider._get_request_payload([HumanMessage(content='test')])
+        assert payload.get('extra_body') == expected
+    finally:
+        await bundle.aclose()
+
+
+@pytest.mark.asyncio
 async def test_production_assembly_reaches_cited_answer_with_one_synthesis_per_topic(tmp_path, monkeypatch):
     model = ResearchModel()
     monkeypatch.setattr(assembly, "ChatModelGateway", lambda *args, **kwargs: model)
