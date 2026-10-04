@@ -1,6 +1,9 @@
 .superpowers/
 .env
 .env.docker
+.env.*
+!.env.example
+!.env.docker.example
 .venv/
 .venv-ragas/
 __pycache__/
@@ -14,3 +17,13 @@ frontend/node_modules/
 frontend/dist/
 
 *.tsbuildinfo
+
+# Local experiments, release archives and author notes
+tmp/
+.dbg/
+.tmp_resume_render/
+.local-notes/
+.local-artifacts/
+deepresearch-*.tar
+caozuo.txt
+*.log

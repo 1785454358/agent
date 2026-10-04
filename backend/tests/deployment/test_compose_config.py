@@ -71,7 +71,7 @@ def test_dockerfile_builds_frontend_and_tests_inside_the_image() -> None:
     assert "npm ci --ignore-scripts" in dockerfile
     assert "npm run build" in dockerfile
     assert "AS test" in dockerfile
-    assert 'uv run pytest -m "not real"' in dockerfile
+    assert 'RUN --network=none uv run --no-sync pytest -m "not real"' in dockerfile
     assert (
         'CMD ["uvicorn", "deeptrace.api:create_app", "--factory"' in dockerfile
     )

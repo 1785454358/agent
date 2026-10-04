@@ -13,7 +13,9 @@ FROM python:3.12-slim AS python-base
 COPY --from=ghcr.io/astral-sh/uv:0.8.15 /uv /uvx /bin/
 WORKDIR /app
 COPY backend/pyproject.toml backend/uv.lock ./
-RUN uv sync --frozen --no-install-project
+RUN --mount=type=cache,target=/root/.cache/uv UV_LINK_MODE=copy uv sync --frozen --no-install-project
+ENV TIKTOKEN_CACHE_DIR=/opt/tiktoken-cache
+RUN .venv/bin/python -c "import tiktoken; tiktoken.get_encoding('cl100k_base')"
 
 # ---- Stage 3: 在打包环境内运行确定性测试 ----
 FROM python-base AS test
@@ -21,20 +23,24 @@ COPY backend/src ./src
 COPY backend/alembic.ini ./
 COPY backend/alembic ./alembic
 COPY backend/tests ./tests
+COPY backend/evaluation ./evaluation
 COPY backend/Dockerfile ./Dockerfile
 COPY docker-compose.yml /docker-compose.yml
-RUN uv sync --frozen
-RUN uv run pytest -m "not real"
+RUN --mount=type=cache,target=/root/.cache/uv UV_LINK_MODE=copy uv sync --frozen
+RUN --network=none uv run --no-sync pytest -m "not real"
 
 # ---- Stage 4: 发布镜像 ----
 FROM python-base
 COPY backend/src ./src
 COPY backend/alembic.ini ./
 COPY backend/alembic ./alembic
-RUN uv sync --frozen --no-dev
+RUN --mount=type=cache,target=/root/.cache/uv UV_LINK_MODE=copy uv sync --frozen --no-dev
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
 RUN .venv/bin/playwright install --with-deps chromium
 COPY --from=frontend /frontend/dist ./src/deeptrace/static
-RUN useradd --create-home --uid 10001 app && chown -R app:app /app
+RUN useradd --create-home --uid 10001 app \
+    && mkdir -p /app/runs /app/chroma \
+    && chown app:app /app/runs /app/chroma
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1
 USER app

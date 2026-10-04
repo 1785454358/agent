@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-04",
+  "scope": "single known diagnostic task; one real online run; not heldout",
+  "question_id": "asyncio-live-01",
+  "mode": "plan_execute",
+  "status": "completed",
+  "question": "请仅依据 Python 3.11 官方文档，对比 asyncio.TaskGroup 与 asyncio.gather 在一个子任务抛出普通异常（不是 CancelledError）时的行为：其他子任务是否取消、异常如何传回调用方；再说明捕获 CancelledError 后应如何处理，为什么不应吞掉它。用中文简洁回答并给出文档出处。",
+  "answer": "asyncio.TaskGroup在一个子任务抛出非CancelledError普通异常时，剩余未完成的其他子任务会被取消[1]。asyncio.gather默认参数return_exceptions=False时，一个子任务抛出该异常，其他未完成子任务不会被取消[1]。\n\nasyncio.TaskGroup会在所有子任务完成后，将异常聚合到ExceptionGroup或BaseExceptionGroup中引发，传回给调用方[1]。asyncio.gather默认return_exceptions=False时，首个异常会立即直接传给等待gather的调用方；若return_exceptions为True，异常会和正常结果一起聚合到结果列表传回[1]。\n\n捕获CancelledError后，应在完成清理逻辑后重新传播（抛出）该异常；如果确实需要抑制取消请求，需要调用Task.uncancel()移除取消状态[1]。\n\n不应吞掉CancelledError，因为TaskGroup、asyncio.timeout()这类结构化并发组件内部依赖取消机制实现功能，吞掉该异常会导致这些组件无法正常工作，且未移除的取消状态会影响后续流程[1]。\n\n文档出处：协程与任务 — Python 3.11.17 说明文档 [1]",
+  "sources": [
+    "https://docs.python.org/zh-tw/3.11/library/asyncio-task.html"
+  ],
+  "configuration": {
+    "model": "doubao-seed-2.0-lite",
+    "temperature": 0,
+    "answer_max_chars": 2000,
+    "memory_enabled": false
+  },
+  "research": {
+    "seconds": 116.29368529999965,
+    "input_tokens": 54734,
+    "output_tokens": 7457,
+    "total_tokens": 62191,
+    "provider_attempts": 14,
+    "missing_usage_attempts": 0,
+    "gateway_requests": {
+      "fetch_page": 1,
+      "read_evidence": 3,
+      "search_web": 1
+    },
+    "branch_rounds": {
+      "Python 3.11 asyncio 为什么不能吞掉CancelledError": 3,
+      "Python 3.11 asyncio 捕获CancelledError后正确处理方式": 3,
+      "Python 3.11 asyncio.TaskGroup vs asyncio.gather 子任务非CancelledError异常时其他子任务是否取消和异常传递对比": 5
+    }
+  },
+  "metrics": {
+    "agent_goal_accuracy": {
+      "reason": null,
+      "status": "ok",
+      "value": 0.0
+    },
+    "factual_correctness": {
+      "reason": null,
+      "status": "ok",
+      "value": 1.0
+    },
+    "faithfulness": {
+      "reason": null,
+      "status": "ok",
+      "value": 0.9
+    }
+  },
+  "experiment_identity": "d0d32304f479b185dbbd69dff4fe0957f9c0c1c2e70f977a8a99671c8718fb3e",
+  "measurement": "research usage excludes evaluation calls; cost not reported"
+}

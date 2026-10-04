@@ -20,7 +20,7 @@ dependencies = [
     "tld>=0.13",
     "trafilatura>=2.2.0",
     "aiosqlite>=0.20",
-    "torch==2.5.1+cu121",
+    "torch==2.5.1",
     "uvicorn[standard]>=0.52.4",
     "sqlalchemy[asyncio]>=2.0",
     "asyncmy>=0.2",
@@ -29,16 +29,23 @@ dependencies = [
     "chromadb>=1.5.9,<2",
 ]
 
-# torch 走 PyTorch 官方 CUDA 索引（PyPI 的 Windows wheel 是 CPU-only 版本）；
-# cu121（CUDA 12.1）与本机驱动 536.40（CUDA 12.2）严格匹配。explicit = true
-# 表示该索引只服务于 torch。
+# Keep the existing CUDA build for local Windows development. Linux containers
+# use the official CPU build because the Compose runtime does not request a GPU.
 [[tool.uv.index]]
 name = "pytorch-cu121"
 url = "https://download.pytorch.org/whl/cu121"
 explicit = true
 
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
 [tool.uv.sources]
-torch = { index = "pytorch-cu121" }
+torch = [
+    { index = "pytorch-cu121", marker = "sys_platform == 'win32'" },
+    { index = "pytorch-cpu", marker = "sys_platform != 'win32'" },
+]
 
 [project.scripts]
 deepresearch = "deeptrace.cli:main"
@@ -60,8 +67,10 @@ build-backend = "hatchling.build"
 packages = ["src/deeptrace"]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 testpaths = ["tests"]
 addopts = "-ra"
 markers = [
     "real: 使用真实 API Key 和外部服务的端到端测试",
+    "eval: 离线确定性研究策略评测",
 ]
