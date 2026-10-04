@@ -2,7 +2,7 @@
 
 2026-10-04，使用真实模型、搜索服务和网页抓取执行「2026年量子力学领域进展」。策略为 Plan-and-Execute，运行状态为 completed，回答附 5 个来源。
 
-[下载四页项目作品 PDF](DeepResearch_项目作品介绍.pdf) · [查看原始统计与回答](data/batch-research-20261004.json) · [查看批量执行器源码](../../backend/src/deeptrace/harness/batch_research.py)
+[下载项目作品 PDF](DeepResearch_项目作品介绍.pdf) · [查看原始统计与回答](data/batch-research-20261004.json) · [查看批量执行器源码](../../backend/src/deeptrace/harness/batch_research.py)
 
 ## 运行结果
 

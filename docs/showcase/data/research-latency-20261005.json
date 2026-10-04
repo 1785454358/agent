@@ -1,0 +1,165 @@
+{
+  "date": "2026-10-05",
+  "question": "2026年量子力学领域进展",
+  "mode": "plan_execute",
+  "model": "doubao-seed-2.0-lite",
+  "model_thinking": "auto",
+  "memory_retrieval": "semantic",
+  "sampling": {
+    "sample_count": 2,
+    "fresh_thread_and_store": true,
+    "temperature": 0,
+    "tool_cache_hits": 0
+  },
+  "measurement_scope": "Full research, evidence evaluation, durable memory consolidation and vector indexing, response generation; runtime assembly reported separately.",
+  "samples": [
+    {
+      "run_id": "latency-test-3f7031b204",
+      "elapsed_seconds": 82.468,
+      "initialization_seconds": 1.491,
+      "model_calls": 6,
+      "tokens": {
+        "input_tokens": 32486,
+        "output_tokens": 3171,
+        "total_tokens": 35657
+      },
+      "roles": {
+        "planner": {
+          "calls": 1,
+          "seconds": 6.464,
+          "input_tokens": 653,
+          "output_tokens": 281,
+          "total_tokens": 934
+        },
+        "researcher": {
+          "calls": 3,
+          "seconds": 14.678,
+          "input_tokens": 10807,
+          "output_tokens": 916,
+          "total_tokens": 11723
+        },
+        "evaluator": {
+          "calls": 1,
+          "seconds": 21.024,
+          "input_tokens": 9133,
+          "output_tokens": 1561,
+          "total_tokens": 10694
+        },
+        "responder": {
+          "calls": 1,
+          "seconds": 6.119,
+          "input_tokens": 11893,
+          "output_tokens": 413,
+          "total_tokens": 12306
+        }
+      },
+      "tools": {
+        "fetch_page": {
+          "calls": 7,
+          "successful": 7,
+          "cached": 0,
+          "seconds": 17.514
+        },
+        "read_evidence": {
+          "calls": 9,
+          "successful": 9,
+          "cached": 0,
+          "seconds": 0.293
+        },
+        "search_web": {
+          "calls": 3,
+          "successful": 3,
+          "cached": 0,
+          "seconds": 4.472
+        }
+      },
+      "replan_rounds": 0,
+      "sources": 6,
+      "status": "completed",
+      "requirement_count": 3,
+      "covered_requirements": 3,
+      "source_urls": [
+        "https://www.cas.cn/cm/202601/t20260115_5096295.shtml",
+        "https://news.sciencenet.cn/htmlnews/2026/8/569182.shtm",
+        "https://www.stdaily.com/web/gdxw/2026-07/11/content_545968.html",
+        "https://www.secrss.com/articles/94238",
+        "https://courier.unesco.org/zh/articles/huanyingburudierciliangzigemingshidai",
+        "https://openai.com/zh-Hant/index/new-result-theoretical-physics"
+      ],
+      "memory_consolidation_seconds": 13.849871900005382
+    },
+    {
+      "run_id": "latency-test-489cb2d1b2",
+      "elapsed_seconds": 73.796,
+      "initialization_seconds": 1.531,
+      "model_calls": 6,
+      "tokens": {
+        "input_tokens": 36559,
+        "output_tokens": 2607,
+        "total_tokens": 39166
+      },
+      "roles": {
+        "planner": {
+          "calls": 1,
+          "seconds": 3.609,
+          "input_tokens": 653,
+          "output_tokens": 187,
+          "total_tokens": 840
+        },
+        "researcher": {
+          "calls": 3,
+          "seconds": 16.697000000000003,
+          "input_tokens": 11369,
+          "output_tokens": 894,
+          "total_tokens": 12263
+        },
+        "evaluator": {
+          "calls": 1,
+          "seconds": 17.061,
+          "input_tokens": 10097,
+          "output_tokens": 1221,
+          "total_tokens": 11318
+        },
+        "responder": {
+          "calls": 1,
+          "seconds": 9.952,
+          "input_tokens": 14440,
+          "output_tokens": 305,
+          "total_tokens": 14745
+        }
+      },
+      "tools": {
+        "fetch_page": {
+          "calls": 8,
+          "successful": 8,
+          "cached": 0,
+          "seconds": 11.217
+        },
+        "read_evidence": {
+          "calls": 9,
+          "successful": 9,
+          "cached": 0,
+          "seconds": 0.313
+        },
+        "search_web": {
+          "calls": 3,
+          "successful": 3,
+          "cached": 0,
+          "seconds": 4.71
+        }
+      },
+      "replan_rounds": 0,
+      "sources": 4,
+      "status": "completed",
+      "requirement_count": 3,
+      "covered_requirements": 3,
+      "source_urls": [
+        "https://openai.com/zh-Hans-CN/index/new-result-theoretical-physics",
+        "https://www.nsfc.gov.cn/p1/3381/2824/100393.html",
+        "https://www.cas.cn/cm/202601/t20260115_5096295.shtml",
+        "https://news.ustc.edu.cn/info/1048/94930.htm"
+      ],
+      "memory_consolidation_seconds": 13.897119699999166
+    }
+  ]
+}
