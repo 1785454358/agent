@@ -90,6 +90,27 @@ class _Index:
 
 
 @pytest.mark.asyncio
+async def test_duplicate_authoritative_memory_is_indexed_once_with_latest_version():
+    original = _record('fact', 'Original statement')
+    latest = original.model_copy(update={'version': original.version + 1, 'content': 'Updated statement'})
+    received = []
+
+    class UniqueIndex(_Index):
+        async def records_requiring_index(self, records):
+            ids = [r.id for r in records]
+            assert len(ids) == len(set(ids))
+            return records
+
+        async def upsert(self, records, embeddings):
+            received.extend(records)
+            assert len(embeddings) == 1
+
+    retriever = SemanticMemoryRetriever(object(), _Embeddings([]), UniqueIndex([], []))
+    await retriever.index([latest, original, latest])
+    assert received == [latest]
+
+
+@pytest.mark.asyncio
 async def test_recall_filters_then_queries_chroma_then_refetches_mysql() -> None:
     trace: list[str] = []
     low = _record("low", "checkpoint recovery", importance=0.1, confidence=0.5)

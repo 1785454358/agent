@@ -1,23 +1,4 @@
-"""Compilation of the Plan-and-Execute research strategy subgraph."""
-
-from __future__ import annotations
-
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.state import CompiledStateGraph
-
-from deeptrace.harness.context import HarnessContext
-from deeptrace.strategies.plan_execute.nodes import (
-    build_execute_task_node,
-    build_evaluate_node,
-    build_finalize_node,
-    build_plan_node,
-    build_replan_node,
-    build_route_after_evaluate,
-    route_after_replan,
-    route_after_select,
-    select_task_node,
-)
-from deeptrace.strategies.plan_execute.state import PlanExecuteState
+"""Compatibility factory; all modes use the same delivery-first collector."""
 
 
 def build_plan_execute_research_graph(
@@ -27,19 +8,13 @@ def build_plan_execute_research_graph(
     max_replans: int = 2,
     max_replan_tasks: int = 2,
     checkpointer=None,
-) -> CompiledStateGraph:
-    builder = StateGraph(PlanExecuteState, context_schema=HarnessContext)
-    builder.add_node("plan", build_plan_node(max_tasks))
-    builder.add_node("select_task", select_task_node)
-    builder.add_node("execute_task", build_execute_task_node(topic_graph))
-    builder.add_node("evaluate", build_evaluate_node(max_replans))
-    builder.add_node("replan", build_replan_node(max_replan_tasks))
-    builder.add_node("finalize", build_finalize_node(max_replans))
-    builder.add_edge(START, "plan")
-    builder.add_edge("plan", "select_task")
-    builder.add_conditional_edges("select_task", route_after_select)
-    builder.add_edge("execute_task", "select_task")
-    builder.add_conditional_edges("evaluate", build_route_after_evaluate(max_replans))
-    builder.add_conditional_edges("replan", route_after_replan)
-    builder.add_edge("finalize", END)
-    return builder.compile(checkpointer=checkpointer)
+):
+    from deeptrace.domain import ResearchMode
+    from deeptrace.research.runtime import build_controller_research_graph
+
+    return build_controller_research_graph(
+        topic_graph,
+        mode=ResearchMode.PLAN_EXECUTE,
+        max_tasks=max_tasks,
+        checkpointer=checkpointer,
+    )

@@ -11,6 +11,7 @@ from collections import Counter
 from dataclasses import dataclass, replace
 
 from deeptrace.domain.evidence import Evidence, EvidenceSupport
+from deeptrace.tools.source_sections import section_at, source_sections
 
 _TERMS = re.compile(r"[a-zA-Z0-9_]+|[\u3400-\u9fff]+")
 _STOP = frozenset(
@@ -44,6 +45,9 @@ _STOP = frozenset(
 )
 _OMITTED = "\n（选段：其余原文已省略，片段边界可能不完整。）"
 _IDENTIFIERS = re.compile(r"[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*")
+_ADMONITION = re.compile(
+    r'<(Warning|Note|Tip|Info|Important|Caution)(?:[ \t][^>]*)?>.*?</\1>', re.DOTALL
+)
 
 
 @dataclass(frozen=True)
@@ -202,6 +206,21 @@ def supported_ranges(
 
     # Freeze necessary ranges: earlier context must never displace later cores.
     ranges = list(cores)
+    for start, _ in cores:
+        owner = section_at(body, start)
+        if owner is not None:
+            proposed = _merge([*ranges, (owner.start, owner.heading_end)])
+            if _range_chars(proposed) <= limit:
+                ranges = proposed
+    # A short quote or its margin can intersect a paragraph/list whose later
+    # clauses supply necessary conditions. Reserve whole neighboring blocks
+    # before optional padding, without displacing any verified core.
+    if cores:
+        for first, last in _source_blocks(body):
+            if any(first < end + 120 and last > start - 120 for start, end in cores):
+                proposed = _merge([*ranges, (first, last)])
+                if _range_chars(proposed) <= limit:
+                    ranges = proposed
     for start, end in cores:
         low, high = 0, 120
         while low < high:
@@ -238,13 +257,19 @@ def select_supported_passages(
     question: str,
     limit: int,
     focus_queries: list[str] | None = None,
+    include_extra: bool = True,
+    max_support_chars: int | None = None,
 ) -> tuple[EvidencePassage, ...]:
     """Keep accepted quotes whole before spending the remaining query budget."""
     if type(limit) is not int or limit < 1:
         raise ValueError("passage limit must be a positive integer")
-    ranges = supported_ranges(record, body, supports, limit)
+    if max_support_chars is not None and (
+        type(max_support_chars) is not int or not 1 <= max_support_chars <= limit
+    ):
+        raise ValueError("invalid_support_budget")
+    ranges = supported_ranges(record, body, supports, max_support_chars or limit)
     remaining = limit - sum(end - first for first, end in ranges)
-    if remaining:
+    if remaining and include_extra:
         for passage in select_evidence_passages(
             record,
             body,
@@ -340,6 +365,10 @@ def _paragraph_ends(body: str) -> list[int]:
             opened = None
     if opened is not None:
         fences.append((opened[0], len(body)))
+    # Documentation callouts often separate a rule from its examples with a
+    # blank line. They are one semantic unit, like fenced code, not independent
+    # paragraphs that may lose the caveat or the corresponding list.
+    fences.extend(match.span() for match in _ADMONITION.finditer(body))
     return [
         match.end()
         for match in re.finditer(r"\n[ \t\r]*\n", body)
@@ -386,6 +415,13 @@ def _render(
 
 
 def _source_blocks(body: str) -> list[tuple[int, int]]:
+    """Never pack paragraphs across a reliably observed section boundary."""
+    cuts = sorted({0, len(body), *(s.start for s in source_sections(body))})
+    return [(left + a, left + b) for left, right in zip(cuts, cuts[1:])
+            for a, b in _paragraph_blocks(body[left:right])]
+
+
+def _paragraph_blocks(body: str) -> list[tuple[int, int]]:
     """Whole small paragraphs; sentence/line blocks for longer paragraphs.
 
     Indivisible oversized units remain whole so callers can report omission.
@@ -396,7 +432,7 @@ def _source_blocks(body: str) -> list[tuple[int, int]]:
     for end in _paragraph_ends(body):
         if first == end:
             continue
-        if end - first <= 900 or re.search(
+        if end - first <= 900 or _ADMONITION.fullmatch(body[first:end].strip()) or re.search(
             r"(?m)^[ \t]*(`{3,}|~{3,})", body[first:end]
         ):
             blocks.append((first, end))
@@ -432,7 +468,21 @@ def _source_blocks(body: str) -> list[tuple[int, int]]:
             if block_start < block_end:
                 blocks.append((block_start, block_end))
         first = end
-    return blocks
+    grouped = []
+    for start, end in blocks:
+        if (
+            grouped and grouped[-1][1] == start
+            and end - grouped[-1][0] <= 900
+            and re.match(r"\s*(?:Thus\b|Therefore\b|Hence\b|Consequently\b|因此|所以|由此)",
+                         body[start:end], re.IGNORECASE)
+        ):
+            # A short conclusion often ranks above the preceding restriction.
+            # Keep this local causal pair whole; eligible read ranges still
+            # bound callers, so grouping never authorizes unseen text.
+            grouped[-1] = (grouped[-1][0], end)
+        else:
+            grouped.append((start, end))
+    return grouped
 
 
 def select_source_excerpt(
@@ -491,6 +541,10 @@ def select_source_excerpt(
     question_terms = _terms(question)
     focus_terms = [_terms(query) for query in (focus_queries or [])[:6]]
     entities = list(dict.fromkeys(e for q in queries for e in _query_entities(q)))
+    qualified_scope = any(
+        '.' in match.group()
+        for query in queries for match in _IDENTIFIERS.finditer(query[:4096])
+    )
     newlines = [m.start() for m in re.finditer("\n", body)]
     candidates: list[tuple[int, int, set[str]]] = []
     blocks = (
@@ -521,6 +575,10 @@ def select_source_excerpt(
         block_entities[start] = relevant
         section_heads[start] = section_first
         matched = {term for term in terms if _matches(text, term)}
+        owner = section_at(body, start)
+        if owner is not None:
+            matched |= {term for term in terms if term.isnumeric() and len(term) >= 3
+                        and _matches(owner.title.casefold(), term)}
         matched |= relevant
         if matched:
             candidates.append((start, end, matched))
@@ -562,6 +620,10 @@ def select_source_excerpt(
                 if (entity in block_entities[row[0]] if entity else row[2] & group)
             ),
             key=lambda row: (
+                # Independent reading targets need a multi-term match before
+                # length normalization; a tiny generic mention otherwise wins
+                # every target, even while ample window space remains unused.
+                -len(row[2] & group) if entity is None else 0,
                 -(section_heads[row[0]] is not None),
                 -score(row, group),
                 row[0],
@@ -571,6 +633,15 @@ def select_source_excerpt(
     def add_with_heading(row):
         start, end, _ = row
         heading = section_heads[start]
+        owner = section_at(body, start)
+        if heading is None and owner is not None and (allowed is None or any(
+            a <= owner.start and owner.heading_end <= b for a, b in allowed
+        )):
+            previous = list(selected)
+            if try_add(owner.start, owner.heading_end) and try_add(start, end):
+                return True
+            selected[:] = previous
+            return False
         if heading is not None:
             heading_end = next(b for a, b in blocks if a == heading)
             previous = list(selected)
@@ -580,28 +651,93 @@ def select_source_excerpt(
             return False
         return try_add(start, end)
 
+    # Explicit prerequisite questions need the whole prose list before a
+    # keyword-rich runnable example can consume the window.
+    if re.search(r"prerequisite|前提|先决条件", " ".join(queries), re.I):
+        for row in sorted(candidates, key=lambda row: (-len(row[2] & terms), row[0])):
+            text = body[row[0]:row[1]]
+            if (re.search(r"(?m)^\s*(?:\d+[.)]|[-*])\s", text)
+                    and not re.search(r"(?m)^\s*```", text)
+                    and re.search(r"\b(?:need|required|requires|before)\b|必须|需要", text, re.I)
+                    and add_with_heading(row)):
+                break
+
+    # A short, explicitly matching section is a better read unit than an
+    # isolated title or sentence. Keep conditions and exceptions together;
+    # eligible reads and the existing serialized character budget still win.
+    section_candidates = []
+    for section in source_sections(body):
+        if entities and not any(_matches(section.title.casefold(), e)
+                or ("_" in e and _matches(section.title.casefold(), e.replace("_", " ")))
+                for e in entities):
+            continue
+        matched = {t for t in terms if (len(t) >= 4 or (t.isnumeric() and len(t) == 3))
+                   and _matches(section.title.casefold(), t)}
+        if (matched and section.end - section.start <= limit and
+                (allowed is None or any(a <= section.start and section.end <= b for a, b in allowed))):
+            section_candidates.append((section, len(matched)))
+    for section, _ in sorted(section_candidates, key=lambda item: (-item[1], item[0].start)):
+        try_add(section.start, section.end)
+
+    # Language/package boundaries are independent targets. A camel-case word
+    # such as JavaScript must not turn all Python paragraphs into non-matches.
+    languages = [
+        aliases for aliases in (("python",), ("javascript", "typescript", "js", "ts"))
+        if any(_matches(question.casefold(), alias) for alias in aliases)
+    ]
+    asks_version = bool(re.search(r"\b(version|package)\b|版本", question, re.IGNORECASE))
+    for aliases in languages:
+        scoped = [
+            row for row in candidates
+            if any(_matches(body[row[0]:row[1]].casefold(), alias) for alias in aliases)
+        ]
+        scoped.sort(key=lambda row: (
+            -int(asks_version and bool(re.search(
+                r"(?:>=?|<=?|==|~=|\bv)\s*\d+\.\d+", body[row[0]:row[1]],
+            ))),
+            -score(row, question_terms), row[0],
+        ))
+        for row in scoped:
+            if add_with_heading(row):
+                break
+
     # Reserve one complete group per target before generic words can consume it.
     for entity in entities:
         for row in ranked_for(terms, entity):
             if add_with_heading(row):
                 break
+    # Preserve one directly relevant rule/caveat before repeated API mentions
+    # consume the window. A callout needs at least two explicit query terms;
+    # its mere presence is not evidence of relevance.
+    for row in sorted(candidates, key=lambda row: (-score(row, question_terms), row[0])):
+        if (len(row[2] & question_terms) >= 2
+                and (not qualified_scope or section_heads[row[0]] is not None)
+                and _ADMONITION.fullmatch(body[row[0]:row[1]].strip())
+                and add_with_heading(row)):
+            break
     for group in focus_terms:
         for row in ranked_for(group):
             if add_with_heading(row):
                 break
-    # With target matches, spend remaining space inside their sections first.
+    # Identifiers already have a guaranteed seed above. Residual space belongs
+    # to relevant question terms, including prerequisites and validity rules
+    # outside that identifier's section. An identifier match is not a grant to
+    # exclude the rest of the source or fill the window with repeated mentions.
     has_entity_matches = any(block_entities.values())
     ranked = sorted(
         candidates,
         key=lambda row: (
             -(section_heads[row[0]] is not None),
-            -bool(block_entities[row[0]]),
+            -bool(block_entities[row[0]]) if qualified_scope else 0,
             -score(row, question_terms),
+            -len(row[2] & question_terms),
             row[0],
         ),
     )
     for row in ranked:
-        if has_entity_matches and not block_entities[row[0]]:
+        # A qualified API request still owns its exact entity boundary; an
+        # unqualified field/key such as request_id does not own the whole page.
+        if qualified_scope and has_entity_matches and not block_entities[row[0]]:
             continue
         add_with_heading(row)
     # Whole adjacent conditions in the same identified section, never a next API.

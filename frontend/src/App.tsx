@@ -12,7 +12,7 @@ import {
 import {
   isTerminalStatus,
   type ChatMessage,
-  type ResearchMode,
+  type ResearchModeSelection,
 } from "./api/types";
 import { useRun } from "./hooks/useRun";
 import { useRuns } from "./hooks/useRuns";
@@ -28,7 +28,7 @@ import { Toast } from "./components/Toast";
 import { IconUsers } from "./components/icons";
 
 export default function App() {
-  const [mode, setMode] = useState<ResearchMode>("workflow");
+  const [mode, setMode] = useState<ResearchModeSelection>("auto");
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [historyCollapsed, setHistoryCollapsed] = useState(false);
@@ -81,7 +81,7 @@ export default function App() {
   const createMutation = useMutation({
     mutationFn: (args: {
       question: string;
-      mode: ResearchMode;
+      mode: ResearchModeSelection;
       threadId?: string;
     }) => createRun(args.question, args.mode, args.threadId),
     onSuccess: (created) => {
@@ -205,6 +205,10 @@ export default function App() {
           <StatusBar
             status={run?.status ?? null}
             runId={selectedRunId}
+            usage={run?.usage}
+            mode={run?.mode}
+            selectedMode={run?.selected_mode}
+            routingReason={run?.routing_reason}
             reconnecting={sse.reconnecting}
             onCancel={
               selectedRunId && live

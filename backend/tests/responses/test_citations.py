@@ -141,3 +141,18 @@ def test_validate_citations_without_loaded_sources_yields_partial() -> None:
     assert outcome.citations == []
     assert outcome.cited_evidence_ids == []
     assert outcome.partial_reason == "no_supported_citations"
+@pytest.mark.parametrize("code", [
+    "`items[2]`", "``items[2] and `tick` ``",
+    "```python\nitems[2]\n```", "~~~python\nitems[2]\n~~~",
+    "````python\n```\nitems[2]\n````",
+])
+def test_code_indices_are_neither_citations_nor_rewritten(code):
+    draft = ResponseDraft(response_mode=ResponseMode.ANSWER, content=f"{code}\n\nSupported [2].")
+    outcome = validate_citations(draft, loaded_evidence_ids=["e1", "e2"])
+    assert code in outcome.content
+    assert outcome.content.endswith("Supported [1].")
+    assert outcome.cited_evidence_ids == ["e2"]
+
+
+def test_code_with_only_indices_cannot_certify_a_citation():
+    assert extract_citation_markers("```python\nitems[1]\n```\n`items[2]`") == []

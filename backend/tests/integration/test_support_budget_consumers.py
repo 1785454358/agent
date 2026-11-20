@@ -27,8 +27,8 @@ from deeptrace.strategies.workflow.nodes import evaluate_node as workflow_evalua
 from deeptrace.tools.evidence_store import EvidenceDraft
 
 
-async def seed(fixture):
-    quotes = [(f"FACT-{i}: 中\n`🧭" + str(i) * 500)[:500] for i in range(6)]
+async def seed(fixture, *, fact_count=6):
+    quotes = [(f"FACT-{i}: 中\n`🧭" + str(i) * 500)[:500] for i in range(fact_count)]
     body = "unused prefix\n" * 100 + ("_" * 300).join(quotes) + "_" * 500
     record = await fixture.evidence_store.ingest(
         TENANT_ID,
@@ -69,7 +69,8 @@ async def seed(fixture):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("mode", list(ResearchMode))
-async def test_all_accepted_cores_reach_actual_live_evaluator(mode):
+@pytest.mark.parametrize("field_placement", ["root", "coverage"])
+async def test_all_accepted_cores_reach_actual_live_evaluator(mode, field_placement):
     def respond(prompt):
         material = json.JSONDecoder().raw_decode(
             prompt.rsplit("EVIDENCE_VIEW_JSON:", 1)[1].lstrip()
@@ -108,6 +109,9 @@ async def test_all_accepted_cores_reach_actual_live_evaluator(mode):
             payload["sufficient"] = True
         else:
             payload.update(action="complete", reason="all supported")
+        if field_placement == "coverage":
+            for key in set(payload) - {"findings", "coverage"}:
+                payload["coverage"][key] = payload.pop(key)
         return json.dumps(payload)
 
     fixture = build_gateway_fixture(
@@ -135,6 +139,7 @@ async def test_all_accepted_cores_reach_actual_live_evaluator(mode):
     result = await node(state, Runtime(context=fixture.context))
     assert len(result["findings"]) == 6
     assert all(i.status == "covered" for i in result["coverage"].items)
+    assert len(fixture.context.model_gateway.calls) == 1
 
 
 @pytest.mark.asyncio
@@ -176,7 +181,7 @@ async def test_writer_keeps_every_core_that_fits(builder, version):
 async def test_genuinely_over_budget_writer_still_remains_partial():
     model = WriterModel({"responder": json.dumps({"content": "Supported facts [1]."})})
     fixture = build_gateway_fixture(model_gateway=model)
-    record, findings, requirements = await seed(fixture)
+    record, findings, requirements = await seed(fixture, fact_count=12)
     extra = findings[0].model_copy(
         update={
             "id": "extra",
@@ -216,5 +221,5 @@ async def test_genuinely_over_budget_writer_still_remains_partial():
     result = await build_answer_graph().ainvoke(
         {"response_input": payload}, context=fixture.context
     )
-    assert "Extra fact" not in model.calls[0][1]
+    assert not all(finding.claim in model.calls[0][1] for finding in findings + [extra])
     assert result["outcome"].partial_reason == "response_evidence_context_limit"

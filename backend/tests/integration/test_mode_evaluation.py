@@ -18,7 +18,7 @@ from strategies.fixtures import (
 )
 
 from deeptrace.domain import ResearchMode
-from deeptrace.harness.agent_executor import build_research_agent_graph
+from deeptrace.harness.batch_research import build_batch_research_graph as build_research_agent_graph
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
 from deeptrace.harness.graph import build_agent_runtime_graph
 from deeptrace.harness.registry import (
@@ -54,7 +54,7 @@ def _evaluate_mode(mode: ResearchMode) -> dict[str, object]:
             model_calls.append(role)
             if role == "researcher":
                 return scripted_research_response(messages, tools)
-            prompt = str(messages[-1].content)
+            prompt = "\n".join(str(message.content) for message in messages)
             if role == "planner":
                 return json.dumps(
                     {
@@ -77,7 +77,7 @@ def _evaluate_mode(mode: ResearchMode) -> dict[str, object]:
 
     fixture = build_gateway_fixture(
         search_results=SEARCH_RESULTS,
-        pages={"https://example.com/a": "body-a"},
+        pages={"https://example.com/a": "LangGraph Harness checkpoint body-a"},
         model_gateway=Gateway(),
     )
     strategies = StrategyRegistry()
@@ -153,8 +153,8 @@ def test_three_modes_complete_on_the_same_dataset_with_comparable_cost() -> None
     assert all(row["termination"] == "completed" for row in rows)
     assert all(row["answered"] for row in rows)
     assert all(row["evidence_count"] == 1 for row in rows)
-    assert all(row["model_calls"] == 6 for row in rows)
-    assert all(row["tool_calls"] == 2 for row in rows)
+    assert all(row["model_calls"] == 2 for row in rows)
+    assert all(row["tool_calls"] == 3 for row in rows)
     # cost/latency proxies stay within a deterministic, documented envelope
     workflow_row = next(r for r in rows if r["mode"] == "workflow")
     assert workflow_row["executed_steps"] <= 8

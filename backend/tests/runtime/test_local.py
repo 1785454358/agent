@@ -2,6 +2,7 @@ import asyncio
 import json
 from datetime import UTC, datetime
 from typing import Any
+from types import SimpleNamespace
 
 import pytest
 
@@ -56,7 +57,7 @@ class FakeApplication:
 async def wait_for_terminal(runtime: LocalResearchRuntime, run_id: str):
     for _ in range(1000):
         run = await runtime.get(run_id)
-        if run is not None and run.status in {"completed", "partial", "failed"}:
+        if run is not None and run.status in {"completed", "partial", "failed", "cancelled"}:
             return run
         await asyncio.sleep(0.01)
     raise AssertionError("local run did not reach a terminal state")
@@ -69,6 +70,65 @@ def build_runtime(tmp_path, application: FakeApplication) -> LocalResearchRuntim
         application=application,
         context_factory=lambda run_id, on_event=None: FakeContext(),
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status,reason", [("failed", "model_error"), ("cancelled", "cancelled")])
+async def test_local_terminal_failure_preserves_reason_without_an_answer(tmp_path, status, reason):
+    class TerminalApplication:
+        async def invoke(self, request, **kwargs):
+            return ApplicationRunResult(run_id=request.run_id, thread_id=request.thread_id,
+                status=status, termination_reason=reason, executed_steps=0,
+                research_outcome=None, response_outcome=None)
+
+    runtime = build_runtime(tmp_path, TerminalApplication())
+    await runtime.start()
+    try:
+        created = await runtime.create("Question", "workflow")
+        result = await wait_for_terminal(runtime, created.id)
+        assert result.status == status
+        assert result.termination_reason == reason
+        persisted = json.loads((tmp_path / f"{created.id}.json").read_text("utf-8"))
+        assert persisted["finish_reason"] == reason
+        assert persisted["research_sufficiency"] == "unknown"
+        assert persisted["answer"] == ""
+        assert persisted["events"][-1]["message"] == {"failed": "研究失败", "cancelled": "研究已取消"}[status]
+    finally:
+        await runtime.stop()
+
+
+def test_historical_record_normalizes_reason_without_rewriting_detail():
+    original = dict(id="old", question="Question", created_at=datetime.now(UTC),
+                    status="partial", termination_reason="max_iterations")
+    result = RunRecord.model_validate(original)
+    assert result.model_dump(mode="json")["finish_reason"] == "iteration_limit"
+    assert result.research_sufficiency == "unknown"
+    assert result.termination_reason == "max_iterations"
+    assert RunRecord.model_validate(result.model_dump()).finish_reason == "iteration_limit"
+
+
+@pytest.mark.asyncio
+async def test_local_runtime_persists_actual_model_usage(tmp_path):
+    from harness.test_durable_model_budget import Provider, call
+    from deeptrace.harness.model_budget import RunBudgetModelGateway
+
+    model = RunBudgetModelGateway(Provider())
+    async def invoke_model():
+        await call(model)
+
+    runtime = LocalResearchRuntime(object(), tmp_path,
+        application=FakeApplication(invoke_hook=invoke_model),
+        context_factory=lambda *args: SimpleNamespace(model_gateway=model))
+    await runtime.start()
+    try:
+        created = await runtime.create('question', 'workflow')
+        result = await wait_for_terminal(runtime, created.id)
+        assert result.usage['total_tokens'] == 82
+        assert result.usage['role_usage']['researcher']['input_tokens'] == 70
+        persisted = json.loads((tmp_path / f'{created.id}.json').read_text('utf-8'))
+        assert persisted['usage']['output_tokens'] == 12
+    finally:
+        await runtime.stop()
 
 
 @pytest.mark.asyncio
@@ -344,3 +404,26 @@ async def test_local_runtime_rejects_concurrent_runs_on_same_thread(tmp_path) ->
     third = await runtime.create("第三轮", "workflow", thread_id="thread-shared")
     await wait_for_terminal(runtime, third.id)
     await runtime.stop()
+
+
+@pytest.mark.asyncio
+async def test_local_reload_keeps_auto_selection_and_durable_routing_event(tmp_path):
+    def factory(run_id, on_event):
+        on_event("research.routed", {"mode": "workflow", "reason": "Focused task", "action": "automatic"})
+        return FakeContext()
+
+    runtime = LocalResearchRuntime(object(), tmp_path, application=FakeApplication(), context_factory=factory)
+    await runtime.start()
+    try:
+        created = await runtime.create("question", "auto")
+        await wait_for_terminal(runtime, created.id)
+    finally:
+        await runtime.stop()
+    restarted = build_runtime(tmp_path, FakeApplication())
+    await restarted.start()
+    try:
+        loaded = await restarted.get(created.id)
+        assert loaded.mode == "auto"
+        assert loaded.routing_metadata() == {"selected_mode": "workflow", "routing_reason": "Focused task"}
+    finally:
+        await restarted.stop()

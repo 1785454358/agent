@@ -22,6 +22,14 @@ class Base(DeclarativeBase):
     pass
 
 
+class ModelBudgetRow(Base):
+    __tablename__ = 'model_run_budgets'
+
+    run_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    revision: Mapped[int] = mapped_column(Integer)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON)
+
+
 class ResearchRunRow(Base):
     __tablename__ = "research_runs"
 
@@ -31,6 +39,7 @@ class ResearchRunRow(Base):
     status: Mapped[str] = mapped_column(String(32), index=True)
     thread_id: Mapped[str] = mapped_column(String(128), default="")
     termination_reason: Mapped[str] = mapped_column(String(128), default="")
+    research_sufficiency: Mapped[str] = mapped_column(String(32), default="unknown", server_default="unknown")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

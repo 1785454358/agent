@@ -21,6 +21,7 @@ from deeptrace.domain import (
     ResponseOutcome,
 )
 from deeptrace.harness.context import HarnessContext
+from deeptrace.harness.checkpoint import subgraph_config
 from deeptrace.harness.memory.lifecycle import (
     _consolidate_memory,
     _memory_update_node,
@@ -40,7 +41,10 @@ from deeptrace.harness.policies.intent import (
 from deeptrace.harness.prompts import task_messages
 from deeptrace.harness.registry import ResponseGraphRegistry, StrategyRegistry
 from deeptrace.harness.state import HarnessState
+from deeptrace.research import VerificationResult
 from deeptrace.responses.citations import select_response_mode
+from deeptrace.observability.progress import emit_progress
+from deeptrace.harness.mode_routing import select_research_mode
 
 SUMMARIZER_ROLE = "summarizer"
 
@@ -95,7 +99,8 @@ def _research_input(
         question=turn["user_input"],
         conversation_summary=_summary_with_memories(conversation, turn),
         recent_messages=recent,
-        prior_evidence_ids=conversation["evidence_ids"],
+        prior_evidence_ids=(list(runtime.context.source_evidence_ids)
+            if runtime.context.source_evidence_ids is not None else conversation["evidence_ids"]),
         unresolved_gaps=conversation["unresolved_gaps"],
         budget=turn["budget"],
         current_date=now.date().isoformat(),
@@ -112,7 +117,7 @@ def _mode_node(registry: StrategyRegistry, mode: ResearchMode):
         registration = registry.resolve(mode)
         request = _research_input(state, runtime)
         raw = await registration.graph.ainvoke(
-            request.model_dump(mode="json"), config=config
+            request.model_dump(mode="json"), config=subgraph_config(config)
         )
         outcome = ResearchOutcome.model_validate(raw["outcome"])
         if outcome.mode is not mode:
@@ -120,9 +125,17 @@ def _mode_node(registry: StrategyRegistry, mode: ResearchMode):
                 "outcome mode does not match routed mode: "
                 f"expected {mode.value}, got {outcome.mode.value}"
             )
+        verification = raw.get("verification")
+        if isinstance(verification, dict):
+            verification = VerificationResult.model_validate(verification)
+        elif verification is not None and not isinstance(
+            verification, VerificationResult
+        ):
+            raise ValueError("strategy verification must be a VerificationResult")
         turn = dict(state["turn"])
         turn["research_request"] = request
         turn["research_outcome"] = outcome
+        turn["verification"] = verification
         turn["active_evidence_ids"] = list(outcome.evidence_ids)
         conversation = state["conversation"]
         return {
@@ -142,9 +155,12 @@ def _mode_node(registry: StrategyRegistry, mode: ResearchMode):
     return invoke_mode
 
 
-def _initialize_turn(state: HarnessState) -> dict[str, Any]:
+async def _initialize_turn(
+    state: HarnessState, runtime: Runtime[HarnessContext]
+) -> dict[str, Any]:
     turn = dict(state["turn"])
     turn["status"] = ExecutionStatus.RUNNING
+    await emit_progress(runtime.context, "run.started", mode=str(turn.get("requested_mode", turn["selected_mode"])))
     user_message = HumanMessage(content=turn["user_input"], id=f"{turn['run_id']}-user")
     return {"turn": turn, "conversation": {"messages": [user_message]}}
 
@@ -246,7 +262,7 @@ def _route_intent(state: HarnessState) -> str:
     turn = state["turn"]
     intent = turn["intent"]
     if turn["requires_research"]:
-        return turn["selected_mode"].value
+        return "select_research_mode"
     if intent is ConversationIntent.SWITCH_MODE:
         return "switch_mode"
     if intent is ConversationIntent.MEMORY_UPDATE:
@@ -335,6 +351,16 @@ def _response_node(response_registry: ResponseGraphRegistry, mode: ResponseMode)
             ]
             + recent
         )[:24]
+        verification = turn.get("verification")
+        if verification is not None and not isinstance(
+            verification, VerificationResult
+        ):
+            verification = VerificationResult.model_validate(verification)
+        verified_finding_ids = (
+            [claim.id for claim in verification.accepted_claims]
+            if verification is not None
+            else None
+        )
         response_input = ResponseInput(
             constraints=list(summary.user_constraints)
             + [
@@ -346,8 +372,10 @@ def _response_node(response_registry: ResponseGraphRegistry, mode: ResponseMode)
             response_mode=mode,
             research_outcome=turn["research_outcome"],
             active_evidence_ids=list(turn["active_evidence_ids"]),
+            verified_finding_ids=verified_finding_ids,
             context_notes=notes,
         )
+        await emit_progress(runtime.context, "writing.started")
         raw = await registration.graph.ainvoke(
             {"response_input": response_input}, config=config
         )
@@ -359,6 +387,7 @@ def _response_node(response_registry: ResponseGraphRegistry, mode: ResponseMode)
             )
         turn = dict(state["turn"])
         turn["response_outcome"] = outcome
+        await emit_progress(runtime.context, "writing.completed")
         return {"turn": turn}
 
     return invoke_response
@@ -368,18 +397,45 @@ def _finalize_turn(state: HarnessState) -> dict[str, Any]:
     turn = dict(state["turn"])
     research = turn["research_outcome"]
     response = turn["response_outcome"]
+    verification = turn.get("verification")
+    if verification is not None and not isinstance(verification, VerificationResult):
+        verification = VerificationResult.model_validate(verification)
     if turn.get("requires_research", True):
-        research_usable = (
-            research is not None and research.termination_reason == "completed"
-        )
-        if research_usable and research.evidence_contract_version in (2, 3):
-            from deeptrace.strategies.evidence_evaluation import coverage_complete
+        if verification is not None:
+            research_usable = (
+                research is not None
+                and research.termination_reason == "completed"
+                and verification.coverage_complete
+            )
+        else:
+            research_usable = (
+                research is not None and research.termination_reason == "completed"
+            )
+            if research_usable and not research.delivery_first and research.evidence_contract_version in (2, 3):
+                from deeptrace.strategies.evidence_evaluation import coverage_complete
 
-            research_usable = coverage_complete(research.model_dump())
+                research_usable = coverage_complete(research.model_dump())
     else:
         research_usable = True
-    response_usable = response is not None and response.partial_reason is None
-    if research_usable and response_usable:
+    response_usable = (
+        response is not None and response.partial_reason is None
+        and bool(response.content.strip())
+    )
+    # Legacy runs without a host verification verdict retain the fixed-workflow
+    # completion contract. Verified runs require accepted coverage.
+    workflow_finished = (
+        verification is None
+        and research is not None
+        and not research.delivery_first
+        and research.mode == ResearchMode.WORKFLOW
+        and research.evidence_contract_version in (2, 3)
+        and research.termination_reason in {"completed", "insufficient_evidence", "no_sources"}
+        and response is not None
+        and response.partial_reason in {None, "insufficient_evidence", "no_evidence"}
+        and bool(response.content.strip())
+    )
+    delivered = research is not None and research.delivery_first and response_usable
+    if delivered or workflow_finished or (research_usable and response_usable):
         turn["status"] = ExecutionStatus.COMPLETED
     else:
         turn["status"] = ExecutionStatus.PARTIAL
@@ -407,6 +463,9 @@ def build_agent_runtime_graph(
     builder.add_node("manage_context", _manage_context)
     builder.add_node("classify_intent", _classify_intent)
     builder.add_node("recall_memory", _recall_memory)
+    builder.add_node("select_research_mode", select_research_mode)
+    builder.add_conditional_edges("select_research_mode", _route_mode,
+                                  {mode.value: mode.value for mode in ResearchMode})
     for mode in ResearchMode:
         builder.add_node(mode.value, _mode_node(registry, mode))
         builder.add_edge(mode.value, "consolidate_memory")
@@ -429,7 +488,7 @@ def build_agent_runtime_graph(
         "recall_memory",
         _route_intent,
         {
-            **{mode.value: mode.value for mode in ResearchMode},
+            "select_research_mode": "select_research_mode",
             "direct_response": "select_response_mode",
             "switch_mode": "switch_mode",
             "memory_update": "memory_update",

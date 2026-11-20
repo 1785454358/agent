@@ -72,6 +72,52 @@ async def _case():
 
 
 @pytest.mark.asyncio
+async def test_short_answer_keeps_multiple_verified_facts_from_one_source():
+    payload, model, fixture, _ = await _case()
+    quotes = [f"Verified condition {index}. " + "detail " * 60 for index in range(8)]
+    body = "\n\n".join(quotes)
+    ids = await _seed_evidence(
+        fixture.evidence_store, [("https://example.com/conditions", "Conditions", body)]
+    )
+    record = await fixture.evidence_store.get(TENANT_ID, ids[0])
+    payload.active_evidence_ids = ids
+    payload.research_outcome.evidence_ids = ids
+    payload.research_outcome.findings = [
+        Finding(
+            id=f"f{index + 1}",
+            claim=f"Supported condition {index}",
+            evidence_ids=ids,
+            confidence=0.9,
+            supports=[
+                EvidenceSupport(
+                    evidence_id=record.id,
+                    version=record.version,
+                    content_hash=record.content_hash,
+                    start=body.index(quote),
+                    end=body.index(quote) + len(quote),
+                    quote=quote,
+                )
+            ],
+        )
+        for index, quote in enumerate(quotes)
+    ]
+    payload.research_outcome.coverage.items[0].finding_ids = [
+        finding.id for finding in payload.research_outcome.findings
+    ]
+
+    result = await build_answer_graph().ainvoke(
+        {"response_input": payload}, context=fixture.context
+    )
+
+    assert all(quote in model.calls[0][1] for quote in quotes)
+    assert all(
+        finding.claim in model.calls[0][1]
+        for finding in payload.research_outcome.findings
+    )
+    assert result["outcome"].partial_reason is None
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("builder", [build_answer_graph, build_report_graph])
 async def test_support_beats_generic_query_in_actual_writer_input(builder):
     payload, model, fixture, _ = await _case()
@@ -135,8 +181,8 @@ async def test_token_dropped_source_drops_its_finding_and_cannot_certify_citatio
     result = await build_answer_graph(budget).ainvoke(
         {"response_input": payload}, context=fixture.context
     )
-    assert "Rare supported qualifier." not in model.calls[0][1]
-    assert "A supported conclusion" not in model.calls[0][1]
+    assert all("Rare supported qualifier." not in prompt for _, prompt in model.calls)
+    assert all("A supported conclusion" not in prompt for _, prompt in model.calls)
     assert result["outcome"].partial_reason is not None
     assert result["outcome"].cited_evidence_ids == []
 
@@ -236,18 +282,25 @@ def test_invisible_first_source_does_not_renumber_second_source_before_validatio
 
 
 @pytest.mark.asyncio
-async def test_application_does_not_complete_a_forged_completed_but_missing_contract():
+@pytest.mark.parametrize("mode_name", ["workflow", "plan_execute", "multi_agent"])
+async def test_workflow_completion_and_adaptive_quality_contracts_are_distinct(
+    mode_name,
+):
     from deeptrace.domain import ResearchMode, ResponseMode, ResponseOutcome
     from deeptrace.harness.graph import _finalize_turn
     from deeptrace.harness.state import new_turn
 
     payload, _, _, _ = await _case()
+    mode = ResearchMode(mode_name)
+    payload.research_outcome = payload.research_outcome.model_copy(
+        update={"mode": mode}
+    )
     payload.research_outcome.coverage.items[0] = (
         payload.research_outcome.coverage.items[0].model_copy(
             update={"status": "missing"}
         )
     )
-    turn = new_turn("run-1", "question", ResearchMode.WORKFLOW)
+    turn = new_turn("run-1", "question", mode)
     turn["research_outcome"] = payload.research_outcome
     turn["response_outcome"] = ResponseOutcome(
         response_mode=ResponseMode.ANSWER,
@@ -256,4 +309,7 @@ async def test_application_does_not_complete_a_forged_completed_but_missing_cont
         cited_evidence_ids=payload.active_evidence_ids,
     )
     result = _finalize_turn({"turn": turn})
-    assert result["turn"]["status"] == "partial"
+    assert result["turn"]["status"] == (
+        "completed" if mode == ResearchMode.WORKFLOW else "partial"
+    )
+    assert result["turn"]["research_outcome"].coverage.items[0].status == "missing"

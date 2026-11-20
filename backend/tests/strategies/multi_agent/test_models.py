@@ -67,6 +67,12 @@ def test_researcher_branch_state_is_private_per_researcher() -> None:
         "target_requirement_ids",
         "research_gaps",
         "prior_evidence_ids",
+        "source_policy",
+        "source_domains",
+        "publication_years",
+        "search_queries",
+        "read_terms",
+        "blocked_acquisitions",
     }
 
 

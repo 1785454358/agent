@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 from pydantic import BaseModel
 
 from deeptrace.domain import ToolName
-from deeptrace.domain.tools import MAX_TOOL_PREVIEW_LENGTH
+from deeptrace.domain.tools import MAX_TOOL_PREVIEW_LENGTH, CustomToolName
 from deeptrace.tools.evidence_store import EvidenceDraft
 
 if TYPE_CHECKING:
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 
 class ToolCapability(StrEnum):
+    FILE_READ = 'file_read'
     WEB_SEARCH = "web_search"
     PAGE_FETCH = "page_fetch"
     MEMORY_READ = "memory_read"
@@ -87,7 +88,7 @@ class ToolAdapterResult:
 
 @dataclass(frozen=True)
 class ToolSpec:
-    name: ToolName
+    name: ToolName | CustomToolName
     argument_model: type[BaseModel]
     handler: ToolHandler
     capability: ToolCapability
@@ -98,8 +99,8 @@ class ToolSpec:
     preflight: ToolPreflight | None = None
 
     def __post_init__(self) -> None:
-        if not isinstance(self.name, ToolName):
-            raise TypeError("spec name must be a ToolName")
+        if not isinstance(self.name, (ToolName, CustomToolName)):
+            raise TypeError("spec name must be a ToolName or CustomToolName")
         if not (
             isinstance(self.argument_model, type)
             and issubclass(self.argument_model, BaseModel)

@@ -2,6 +2,8 @@
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from deeptrace.harness.model_context import TaskContext
+
 RESEARCH_SYSTEM_INSTRUCTION = (
     "你是一名严谨的研究员。你的目标是通过工具收集足以回答用户问题的资料。\n"
     "工作方式：\n"
@@ -41,12 +43,14 @@ RESEARCH_SYSTEM_INSTRUCTION = (
 
 
 def task_messages(*, instruction: str, task: str, constraints=(), prompt: str = ""):
+    task_context = TaskContext(task=task, constraints=list(constraints))
     return [
         SystemMessage(
             content=instruction
             + "\n本轮用户明确要求优先于历史偏好；历史记忆中的事实仅作待核验背景，不替代当前证据。"
         ),
         HumanMessage(
+            additional_kwargs={'task_context': task_context.model_dump()},
             content="原始任务：\n"
             + task
             + "\n当前约束：\n"

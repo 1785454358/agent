@@ -1,21 +1,29 @@
-"""Checkpointed search → batch fetch → anchored read → single synthesis."""
+"""Checkpointed acquisition with direct scientific and supplement handoff."""
 from __future__ import annotations
 
 from langgraph.graph import END, START, StateGraph
 
 from deeptrace.domain import ResearchTopicOutcome
 from deeptrace.harness.agent_state import AgentExecutorState, topic_input
-from deeptrace.harness.batch_collection import fetch_sources, read_sources, search_sources, stage_todos
+from deeptrace.harness.batch_collection import (
+    fetch_sources,
+    read_sources,
+    search_sources,
+    stage_todos,
+)
 from deeptrace.harness.batch_synthesis import synthesize_findings
 from deeptrace.harness.context import HarnessContext
 from deeptrace.harness.policies.execution import ExecutionPolicy
+from deeptrace.harness.source_selection import select_sources
 from deeptrace.harness.token_budget import TokenBudgetConfig
 
 
 class BatchResearchState(AgentExecutorState, total=False):
     candidate_urls: list[str]
+    source_candidates: list[dict]
     batch_selected_ids: list[str]
     batch_read_previews: list[dict]
+    batch_read_queries: dict[str, list[str]]
     synthesis_feedback: str
     synthesis_done: bool
 
@@ -33,8 +41,24 @@ def build_batch_research_graph(*, source_target=3, max_tool_concurrency=4,
         return await fetch_sources(state, runtime.context, source_target=source_target,
                                    concurrency=max_tool_concurrency)
 
+    async def select(state, runtime):
+        return await select_sources(state, runtime.context, budget)
+
     async def read(state, runtime):
-        return await read_sources(state, runtime.context, concurrency=max_tool_concurrency)
+        updates = await read_sources(state, runtime.context, concurrency=max_tool_concurrency)
+        task = topic_input(state)
+        if (
+            (task.evidence_contract_version >= 3
+             or task.source_policy == "research_results"
+             or (task.research_gaps and task.target_requirement_ids))
+            and updates.get("batch_read_previews")
+            and not (updates.get("stop_reason") or state.get("stop_reason"))
+        ):
+            # The v3 parent evaluates these exact authorized read anchors.
+            # Acquiring originals completes this branch, not global coverage;
+            # another summary would add a smaller window and duplicate cost.
+            updates["stop_reason"] = "completed"
+        return updates
 
     async def synthesize(state, runtime):
         return await synthesize_findings(state, runtime.context, budget)
@@ -58,11 +82,12 @@ def build_batch_research_graph(*, source_target=3, max_tool_concurrency=4,
             unfinished_todos=agent.unfinished_todos)}
 
     builder = StateGraph(BatchResearchState, context_schema=HarnessContext)
-    for name, node in (("search", search), ("fetch", fetch), ("read", read),
+    for name, node in (("search", search), ("select_sources", select), ("fetch", fetch), ("read", read),
                        ("synthesize", synthesize), ("finalize", finalize)):
         builder.add_node(name, node)
     builder.add_edge(START, "search")
-    builder.add_conditional_edges("search", lambda s: "finalize" if s.get("stop_reason") else "fetch")
+    builder.add_conditional_edges("search", lambda s: "finalize" if s.get("stop_reason") else "select_sources")
+    builder.add_conditional_edges("select_sources", lambda s: "finalize" if s.get("stop_reason") else "fetch")
     builder.add_edge("fetch", "read")
     builder.add_conditional_edges("read", lambda s: "synthesize" if s.get("batch_read_previews") and not s.get("stop_reason") else "finalize")
     builder.add_conditional_edges("synthesize", lambda s: "finalize" if s.get("synthesis_done") or s.get("stop_reason") else "synthesize")

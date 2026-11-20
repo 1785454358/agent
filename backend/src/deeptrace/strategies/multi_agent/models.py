@@ -7,7 +7,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 from deeptrace.domain import CoverageAssessment
-from deeptrace.strategies.evidence_evaluation import FindingDraft
+from deeptrace.strategies.evidence_evaluation import FindingDraft, GapResearchTask
 from deeptrace.strategies.evidence_references import (
     ReferenceFindingDraft,
     ReferenceSourceCheck,
@@ -39,9 +39,13 @@ class SupervisorEvaluation(BaseModel):
 class ReferenceSupervisorEvaluation(SupervisorEvaluation):
     """Live v3 output; SupervisorEvaluation remains the historical v2 DTO."""
 
+    unchanged_requirement_ids: list[str] | None = Field(default=None, max_length=6)
+
+    recovery_tasks: list[GapResearchTask] | None = Field(default=None, max_length=2)
+
     findings: list[ReferenceFindingDraft] = Field(
         default_factory=list, max_length=MAX_WORKFLOW_GAPS
     )
     source_checks: list[ReferenceSourceCheck] = Field(
-        default_factory=list, max_length=8
+        default_factory=list, max_length=32
     )

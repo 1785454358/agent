@@ -6,6 +6,11 @@ from datetime import UTC, datetime
 from typing import Any
 
 import pytest
+from langchain_core.messages import AIMessage
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.errors import NodeCancelledError
+from strategies.fixtures import TENANT_ID, build_gateway_fixture
+
 from deeptrace.domain import (
     ErrorCategory,
     ResearchMode,
@@ -13,18 +18,14 @@ from deeptrace.domain import (
     ResponseInput,
     ResponseMode,
 )
-from deeptrace.harness.model_gateway import ModelCallError
 from deeptrace.harness.model_budget import ModelBudgetExceeded
+from deeptrace.harness.model_gateway import ModelCallError
 from deeptrace.responses.graph import (
     build_answer_graph,
     build_brief_graph,
     build_report_graph,
 )
 from deeptrace.tools.evidence_store import EvidenceDraft, InMemoryEvidenceStore
-from langchain_core.messages import AIMessage
-from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.errors import NodeCancelledError
-from strategies.fixtures import TENANT_ID, build_gateway_fixture
 
 
 class ScriptedModelGateway:
@@ -33,7 +34,7 @@ class ScriptedModelGateway:
         self.calls: list[tuple[str, str]] = []
 
     async def invoke(self, *, role: str, messages: list[Any]) -> Any:
-        prompt = str(messages[-1].content)
+        prompt = "\n".join(str(message.content) for message in messages)
         self.calls.append((role, prompt))
         response = self._responses[role]
         if callable(response):
@@ -185,15 +186,16 @@ async def test_brief_and_report_prompts_differ_by_policy() -> None:
         assert result["outcome"].response_mode is expected_mode
 
 
-def test_strip_markdown_headings_keeps_non_heading_hashes() -> None:
-    from deeptrace.responses.graph import strip_markdown_headings
+def test_writing_policy_allows_markdown_structure_and_code() -> None:
+    from deeptrace.responses.writing import MARKDOWN_RULE
 
-    text = "## 标题\nC# 是语言\n编号 #1 保留\n**加粗**文字"
-    assert strip_markdown_headings(text) == "标题\nC# 是语言\n编号 #1 保留\n加粗文字"
+    assert "Markdown" in MARKDOWN_RULE
+    assert "代码块" in MARKDOWN_RULE
+    assert "引用编号[n]保持为普通文本" in MARKDOWN_RULE
 
 
 @pytest.mark.asyncio
-async def test_report_markdown_headings_are_stripped_to_plain_text() -> None:
+async def test_report_preserves_markdown_headings_and_emphasis() -> None:
     model = ScriptedModelGateway(
         {
             "responder": json.dumps(
@@ -223,12 +225,11 @@ async def test_report_markdown_headings_are_stripped_to_plain_text() -> None:
     )
     outcome = result["outcome"]
 
-    assert "#" not in outcome.content
-    assert "**" not in outcome.content
+    assert "# 2026 年报告" in outcome.content
+    assert "**重点**" in outcome.content
     assert "一、概述" in outcome.content
-    assert "重点：结论二 [1]。" in outcome.content
-    # the prompt itself also forbids markdown so the model is nudged up front
-    assert "禁止使用 Markdown" in model.calls[0][1]
+    assert "**重点**：结论二 [1]。" in outcome.content
+    assert "content正文可以使用Markdown" in model.calls[0][1]
 
 
 @pytest.mark.asyncio
@@ -253,7 +254,9 @@ async def test_response_budget_reserves_output_and_reports_trimming() -> None:
     prompt = model.calls[0][1]
     assert "只输出 JSON" in prompt
     assert "用户问题" in prompt
-    assert result["outcome"].content == "结论 [1]。"
+    assert result["outcome"].partial_reason == "no_supported_citations"
+    assert result["outcome"].cited_evidence_ids == []
+    assert "结论 [1]。" not in result["outcome"].content
     assert any(
         event_type == "response.budget"
         for event_type, _payload in fixture.events.events
@@ -663,4 +666,4 @@ async def test_generation_does_not_swallow_transport_errors_or_cancellation(
         await _run_response(build_answer_graph(), model, _response_input(ids), fixture)
     if cancelled:
         assert isinstance(raised.value.__cause__, asyncio.CancelledError)
-    assert len(model.calls) == (2 if during_correction else 1)
+    assert len(model.calls) == int(during_correction) + (1 if cancelled else 2)

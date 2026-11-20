@@ -100,6 +100,10 @@ class NoopModelGateway:
 
 def scripted_research_response(messages: list[Any], tools: Any) -> AIMessage:
     """Script external model decisions from this branch's transcript, not a cursor."""
+    prompt = str(messages[-1].content)
+    if "SOURCE_CANDIDATES_JSON:\n" in prompt:
+        rows = json.loads(prompt.split("SOURCE_CANDIDATES_JSON:\n", 1)[1])
+        return AIMessage(content=json.dumps({"selected": [row["id"] for row in rows]}))
     assert tools, "the executor must bind research tools"
     if any(
         message.type == "human"
@@ -144,7 +148,10 @@ class ScriptedModelGateway:
         self.calls: list[tuple[str, str]] = []
 
     async def invoke(self, *, role: str, messages: list[Any], tools=None) -> Any:
-        prompt = str(messages[-1].content)
+        # Evaluation policy is a system message; scripted decisions must see
+        # the same policy and task data as the real provider.
+        prompt = ("\n".join(str(message.content) for message in messages)
+                  if role == "evaluator" else str(messages[-1].content))
         self.calls.append((role, prompt))
         if role == "researcher":
             return scripted_research_response(messages, tools)
@@ -181,7 +188,7 @@ class ScriptedSearch:
         self._fail = fail
         self.calls: list[str] = []
 
-    async def __call__(self, query: str) -> dict[str, Any]:
+    async def __call__(self, query: str, **options) -> dict[str, Any]:
         self.calls.append(query)
         if self._fail:
             raise RuntimeError("provider exploded")

@@ -37,6 +37,65 @@ class SearchArguments(BaseModel):
     limit: int = Field(default=3, ge=1, le=10)
 
 
+@pytest.mark.asyncio
+async def test_provided_scope_denies_web_even_with_authorized_url():
+    async def handler(arguments, context):
+        return ToolAdapterResult(preview='original gateway remains usable')
+    gateway, _, _, _ = _gateway(_spec(handler))
+    scoped = gateway.with_source_scope(frozenset({'allowed-evidence'}))
+    result = await scoped.execute(tenant_id='tenant-a', caller=_caller(), request=_request())
+    assert result.ok is False and result.error_code == 'tool_not_allowed'
+    original = await gateway.execute(tenant_id='tenant-a', caller=_caller(), request=_request())
+    assert original.ok
+
+
+@pytest.mark.asyncio
+async def test_provided_scope_cannot_be_widened_or_read_outside_evidence():
+    async def handler(arguments, context):
+        raise AssertionError('outside evidence must not dispatch')
+    gateway, _, _, _ = _gateway(_spec(handler))
+    scoped = gateway.with_source_scope(frozenset({'inside'}))
+    with pytest.raises(PermissionError, match='widened'):
+        scoped.with_source_scope(frozenset({'inside', 'outside'}))
+    result = await scoped.execute(tenant_id='tenant-a', caller=_caller(),
+        request=_request(tool=ToolName.READ_EVIDENCE, arguments={'evidence_id':'outside'}))
+    assert result.error_code == 'evidence_not_authorized'
+
+
+@pytest.mark.asyncio
+async def test_invalid_evidence_id_cannot_escape_scoped_gateway_validation():
+    async def handler(arguments, context):
+        raise AssertionError('invalid input must not dispatch')
+    gateway, _, _, _ = _gateway(_spec(handler))
+    result = await gateway.with_source_scope(frozenset({'inside'})).execute(
+        tenant_id='tenant-a',caller=_caller(),
+        request=_request(tool=ToolName.READ_EVIDENCE, arguments={'evidence_id':['inside']}))
+    assert result.error_code == 'invalid_arguments'
+
+
+@pytest.mark.asyncio
+async def test_langsmith_marks_failed_attempt_and_keeps_gateway_return_contract():
+    from langsmith import tracing_context
+    from langsmith.run_trees import RunTree
+    async def handler(arguments, context):
+        return ToolAdapterResult.failure("provider_timeout")
+    gateway, _, _, _ = _gateway(_spec(handler))
+    parent = RunTree(name="research", run_type="chain", inputs={})
+    with tracing_context(parent=parent, enabled="local"):
+        result = await gateway.execute(tenant_id="tenant-a", caller=_caller(), request=_request())
+    assert result.ok is False
+    execution = parent.child_runs[0]
+    assert execution.error == "provider_timeout"
+    assert execution.child_runs[0].error == "provider_timeout"
+    assert "authorization" not in execution.inputs
+
+
+def test_langsmith_tool_inputs_do_not_copy_credentials_from_invalid_arguments():
+    from deeptrace.observability.langsmith import tool_inputs
+    inputs = tool_inputs({"request": _request(arguments={"query": "q", "api_key": "secret"}), "authorization": "private"})
+    assert inputs["arguments"] == {"query": "q"}
+
+
 def test_progress_argument_summary_never_copies_arbitrary_arguments():
     from deeptrace.tools.gateway import _event_payload
 
@@ -83,11 +142,13 @@ async def test_preflight_denial_precedes_ledger_and_handler():
             raise AssertionError("must not claim unauthorized tool")
 
     spec = replace(_spec(handler), preflight=deny)
-    gateway, _, _, _ = _gateway(spec, executions=NoClaimLedger())
+    gateway, _, events, _ = _gateway(spec, executions=NoClaimLedger())
     result = await gateway.execute(
         tenant_id="tenant-a", caller=_caller(), request=_request()
     )
     assert result.error_code == "evidence_not_authorized"
+    assert events.events[0][0] == "tool.rejected"
+    assert events.events[0][1]["error_code"] == "evidence_not_authorized"
 
 
 @pytest.mark.asyncio
@@ -289,7 +350,9 @@ async def test_rejections_happen_before_budget_and_execution_events() -> None:
     assert invalid.error_code == "invalid_arguments"
     assert denied.error_code == "tool_not_allowed"
     assert calls == 0
-    assert events.events == []
+    assert [name for name, _payload in events.events] == ["tool.rejected", "tool.rejected"]
+    assert [payload["error_code"] for _name, payload in events.events] == ["invalid_arguments", "tool_not_allowed"]
+    assert all("arguments" not in payload and "query" not in payload for _name, payload in events.events)
     snapshot = await budget.snapshot()
     assert snapshot.for_scope(BudgetScopeKey.for_run("run-1")).used.is_empty()
     assert snapshot.for_scope(BudgetScopeKey.for_run("run-1")).reserved.is_empty()
@@ -322,7 +385,9 @@ async def test_same_call_replays_without_provider_or_budget_charge() -> None:
     assert [name for name, _payload in events.events] == [
         "tool.started",
         "tool.completed",
+        "tool.replayed",
     ]
+    assert events.events[-1][1]["replayed"] is True
 
 
 @pytest.mark.asyncio

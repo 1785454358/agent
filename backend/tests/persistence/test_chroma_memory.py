@@ -57,3 +57,18 @@ async def test_chroma_query_is_restricted_to_mysql_candidate_ids() -> None:
     assert await index.query(
         query_embedding=[1.0, 0.0], candidate_ids=[], limit=5
     ) == []
+
+
+@pytest.mark.asyncio
+async def test_retriever_deduplicates_records_before_real_chroma_get_and_upsert():
+    from deeptrace.harness.memory.retriever import SemanticMemoryRetriever
+
+    class Embeddings:
+        async def embed_documents(self, texts):
+            assert len(texts) == 1
+            return [[1.0, 0.0]]
+
+    index = ChromaMemoryVectorIndex(chromadb.Client(), "test-memory-duplicate")
+    record = _record("duplicate", "Same authoritative memory returned twice")
+    await SemanticMemoryRetriever(object(), Embeddings(), index).index([record, record])
+    assert await index.records_requiring_index([record]) == []

@@ -22,4 +22,22 @@ describe("Sources", () => {
     expect(screen.getByText(/无成功抓取来源/)).toBeInTheDocument();
     expect(screen.getByText("缺少对比数据")).toBeInTheDocument();
   });
+
+  it("does not present internal diagnostics as missing research", () => {
+    render(<Sources sources={["https://example.com/a"]} unresolvedGaps={[
+      "diagnostic:read_anchor_omitted:evidence-123",
+    ]} />);
+    expect(screen.queryByText("未解决的研究缺口")).not.toBeInTheDocument();
+    expect(screen.queryByText(/read_anchor_omitted/)).not.toBeInTheDocument();
+    expect(screen.getByRole("link")).toHaveAttribute("href", "https://example.com/a");
+  });
+
+  it("keeps real research gaps when internal diagnostics also exist", () => {
+    render(<Sources sources={[]} unresolvedGaps={[
+      "diagnostic:read_anchor_omitted:evidence-123", "缺少对比数据",
+    ]} />);
+    expect(screen.getByText("未解决的研究缺口")).toBeInTheDocument();
+    expect(screen.getByText("缺少对比数据")).toBeInTheDocument();
+    expect(screen.queryByText(/read_anchor_omitted/)).not.toBeInTheDocument();
+  });
 });

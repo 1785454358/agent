@@ -21,6 +21,14 @@ function setup(submitting = false) {
 }
 
 describe("TopBar", () => {
+  it("allows automatic routing while retaining all three manual modes", () => {
+    const { onModeChange } = setup();
+    const select = screen.getByRole("combobox", { name: "研究模式" });
+    expect(screen.getByRole("option", { name: "自动路由" })).toBeInTheDocument();
+    fireEvent.change(select, { target: { value: "auto" } });
+    expect(onModeChange).toHaveBeenCalledWith("auto");
+    expect(screen.getAllByRole("option")).toHaveLength(4);
+  });
   it("does not submit an empty question", () => {
     const { onSubmit } = setup();
     fireEvent.click(screen.getByRole("button", { name: /开始研究/ }));

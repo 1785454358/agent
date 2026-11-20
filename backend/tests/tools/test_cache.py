@@ -53,6 +53,21 @@ def test_page_cache_keys_normalize_url_and_include_content_version() -> None:
     )
 
 
+def test_pdf_page_ranges_cannot_reuse_a_different_or_full_document_cache():
+    from deeptrace.tools.adapters import FetchPageArguments
+    from deeptrace.tools.gateway import _cache_key
+    from types import SimpleNamespace
+    from deeptrace.tools.contracts import CachePolicy
+
+    spec = SimpleNamespace(name=ToolName.FETCH_PAGE, cache_policy=CachePolicy.SUCCESS)
+    first = _cache_key('tenant', spec, FetchPageArguments(url='https://example.com/report.pdf',
+        page_start=1, page_end=10), 'default')
+    later = _cache_key('tenant', spec, FetchPageArguments(url='https://example.com/report.pdf',
+        page_start=11, page_end=20), 'default')
+    full = _cache_key('tenant', spec, FetchPageArguments(url='https://example.com/report.pdf'), 'default')
+    assert first != later and first != full and later != full
+
+
 @pytest.mark.asyncio
 async def test_cache_accepts_only_successful_results_and_returns_copies() -> None:
     cache = InMemorySuccessCache()

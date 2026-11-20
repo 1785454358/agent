@@ -10,6 +10,9 @@ _PUBLIC_FIELDS = frozenset({
     "error_category", "retryable", "message", "cached", "replayed", "duration_ms",
     "round", "task", "tasks_json", "gaps_json", "reason", "action", "next_step",
     "url", "query", "branch", "iteration", "covered", "total",
+    "role", "usage_known", "input_tokens", "output_tokens", "estimated_input_tokens",
+    "prompt_segment_estimates_json", "request_parameters_json",
+    "evaluation_mode", "evaluated_requirements_json", "retained_requirements_json",
 })
 
 
@@ -37,7 +40,11 @@ _TOOL_LABEL: dict[str, str] = {
 }
 
 _PHASE_LABEL: dict[str, str] = {
+    "model.started": "模型调用开始",
+    "model.completed": "模型调用完成",
+    "model.failed": "模型调用失败",
     "run.started": "研究任务开始",
+    "research.routed": "已选择研究模式",
     "planning.started": "开始规划研究策略",
     "planning.completed": "研究计划已生成",
     "replanning.started": "开始调整研究计划",
@@ -52,6 +59,7 @@ _PHASE_LABEL: dict[str, str] = {
     "research.batch_synthesis.completed": "研究发现已整理",
     "research.batch_synthesis.failed": "研究发现待核验",
     "research.route": "确定后续研究步骤",
+    "research.evaluation_scope": "确定本轮核验范围",
     "agent.context_view": "准备研究上下文",
     "evidence.view": "整理原文证据片段",
     "supervisor.dispatched": "Supervisor 已派发研究方向",
@@ -80,11 +88,14 @@ def humanize_event_message(event_type: str, payload: dict[str, Any]) -> str:
         return f"{label}调用失败，正在重试…" if label else "工具调用失败，正在重试…"
     error_code = payload.get("error_code")
     if error_code:
-        prefix = f"{label}失败" if label else "工具调用失败"
+        prefix = ('模型调用失败' if event_type.startswith('model.') else
+                  (f"{label}失败" if label else "工具调用失败"))
         return f"{prefix}（{error_code}）"
     if label:
         if event_type == "tool.started":
             return f"正在{label}…"
         if event_type == "tool.completed":
             return f"{label}完成" if payload.get("ok", True) else f"{label}失败"
+        if event_type == "tool.replayed":
+            return f"{label}复用已有结果"
     return _PHASE_LABEL.get(event_type, event_type)

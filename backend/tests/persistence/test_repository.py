@@ -21,6 +21,42 @@ async def repository():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("status,reason", [
+    ("completed", "workflow_completed"), ("partial", "max_iterations"),
+    ("failed", "model_error"), ("cancelled", "cancelled"),
+])
+async def test_terminal_contract_survives_sql_round_trip(repository, status, reason):
+    await repository.create(RunRecord(id="contract", question="Question", created_at=datetime.now(UTC)))
+    await repository.claim("contract", "owner", 60)
+    result = AgentResult(status=status, answer="", sources=[], steps=0, events=[],
+        termination_reason=reason, search_queries=[], provider_usage=TokenUsage(),
+        role_usage=UsageBreakdown(), estimated_cost_usd=None, stage_seconds={},
+        research_sufficiency="insufficient")
+    assert await repository.complete("contract", "stale-owner", result) is None
+    await repository.complete("contract", "owner", result)
+    loaded = await repository.get("contract")
+    assert loaded.status == status
+    assert loaded.termination_reason == reason
+    assert loaded.research_sufficiency == "insufficient"
+    assert loaded.model_dump(mode="json")["finish_reason"] == {
+        "workflow_completed": "completed", "max_iterations": "iteration_limit",
+        "model_error": "model_error", "cancelled": "cancelled",
+    }[reason]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('terminal', ['fail', 'cancel'])
+async def test_failure_and_cancellation_keep_usage_under_owner_guard(repository, terminal):
+    await repository.create(RunRecord(id='usage-run', question='question', created_at=datetime.now(UTC)))
+    await repository.claim('usage-run', 'owner', 60)
+    usage = {'provider_attempts': 2, 'total_tokens': None, 'missing_usage_attempts': 1}
+    finish = getattr(repository, terminal)
+    assert await finish('usage-run', 'stale-owner', 'error', usage=usage) is None
+    result = await finish('usage-run', 'owner', 'error', usage=usage)
+    assert result.usage == usage
+
+
+@pytest.mark.asyncio
 async def test_repository_creates_and_reads_run(repository) -> None:
     created_at = datetime.now(UTC)
     run = RunRecord(
@@ -188,6 +224,10 @@ async def test_repository_only_current_worker_can_persist_result(repository) -> 
             "replanner": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
             "supervisor": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
             "researcher": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+            "evaluator": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+            "summarizer": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+            "memory_consolidator": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+            "other": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
             "writer": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 42},
         },
         "steps": 4,

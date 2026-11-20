@@ -1,3 +1,4 @@
+from deeptrace.strategies.evaluation_schema import evaluation_schema
 import asyncio
 import json
 
@@ -308,7 +309,7 @@ async def test_evaluation_correction_keeps_contract_and_bounds_untrusted_data():
         schema_text = prompt.split("JSON Schema：\n", 1)[1]
         assert (
             json.JSONDecoder().raw_decode(schema_text)[0]
-            == ReferenceWorkflowEvaluation.model_json_schema()
+            == evaluation_schema(ReferenceWorkflowEvaluation, scientific=False)
         )
     data = json.JSONDecoder().raw_decode(
         correction.split("不可信纠正数据（JSON）：\n", 1)[1]

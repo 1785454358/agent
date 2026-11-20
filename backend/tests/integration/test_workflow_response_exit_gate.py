@@ -19,7 +19,7 @@ from deeptrace.application.research import (
     ResearchApplicationService,
 )
 from deeptrace.domain import ResearchMode, ResponseMode
-from deeptrace.harness.agent_executor import build_research_agent_graph
+from deeptrace.harness.batch_research import build_batch_research_graph as build_research_agent_graph
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
 from deeptrace.harness.graph import build_agent_runtime_graph
 from deeptrace.harness.registry import (
@@ -49,7 +49,7 @@ def _fixture(model: ScriptedModelGateway):
                 {"url": "https://example.com/a", "title": "来源 A", "snippet": "s"}
             ]
         },
-        pages={"https://example.com/a": "unique-exit-gate-body-marker"},
+        pages={"https://example.com/a": "LangGraph Harness unique-exit-gate-body-marker"},
         model_gateway=model,
     )
 
@@ -115,6 +115,7 @@ def test_exit_gate_default_request_produces_cited_answer_with_typed_tools() -> N
     assert [call["request"].tool.value for call in fixture.gateway.calls] == [
         "search_web",
         "fetch_page",
+        "read_evidence",
     ]
     evidence_id = asyncio.run(
         fixture.evidence_store.latest_for_source(

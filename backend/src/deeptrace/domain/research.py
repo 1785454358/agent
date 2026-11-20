@@ -70,6 +70,17 @@ TopicErrorCode = Annotated[
     ),
 ]
 
+# Discovery hints only: actual URL safety and source admission stay separate.
+SourceDomain = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        to_lower=True,
+        pattern=r"^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$",
+        max_length=253,
+    ),
+]
+
 
 def _require_unique(values: list[str], field_name: str) -> list[str]:
     if len(values) != len(set(values)):
@@ -89,6 +100,14 @@ class ResearchTopicInput(BaseModel):
     original_task: str = ""
     constraints: list[str] = Field(default_factory=list)
     context_notes: list[str] = Field(default_factory=list)
+    search_queries: list[TopicQuery] = Field(default_factory=list, max_length=2)
+    read_terms: list[TopicQuery] = Field(default_factory=list, max_length=6)
+    blocked_acquisitions: dict[TopicUrl, TopicErrorCode] = Field(default_factory=dict, max_length=100)
+    source_policy: Literal["general", "research_results"] = "general"
+    source_domains: list[SourceDomain] = Field(default_factory=list, max_length=4)
+    publication_years: list[Annotated[int, Field(strict=True, ge=1900, le=2100)]] = Field(
+        default_factory=list, max_length=3
+    )
     evidence_contract_version: int = Field(default=1, ge=1, le=3)
     requirements: list[ResearchRequirement] = Field(default_factory=list, max_length=6)
     target_requirement_ids: list[
@@ -102,7 +121,7 @@ class ResearchTopicInput(BaseModel):
         default_factory=list, max_length=100
     )
 
-    @field_validator("target_requirement_ids", "authorized_evidence_ids")
+    @field_validator("target_requirement_ids", "authorized_evidence_ids", "search_queries")
     @classmethod
     def unique_context_ids(cls, values: list[str], info: ValidationInfo) -> list[str]:
         return _require_unique(values, info.field_name)

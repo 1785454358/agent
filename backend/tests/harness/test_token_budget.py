@@ -93,3 +93,12 @@ def test_allocation_reports_actual_retained_tokens_and_pinned_overflow() -> None
         TokenBudgetConfig(context_tokens=10, output_reserve_tokens=0, safety_tokens=0),
     )
     assert allocation.included["elastic"] == count_tokens(text)
+def test_allocation_exposes_exact_rendered_segments_without_logging_raw_text():
+    config = TokenBudgetConfig(context_tokens=110, output_reserve_tokens=0, safety_tokens=0)
+    text, allocation = assemble_with_budget([
+        Segment("instructions", "Instructions.\n", SegmentPriority.PINNED),
+        Segment("source_1", "PRIVATE_BODY " * 500, min_tokens=10),
+    ], config)
+    assert allocation.rendered_segments["source_1"] in text
+    assert "source_1" in allocation.truncated
+    assert "PRIVATE_BODY" not in str(allocation.summary())

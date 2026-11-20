@@ -11,6 +11,7 @@ from deeptrace.domain.evidence_anchor import ReadEvidenceAnchor
 from deeptrace.harness.read_anchors import capture_read_anchors
 from deeptrace.tools.evidence_units import split_quote_units
 from deeptrace.tools.evidence_views import EvidencePassage
+from deeptrace.research.observations import ExperimentDraft, resolve_experiments
 
 MAX_READ_REFERENCES = 128
 MAX_RESEARCH_FINDINGS = 20
@@ -24,6 +25,7 @@ class RecordFindingDraft(BaseModel):
         description="1–3 个此前 read_evidence 返回的 n 编号，不能为空；无原文支持的结论不要提交。",
     )
     confidence: float = Field(ge=0, le=1)
+    experiments: list[ExperimentDraft] = Field(default_factory=list, max_length=2)
 
     @field_validator("refs")
     @classmethod
@@ -157,7 +159,7 @@ async def resolve_recorded_findings(arguments, *, task, references, existing, co
     sources = {}
     for draft in arguments.findings:
         supports = []
-        for ref in draft.refs:
+        async def resolve_ref(ref):
             if ref not in references:
                 raise ValueError("invalid_read_reference")
             anchor = ReadEvidenceAnchor.model_validate(references[ref])
@@ -183,11 +185,28 @@ async def resolve_recorded_findings(arguments, *, task, references, existing, co
                 or not 1 <= anchor.end - anchor.start <= 500
             ):
                 raise ValueError("invalid_read_reference_source")
-            supports.append(
-                EvidenceSupport(
-                    **anchor.model_dump(), quote=body[anchor.start : anchor.end]
-                )
+            return EvidenceSupport(
+                **anchor.model_dump(exclude={"queries"}),
+                quote=body[anchor.start : anchor.end],
             )
+        resolved_refs = {}
+        for ref in draft.refs:
+            support = await resolve_ref(ref)
+            resolved_refs[ref] = [support]
+            if support not in supports:
+                supports.append(support)
+        extra_refs = dict.fromkeys(ref for exp in draft.experiments
+            for name in ExperimentDraft.model_fields if (cell := getattr(exp, name)) is not None
+            for ref in cell.refs)
+        for ref in extra_refs:
+            if ref in resolved_refs:
+                continue
+            try:
+                resolved_refs[ref] = [await resolve_ref(ref)]
+            except ValueError:
+                # Optional cells fail independently of the original claim.
+                continue
+        experiments, _ = resolve_experiments(draft.experiments, resolved_refs, supports)
         keys = sorted(
             [s.evidence_id, s.version, s.content_hash, s.start, s.end] for s in supports
         )
@@ -198,6 +217,7 @@ async def resolve_recorded_findings(arguments, *, task, references, existing, co
             task.query,
             draft.claim,
             keys,
+            [experiment.model_dump() for experiment in experiments],
         ]
         digest = hashlib.sha256(
             json.dumps(identity, ensure_ascii=False, separators=(",", ":")).encode()
@@ -208,6 +228,7 @@ async def resolve_recorded_findings(arguments, *, task, references, existing, co
             confidence=draft.confidence,
             evidence_ids=list(dict.fromkeys(s.evidence_id for s in supports)),
             supports=supports,
+            experiments=experiments,
         )
         if finding.id not in {f.id for f in working}:
             working.append(finding)

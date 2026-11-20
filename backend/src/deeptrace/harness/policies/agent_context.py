@@ -5,6 +5,7 @@ import json
 from langchain_core.messages import ToolMessage
 
 from deeptrace.harness.agent_state import topic_input
+from deeptrace.harness.model_context import message_tokens
 from deeptrace.harness.prompts import RESEARCH_SYSTEM_INSTRUCTION, task_messages
 from deeptrace.harness.read_anchors import capture_read_anchors
 from deeptrace.harness.token_budget import TokenBudgetConfig, count_tokens
@@ -54,12 +55,6 @@ def retained_read_previews(state, groups, selected_groups):
                 if len(retained) == 3:
                     return retained
     return retained
-
-
-def message_tokens(messages, tools=()):
-    # Conservative serialization estimate including tool schemas and framing.
-    payload = [m.model_dump(mode="json") for m in messages]
-    return count_tokens(json.dumps([payload, tools], ensure_ascii=False, default=str))
 
 
 def prepare_messages(state, tools, budget: TokenBudgetConfig):

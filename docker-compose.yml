@@ -1,5 +1,6 @@
 x-runtime-environment: &runtime-environment
   DEEPTRACE_RUNTIME_MODE: distributed
+  DEEPTRACE_RESEARCH_ORCHESTRATOR: ${DEEPTRACE_RESEARCH_ORCHESTRATOR:-strategies}
   DEEPTRACE_MYSQL_DSN: mysql+asyncmy://deepresearch:${MYSQL_PASSWORD:-deepresearch}@mysql:3306/deepresearch
   DEEPTRACE_REDIS_URL: redis://redis:6379/0
   DEEPTRACE_REDIS_JOB_STREAM: deeptrace:research:jobs

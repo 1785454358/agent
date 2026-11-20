@@ -3,10 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from langchain_core.messages import AIMessage
-from langgraph.checkpoint.memory import InMemorySaver
-from strategies.fixtures import build_gateway_fixture
-
 from deeptrace.config.settings import Settings
 from deeptrace.domain import ResearchMode, ResearchTopicInput
 from deeptrace.harness.agent_executor import (
@@ -15,6 +11,9 @@ from deeptrace.harness.agent_executor import (
 )
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
 from deeptrace.tools.policy import CallerRole, UrlAuthorizationSource
+from langchain_core.messages import AIMessage
+from langgraph.checkpoint.memory import InMemorySaver
+from strategies.fixtures import build_gateway_fixture
 
 
 class ScriptedModelGateway:
@@ -225,14 +224,14 @@ async def test_fatal_search_error_stops_without_fetching_or_repeating() -> None:
         ],
     ],
 )
-async def test_empty_or_truncated_search_preview_cannot_authorize_a_guessed_url(
+async def test_empty_or_long_search_preview_cannot_authorize_an_unlisted_url(
     results,
 ) -> None:
     fixture = build_gateway_fixture(
         model_gateway=ScriptedModelGateway(
             [
                 _tool_call("search_web", {"query": "q", "limit": 8}, "search"),
-                _fetch_batch("https://example.com/0"),
+                _fetch_batch("https://example.com/guessed"),
             ]
         ),
         default_search_results=results,

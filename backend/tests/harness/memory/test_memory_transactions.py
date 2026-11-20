@@ -38,7 +38,7 @@ async def store(request, tmp_path):
         openai_model="test",
         tavily_api_key="test",
     )
-    _, _, memory, _, engine = _build_durable_stores(settings, tmp_path)
+    _, _, memory, _, engine, _ = _build_durable_stores(settings, tmp_path)
     try:
         yield memory
     finally:

@@ -3,11 +3,14 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, StringConstraints, field_validator
 
 from deeptrace.domain.conversation import ConversationSummary
 from deeptrace.domain.coverage import CoverageAssessment, ResearchRequirement
 from deeptrace.domain.evidence import Finding
+from deeptrace.domain.evidence_anchor import ReadEvidenceAnchor
+from deeptrace.domain.delivery import DeliveryPlan
+from deeptrace.domain.run import FinishReason, normalize_finish_reason
 
 MAX_EXECUTION_ID_LENGTH = 128
 
@@ -30,6 +33,16 @@ class ResearchMode(StrEnum):
     WORKFLOW = "workflow"
     PLAN_EXECUTE = "plan_execute"
     MULTI_AGENT = "multi_agent"
+
+
+ResearchModeSelection = ResearchMode | Literal["auto"]
+
+
+def normalize_mode_selection(value: str | ResearchMode) -> ResearchModeSelection:
+    """Auto selects a concrete strategy later; it is never a tool-budget mode."""
+    if isinstance(value, str) and value.strip().lower() == "auto":
+        return "auto"
+    return normalize_research_mode(value)
 
 
 _LEGACY_MODES = {
@@ -124,6 +137,9 @@ class ResearchInput(BaseModel):
 
 
 class ResearchOutcome(BaseModel):
+    delivery_first: bool = False
+    read_anchors: list[ReadEvidenceAnchor] = Field(default_factory=list, max_length=384)
+    delivery_plan: DeliveryPlan | None = None
     source_eligibility: (
         dict[str, Literal["eligible", "ineligible", "uncertain"]] | None
     ) = Field(default=None, max_length=100)
@@ -134,9 +150,14 @@ class ResearchOutcome(BaseModel):
     mode: ResearchMode
     evidence_ids: list[str] = Field(default_factory=list)
     findings: list[Finding] = Field(default_factory=list)
+    field_checks: list[dict[str,JsonValue]] = Field(default_factory=list,max_length=48)
     unresolved_gaps: list[str] = Field(default_factory=list)
     executed_steps: int = Field(ge=0)
     termination_reason: str = Field(min_length=1)
+
+    @property
+    def finish_reason(self) -> FinishReason:
+        return normalize_finish_reason(self.termination_reason)
 
     @field_validator("evidence_ids")
     @classmethod

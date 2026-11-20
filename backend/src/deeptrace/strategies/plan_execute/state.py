@@ -6,11 +6,14 @@ from typing import Annotated, TypedDict
 
 from deeptrace.domain import CoverageAssessment, ResearchOutcome, ResearchRequirement
 from deeptrace.domain.evidence import Finding
+from deeptrace.domain.delivery import DeliveryPlan
 from deeptrace.domain.research import ResearchTopicOutcome
+from deeptrace.research import VerificationResult
 from deeptrace.strategies.plan_execute.models import (
     ExecutorDecision,
     ReferenceExecutorDecision,
 )
+from deeptrace.strategies.source_reread import SourceReadAction
 
 
 def merge_unique_strings(left: list[str] | None, right: list[str] | None) -> list[str]:
@@ -56,8 +59,13 @@ class PlanExecuteState(TypedDict, total=False):
     requirements: list[ResearchRequirement]
     target_requirement_ids: list[str]
     query_targets: dict[str, list[str]]
+    research_brief: dict[str, object] | None
+    delivery_plan: DeliveryPlan | None
+    delivery_plan_history: list[dict]
+    task_briefs: dict[str, dict[str, str]]
     evidence_contract_version: int
     decomposition_degraded: bool
+    evaluation_snapshot: dict | None
     coverage: CoverageAssessment | None
     source_eligibility: dict[str, str]
     diagnostic_gaps: Annotated[list[str], merge_unique_strings]
@@ -65,6 +73,11 @@ class PlanExecuteState(TypedDict, total=False):
     progress_before_supplement: list[str]
     supplement_completed: bool
     no_progress: bool
+    reread_attempted: bool
+    reread_actions: list[SourceReadAction]
+    reread_queries: Annotated[list[str], merge_unique_strings]
+    recovery_queries: list[str]
+    recovery_read_pending: bool
 
     # Loop state (all persisted at checkpoint boundaries).
     plan_tasks: list[str]
@@ -76,4 +89,5 @@ class PlanExecuteState(TypedDict, total=False):
     evidence_ids: Annotated[list[str], merge_unique_strings]
     findings: list[Finding]
     executed_steps: Annotated[int, add_executed_steps]
+    verification: VerificationResult | None
     outcome: ResearchOutcome | None

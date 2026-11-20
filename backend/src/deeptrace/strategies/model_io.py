@@ -2,16 +2,39 @@
 
 from __future__ import annotations
 
+from typing import TypedDict
+
+from deeptrace.domain import ResearchRequirement
+
 # Public decoding imports are retained for existing consumers, including eval.
 from deeptrace.harness.model_io import parse_json_object, payload_text
 
 __all__ = [
+    "ResearchBranchContext",
     "branch_context",
     "conversation_background_lines",
     "parse_json_object",
     "payload_text",
     "research_messages",
 ]
+
+
+class ResearchBranchContext(TypedDict):
+    """The complete research context carried across a private graph branch."""
+
+    search_queries: list[str]
+    read_terms: list[str]
+    blocked_acquisitions: dict[str, str]
+    source_policy: str
+    source_domains: list[str]
+    publication_years: list[int]
+    original_task: str
+    constraints: list[str]
+    context_notes: list[str]
+    requirements: list[ResearchRequirement]
+    evidence_contract_version: int
+    target_requirement_ids: list[str]
+    research_gaps: list[str]
 
 
 def conversation_background_lines(research_input) -> list[str]:
@@ -26,17 +49,31 @@ def conversation_background_lines(research_input) -> list[str]:
     return lines
 
 
-def branch_context(state):
+def branch_context(state) -> ResearchBranchContext:
     """Carry the original task and all current constraints into every branch."""
     summary = state.get("conversation_summary") or {}
     if hasattr(summary, "model_dump"):
         summary = summary.model_dump()
+    from deeptrace.strategies.planning import planning_context_notes
+    from deeptrace.strategies.acquisition_recovery import blocked_acquisitions
+
+    brief = state.get("research_brief") or {}
+    task_brief = (state.get("task_briefs") or {}).get(
+        state.get("query") or state.get("current_task")
+    ) or {}
     return {
+        "blocked_acquisitions": blocked_acquisitions(state),
+        "read_terms": list(task_brief.get("read_terms", state.get("read_terms", [])) or []),
+        "search_queries": list(task_brief.get("search_queries", state.get("search_queries", [])) or []),
+        "source_policy": brief.get("source_policy", state.get("source_policy", "general")),
+        "source_domains": list(brief.get("source_domains", state.get("source_domains", [])) or []),
+        "publication_years": list(brief.get("publication_years", state.get("publication_years", [])) or []),
         "original_task": state.get("question") or state.get("original_task", ""),
         "constraints": list(
             summary.get("user_constraints") or state.get("constraints") or []
         ),
         "context_notes": list(state.get("context_notes") or [])
+        + planning_context_notes(state, state.get("query") or state.get("current_task"))
         + list(summary.get("established_facts") or [])
         + list(state.get("recent_messages") or []),
         "requirements": list(state.get("requirements") or [])[:6],
@@ -72,11 +109,13 @@ def parent_evidence_candidates(state):
     )[:100]
 
 
-def research_messages(research_input, prompt):
+def research_messages(
+    research_input, prompt, *, instruction="按当前研究阶段完成规划或评估，遵守用户约束与输出契约。"
+):
     from deeptrace.harness.prompts import task_messages
 
     return task_messages(
-        instruction="按当前研究阶段完成规划或评估，遵守用户约束与输出契约。",
+        instruction=instruction,
         task=research_input.question,
         constraints=research_input.conversation_summary.user_constraints,
         prompt=prompt,

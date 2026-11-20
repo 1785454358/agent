@@ -69,14 +69,14 @@ def test_finding_rejects_support_for_an_unlisted_source():
         )
 
 
-def test_finding_cannot_carry_more_than_three_supports():
+def test_finding_cannot_exceed_visible_quote_capacity():
     with pytest.raises(ValidationError):
         Finding(
             id="f1",
             claim="fact",
             evidence_ids=["e-1"],
             confidence=0.9,
-            supports=[_support()] * 4,
+            supports=[_support()] * 129,
         )
 
 

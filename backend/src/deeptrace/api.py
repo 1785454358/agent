@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, field_validator
 from redis.asyncio import Redis
 
 from deeptrace.config import Settings
-from deeptrace.domain import normalize_research_mode
+from deeptrace.domain.execution import normalize_mode_selection
 from deeptrace.persistence.database import create_session_factory
 from deeptrace.persistence.repository import SqlAlchemyRunRepository
 from deeptrace.queue.redis_streams import RedisResearchBroker
@@ -34,14 +34,14 @@ class ResearchRequest(BaseModel):
     """
 
     question: str = Field(min_length=1)
-    mode: str = "workflow"
+    mode: str = "auto"
     thread_id: str | None = Field(default=None, max_length=128)
 
     @field_validator("mode")
     @classmethod
     def normalize_mode(cls, value: str) -> str:
-        """Canonical values pass through; legacy aliases normalize at the boundary."""
-        return normalize_research_mode(value).value
+        """Accept automatic selection and normalize explicit legacy aliases."""
+        return str(normalize_mode_selection(value))
 
 
 class BatchDeleteRequest(BaseModel):
@@ -52,6 +52,7 @@ class BatchDeleteRequest(BaseModel):
 
 def _record_to_response(record: RunRecord) -> dict[str, Any]:
     data = record.model_dump(mode="json")
+    data.update(record.routing_metadata())
     data["events"] = record.events[-200:]
     return data
 
@@ -85,6 +86,7 @@ def _build_runtime(
                 runs_dir or "runs",
                 application=bundle.service,
                 context_factory=bundle.context_factory,
+                release_run=bundle.release_run,
             ),
             bundle.aclose,
         )

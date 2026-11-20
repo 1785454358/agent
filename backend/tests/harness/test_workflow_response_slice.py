@@ -18,7 +18,7 @@ from deeptrace.application.research import (
     ResearchApplicationService,
 )
 from deeptrace.domain import ExecutionStatus, ResearchMode, ResponseMode
-from deeptrace.harness.agent_executor import build_research_agent_graph
+from deeptrace.harness.batch_research import build_batch_research_graph as build_research_agent_graph
 from deeptrace.harness.checkpoint import create_harness_checkpoint_serializer
 from deeptrace.harness.graph import build_agent_runtime_graph
 from deeptrace.harness.registry import (
@@ -130,7 +130,7 @@ async def test_default_request_returns_a_concise_cited_answer() -> None:
     )
     # real typed tool calls happened through the gateway
     tool_sequence = [call["request"].tool.value for call in fixture.gateway.calls]
-    assert tool_sequence == ["search_web", "fetch_page"]
+    assert tool_sequence == ["search_web", "fetch_page", "read_evidence"]
     assert turn["research_outcome"].executed_steps >= 3
 
     snapshot = await graph.aget_state({"configurable": {"thread_id": "thread-1"}})
@@ -154,7 +154,7 @@ async def test_default_request_returns_a_concise_cited_answer() -> None:
         item.config["configurable"].get("checkpoint_ns") for item in checkpoints
     }
     assert any(ns and ns.startswith("workflow") for ns in namespaces)
-    assert any("research_topic" in ns for ns in namespaces)
+    assert any("execute_task" in ns for ns in namespaces)
     assert any(ns and ns.startswith("answer") for ns in namespaces)
 
 
@@ -255,14 +255,7 @@ async def test_plan_execute_mode_routes_through_application_service() -> None:
     assert outcome.response_outcome.response_mode is ResponseMode.ANSWER
     assert outcome.response_outcome.partial_reason is None
     roles = [role for role, _ in model.calls]
-    assert roles == [
-        "planner",
-        "researcher",
-        "researcher",
-        "researcher",
-        "evaluator",
-        "responder",
-    ]
+    assert roles == ["planner", "responder"]
 
 
 @pytest.mark.asyncio
@@ -600,7 +593,7 @@ async def test_research_recalls_memories_and_consolidates_findings() -> None:
     facts = await fixture.memory_store.list_namespace(
         ("workspace", "workspace-1", "facts")
     )
-    assert facts, "findings should consolidate into workspace facts"
+    assert facts == [], "raw reads are not promoted to verified workspace facts"
 
 
 @pytest.mark.asyncio
@@ -697,8 +690,8 @@ async def test_harness_uses_semantic_retriever_and_indexes_consolidated_memory()
         ("workspace", "workspace-1", "facts"),
     ]
     assert retriever.recall_calls[0]["limit"] == 2
-    assert any(record.type is MemoryType.FACT for record in retriever.indexed)
-    assert retriever.index_calls == 1
+    assert not any(record.type is MemoryType.FACT for record in retriever.indexed)
+    assert retriever.index_calls == 0
 
 
 @pytest.mark.asyncio

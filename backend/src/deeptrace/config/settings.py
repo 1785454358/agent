@@ -140,6 +140,9 @@ class Settings:
     max_model_calls: int = 20
     max_input_tokens: int = 100_000
     research_max_seconds: float = 600.0
+    response_fact_review: bool = True
+    research_completion_scope: str = "decomposed"
+    research_orchestrator: str = "strategies"
     input_cost_per_million: Decimal | None = None
     output_cost_per_million: Decimal | None = None
     openai_max_tokens: int | None = None
@@ -193,6 +196,9 @@ class Settings:
             ),
             tavily_api_key=_required("TAVILY_API_KEY"),
             runtime_mode=runtime_mode,
+            research_orchestrator=_choice(
+                "DEEPTRACE_RESEARCH_ORCHESTRATOR", "strategies", {"strategies", "legacy", "controller"}
+            ),
             mysql_dsn=mysql_dsn,
             redis_url=redis_url,
             redis_job_stream=os.getenv(
@@ -291,6 +297,11 @@ class Settings:
             max_model_calls=_bounded_int("DEEPTRACE_MAX_MODEL_CALLS", 20, 3, 100),
             max_input_tokens=_bounded_int("DEEPTRACE_MAX_INPUT_TOKENS", 100_000, 10_000, 2_000_000),
             research_max_seconds=_bounded_float("DEEPTRACE_RESEARCH_MAX_SECONDS", 600, 1, 3600),
+            response_fact_review=_boolean("DEEPTRACE_RESPONSE_FACT_REVIEW", True),
+            research_completion_scope=_choice(
+                "DEEPTRACE_RESEARCH_COMPLETION_SCOPE", "decomposed",
+                {"decomposed", "scope_review"},
+            ),
             input_cost_per_million=input_cost,
             output_cost_per_million=output_cost,
             openai_max_tokens=_optional_int("OPENAI_MAX_TOKENS"),

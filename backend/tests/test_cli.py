@@ -18,12 +18,12 @@ def test_cli_can_select_multi_agent_research():
 from deeptrace.models import RunEvent
 
 
-def test_parser_defaults_to_workflow_and_normalizes_legacy_names() -> None:
+def test_parser_defaults_to_automatic_routing() -> None:
     parser = _parser()
     args = parser.parse_args(["研究问题"])
 
     assert args.question == "研究问题"
-    assert args.mode == "workflow"
+    assert args.mode == "auto"
 
 
 def test_event_formatter_prints_message_only(capsys) -> None:

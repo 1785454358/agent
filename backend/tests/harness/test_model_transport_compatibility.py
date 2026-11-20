@@ -5,12 +5,7 @@ import asyncio
 import httpx
 import pytest
 from deeptrace.domain import ErrorCategory
-from deeptrace.eval.telemetry import (
-    MeteredChatModel,
-    ModelTelemetry,
-    RequestCounter,
-    RequestLimitReached,
-)
+from deeptrace.harness.model_budget import ModelBudgetExceeded
 from deeptrace.harness.model_gateway import ChatModelGateway, ModelCallError
 from deeptrace.harness.prompts import task_messages
 from langchain_core.messages import AIMessage
@@ -98,7 +93,7 @@ async def test_authentication_and_invalid_requests_remain_fatal(error_type, stat
 
 @pytest.mark.asyncio
 async def test_budget_sentinel_is_not_retried():
-    provider = Provider(RequestLimitReached(), AIMessage(content="must not run"))
+    provider = Provider(ModelBudgetExceeded("calls"), AIMessage(content="must not run"))
 
     with pytest.raises(ModelCallError) as caught:
         await ChatModelGateway(provider, retry_base_seconds=0).invoke(
@@ -119,55 +114,3 @@ async def test_cancellation_is_propagated_without_retry():
         )
 
     assert provider.calls == 1
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("error_type", TRANSPORT_ERRORS)
-async def test_wrapper_retry_spends_both_provider_attempts(error_type):
-    provider = Provider(
-        error_type(request=REQUEST),
-        AIMessage(
-            content="recovered",
-            usage_metadata={"input_tokens": 7, "output_tokens": 3, "total_tokens": 10},
-        ),
-    )
-    meter = ModelTelemetry()
-    run_counter, batch_counter = RequestCounter(2), RequestCounter(2)
-    wrapped = MeteredChatModel(provider, meter, run_counter, batch_counter)
-
-    response = await ChatModelGateway(wrapped, retry_base_seconds=0).invoke(
-        role="researcher", messages=MESSAGES
-    )
-
-    assert response.content == "recovered"
-    assert run_counter.used == batch_counter.used == 2
-    summary = meter.snapshot()
-    assert summary["provider_attempts"] == 2
-    assert summary["missing_usage_attempts"] == 1
-    assert summary["observed_input_tokens"] == 7
-    assert summary["observed_output_tokens"] == 3
-    assert summary["input_tokens"] is None
-    assert summary["output_tokens"] is None
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("error_type", TRANSPORT_ERRORS)
-@pytest.mark.parametrize("limited_scope", ["run", "batch"])
-async def test_wrapper_retry_cannot_bypass_provider_ceiling(error_type, limited_scope):
-    provider = Provider(error_type(request=REQUEST), AIMessage(content="must not run"))
-    meter = ModelTelemetry()
-    run_counter = RequestCounter(1 if limited_scope == "run" else 2)
-    batch_counter = RequestCounter(1 if limited_scope == "batch" else 2)
-    wrapped = MeteredChatModel(provider, meter, run_counter, batch_counter)
-
-    with pytest.raises(ModelCallError) as caught:
-        await ChatModelGateway(wrapped, retry_base_seconds=0).invoke(
-            role="researcher", messages=MESSAGES
-        )
-
-    assert caught.value.category == ErrorCategory.FATAL
-    assert isinstance(caught.value.__cause__, RequestLimitReached)
-    assert provider.calls == 1
-    assert run_counter.used == batch_counter.used == 1
-    assert meter.snapshot()["provider_attempts"] == 1
-    assert meter.snapshot()["missing_usage_attempts"] == 1

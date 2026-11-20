@@ -17,6 +17,7 @@ from strategies.fixtures import (
 
 from deeptrace.domain import ResearchMode, ResponseMode
 from deeptrace.harness.agent_executor import build_research_agent_graph
+from deeptrace.harness.batch_research import build_batch_research_graph
 from deeptrace.harness.graph import build_agent_runtime_graph
 from deeptrace.harness.registry import (
     ResponseGraphRegistry,
@@ -49,7 +50,7 @@ class CrashOnceModelGateway:
     async def invoke(self, *, role: str, messages: list[Any], tools=None) -> Any:
         self.calls.append(role)
         if role == self._crash_role and self.calls.count(role) == 1:
-            raise CrashError("worker crashed")
+            raise asyncio.CancelledError("worker crashed")
         if role == "researcher":
             return scripted_research_response(messages, tools)
         return self._responses[role](str(messages[-1].content))
@@ -85,7 +86,7 @@ def _evaluation(prompt: str) -> str:
 
 
 def _registries(topic_proxy=None, response_proxy=None):
-    topic_graph = build_research_agent_graph()
+    topic_graph = build_batch_research_graph()
     if topic_proxy is not None:
         topic_graph = topic_proxy
     strategies = StrategyRegistry()
@@ -198,11 +199,11 @@ async def test_crash_during_planning_resumes_without_repeating_tools(tmp_path) -
         search_results={
             "研究问题": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}]
         },
-        pages={"https://example.com/a": "recovery-body-a"},
+        pages={"https://example.com/a": "研究问题 recovery-body-a"},
         model_gateway=model,
         execution_store=ledger,
     )
-    crashing_topic = CrashProxy(build_research_agent_graph(), after_completion=False)
+    crashing_topic = build_batch_research_graph()
     strategies, responses = _registries(topic_proxy=crashing_topic)
     graph = build_agent_runtime_graph(strategies, responses, checkpointer=saver)
     initial = {
@@ -222,6 +223,7 @@ async def test_crash_during_planning_resumes_without_repeating_tools(tmp_path) -
     assert [call["request"].tool.value for call in fixture.gateway.calls] == [
         "search_web",
         "fetch_page",
+        "read_evidence",
     ]
     assert fixture.search.calls == ["研究问题"]
     assert fixture.fetcher.calls == ["https://example.com/a"]
@@ -258,11 +260,11 @@ async def test_crash_after_research_completion_reuses_subgraph_checkpoint(
         search_results={
             "研究问题": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}]
         },
-        pages={"https://example.com/a": "recovery-body-b"},
+        pages={"https://example.com/a": "研究问题 recovery-body-b"},
         model_gateway=model,
         execution_store=ledger,
     )
-    crashing_topic = CrashProxy(build_research_agent_graph(), after_completion=True)
+    crashing_topic = CrashProxy(build_batch_research_graph(), after_completion=True)
     strategies, responses = _registries(topic_proxy=crashing_topic)
     graph = build_agent_runtime_graph(strategies, responses, checkpointer=saver)
     initial = {
@@ -284,7 +286,7 @@ async def test_crash_after_research_completion_reuses_subgraph_checkpoint(
     assert crashing_topic.calls == 2
     assert fixture.search.calls == ["研究问题"]
     assert fixture.fetcher.calls == ["https://example.com/a"]
-    assert len(fixture.gateway.calls) == 2
+    assert len(fixture.gateway.calls) == 3
 
 
 @pytest.mark.asyncio
@@ -303,7 +305,7 @@ async def test_crash_after_memory_commit_does_not_duplicate_facts(tmp_path) -> N
         search_results={
             "研究问题": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}]
         },
-        pages={"https://example.com/a": "recovery-body-c"},
+        pages={"https://example.com/a": "研究问题 recovery-body-c"},
         model_gateway=model,
         execution_store=ledger,
     )
@@ -315,7 +317,7 @@ async def test_crash_after_memory_commit_does_not_duplicate_facts(tmp_path) -> N
     }
     config = {"configurable": {"thread_id": "thread-1"}}
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(NodeCancelledError):
         await graph.ainvoke(initial, config=config, context=fixture.context)
 
     result = await graph.ainvoke(None, config=config, context=fixture.context)
@@ -325,7 +327,7 @@ async def test_crash_after_memory_commit_does_not_duplicate_facts(tmp_path) -> N
     facts = await fixture.memory_store.list_namespace(
         ("workspace", "workspace-1", "facts")
     )
-    assert len(facts) == 1
+    assert len(facts) == 0  # Raw reads do not create verified memory facts.
     assert fixture.fetcher.calls == ["https://example.com/a"]
 
 
@@ -413,11 +415,11 @@ async def test_service_resumes_an_interrupted_run_for_the_same_identity(
         search_results={
             "研究问题": [{"url": "https://example.com/a", "title": "A", "snippet": "s"}]
         },
-        pages={"https://example.com/a": "service-resume-body"},
+        pages={"https://example.com/a": "研究问题 service-resume-body"},
         model_gateway=model,
         execution_store=ledger,
     )
-    crashing_topic = CrashProxy(build_research_agent_graph(), after_completion=False)
+    crashing_topic = CrashProxy(build_batch_research_graph(), after_completion=False)
     strategies, responses = _registries(topic_proxy=crashing_topic)
     graph = build_agent_runtime_graph(strategies, responses, checkpointer=saver)
     service = ResearchApplicationService(graph)

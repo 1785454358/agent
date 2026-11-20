@@ -15,6 +15,7 @@ function hostOf(url: string): string {
 
 /** 来源编号列表 + 未解决缺口提示。 */
 export function Sources({ sources, unresolvedGaps }: SourcesProps) {
+  const researchGaps = unresolvedGaps.filter((gap) => !gap.startsWith("diagnostic:"));
   return (
     <section className="sources-block">
       <div className="section-head">
@@ -39,11 +40,11 @@ export function Sources({ sources, unresolvedGaps }: SourcesProps) {
           ))}
         </ol>
       )}
-      {unresolvedGaps.length > 0 && (
+      {researchGaps.length > 0 && (
         <div className="gaps">
           <div className="gaps-label">未解决的研究缺口</div>
           <ul>
-            {unresolvedGaps.map((gap, index) => (
+            {researchGaps.map((gap, index) => (
               <li key={index}>{gap}</li>
             ))}
           </ul>

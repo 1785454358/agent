@@ -9,6 +9,7 @@ from typing import Any, Protocol
 from urllib.parse import urlsplit, urlunsplit
 
 from deeptrace.domain import ResearchMode, ResponseMode, ToolName
+from deeptrace.domain.tools import CustomToolName
 from deeptrace.tools.contracts import ToolCapability, ToolSpec
 from deeptrace.tools.registry import ToolRegistry
 from deeptrace.tools.scraper.urls import normalize_url_before_fetch, validate_public_url
@@ -19,6 +20,7 @@ _NON_PUBLIC_SUFFIXES = (".internal", ".lan", ".local", ".localhost", ".home")
 
 
 class CallerRole(StrEnum):
+    AGENT = 'agent'
     WORKFLOW_GRAPH = "workflow_graph"
     PLAN_EXECUTE_EXECUTOR = "plan_execute_executor"
     MULTI_AGENT_RESEARCHER = "multi_agent_researcher"
@@ -75,7 +77,7 @@ class ToolAllowlistPolicy(Protocol):
         self,
         registry: ToolRegistry,
         caller: ToolCaller,
-        tool: ToolName,
+        tool: ToolName | CustomToolName,
     ) -> ToolSpec: ...
 
 
@@ -88,6 +90,7 @@ class EvidenceAuthorization:
 
 
 _ALLOWED_CAPABILITIES: dict[CallerRole, frozenset[ToolCapability]] = {
+    CallerRole.AGENT: frozenset(),
     CallerRole.WORKFLOW_GRAPH: frozenset(
         {
             ToolCapability.WEB_SEARCH,
@@ -121,16 +124,23 @@ _ALLOWED_CAPABILITIES: dict[CallerRole, frozenset[ToolCapability]] = {
 
 
 class StaticToolAllowlist:
+    def __init__(self, *, extra_capabilities: Mapping[CallerRole, set[ToolCapability]] | None = None):
+        self._capabilities = dict(_ALLOWED_CAPABILITIES)
+        for role, capabilities in (extra_capabilities or {}).items():
+            if not isinstance(role, CallerRole) or any(not isinstance(c, ToolCapability) for c in capabilities):
+                raise TypeError('Host grants require CallerRole and ToolCapability')
+            self._capabilities[role] = self._capabilities[role] | frozenset(capabilities)
+
     def resolve(
         self,
         registry: ToolRegistry,
         caller: ToolCaller,
-        tool: ToolName,
+        tool: ToolName | CustomToolName,
     ) -> ToolSpec:
         if not isinstance(caller, ToolCaller):
             raise TypeError("caller must be a ToolCaller")
         spec = registry.resolve(tool)
-        if spec.capability not in _ALLOWED_CAPABILITIES[caller.role]:
+        if spec.capability not in self._capabilities[caller.role]:
             raise PermissionError(
                 f"caller is not allowed to use capability: {spec.capability.value}"
             )
@@ -161,7 +171,7 @@ class UrlAuthorization:
 class UrlSecurityPolicy(Protocol):
     def validate(
         self,
-        tool: ToolName,
+        tool: ToolName | CustomToolName,
         arguments: Mapping[str, Any],
         authorization: UrlAuthorization | None,
     ) -> dict[str, Any]: ...
@@ -170,12 +180,12 @@ class UrlSecurityPolicy(Protocol):
 class DeterministicUrlSecurityPolicy:
     def validate(
         self,
-        tool: ToolName,
+        tool: ToolName | CustomToolName,
         arguments: Mapping[str, Any],
         authorization: UrlAuthorization | None,
     ) -> dict[str, Any]:
-        if not isinstance(tool, ToolName):
-            raise TypeError("tool must be a ToolName")
+        if not isinstance(tool, (ToolName, CustomToolName)):
+            raise TypeError("tool must be a ToolName or CustomToolName")
         copied = dict(arguments)
         if tool is not ToolName.FETCH_PAGE:
             return copied

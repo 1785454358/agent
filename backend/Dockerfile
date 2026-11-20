@@ -23,7 +23,7 @@ COPY backend/src ./src
 COPY backend/alembic.ini ./
 COPY backend/alembic ./alembic
 COPY backend/tests ./tests
-COPY backend/evaluation ./evaluation
+COPY backend/scripts ./scripts
 COPY backend/Dockerfile ./Dockerfile
 COPY docker-compose.yml /docker-compose.yml
 RUN --mount=type=cache,target=/root/.cache/uv UV_LINK_MODE=copy uv sync --frozen

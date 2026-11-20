@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
+
 import asyncio
+from copy import copy
 import hashlib
 import logging
 from time import perf_counter
@@ -42,6 +45,8 @@ from deeptrace.tools.policy import (
     UrlSecurityPolicy,
 )
 from deeptrace.tools.registry import ToolRegistry
+from langsmith import traceable
+from deeptrace.observability.langsmith import tool_inputs, tool_outputs, annotate_tool_result
 
 
 class EventSink(Protocol):
@@ -86,8 +91,26 @@ class AgentToolGateway:
         self._retry_attempts = retry_attempts
         self._retry_base_seconds = float(retry_base_seconds)
         self._logger = logging.getLogger(__name__)
+        self._source_scope_ids: frozenset[str] | None = None
 
-    async def execute(
+    def with_source_scope(self, evidence_ids: frozenset[str]) -> AgentToolGateway:
+        """Bind a narrower host grant while sharing the run's budgets and ledger."""
+        if not isinstance(evidence_ids, frozenset) or any(
+            not isinstance(identity, str) or not identity.strip() for identity in evidence_ids
+        ):
+            raise TypeError("source scope requires a frozenset of evidence ids")
+        if self._source_scope_ids is not None and not evidence_ids <= self._source_scope_ids:
+            raise PermissionError("source scope cannot be widened")
+        scoped = copy(self)
+        scoped._source_scope_ids = evidence_ids
+        return scoped
+
+    @traceable(name="tool.execute", run_type="tool", process_inputs=tool_inputs,
+               process_outputs=tool_outputs)
+    async def execute(self, **kwargs) -> ToolResult:
+        return annotate_tool_result(await self._execute(**kwargs))
+
+    async def _execute(
         self,
         *,
         tenant_id: str,
@@ -105,17 +128,26 @@ class AgentToolGateway:
         tenant = _require_text("tenant_id", tenant_id)
         provider = _require_text("provider_id", provider_id)
 
+        if self._source_scope_ids is not None:
+            if request.tool != ToolName.READ_EVIDENCE:
+                return await self._reject(caller, _failure(request, "tool_not_allowed"))
+            evidence_id = request.arguments.get("evidence_id")
+            if not isinstance(evidence_id, str):
+                return await self._reject(caller, _failure(request, "invalid_arguments"))
+            if evidence_id not in self._source_scope_ids:
+                return await self._reject(caller, _failure(request, "evidence_not_authorized"))
+
         try:
             spec = self._allowlist.resolve(self._registry, caller, request.tool)
         except KeyError:
-            return _failure(request, "tool_not_registered")
+            return await self._reject(caller, _failure(request, "tool_not_registered"))
         except PermissionError:
-            return _failure(request, "tool_not_allowed")
+            return await self._reject(caller, _failure(request, "tool_not_allowed"))
 
         try:
             arguments = spec.argument_model.model_validate(request.arguments)
         except ValidationError:
-            return _failure(request, "invalid_arguments")
+            return await self._reject(caller, _failure(request, "invalid_arguments"))
 
         try:
             secured = self._security.validate(
@@ -125,16 +157,16 @@ class AgentToolGateway:
             )
             arguments = spec.argument_model.model_validate(secured)
         except PermissionError:
-            return _failure(request, "url_not_authorized")
+            return await self._reject(caller, _failure(request, "url_not_authorized"))
         except (TypeError, ValueError, ValidationError):
-            return _failure(request, "unsafe_arguments")
+            return await self._reject(caller, _failure(request, "unsafe_arguments"))
 
         call_context = ToolCallContext(
             tenant, request.run_id, request.thread_id, caller, evidence_authorization
         )
         denied = await self._preflight(spec, arguments, call_context, request)
         if denied is not None:
-            return denied
+            return await self._reject(caller, denied)
 
         claim = await self._executions.claim(
             tenant,
@@ -144,7 +176,7 @@ class AgentToolGateway:
         )
         if claim.disposition is ClaimDisposition.REPLAY:
             assert claim.result is not None
-            return claim.result.model_copy(update={"replayed": True}, deep=True)
+            return await self._replay(caller, claim.result)
         if claim.disposition is ClaimDisposition.FOLLOWER:
             try:
                 result = await self._executions.wait(claim)
@@ -152,8 +184,8 @@ class AgentToolGateway:
                 return _failure(request, "execution_abandoned")
             denied = await self._preflight(spec, arguments, call_context, request)
             if denied is not None:
-                return denied
-            return result.model_copy(update={"replayed": True}, deep=True)
+                return await self._reject(caller, denied)
+            return await self._replay(caller, result)
 
         scope = _budget_scope(request, caller)
         requested_units = _budget_units(spec.capability)
@@ -161,7 +193,7 @@ class AgentToolGateway:
         if reservation is None:
             result = _failure(request, "budget_exhausted")
             await self._executions.complete(claim, result, consumed=BudgetUnits())
-            return result
+            return await self._reject(caller, result)
 
         started_at = perf_counter()
         try:
@@ -212,6 +244,22 @@ class AgentToolGateway:
             result = _failure(request, "tool_internal_error")
             await self._executions.complete(claim, result, consumed=BudgetUnits())
             return result
+
+    async def _reject(self, caller: ToolCaller, result: ToolResult) -> ToolResult:
+        # Build from the sanitized result, never from rejected arguments.
+        await self._emit_event("tool.rejected", {
+            **_event_payload(caller, result), "ok": False,
+            "error_code": result.error_code,
+        })
+        return result
+
+    async def _replay(self, caller: ToolCaller, result: ToolResult) -> ToolResult:
+        result = result.model_copy(update={"replayed": True}, deep=True)
+        await self._emit_event("tool.replayed", {
+            **_event_payload(caller, result), "ok": result.ok,
+            "error_code": result.error_code, "replayed": True,
+        })
+        return result
 
     async def _preflight(
         self,
@@ -268,7 +316,14 @@ class AgentToolGateway:
             await asyncio.sleep(self._retry_base_seconds * (2 ** (attempt - 1)))
         return result
 
+    @traceable(name="tool.provider_attempt", run_type="tool", process_inputs=tool_inputs, process_outputs=tool_outputs)
     async def _invoke_once(
+        self, context: ToolCallContext, request: ToolRequest,
+        spec: ToolSpec, arguments: BaseModel,
+    ) -> ToolResult:
+        return annotate_tool_result(await self._invoke_provider(context, request, spec, arguments))
+
+    async def _invoke_provider(
         self,
         context: ToolCallContext,
         request: ToolRequest,
@@ -406,6 +461,8 @@ def _cache_key(
     elif spec.name is ToolName.FETCH_PAGE:
         url = values["url"]
         version = values.get("content_version")
+        if values.get("page_start") is not None:
+            version = json.dumps([version, "pdf_pages", values["page_start"], values["page_end"]])
         base_key = page_cache_key(url, content_version=version)
     else:
         return None

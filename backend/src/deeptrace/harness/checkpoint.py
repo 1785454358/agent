@@ -1,4 +1,6 @@
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+from langgraph.types import Overwrite
+from deeptrace.domain.delivery import DeliveryPlan, EvidenceNeed
 
 from deeptrace.domain import (
     BudgetSnapshot,
@@ -29,8 +31,33 @@ from deeptrace.domain import (
     TopicStepError,
 )
 from deeptrace.domain.agent import AgentOutcome
+from deeptrace.domain.tools import CustomToolName
 from deeptrace.domain.evidence_anchor import ReadEvidenceAnchor
 from deeptrace.harness.agent_state import AgentTodo, TodoStatus
+from deeptrace.research import (
+    Claim,
+    ClaimStatus,
+    ContractBudget,
+    ControllerDecision,
+    EvidenceGraph,
+    EvidenceSource,
+    EvidenceSpan,
+    ExecutionMode,
+    ExecutionShape,
+    PlanIssue,
+    PlanIssueSeverity,
+    PlanReview,
+    PlanTask,
+    ResearchAmbiguity,
+    ResearchContract,
+    ResearchPlan,
+    SourcePolicy,
+    TaskBudget,
+    TaskRunStatus,
+    TaskType,
+    VerificationAction,
+    VerificationResult,
+)
 from deeptrace.responses.models import ResponseDraft
 from deeptrace.strategies.evidence_evaluation import FindingDraft, SupportDraft
 from deeptrace.strategies.evidence_references import (
@@ -53,6 +80,10 @@ from deeptrace.strategies.workflow.models import (
 )
 
 HARNESS_STATE_MSGPACK_TYPES = (
+    DeliveryPlan,
+    EvidenceNeed,
+    Overwrite,
+    CustomToolName,
     ReferenceSupportDraft,
     ReferenceFindingDraft,
     ReferenceSupervisorEvaluation,
@@ -96,7 +127,44 @@ HARNESS_STATE_MSGPACK_TYPES = (
     ToolResult,
     Evidence,
     EvidenceLifecycleStatus,
+    Claim,
+    ClaimStatus,
+    ContractBudget,
+    ControllerDecision,
+    EvidenceGraph,
+    EvidenceSource,
+    EvidenceSpan,
+    ExecutionMode,
+    ExecutionShape,
+    PlanIssue,
+    PlanIssueSeverity,
+    PlanReview,
+    PlanTask,
+    ResearchAmbiguity,
+    ResearchContract,
+    ResearchPlan,
+    SourcePolicy,
+    TaskBudget,
+    TaskRunStatus,
+    TaskType,
+    VerificationAction,
+    VerificationResult,
 )
+
+
+def subgraph_config(config):
+    """Forward checkpoint coordinates without requesting replay at a null ID.
+
+    Parent task configs include checkpoint_id=None. The installed runtime treats
+    presence of that key as explicit replay, which reruns successful pending
+    writes. Real checkpoint IDs (intentional time travel) remain unchanged.
+    """
+    if config is None:
+        return None
+    configurable = dict(config.get("configurable") or {})
+    if configurable.get("checkpoint_id") is None:
+        configurable.pop("checkpoint_id", None)
+    return {**config, "configurable": configurable}
 
 
 def create_harness_checkpoint_serializer() -> JsonPlusSerializer:

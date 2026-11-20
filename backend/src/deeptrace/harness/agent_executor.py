@@ -8,7 +8,6 @@ import logging
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage
-from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.runtime import Runtime
 
@@ -20,6 +19,7 @@ from deeptrace.harness.agent_tools import (
     execute_batch,
 )
 from deeptrace.harness.context import HarnessContext
+from deeptrace.harness.loop import LoopNodes, build_tool_call_loop
 from deeptrace.harness.policies.agent_context import (
     ContextLimitError,
     message_tokens,
@@ -183,16 +183,6 @@ def build_research_agent_graph(
         finished = last is not None and last.type == "ai" and not last.tool_calls
         return {"stop_reason": policy.stop(state, model_finished=finished)}
 
-    def route_model(state):
-        if state.get("stop_reason"):
-            return "finalize"
-        return "execute_tools" if state["messages"][-1].tool_calls else "observe"
-
-    def route_observation(state):
-        if state.get("stop_reason"):
-            return "finalize"
-        return "nudge" if state["messages"][-1].type == "ai" else "prepare_context"
-
     def nudge(state):
         remaining = [
             t.content
@@ -228,26 +218,8 @@ def build_research_agent_graph(
             )
         }
 
-    builder = StateGraph(AgentExecutorState, context_schema=HarnessContext)
-    for name, node in [
-        ("prepare_context", prepare_context),
-        ("call_model", call_model),
-        ("execute_tools", execute_tools),
-        ("observe", observe),
-        ("nudge", nudge),
-        ("finalize", finalize),
-    ]:
-        builder.add_node(name, node)
-    builder.add_edge(START, "prepare_context")
-    builder.add_conditional_edges(
-        "prepare_context",
-        lambda s: "finalize" if s.get("stop_reason") else "call_model",
-    )
-    builder.add_conditional_edges("call_model", route_model)
-    builder.add_edge("execute_tools", "observe")
-    builder.add_conditional_edges("observe", route_observation)
-    builder.add_edge("nudge", "prepare_context")
-    builder.add_edge("finalize", END)
-    return builder.compile(checkpointer=checkpointer).with_config(
-        {"recursion_limit": max_iterations * 5 + 10}
+    return build_tool_call_loop(
+        state_schema=AgentExecutorState, context_schema=HarnessContext,
+        nodes=LoopNodes(prepare_context, call_model, execute_tools, observe, nudge, finalize),
+        max_iterations=max_iterations, checkpointer=checkpointer,
     )

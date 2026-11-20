@@ -8,7 +8,11 @@ from typing import Any
 from deeptrace.application.research import ApplicationResearchRequest
 from deeptrace.config import Settings
 from deeptrace.models import AgentResult, RunEvent, TokenUsage, UsageBreakdown
-from deeptrace.observability.messages import humanize_event_message, public_event_details
+from deeptrace.observability.messages import (
+    humanize_event_message,
+    public_event_details,
+)
+from deeptrace.observability.model_metrics import run_usage_payload
 from deeptrace.runtime.models import RunRecord
 
 
@@ -67,35 +71,50 @@ class HarnessResearchRunner:
             except Exception:  # noqa: BLE001 - observers cannot abort execution
                 return
 
-        context = bundle.context_factory(run.id, on_harness_event)
-        emit("run.started", "研究任务已进入统一运行图")
-        outcome = await bundle.service.invoke(
-            ApplicationResearchRequest(
-                run_id=run.id,
-                thread_id=thread_id,
-                question=run.question,
-                mode=run.mode,
-            ),
-            config={"configurable": {"thread_id": thread_id}},
-            context=context,
-        )
+        context = None
+        try:
+            context = bundle.context_factory(run.id, on_harness_event)
+            emit("run.started", "研究任务已进入统一运行图")
+            outcome = await bundle.service.invoke(
+                ApplicationResearchRequest(
+                    run_id=run.id,
+                    thread_id=thread_id,
+                    question=run.question,
+                    mode=run.mode,
+                ),
+                config={"configurable": {"thread_id": thread_id}},
+                context=context,
+            )
+        finally:
+            run.usage = run_usage_payload(context)
+            release = getattr(bundle, "release_run", None)
+            if release is not None:
+                release(run.id)
+        usage = run.usage
         emit(
             "response.completed",
-            "研究已完成" if outcome.status == "completed" else "研究部分完成",
+            {"completed": "研究已完成", "partial": "研究部分完成",
+             "failed": "研究失败", "cancelled": "研究已取消"}[outcome.status],
         )
         return AgentResult(
             status=outcome.status,
-            answer=outcome.response_outcome.content,
+            answer=outcome.response_outcome.content if outcome.response_outcome is not None else "",
             sources=outcome.sources,
             steps=outcome.executed_steps,
             events=[],
             termination_reason=outcome.termination_reason,
             search_queries=[],
-            provider_usage=TokenUsage(),
-            role_usage=UsageBreakdown(),
+            provider_usage=TokenUsage.model_validate(usage["observed_usage"])
+            if usage
+            else TokenUsage(),
+            role_usage=UsageBreakdown.model_validate(usage["role_usage"])
+            if usage
+            else UsageBreakdown(),
             estimated_cost_usd=None,
-            stage_seconds={},
+            stage_seconds=usage["stage_seconds"] if usage else {},
             unresolved_gaps=outcome.unresolved_gaps,
+            usage_observation=usage,
+            research_sufficiency=outcome.research_sufficiency,
         )
 
 

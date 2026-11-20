@@ -5,10 +5,10 @@ import inspect
 import json
 import re
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
-from typing import Any, Protocol
+from datetime import UTC, date, datetime, timedelta
+from typing import Any, Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from deeptrace.domain import ToolName
 from deeptrace.models import RawDocument
@@ -30,12 +30,31 @@ class SearchWebArguments(BaseModel):
 
     query: str = Field(min_length=1, max_length=1_000)
     limit: int = Field(default=5, ge=1, le=8)
+    search_depth: Literal["basic", "advanced"] = "basic"
+    start_date: date | None = None
+    end_date: date | None = None
+
+    @model_validator(mode="after")
+    def valid_window(self):
+        if self.start_date and self.end_date and self.start_date > self.end_date:
+            raise ValueError("invalid_search_window")
+        return self
 
 
 class FetchPageArguments(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     url: str = Field(min_length=1, max_length=2_048)
+    page_start: int | None = Field(default=None, strict=True, ge=1)
+    page_end: int | None = Field(default=None, strict=True, ge=1)
+
+    @model_validator(mode="after")
+    def valid_pdf_range(self):
+        if ((self.page_start is None) != (self.page_end is None)
+                or self.page_start is not None and (self.page_end < self.page_start
+                    or self.page_end - self.page_start >= 100)):
+            raise ValueError("invalid_pdf_page_range")
+        return self
 
 
 class SearchMemoryArguments(BaseModel):
@@ -53,7 +72,7 @@ class PageMemory(Protocol):
     def entries(self) -> list[Any]: ...
 
 
-SearchCallable = Callable[[str], Any]
+SearchCallable = Callable[..., Any]
 ClockCallable = Callable[[], datetime]
 
 
@@ -79,7 +98,19 @@ class _ResearchToolAdapters:
         if not isinstance(arguments, SearchWebArguments):
             raise TypeError("search arguments have the wrong type")
         query = arguments.query.strip()
-        response = await _call_search(self._search, query)
+        options = {"max_results": arguments.limit}
+        if arguments.search_depth != "basic":
+            options["search_depth"] = arguments.search_depth
+        for key in ("start_date", "end_date"):
+            value = getattr(arguments, key)
+            if value:
+                options[key] = value.isoformat()
+        try:
+            response = await _call_search(self._search, query, **options)
+        except ValueError as exc:
+            if str(exc) == "unsupported_search_options":
+                return ToolAdapterResult.failure("unsupported_search_options")
+            raise
         if not isinstance(response, dict) or not response.get("ok"):
             error = response.get("error") if isinstance(response, dict) else None
             code = "search_failed"
@@ -106,9 +137,11 @@ class _ResearchToolAdapters:
                     "snippet": str(item.get("snippet", item.get("content", "")))[:500],
                 }
             )
+            if isinstance(item.get("discovery_date"), str):
+                results[-1]["discovery_date"] = item["discovery_date"][:128]
             if len(results) >= arguments.limit:
                 break
-        return ToolAdapterResult(preview=_json_preview({"results": results}))
+        return ToolAdapterResult(preview=_search_preview(results))
 
     async def fetch_page(
         self, arguments: BaseModel, _context: ToolCallContext
@@ -116,7 +149,9 @@ class _ResearchToolAdapters:
         if not isinstance(arguments, FetchPageArguments):
             raise TypeError("fetch arguments have the wrong type")
         try:
-            document = await self._fetcher.fetch(arguments.url)
+            options = ({"page_start": arguments.page_start, "page_end": arguments.page_end}
+                       if arguments.page_start is not None else {})
+            document = await self._fetcher.fetch(arguments.url, **options)
         except WebFetchError as exc:
             return ToolAdapterResult.failure(exc.code, message=str(exc))
         if document.status != "success" or not document.content.strip():
@@ -127,8 +162,8 @@ class _ResearchToolAdapters:
         draft = EvidenceDraft(
             canonical_url=source_url,
             title=document.title.strip() or source_url,
-            media_type="text/html",
-            body=document.content,
+            media_type=document.media_type,
+            body=document.full_content or document.content,
             fetched_at=document.fetched_at,
             published_at=document.source_published_at,
             source_quality=_source_quality(document),
@@ -276,12 +311,21 @@ def build_research_tool_registry(
     return registry
 
 
-async def _call_search(search: SearchCallable, query: str) -> Any:
+async def _call_search(search: SearchCallable, query: str, **options) -> Any:
+    parameters = inspect.signature(search).parameters
+    if not any(p.kind is inspect.Parameter.VAR_KEYWORD for p in parameters.values()):
+        # Query-only injected providers remain valid for basic search. A
+        # requested time/depth policy must never silently disappear.
+        if set(options) - set(parameters) - {"max_results"}:
+            raise ValueError("unsupported_search_options")
+        options = {key: value for key, value in options.items() if key in parameters}
     async_call = inspect.iscoroutinefunction(search) or inspect.iscoroutinefunction(
         getattr(search, "__call__", None)  # noqa: B004 - async callable instances
     )
     response = (
-        await search(query) if async_call else await asyncio.to_thread(search, query)
+        await search(query, **options)
+        if async_call
+        else await asyncio.to_thread(search, query, **options)
     )
     if inspect.isawaitable(response):
         return await response
@@ -290,6 +334,23 @@ async def _call_search(search: SearchCallable, query: str) -> Any:
 
 def _json_preview(value: dict[str, Any]) -> str:
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+
+
+def _search_preview(results: list[dict[str, Any]], limit: int = 4000) -> str:
+    """Fit complete records/JSON before the gateway's generic string clamp."""
+    payload = {"results": results}
+    for field, floor in (("snippet", 120), ("title", 80)):
+        while len(_json_preview(payload)) > limit and any(
+            len(row[field]) > floor for row in results
+        ):
+            for row in results:
+                row[field] = row[field][: max(floor, len(row[field]) // 2)]
+    omitted = 0
+    while results and len(_json_preview(payload)) > limit:
+        results.pop()
+        omitted += 1
+        payload["omitted_results"] = omitted
+    return _json_preview(payload)
 
 
 def _tokens(value: str) -> set[str]:

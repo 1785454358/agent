@@ -10,13 +10,15 @@ from pathlib import Path
 from typing import Any
 
 from deeptrace.application.research import ApplicationResearchRequest
+from deeptrace.domain.run import TERMINAL_STATUSES as _TERMINAL_STATUSES
 from deeptrace.models import RunEvent
-from deeptrace.observability.messages import humanize_event_message, public_event_details
+from deeptrace.observability.messages import (
+    humanize_event_message,
+    public_event_details,
+)
+from deeptrace.observability.model_metrics import run_usage_payload
 from deeptrace.runtime.errors import RunActiveError, ThreadBusyError
 from deeptrace.runtime.models import RunMode, RunRecord, StoredEvent
-
-_TERMINAL_STATUSES = frozenset({"completed", "partial", "failed", "cancelled"})
-
 
 def _parse_ts(value: Any) -> datetime:
     if isinstance(value, str):
@@ -44,12 +46,14 @@ class LocalResearchRuntime:
         *,
         application,
         context_factory: Callable[[str], Any],
+        release_run: Callable[[str], None] | None = None,
     ) -> None:
         self._settings = settings
         self._runs_dir = Path(runs_dir)
         self._runs_dir.mkdir(parents=True, exist_ok=True)
         self._application = application
         self._context_factory = context_factory
+        self._release_run = release_run
         self._registry: dict[str, _LocalRunState] = {}
         self._thread_locks: dict[str, asyncio.Lock] = {}
         self._next_event_id = 1
@@ -238,6 +242,8 @@ class LocalResearchRuntime:
             record.finished_at = datetime.now(UTC)
             record.error = f"运行失败（{type(exc).__name__}），请检查服务与模型配置"
         finally:
+            if self._release_run is not None:
+                self._release_run(record.id)
             record.updated_at = datetime.now(UTC)
             self._persist(record)
             self._append_done(state)
@@ -266,24 +272,27 @@ class LocalResearchRuntime:
             question=record.question,
             mode=record.mode,
         )
-        outcome = await self._application.invoke(
-            request,
-            config={"configurable": {"thread_id": thread_id}},
-            context=context,
-        )
-        record.answer = outcome.response_outcome.content
+        try:
+            outcome = await self._application.invoke(
+                request,
+                config={"configurable": {"thread_id": thread_id}},
+                context=context,
+            )
+        finally:
+            record.usage = run_usage_payload(context)
+        record.answer = outcome.response_outcome.content if outcome.response_outcome is not None else ""
         record.status = outcome.status
         record.termination_reason = outcome.termination_reason
         record.finished_at = datetime.now(UTC)
         record.sources = outcome.sources
         record.unresolved_gaps = outcome.unresolved_gaps
+        record.research_sufficiency = outcome.research_sufficiency
         self._append_event(
             state,
             RunEvent(
                 event_type="response.completed",
-                message="研究已完成"
-                if outcome.status == "completed"
-                else "研究部分完成",
+                message={"completed": "研究已完成", "partial": "研究部分完成",
+                         "failed": "研究失败", "cancelled": "研究已取消"}[outcome.status],
             ),
         )
 

@@ -73,3 +73,16 @@ async def test_concurrent_first_reservations_wait_for_one_complete_seed() -> Non
     for scope in (run, mode, agent):
         assert snapshot.for_scope(scope).used == requested
         assert snapshot.for_scope(scope).reserved == requested
+
+
+@pytest.mark.asyncio
+async def test_failed_budget_seed_never_restores_free_allowance():
+    async def failed_seed():
+        raise OSError('ledger unavailable')
+
+    scope = BudgetScopeKey.for_run('run-1')
+    inner = InMemoryBudgetManager({scope: BudgetUnits(tool_calls=3)})
+    budgets = _SeededBudgets(inner, failed_seed, 'run-1')
+    for _ in range(2):
+        with pytest.raises(RuntimeError, match='budget_state_unavailable'):
+            await budgets.reserve(scope, BudgetUnits(tool_calls=1))

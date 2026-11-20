@@ -5,8 +5,9 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from deeptrace.domain.execution import BudgetSnapshot, ErrorRecord
+from deeptrace.domain.run import FinishReason, TerminalStatus, normalize_finish_reason
 
-AgentStatus = Literal["completed", "partial", "failed", "cancelled"]
+AgentStatus = TerminalStatus
 AgentStopReason = Literal[
     "completed",
     "iteration_limit",
@@ -34,3 +35,7 @@ class AgentOutcome(BaseModel):
     unfinished_todos: list[str] = Field(default_factory=list)
     plan_total: int = Field(default=0, ge=0)
     plan_completed: int = Field(default=0, ge=0)
+
+    @property
+    def finish_reason(self) -> FinishReason:
+        return normalize_finish_reason(self.stop_reason)

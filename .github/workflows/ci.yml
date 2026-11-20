@@ -9,22 +9,6 @@ permissions:
   contents: read
 
 jobs:
-  evaluation:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v7
-      - uses: docker/setup-buildx-action@v3
-      - name: Test locked isolated scorer with networking disabled
-        uses: docker/build-push-action@v6
-        with:
-          context: backend/evaluation
-          file: backend/evaluation/Dockerfile
-          push: false
-          tags: deepresearch:scorer-test
-          cache-from: type=gha,scope=scorer
-          cache-to: type=gha,scope=scorer,mode=max
-
   frontend:
     runs-on: ubuntu-latest
     defaults:

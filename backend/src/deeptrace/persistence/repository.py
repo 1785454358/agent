@@ -3,25 +3,27 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from typing import Protocol
+from typing import Any, Protocol
 
 from sqlalchemy import (
     and_,
-    delete as sa_delete,
     or_,
     select,
     update,
+)
+from sqlalchemy import (
+    delete as sa_delete,
+)
+from sqlalchemy import (
     update as sa_update,
 )
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from deeptrace.models import AgentResult, RunEvent
+from deeptrace.domain.run import TERMINAL_STATUSES as _TERMINAL_STATUSES
 from deeptrace.persistence.orm import ResearchRunRow, RunEventRow, ThreadLeaseRow
 from deeptrace.runtime.errors import RunActiveError
 from deeptrace.runtime.models import RunRecord, StoredEvent
-
-_TERMINAL_STATUSES = frozenset({"completed", "partial", "failed", "cancelled"})
-
 
 class RunRepository(Protocol):
     async def create(self, run: RunRecord) -> None: ...
@@ -57,7 +59,7 @@ class RunRepository(Protocol):
     ) -> RunRecord | None: ...
 
     async def fail(
-        self, run_id: str, worker_id: str, error: str
+        self, run_id: str, worker_id: str, error: str, *, usage: dict[str, Any] | None = None
     ) -> RunRecord | None: ...
 
     async def acquire_thread_lease(
@@ -71,7 +73,7 @@ class RunRepository(Protocol):
     async def release_thread_lease(self, thread_id: str, run_id: str) -> bool: ...
 
     async def cancel(
-        self, run_id: str, worker_id: str, error: str
+        self, run_id: str, worker_id: str, error: str, *, usage: dict[str, Any] | None = None
     ) -> RunRecord | None: ...
 
 
@@ -81,7 +83,7 @@ class SqlAlchemyRunRepository:
 
     async def create(self, run: RunRecord) -> None:
         async with self._sessions() as session:
-            session.add(ResearchRunRow(**run.model_dump(exclude={"events"})))
+            session.add(ResearchRunRow(**run.model_dump(exclude={"events", "finish_reason"})))
             await session.commit()
 
     async def get(self, run_id: str) -> RunRecord | None:
@@ -279,6 +281,7 @@ class SqlAlchemyRunRepository:
                 else None
             ),
             "stage_seconds": result.stage_seconds,
+            **(result.usage_observation or {}),
         }
         statement = (
             update(ResearchRunRow)
@@ -290,6 +293,7 @@ class SqlAlchemyRunRepository:
             .values(
                 status=result.status,
                 termination_reason=result.termination_reason,
+                research_sufficiency=result.research_sufficiency,
                 answer=result.answer,
                 sources=result.sources,
                 search_queries=result.search_queries,
@@ -312,7 +316,7 @@ class SqlAlchemyRunRepository:
         return await self.get(run_id)
 
     async def fail(
-        self, run_id: str, worker_id: str, error: str
+        self, run_id: str, worker_id: str, error: str, *, usage: dict[str, Any] | None = None
     ) -> RunRecord | None:
         return await self._finish_with_error(
             run_id,
@@ -321,10 +325,11 @@ class SqlAlchemyRunRepository:
             termination_reason="worker_error",
             error=error,
             allowed_statuses=("running",),
+            usage=usage,
         )
 
     async def cancel(
-        self, run_id: str, worker_id: str, error: str
+        self, run_id: str, worker_id: str, error: str, *, usage: dict[str, Any] | None = None
     ) -> RunRecord | None:
         return await self._finish_with_error(
             run_id,
@@ -333,6 +338,7 @@ class SqlAlchemyRunRepository:
             termination_reason="cancelled",
             error=error,
             allowed_statuses=("running", "cancel_requested"),
+            usage=usage,
         )
 
     async def _finish_with_error(
@@ -344,6 +350,7 @@ class SqlAlchemyRunRepository:
         termination_reason: str,
         error: str,
         allowed_statuses: tuple[str, ...],
+        usage: dict[str, Any] | None = None,
     ) -> RunRecord | None:
         now = datetime.now(UTC)
         statement = (
@@ -364,6 +371,8 @@ class SqlAlchemyRunRepository:
                 version=ResearchRunRow.version + 1,
             )
         )
+        if usage is not None:
+            statement = statement.values(usage=usage)
         async with self._sessions() as session:
             result = await session.execute(statement)
             if result.rowcount != 1:

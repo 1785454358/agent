@@ -1,6 +1,6 @@
 import type {
   CreateRunResponse,
-  ResearchMode,
+  ResearchModeSelection,
   RunDetail,
   RunSummary,
 } from "./types";
@@ -44,7 +44,7 @@ export function getRun(runId: string): Promise<RunDetail> {
 
 export function createRun(
   question: string,
-  mode: ResearchMode,
+  mode: ResearchModeSelection,
   threadId?: string,
 ): Promise<CreateRunResponse> {
   return request<CreateRunResponse>("/researches", {

@@ -47,7 +47,7 @@ async def test_local_memory_store_persists_across_runtime_instances(tmp_path) ->
     settings = _settings()
     first = _record()
 
-    _saver, _ledger, memory, _evidence, engine = _build_durable_stores(
+    _saver, _ledger, memory, _evidence, engine, _budget = _build_durable_stores(
         settings, tmp_path
     )
     try:
@@ -57,7 +57,7 @@ async def test_local_memory_store_persists_across_runtime_instances(tmp_path) ->
         await engine.dispose()
 
     # a brand-new assembly over the same runs dir must read the record back
-    _saver, _ledger, reopened, _evidence, engine = _build_durable_stores(
+    _saver, _ledger, reopened, _evidence, engine, _budget = _build_durable_stores(
         settings, tmp_path
     )
     try:
@@ -132,5 +132,57 @@ def test_sqlite_schema_migrates_legacy_payload_only_memory_table(tmp_path) -> No
             )
         }
         assert "ix_memory_records_recall" in indexes
+    finally:
+        connection.close()
+
+
+def test_sqlite_schema_migrates_legacy_tool_ledger_columns(tmp_path) -> None:
+    database = tmp_path / "legacy-ledger.db"
+    connection = sqlite3.connect(database)
+    connection.execute(
+        """
+        CREATE TABLE tool_executions (
+            id INTEGER NOT NULL PRIMARY KEY,
+            tenant_id VARCHAR(128) NOT NULL,
+            run_id VARCHAR(128) NOT NULL,
+            call_id VARCHAR(160) NOT NULL,
+            fingerprint VARCHAR(256) NOT NULL,
+            status VARCHAR(32) NOT NULL,
+            generation INTEGER NOT NULL,
+            owner_token VARCHAR(64),
+            result_json JSON,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL
+        )
+        """
+    )
+    connection.execute(
+        "INSERT INTO tool_executions "
+        "(tenant_id, run_id, call_id, fingerprint, status, generation, "
+        "created_at, updated_at) "
+        "VALUES ('ws', 'run', 'call', 'fp', 'running', 1, '2026-09-15', '2026-09-15')"
+    )
+    connection.commit()
+    connection.close()
+
+    _ensure_sqlite_schema(database)
+
+    connection = sqlite3.connect(database)
+    try:
+        columns = {
+            row[1] for row in connection.execute("PRAGMA table_info(tool_executions)")
+        }
+        assert {
+            "mode",
+            "caller_id",
+            "consumed_tool_calls",
+            "consumed_network_requests",
+            "consumed_fetched_pages",
+        } <= columns
+        row = connection.execute(
+            "SELECT consumed_tool_calls, consumed_network_requests, "
+            "consumed_fetched_pages FROM tool_executions"
+        ).fetchone()
+        assert row == (0, 0, 0)
     finally:
         connection.close()

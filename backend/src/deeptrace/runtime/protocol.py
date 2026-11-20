@@ -7,6 +7,7 @@ from deeptrace.runtime.models import RunMode, RunRecord, StoredEvent
 
 
 class ResearchRuntime(Protocol):
+
     async def start(self) -> None: ...
 
     async def stop(self) -> None: ...

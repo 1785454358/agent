@@ -124,4 +124,8 @@ class HarnessContext:
     memory_recall_limit: int = 5
     memory_context_tokens: int = 768
     response_max_content_chars: int | None = None
+    response_fact_review: bool = False
+    research_completion_scope: str = "decomposed"
     research_max_pages: int = 8
+    # Host-owned corpus grant. None permits web discovery; () is an empty corpus.
+    source_evidence_ids: tuple[str, ...] | None = None

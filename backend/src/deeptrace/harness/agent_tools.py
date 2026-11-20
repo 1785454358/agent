@@ -751,10 +751,12 @@ async def execute_batch(state, context, *, max_concurrency=4, max_discovered_url
                     }
                 )
                 observed, diagnostics = capture_read_anchors(
-                    actual_preview, call["args"]["evidence_id"]
+                    actual_preview, call["args"]["evidence_id"],
+                    query=call["args"].get("query"),
                 )
                 combined = merge_read_anchors(anchors, observed)
-                if any(anchor not in combined for anchor in observed):
+                retained_ranges = {anchor.range_key for anchor in combined}
+                if any(anchor.range_key not in retained_ranges for anchor in observed):
                     diagnostics.append("read_anchor_capacity")
                 anchors = combined
                 read_diagnostics.extend(diagnostics)

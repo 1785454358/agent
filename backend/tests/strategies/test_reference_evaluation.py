@@ -4,6 +4,7 @@ import json
 
 import pytest
 from langgraph.runtime import Runtime
+from langchain_core.messages import AIMessage
 
 from deeptrace.domain import (
     EvidenceSupport,
@@ -26,6 +27,36 @@ from strategies.fixtures import (
 
 FACT = "`key`\nnot optional. 🧭"
 QUESTION = "Explain Alpha technical context and identifier necessity."
+
+
+@pytest.mark.asyncio
+async def test_schema_repair_keeps_the_exact_original_reference_window():
+    from deeptrace.strategies.evidence_evaluation import run_evidence_evaluation
+    from deeptrace.strategies.workflow.models import ReferenceWorkflowEvaluation
+    from strategies.fixtures import evaluation_payload_from_view
+    from strategies.test_reference_materials import seed
+
+    class RepairingModel:
+        views = []
+        async def available_input_tokens(self, role):
+            return 14000 if not self.views else 12000
+        async def invoke(self, *, messages, **kwargs):
+            material = json.JSONDecoder().raw_decode(str(messages[-1].content).split('EVIDENCE_VIEW_JSON:',1)[1].lstrip())[0]
+            self.views.append(material)
+            if len(self.views) == 1:
+                return AIMessage(content='{"sufficient":"invalid"}')
+            return AIMessage(content=json.dumps(evaluation_payload_from_view(str(messages[-1].content), sufficient=True)))
+
+    model = RepairingModel()
+    fixture = build_gateway_fixture(model_gateway=model)
+    records = [await seed(fixture, i, ('Distinct source original '+str(i)+' cancellation. ') * 200) for i in range(5)]
+    await run_evidence_evaluation({'run_id':'run-1','thread_id':'thread-1',
+        'question':'Cancellation', 'current_date':'2026-11-18','timezone':'Asia/Shanghai',
+        'requirements':[ResearchRequirement(id='r1',description='Cancellation')],
+        'evidence_contract_version':3, 'evidence_ids':[r.id for r in records]},
+        fixture.context, ReferenceWorkflowEvaluation, repair_attempts=1)
+    assert len(model.views) == 2
+    assert model.views[0] == model.views[1]
 
 
 @pytest.mark.asyncio
@@ -97,7 +128,7 @@ async def test_read_fact_reaches_live_evaluator_and_resolves_without_quote_copy(
                 claim="The identifier is required.",
                 confidence=0.9,
                 evidence_ids=[record.id],
-                supports=[EvidenceSupport(**anchor.model_dump(), quote=FACT)],
+                supports=[EvidenceSupport(**anchor.model_dump(exclude={"queries"}), quote=FACT)],
             )
         ],
     )

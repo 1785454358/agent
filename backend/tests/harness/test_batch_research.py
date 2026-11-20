@@ -9,6 +9,22 @@ from deeptrace.harness.batch_research import build_batch_research_graph
 from strategies.fixtures import build_gateway_fixture
 
 
+@pytest.mark.asyncio
+async def test_reused_source_keeps_original_language_read_terms():
+    from strategies.test_reference_materials import seed
+    fixture = build_gateway_fixture(model_gateway=BatchModel())
+    body = "unrelated. " * 1000 + "\n\nRetry-After = HTTP-date / delay-seconds\n"
+    record = await seed(fixture, 1, body)
+    task = ResearchTopicInput(run_id='run-1',thread_id='thread-1',query='header syntax',
+        mode=ResearchMode.WORKFLOW,caller_id='workflow-graph',evidence_contract_version=3,
+        requirements=[{'id':'r1','description':'响应头的两种格式'}],
+        target_requirement_ids=['r1'],read_terms=['Retry-After','delay-seconds'],
+        authorized_evidence_ids=[record.id])
+    from deeptrace.harness.batch_collection import read_sources
+    result = await read_sources({'topic_input':task,'batch_selected_ids':[record.id]},fixture.context)
+    assert any('Retry-After' in body[a.start:a.end] for a in result['read_anchors'])
+
+
 class BatchModel:
     def __init__(self, replies=None):
         self.calls = []
@@ -19,6 +35,9 @@ class BatchModel:
         if self.replies:
             return AIMessage(content=self.replies.pop(0))
         prompt = str(messages[-1].content)
+        if "SOURCE_CANDIDATES_JSON:\n" in prompt:
+            rows = json.loads(prompt.split("SOURCE_CANDIDATES_JSON:\n", 1)[1])
+            return AIMessage(content=json.dumps({"selected": [row["id"] for row in rows]}))
         if "BATCH_EVIDENCE_JSON:\n" not in prompt:
             return AIMessage(content='{"summary":"待取材","findings":[]}')
         view = json.JSONDecoder().raw_decode(prompt.split("BATCH_EVIDENCE_JSON:\n", 1)[1])[0]

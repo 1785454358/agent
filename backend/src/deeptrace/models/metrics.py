@@ -29,6 +29,10 @@ class UsageBreakdown(BaseModel):
     replanner: TokenUsage = Field(default_factory=TokenUsage)
     supervisor: TokenUsage = Field(default_factory=TokenUsage)
     researcher: TokenUsage = Field(default_factory=TokenUsage)
+    evaluator: TokenUsage = Field(default_factory=TokenUsage)
+    summarizer: TokenUsage = Field(default_factory=TokenUsage)
+    memory_consolidator: TokenUsage = Field(default_factory=TokenUsage)
+    other: TokenUsage = Field(default_factory=TokenUsage)
     writer: TokenUsage = Field(default_factory=TokenUsage)
 
     @property
@@ -39,5 +43,9 @@ class UsageBreakdown(BaseModel):
             self.replanner,
             self.supervisor,
             self.researcher,
+            self.evaluator,
+            self.summarizer,
+            self.memory_consolidator,
+            self.other,
             self.writer,
         )

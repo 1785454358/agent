@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import type { ResearchMode } from "../api/types";
+import type { ResearchModeSelection } from "../api/types";
 import { IconChat, IconSearch } from "./icons";
 
 interface TopBarProps {
-  mode: ResearchMode;
-  onModeChange: (mode: ResearchMode) => void;
+  mode: ResearchModeSelection;
+  onModeChange: (mode: ResearchModeSelection) => void;
   onSubmit: (question: string) => void;
   submitting: boolean;
   /** 变化时聚焦问题输入框（用于“新研究”）。 */
@@ -44,8 +44,9 @@ export function TopBar({
         <select
           aria-label="研究模式"
           value={mode}
-          onChange={(e) => onModeChange(e.target.value as ResearchMode)}
+          onChange={(e) => onModeChange(e.target.value as ResearchModeSelection)}
         >
+          <option value="auto">自动路由</option>
           <option value="workflow">Workflow</option>
           <option value="plan_execute">Plan-and-Execute</option>
           <option value="multi_agent">Multi-Agent</option>

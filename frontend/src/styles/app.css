@@ -373,6 +373,7 @@ body {
 .statusline.failed .dot, .statusline.cancelled .dot { background: var(--err); animation: none; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 .statusline .runid { color: var(--faint); }
+.routing-info { display: flex; flex-wrap: wrap; gap: 4px 10px; max-width: 100%; }
 .statusline .cancel {
   background: transparent;
   border: 1px solid var(--err);
@@ -576,8 +577,9 @@ body {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 32px 36px;
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  min-width: 0;
   font-size: 16px;
   line-height: 1.85;
   color: #e3eaf6;
@@ -585,6 +587,45 @@ body {
   box-shadow: var(--shadow-panel);
 }
 .report.has-error { border-color: var(--err); color: var(--err); }
+.report > :first-child { margin-top: 0; }
+.report > :last-child { margin-bottom: 0; }
+.report p { margin: 0 0 1em; white-space: pre-line; }
+.report h1, .report h2, .report h3, .report h4 {
+  color: var(--text);
+  font-size: 1.12em;
+  line-height: 1.5;
+  margin: 1.6em 0 .7em;
+}
+.report h1 { font-size: 1.35em; }
+.report strong { color: #f1f5fc; font-weight: 650; }
+.report ul, .report ol { padding-left: 1.5em; margin: .7em 0 1em; }
+.report li { margin-bottom: .4em; }
+.report li p { margin-bottom: .4em; }
+.report a { color: var(--teal); text-decoration: underline; text-underline-offset: 3px; }
+.report code {
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: .88em;
+  background: rgba(148, 163, 184, .1);
+  border-radius: 4px;
+  padding: .1em .35em;
+}
+.report pre {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre;
+  padding: 16px 18px;
+  background: #0d1523;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  line-height: 1.65;
+}
+.report pre code { background: none; padding: 0; }
+.report-table { overflow-x: auto; margin: 1em 0; }
+.report table { width: 100%; border-collapse: collapse; font-size: .92em; }
+.report th, .report td { border: 1px solid var(--line); padding: 10px 14px; text-align: left; min-width: 110px; }
+.report th { background: rgba(148, 163, 184, .08); color: #f1f5fc; font-weight: 600; }
+.report blockquote { margin: 1em 0; padding: .3em 1em; border-left: 3px solid var(--teal); color: var(--muted); }
+.report hr { border: 0; border-top: 1px solid var(--line); margin: 1.5em 0; }
 
 /* ============================================================
    来源

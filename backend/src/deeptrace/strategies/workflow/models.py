@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 
 from deeptrace.domain import CoverageAssessment, ResearchRequirement
 from deeptrace.domain.research import TopicQuery
-from deeptrace.strategies.evidence_evaluation import FindingDraft
+from deeptrace.strategies.evidence_evaluation import FindingDraft, GapResearchTask
 from deeptrace.strategies.evidence_references import (
     ReferenceFindingDraft,
     ReferenceSourceCheck,
@@ -57,9 +57,13 @@ class WorkflowEvaluation(BaseModel):
 class ReferenceWorkflowEvaluation(WorkflowEvaluation):
     """Live v3 output; WorkflowEvaluation remains the historical v2 DTO."""
 
+    unchanged_requirement_ids: list[str] | None = Field(default=None, max_length=6)
+
+    recovery_tasks: list[GapResearchTask] | None = Field(default=None, max_length=2)
+
     findings: list[ReferenceFindingDraft] = Field(
         default_factory=list, max_length=MAX_WORKFLOW_FINDINGS
     )
     source_checks: list[ReferenceSourceCheck] = Field(
-        default_factory=list, max_length=8
+        default_factory=list, max_length=32
     )

@@ -169,3 +169,16 @@ async def test_distributed_runtime_stops_broker(infrastructure) -> None:
     await runtime.start()
 
     await runtime.stop()
+
+
+@pytest.mark.asyncio
+async def test_sql_run_and_event_reload_exposes_the_same_auto_decision(infrastructure):
+    repository, broker, _ = infrastructure
+    runtime = DistributedResearchRuntime(repository, broker, id_factory=lambda: "run-auto")
+    await runtime.start()
+    await runtime.create("question", "auto")
+    await repository.append_event("run-auto", RunEvent(event_type="research.routed", message="Selected mode",
+        details={"mode": "multi_agent", "reason": "Independent tracks", "action": "automatic"}))
+    loaded = await runtime.get("run-auto")
+    assert loaded.mode == "auto"
+    assert loaded.routing_metadata() == {"selected_mode": "multi_agent", "routing_reason": "Independent tracks"}

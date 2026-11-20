@@ -20,6 +20,8 @@ from deeptrace.domain import (
     ResponseOutcome,
 )
 from deeptrace.domain.memory import RecalledMemory
+from deeptrace.research import VerificationResult
+from deeptrace.domain.execution import ResearchModeSelection
 
 
 class ConversationState(TypedDict):
@@ -71,14 +73,18 @@ _CONVERSATION_UPDATE_FIELDS = frozenset(
 
 
 class TurnState(TypedDict):
+    research_flow_version: int
     run_id: str
     user_input: str
     intent: ConversationIntent
     selected_mode: ResearchMode
+    requested_mode: ResearchModeSelection
+    routing_reason: str
     response_mode: ResponseMode
     requires_research: bool
     research_request: ResearchInput | None
     research_outcome: ResearchOutcome | None
+    verification: VerificationResult | None
     response_outcome: ResponseOutcome | None
     recalled_memory_ids: list[str]
     recalled_memories: list[RecalledMemory]
@@ -128,16 +134,20 @@ def new_conversation(thread_id: str, mode: ResearchMode) -> ConversationState:
     }
 
 
-def new_turn(run_id: str, user_input: str, mode: ResearchMode) -> TurnState:
+def new_turn(run_id: str, user_input: str, mode: ResearchModeSelection) -> TurnState:
     return {
+        "research_flow_version": 2,
         "run_id": run_id,
         "user_input": user_input,
         "intent": ConversationIntent.RESEARCH,
-        "selected_mode": mode,
+        "selected_mode": ResearchMode.WORKFLOW if mode == "auto" else mode,
+        "requested_mode": mode,
+        "routing_reason": "",
         "response_mode": ResponseMode.ANSWER,
         "requires_research": True,
         "research_request": None,
         "research_outcome": None,
+        "verification": None,
         "response_outcome": None,
         "recalled_memory_ids": [],
         "recalled_memories": [],

@@ -183,7 +183,7 @@ async def test_service_invokes_graph_with_canonical_identity_and_returns_outcome
     assert outcome.response_outcome.response_mode is ResponseMode.ANSWER
     assert outcome.response_outcome.content == "回答 [1]"
     assert outcome.status == "completed"
-    assert outcome.termination_reason == "completed"
+    assert outcome.termination_reason == "workflow_completed"
     assert outcome.executed_steps == 2
     assert (outcome.run_id, outcome.thread_id) == ("run-1", "thread-1")
     assert len(graph.invocations) == 1
@@ -229,7 +229,7 @@ def test_service_requires_a_response_outcome_from_the_graph() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("status", [None, "running", "pending", "failed", "cancelled"])
+@pytest.mark.parametrize("status", [None, "running", "pending"])
 async def test_service_rejects_nonterminal_success_result(status) -> None:
     class InvalidStatusGraph(RecordingGraph):
         async def ainvoke(self, *args, **kwargs):
@@ -368,3 +368,115 @@ async def test_service_projects_ordered_metadata_once_and_copies_gaps() -> None:
     assert result.termination_reason == "max_iterations"
     result.unresolved_gaps.append("Caller edit")
     assert result.research_outcome.unresolved_gaps == ["Missing fact"]
+
+
+@pytest.mark.asyncio
+async def test_workflow_execution_completion_keeps_quality_diagnostics() -> None:
+    class CompletedWorkflow(RecordingGraph):
+        async def ainvoke(self, *args, **kwargs):
+            result = await super().ainvoke(*args, **kwargs)
+            result["turn"]["research_outcome"].update(
+                termination_reason="insufficient_evidence",
+                unresolved_gaps=["Missing comparison"],
+            )
+            result["turn"]["response_outcome"]["partial_reason"] = "no_evidence"
+            return result
+
+    graph = CompletedWorkflow()
+    context = await _seeded_context(graph)
+    result = await ResearchApplicationService(graph).invoke(
+        _request(), config=_config(), context=context
+    )
+    assert result.status == "completed"
+    assert result.termination_reason == "workflow_completed"
+    assert result.research_outcome.termination_reason == "insufficient_evidence"
+    assert result.unresolved_gaps == ["Missing comparison", "response:no_evidence"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status,reason", [("failed", "model_error"), ("cancelled", "cancelled")])
+async def test_explicit_terminal_failure_does_not_require_an_invented_answer(status, reason):
+    class TerminalGraph(RecordingGraph):
+        async def ainvoke(self, *args, **kwargs):
+            result = await super().ainvoke(*args, **kwargs)
+            result["turn"].update(status=status, response_outcome=None)
+            result["turn"]["research_outcome"]["termination_reason"] = reason
+            return result
+
+    result = await ResearchApplicationService(TerminalGraph()).invoke(
+        _request(), config=_config(), context=_context()
+    )
+    assert result.status == status
+    assert result.finish_reason == reason
+    assert result.response_outcome is None
+    assert result.sources == []
+    assert result.research_sufficiency == "unknown"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("mode", ["workflow", "plan_execute", "multi_agent"])
+async def test_sufficiency_is_independent_of_mode_and_execution_completion(mode):
+    class GapGraph(RecordingGraph):
+        async def ainvoke(self, *args, **kwargs):
+            result = await super().ainvoke(*args, **kwargs)
+            result["turn"]["research_outcome"].update(
+                termination_reason="insufficient_evidence", unresolved_gaps=["Missing fact"]
+            )
+            return result
+
+    graph = GapGraph()
+    context = await _seeded_context(graph)
+    result = await ResearchApplicationService(graph).invoke(
+        _request(mode=mode), config=_config(), context=context
+    )
+    assert result.status == "completed"
+    assert result.research_sufficiency == "insufficient"
+
+
+@pytest.mark.asyncio
+async def test_legacy_completed_research_does_not_claim_validated_sufficiency():
+    graph = RecordingGraph()
+    context = await _seeded_context(graph)
+    result = await ResearchApplicationService(graph).invoke(_request(), config=_config(), context=context)
+    assert result.finish_reason == "completed"
+    assert result.research_sufficiency == "unknown"
+
+
+@pytest.mark.asyncio
+async def test_direct_response_marks_research_not_required():
+    class DirectGraph(RecordingGraph):
+        async def ainvoke(self, *args, **kwargs):
+            result = await super().ainvoke(*args, **kwargs)
+            result["turn"].update(research_outcome=None, requires_research=False)
+            return result
+
+    graph = DirectGraph()
+    context = await _seeded_context(graph)
+    result = await ResearchApplicationService(graph).invoke(_request(), config=_config(), context=context)
+    assert result.research_sufficiency == "not_required"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("mode", ["workflow", "plan_execute", "multi_agent"])
+@pytest.mark.parametrize("has_support,expected", [(True, "sufficient"), (False, "insufficient")])
+async def test_sufficiency_uses_validated_coverage_in_every_mode(mode, has_support, expected):
+    class CoveredGraph(RecordingGraph):
+        async def ainvoke(self, *args, **kwargs):
+            result = await super().ainvoke(*args, **kwargs)
+            result["turn"]["research_outcome"].update(
+                evidence_contract_version=3,
+                requirements=[{"id": "r1", "description": "A fact"}],
+                coverage={"items": [{"requirement_id": "r1", "status": "covered",
+                    "reason": "Found", "finding_ids": ["f1"]}]},
+                findings=[{"id": "f1", "claim": "A fact", "confidence": 1,
+                    "evidence_ids": self.evidence_ids,
+                    "supports": [{"evidence_id": self.evidence_ids[0], "version": 1,
+                        "content_hash": "a" * 64, "start": 0, "end": 6, "quote": "A fact"}]
+                        if has_support else []}],
+            )
+            return result
+
+    graph = CoveredGraph()
+    context = await _seeded_context(graph)
+    result = await ResearchApplicationService(graph).invoke(_request(mode=mode), config=_config(), context=context)
+    assert result.research_sufficiency == expected

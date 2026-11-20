@@ -8,7 +8,7 @@ from deeptrace.domain.evidence_anchor import ReadEvidenceAnchor
 
 
 def capture_read_anchors(
-    preview: str, evidence_id: str
+    preview: str, evidence_id: str, *, query: str | None = None,
 ) -> tuple[list[ReadEvidenceAnchor], list[str]]:
     try:
         payload = json.loads(preview)
@@ -24,10 +24,10 @@ def capture_read_anchors(
         anchors = []
         for passage in payload["passages"]:
             anchor = ReadEvidenceAnchor.model_validate(
-                {
+                {"query": query, **{
                     k: passage.get(k, payload.get(k))
                     for k in ("evidence_id", "version", "content_hash", "start", "end")
-                }
+                }}
             )
             if (
                 anchor.evidence_id != evidence_id

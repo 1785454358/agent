@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from typing import Any
 from contextlib import suppress
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from redis.asyncio import Redis
 
@@ -17,7 +17,7 @@ from deeptrace.persistence.database import create_session_factory
 from deeptrace.persistence.repository import RunRepository, SqlAlchemyRunRepository
 from deeptrace.queue.protocol import ResearchBroker
 from deeptrace.queue.redis_streams import RedisResearchBroker
-from deeptrace.runtime.models import JobMessage
+from deeptrace.runtime.models import JobMessage, RunRecord
 
 
 class ResearchWorker:
@@ -116,7 +116,7 @@ class ResearchWorker:
                     self._settings, on_event=on_event, mode=run.mode
                 )
                 research_coro = agent.arun(run.question)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - public worker failure boundary
             event_queue.put_nowait(None)
             await drain_task
             failed = await self._repository.fail(
@@ -145,12 +145,12 @@ class ResearchWorker:
                     await monitor_task
                 try:
                     result = research_task.result()
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 - collect runner failure before terminal write
                     execution_error = exc
             else:
                 try:
                     control_outcome = monitor_task.result()
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 - monitor failure stops the runner
                     execution_error = exc
                 research_task.cancel()
                 with suppress(asyncio.CancelledError):
@@ -168,7 +168,7 @@ class ResearchWorker:
             if self._research_runner is None:
                 try:
                     await agent.aclose()
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 - cleanup failure is persisted
                     if execution_error is None:
                         execution_error = exc
             event_queue.put_nowait(None)
@@ -176,7 +176,7 @@ class ResearchWorker:
 
         if control_outcome == "cancelled":
             cancelled = await self._repository.cancel(
-                run.id, self._worker_id, "运行被用户取消"
+                run.id, self._worker_id, "运行被用户取消", usage=run.usage
             )
             if cancelled is not None:
                 await self._release_thread_lease(run)
@@ -191,6 +191,7 @@ class ResearchWorker:
                 self._worker_id,
                 f"运行失败（{type(execution_error).__name__}），"
                 "请检查服务与模型配置",
+                usage=run.usage,
             )
             if failed is not None:
                 await self._release_thread_lease(run)
@@ -231,7 +232,7 @@ class ResearchWorker:
                 await self._repository.release_thread_lease(
                     run.thread_id, run.id
                 )
-            except Exception:
+            except Exception:  # noqa: BLE001 - failed thread cleanup must not hide the run outcome
                 return
 
     async def _append_done_and_ack(self, run_id: str, message_id: str) -> None:

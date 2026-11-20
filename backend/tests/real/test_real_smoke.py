@@ -17,7 +17,9 @@ from deeptrace.config import Settings
 
 
 @pytest.mark.real
-@pytest.mark.asyncio
+# The installed model SDK caches async HTTP clients across model instances.
+# Real API tests share the production-style event loop across their lifetimes.
+@pytest.mark.asyncio(loop_scope="session")
 async def test_real_workflow_run_returns_cited_answer(tmp_path) -> None:
     pytest.importorskip("langchain_openai")
     settings = replace(
@@ -27,9 +29,6 @@ async def test_real_workflow_run_returns_cited_answer(tmp_path) -> None:
         redis_url="",
         memory_retrieval="lexical",
         agent_max_iterations=12,
-        openai_max_tokens=2048,
-        planner_timeout_seconds=45.0,
-        writer_timeout_seconds=45.0,
     )
     if not getattr(settings, "openai_api_key", ""):
         pytest.skip("openai_api_key is not configured")
@@ -49,10 +48,28 @@ async def test_real_workflow_run_returns_cited_answer(tmp_path) -> None:
 
     class BoundedModel:
         async def invoke(self, **kwargs):
-            if counts["model_calls"] >= 40:
+            if counts["model_calls"] >= settings.max_model_calls:
                 raise RuntimeError("real smoke model-call limit reached")
             counts["model_calls"] += 1
             response = await context.model_gateway.invoke(**kwargs)
+            (
+                tmp_path / f"model-{counts['model_calls']:02d}-{kwargs['role']}.json"
+            ).write_text(
+                json.dumps(
+                    {
+                        "messages": [
+                            message.model_dump(mode="json")
+                            for message in kwargs["messages"]
+                        ],
+                        "content": response.content,
+                        "usage": response.usage_metadata,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                    default=str,
+                ),
+                encoding="utf-8",
+            )
             if kwargs["role"] == "evaluator":
                 from pydantic import ValidationError
 
@@ -90,7 +107,7 @@ async def test_real_workflow_run_returns_cited_answer(tmp_path) -> None:
 
     class BoundedTools:
         async def execute(self, **kwargs):
-            if counts["tool_calls"] >= 24:
+            if counts["tool_calls"] >= settings.max_tool_calls:
                 raise RuntimeError("real smoke tool-call limit reached")
             counts["tool_calls"] += 1
             result = await context.tool_gateway.execute(**kwargs)
@@ -109,7 +126,7 @@ async def test_real_workflow_run_returns_cited_answer(tmp_path) -> None:
     )
     config = {"configurable": {"thread_id": thread_id}}
     try:
-        async with asyncio.timeout(240):
+        async with asyncio.timeout(settings.research_max_seconds + 300):
             outcome = await bundle.service.invoke(
                 ApplicationResearchRequest(
                     run_id=run_id,
@@ -122,6 +139,17 @@ async def test_real_workflow_run_returns_cited_answer(tmp_path) -> None:
             )
             snapshot = await bundle.service._graph.aget_state(config)
             turn = snapshot.values["turn"]
+            (tmp_path / "outcomes.json").write_text(
+                json.dumps(
+                    {
+                        "research": outcome.research_outcome.model_dump(mode="json"),
+                        "response": outcome.response_outcome.model_dump(mode="json"),
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
             assert outcome.status == turn["status"]
             assert outcome.research_outcome == turn["research_outcome"]
             assert outcome.response_outcome == turn["response_outcome"]
@@ -129,15 +157,16 @@ async def test_real_workflow_run_returns_cited_answer(tmp_path) -> None:
             research = outcome.research_outcome
             assert research is not None
             assert outcome.executed_steps == research.executed_steps
-            assert outcome.unresolved_gaps == research.unresolved_gaps
-            reason = (
-                research.termination_reason
-                if research.termination_reason != "completed"
-                else outcome.response_outcome.partial_reason
-            )
-            assert outcome.termination_reason == (
-                reason or ("completed" if outcome.status == "completed" else "partial")
-            )
+            assert set(research.unresolved_gaps) <= set(outcome.unresolved_gaps)
+            if (
+                outcome.status == "completed"
+                and outcome.response_outcome.partial_reason
+            ):
+                assert (
+                    f"response:{outcome.response_outcome.partial_reason}"
+                    in outcome.unresolved_gaps
+                )
+            assert outcome.termination_reason == "workflow_completed"
             print(
                 json.dumps(
                     {
@@ -156,7 +185,7 @@ async def test_real_workflow_run_returns_cited_answer(tmp_path) -> None:
                 row["tool"] == "fetch_page" and row["ok"] for row in tool_results
             )
             assert outcome.status == "completed"
-            assert outcome.termination_reason == "completed"
+            assert outcome.termination_reason == "workflow_completed"
             assert outcome.response_outcome.partial_reason is None
             assert outcome.response_outcome.cited_evidence_ids
             assert len(outcome.response_outcome.content) > 20

@@ -48,6 +48,10 @@ def test_bad_mapping_retains_requirements_in_one_full_question_branch(mapping):
     queries, contract = seal_initial_plan("full task", payload(mapping), ["a", "b"])
     assert queries == ["full task"]
     assert contract["decomposition_degraded"] is True
+    if mapping == {"a": ["r4"], "b": ["r7"]}:
+        assert [r.description for r in contract["requirements"]] == ["完整回答原始问题及全部用户约束"]
+        assert contract["query_targets"] == {"full task": ["r1"]}
+        return
     assert [r.description for r in contract["requirements"]] == [
         "first fact",
         "second fact",

@@ -17,6 +17,7 @@ from deeptrace.domain import (
     unfinished_plan_items,
 )
 from deeptrace.harness.context import HarnessContext
+from deeptrace.harness.model_recovery import invoke_readonly_with_recovery
 from deeptrace.strategies.common import (
     effective_termination_reason,
     filter_findings,  # noqa: F401 - public API re-export used by existing callers
@@ -24,6 +25,7 @@ from deeptrace.strategies.common import (
     strong_exit_reason,
     topic_error_gaps,
     validated_branch_context,
+    verified_coverage_complete,
 )
 from deeptrace.strategies.common import (
     research_input_from_state as _research_input,
@@ -42,7 +44,8 @@ from deeptrace.strategies.model_io import (
     payload_text,
     research_messages,
 )
-from deeptrace.strategies.planning import planning_instruction
+from deeptrace.strategies.planning import normalize_task_plan, planning_instruction
+from deeptrace.strategies.scope_review import review_plan_scope
 from deeptrace.strategies.workflow.models import ReferenceWorkflowEvaluation
 from deeptrace.strategies.workflow.state import TopicBranchState, WorkflowState
 
@@ -69,7 +72,7 @@ def parse_query_plan(text: str, *, limit: int, fallback: str) -> list[str]:
     return queries or [fallback]
 
 
-def build_plan_queries_node(query_limit: int):
+def build_plan_queries_node(query_limit: int, *, preserve_queries: bool = False):
     async def plan_queries_node(
         state: WorkflowState,
         runtime: Runtime[HarnessContext],
@@ -80,7 +83,7 @@ def build_plan_queries_node(query_limit: int):
         summary_lines = conversation_background_lines(research_input)
         prompt = (
             "你是一次研究任务的查询规划器。"
-            + planning_instruction("queries", query_limit)
+            + planning_instruction("queries", query_limit, research_input.question)
             + f"用户问题：{research_input.question}\n"
             + (
                 ""
@@ -92,7 +95,8 @@ def build_plan_queries_node(query_limit: int):
         queries: list[str]
         payload = None
         try:
-            response = await runtime.context.model_gateway.invoke(
+            response = await invoke_readonly_with_recovery(
+                runtime.context.model_gateway,
                 role=PLANNER_ROLE, messages=research_messages(research_input, prompt)
             )
             queries = parse_query_plan(
@@ -101,21 +105,46 @@ def build_plan_queries_node(query_limit: int):
                 fallback=research_input.question,
             )
             payload = parse_json_object(payload_text(response))
+            payload = normalize_task_plan(payload, "queries", query_limit)
+            if isinstance(payload, dict) and payload.get("_canonical_tasks"):
+                queries = payload["queries"]
         except Exception:
             logging.getLogger(__name__).warning(
                 "Research planning failed; using fallback", exc_info=True
             )
             queries = [research_input.question]
-        queries, contract = seal_initial_plan(research_input.question, payload, queries)
-        return {**contract, "queries": queries, "executed_steps": 1}
+        queries, contract = seal_initial_plan(
+            research_input.question, payload, queries, preserve_queries=preserve_queries,
+        )
+        queries, contract = await review_plan_scope(state, runtime.context, queries, contract)
+        return {
+            **contract, "queries": queries, "executed_steps": 1,
+            "delivery_plan_history": [],
+            "recovery_attempted": False, "recovery_queries": [],
+            "recovery_search_dispatched": False, "reread_attempted": False,
+            "reread_actions": [], "reread_queries": [],
+            "supplement_targets": {}, "progress_before_supplement": None,
+            "supplement_completed": False, "no_progress": False,
+        }
 
     return plan_queries_node
 
 
 def route_topics(state: WorkflowState) -> list[Send]:
+    research_input = _research_input(state)
+    return _topic_sends(state, state.get("queries") or [research_input.question])
+
+
+def route_recovery(state: WorkflowState) -> str | list[Send]:
+    if state.get("reread_actions"):
+        return "reread"
+    queries = state.get("recovery_queries") or []
+    return _topic_sends(state, queries) if queries else "finalize"
+
+
+def _topic_sends(state: WorkflowState, queries: list[str]) -> list[Send]:
     require_evidence_contract(state)
     research_input = _research_input(state)
-    queries = state.get("queries") or [research_input.question]
     return [
         Send(
             "research_topic",
@@ -124,7 +153,7 @@ def route_topics(state: WorkflowState) -> list[Send]:
                 thread_id=research_input.thread_id,
                 query=query,
                 prior_evidence_ids=parent_evidence_candidates(state),
-                **branch_context({**state, "target_requirement_ids": assigned_targets(state, query)}),
+                **branch_context({**state, "query": query, "target_requirement_ids": assigned_targets(state, query)}),
             ),
         )
         for query in queries
@@ -174,10 +203,11 @@ def build_research_topic_node(topic_graph):
 
 
 async def evaluate_node(
-    state: WorkflowState, runtime: Runtime[HarnessContext]
+    state: WorkflowState, runtime: Runtime[HarnessContext], *, repair_source_admission: bool = True,
 ) -> dict[str, Any]:
     result = await run_evidence_evaluation(
-        state, runtime.context, ReferenceWorkflowEvaluation, repair_attempts=1
+        state, runtime.context, ReferenceWorkflowEvaluation, repair_attempts=1,
+        repair_source_admission=repair_source_admission,
     )
     return {"evaluation": result.pop("assessment"), **result}
 
@@ -190,11 +220,16 @@ def finalize_node(state: WorkflowState) -> dict[str, Any]:
 
     gaps = final_evidence_gaps(state)
     unfinished = unfinished_plan_items(list(state.get("topic_outcomes") or []))
+    verified_complete = verified_coverage_complete(state)
     if strong_exit_reason(state):
         termination_reason = strong_exit_reason(state)
         gaps.append(f"agent_exit:{termination_reason}")
     elif not evidence_ids:
         termination_reason = "no_sources"
+    elif verified_complete is True:
+        termination_reason = INCOMPLETE_PLAN_REASON if unfinished else "completed"
+    elif verified_complete is False:
+        termination_reason = "insufficient_evidence"
     elif evaluation is not None and evaluation.sufficient and coverage_complete(state):
         termination_reason = INCOMPLETE_PLAN_REASON if unfinished else "completed"
     else:
@@ -203,6 +238,7 @@ def finalize_node(state: WorkflowState) -> dict[str, Any]:
         termination_reason, state.get("topic_outcomes", [])
     )
     outcome = ResearchOutcome(
+        delivery_plan=state.get("delivery_plan"),
         source_eligibility=state.get("source_eligibility"),
         evidence_contract_version=3,
         requirements=requirements,

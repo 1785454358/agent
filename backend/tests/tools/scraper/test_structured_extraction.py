@@ -72,6 +72,18 @@ class StaticHttpFetcher(AsyncWebFetcher):
 
 
 @pytest.mark.asyncio
+async def test_extraction_keeps_publication_metadata_even_when_main_text_drops_header(monkeypatch):
+    monkeypatch.setattr("deeptrace.tools.scraper.fetcher.extract", lambda *a, **k: "Abstract: measured a new correlation.")
+    fetcher = StaticHttpFetcher('<meta name="citation_date" content="2026/09/29"><main><p>Abstract: measured a new correlation.</p></main>')
+    try:
+        result = await fetcher.fetch("https://example.com/paper")
+        assert "Published (HTML metadata): 2026-09-29" in result.content
+        assert "Abstract: measured a new correlation." in result.content
+    finally:
+        await fetcher.aclose()
+
+
+@pytest.mark.asyncio
 async def test_usable_primary_is_not_displaced_by_longer_fallback(monkeypatch):
     primary = "Relevant main text.\n\nA complete condition."
     monkeypatch.setattr(
@@ -83,6 +95,25 @@ async def test_usable_primary_is_not_displaced_by_longer_fallback(monkeypatch):
         assert result.content == primary
         assert result.scraper_used is ScraperUsed.HTTPX_TRAFILATURA
         assert result.final_url == "https://example.com/article"
+    finally:
+        await fetcher.aclose()
+
+
+@pytest.mark.asyncio
+async def test_news_type_and_original_paper_anchor_survive_text_extraction(monkeypatch):
+    monkeypatch.setattr('deeptrace.tools.scraper.fetcher.extract', lambda *a, **k: 'A new laboratory result.')
+    html = '''<script type="application/ld+json">{"@type":"NewsArticle","datePublished":"2026-06-27"}</script>
+        <main><p>A new laboratory result.</p><p>Original publication:
+        <a href="https://doi.org/10.1234/new">Read the paper</a></p>
+        <section id="references"><a href="https://doi.org/10.1234/old">Old reference</a></section>
+        <a href="http://127.0.0.1/secret">Internal</a></main>'''
+    fetcher = StaticHttpFetcher(html)
+    try:
+        result = await fetcher.fetch('https://example.com/news')
+        assert 'Source type (HTML metadata): NewsArticle' in result.content
+        assert 'Original research links (HTML anchors):\nhttps://doi.org/10.1234/new' in result.content
+        assert '10.1234/old' not in result.content
+        assert '127.0.0.1' not in result.content
     finally:
         await fetcher.aclose()
 

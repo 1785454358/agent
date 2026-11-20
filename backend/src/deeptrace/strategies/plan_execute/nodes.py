@@ -25,6 +25,7 @@ from deeptrace.strategies.common import (
     strong_exit_reason,
     topic_error_gaps,
     validated_branch_context,
+    verified_coverage_complete,
 )
 from deeptrace.strategies.common import (
     research_input_from_state as _research_input,
@@ -34,8 +35,9 @@ from deeptrace.strategies.evidence_evaluation import (
     require_evidence_contract,
     run_evidence_evaluation,
     seal_initial_plan,
-    supplement_plan,
 )
+from deeptrace.strategies.gap_recovery import recover_gaps
+from deeptrace.strategies.evaluation_retention import retain_verified_findings
 from deeptrace.strategies.model_io import (
     assigned_targets,
     parse_json_object,
@@ -44,7 +46,8 @@ from deeptrace.strategies.model_io import (
 )
 from deeptrace.strategies.plan_execute.models import ReferenceExecutorDecision, TaskPlan
 from deeptrace.strategies.plan_execute.state import PlanExecuteState
-from deeptrace.strategies.planning import planning_instruction
+from deeptrace.strategies.planning import normalize_task_plan, planning_instruction, repair_plan_mapping
+from deeptrace.strategies.scope_review import review_plan_scope
 
 PLAN_EXECUTE_CALLER_ID = "plan-execute-executor"
 PLANNER_ROLE = "planner"
@@ -63,7 +66,7 @@ def build_plan_node(max_tasks: int):
         background = conversation_background_lines(research_input)
         prompt = (
             "你是一次研究任务的规划器。"
-            + planning_instruction("queries", max_tasks)
+            + planning_instruction("queries", max_tasks, research_input.question)
             + f"用户问题：{research_input.question}\n"
             + ("" if not background else "会话背景：\n" + "\n".join(background) + "\n")
             + f"今天日期：{research_input.current_date}"
@@ -75,6 +78,7 @@ def build_plan_node(max_tasks: int):
                 role=PLANNER_ROLE, messages=research_messages(research_input, prompt)
             )
             payload = parse_json_object(payload_text(response))
+            payload = normalize_task_plan(payload, "queries", max_tasks)
             if payload is not None and isinstance(payload.get("queries"), list):
                 for candidate in payload["queries"]:
                     if not isinstance(candidate, str):
@@ -91,7 +95,12 @@ def build_plan_node(max_tasks: int):
                 "Research planning failed; using fallback", exc_info=True
             )
             queries = []
-        queries, contract = seal_initial_plan(research_input.question, payload, queries)
+        queries, contract = seal_initial_plan(research_input.question, payload, queries, preserve_mapped_queries=True)
+        queries, contract = await repair_plan_mapping(
+            research_input, payload, queries, contract, runtime.context,
+            role=PLANNER_ROLE, field="queries", limit=max_tasks,
+        )
+        queries, contract = await review_plan_scope(state, runtime.context, queries, contract)
         plan = TaskPlan(queries=queries, requirements=contract["requirements"])
         await emit_progress(
             runtime.context, "planning.completed", round=1,
@@ -134,6 +143,7 @@ def build_execute_task_node(topic_graph):
         await emit_progress(runtime.context, "task.started", round=round_number, task=query)
         branch = {
             **state,
+            "query": query,
             "target_requirement_ids": assigned_targets(state, query),
         }
         topic_input = ResearchTopicInput(
@@ -184,8 +194,9 @@ async def evaluate_node(
     await emit_progress(runtime.context, "evaluation.started", round=round_number)
     result = await run_evidence_evaluation(
         state, runtime.context, ReferenceExecutorDecision,
-        incomplete_action="replan", repair_attempts=1,
+        incomplete_action="replan", repair_attempts=1, repair_source_admission=False,
     )
+    result = await retain_verified_findings(state, result, runtime, assessment_key="assessment")
     decision = result.pop("assessment")
     coverage = result.get("coverage")
     await emit_progress(
@@ -234,13 +245,15 @@ def build_route_after_evaluate(max_replans: int):
     def route_after_evaluate(state: PlanExecuteState) -> str:
         if (
             strong_exit_reason(state)
-            or state.get("no_progress")
+            or "evaluation_budget_exhausted" in (state.get("diagnostic_gaps") or [])
             or coverage_complete(state)
         ):
             return "finalize"
-        decision = state.get("decision")
-        if decision is None and state.get("evidence_ids"):
+        if state.get("recovery_read_pending") and state.get("recovery_queries"):
+            return "replan"
+        if state.get("no_progress"):
             return "finalize"
+        decision = state.get("decision")
         if decision is None or decision.action == "replan":
             if (state.get("replan_count") or 0) >= max_replans:
                 return "finalize"
@@ -254,24 +267,26 @@ def build_replan_node(max_tasks: int):
     async def replan_node(
         state: PlanExecuteState, runtime: Runtime[HarnessContext]
     ) -> dict[str, Any]:
-        replan_count = (state.get("replan_count") or 0) + 1
+        resuming = state.get("recovery_read_pending") and state.get("recovery_queries")
+        replan_count = (state.get("replan_count") or 0) + int(not resuming)
         await emit_progress(
             runtime.context, "replanning.started", round=replan_count + 1,
             gaps_json=json.dumps(state.get("unresolved_gaps") or [], ensure_ascii=False),
         )
-        planned = await supplement_plan(
+        planned = await recover_gaps(
             state,
-            runtime.context,
+            runtime,
             role=REPLANNER_ROLE,
             dispatched=state.get("completed_tasks") or [],
             limit=max_tasks,
+            mode=ResearchMode.PLAN_EXECUTE, caller_id=PLAN_EXECUTE_CALLER_ID,
         )
         new_queries = planned.pop("queries")
         await emit_progress(
             runtime.context, "replanning.completed", round=replan_count + 1,
             tasks_json=json.dumps(new_queries, ensure_ascii=False),
         )
-        if new_queries:
+        if new_queries or planned.get("recovery_read_pending"):
             return {**planned, "plan_tasks": new_queries, "replan_count": replan_count}
         return {
             **planned,
@@ -287,6 +302,8 @@ def build_replan_node(max_tasks: int):
 
 
 def route_after_replan(state: PlanExecuteState) -> str:
+    if state.get("recovery_read_pending"):
+        return "evaluate"
     if state.get("plan_tasks"):
         return "select_task"
     return "finalize"
@@ -302,6 +319,7 @@ def build_finalize_node(max_replans: int):
         gaps = final_evidence_gaps(state)
         replan_count = state.get("replan_count") or 0
         unfinished = unfinished_plan_items(list(state.get("topic_outcomes") or []))
+        verified_complete = verified_coverage_complete(state)
         if strong_exit_reason(state):
             termination_reason = strong_exit_reason(state)
             gaps.append(f"agent_exit:{termination_reason}")
@@ -310,10 +328,22 @@ def build_finalize_node(max_replans: int):
             gaps.append("no_research_progress")
         elif not evidence_ids:
             termination_reason = "no_sources"
+        elif verified_complete is True:
+            termination_reason = INCOMPLETE_PLAN_REASON if unfinished else "completed"
+        elif verified_complete is False:
+            if decision is not None and decision.action == "replan":
+                if replan_count >= max_replans:
+                    termination_reason = "max_replans_reached"
+                else:
+                    termination_reason = "insufficient_evidence"
+            else:
+                termination_reason = "insufficient_evidence"
         elif decision is not None and coverage_complete(state):
             termination_reason = INCOMPLETE_PLAN_REASON if unfinished else "completed"
         elif decision is not None and decision.action == "replan":
-            if replan_count >= max_replans or "no_new_tasks_to_plan" in gaps:
+            if "no_new_tasks_to_plan" in gaps:
+                termination_reason = "insufficient_evidence"
+            elif replan_count >= max_replans:
                 termination_reason = "max_replans_reached"
             else:
                 termination_reason = "insufficient_evidence"
@@ -323,6 +353,7 @@ def build_finalize_node(max_replans: int):
             termination_reason, state.get("topic_outcomes", [])
         )
         outcome = ResearchOutcome(
+            delivery_plan=state.get("delivery_plan"),
             source_eligibility=state.get("source_eligibility"),
             evidence_contract_version=3,
             requirements=requirements,

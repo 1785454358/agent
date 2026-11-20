@@ -18,6 +18,7 @@ from deeptrace.domain import (
 from deeptrace.domain.evidence import Finding
 from deeptrace.harness.context import HarnessContext
 from deeptrace.harness.registry import ResearchStrategyGraph
+from deeptrace.research import VerificationResult
 from deeptrace.strategies.model_io import branch_context, parent_evidence_candidates
 
 
@@ -144,6 +145,16 @@ def _controlled_exit(outcome: ResearchTopicOutcome) -> str | None:
     ):
         return None
     return agent.stop_reason
+
+
+def verified_coverage_complete(state: Mapping[str, Any]) -> bool | None:
+    """Return the host verification verdict, or None for legacy states."""
+    verification = state.get("verification")
+    if verification is None:
+        return None
+    if not isinstance(verification, VerificationResult):
+        verification = VerificationResult.model_validate(verification)
+    return verification.coverage_complete
 
 
 def strong_exit_reason(state: Mapping[str, Any]) -> str | None:

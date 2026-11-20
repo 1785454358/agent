@@ -14,6 +14,7 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+from deeptrace.domain.research_record import ExperimentRecord, StudyIdentity
 
 MAX_EVIDENCE_ID_LENGTH = 128
 MAX_EVIDENCE_URL_LENGTH = 2_048
@@ -152,7 +153,11 @@ class Finding(BaseModel):
     claim: str = Field(min_length=1)
     evidence_ids: list[str] = Field(min_length=1)
     confidence: float = Field(ge=0.0, le=1.0)
-    supports: list[EvidenceSupport] = Field(default_factory=list, max_length=3)
+    # Model drafts select at most 3 refs. Host-expanded reading groups and dates
+    # can retain every short quote within the 128-unit visible evaluation view.
+    supports: list[EvidenceSupport] = Field(default_factory=list, max_length=128)
+    research_result: StudyIdentity | None = None
+    experiments: list[ExperimentRecord] = Field(default_factory=list, max_length=2)
 
     @field_validator("evidence_ids")
     @classmethod

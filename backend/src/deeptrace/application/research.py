@@ -12,10 +12,14 @@ from deeptrace.domain import (
     ResearchOutcome,
     ResponseMode,
     ResponseOutcome,
-    normalize_research_mode,
 )
+from deeptrace.domain.run import TERMINAL_STATUSES, ResearchSufficiency
+from deeptrace.domain.execution import ResearchModeSelection, normalize_mode_selection
 from deeptrace.harness.context import HarnessContext
 from deeptrace.harness.state import new_conversation, new_turn
+from langsmith import traceable
+from langsmith.run_helpers import get_current_run_tree
+from deeptrace.observability.langsmith import application_inputs, application_outputs
 
 MAX_QUESTION_LENGTH = 20_000
 
@@ -42,7 +46,7 @@ class ApplicationResearchRequest(BaseModel):
             strip_whitespace=True, min_length=1, max_length=MAX_QUESTION_LENGTH
         ),
     ]
-    mode: ResearchMode
+    mode: ResearchModeSelection = "auto"
     response_mode: ResponseMode | None = None
 
     @field_validator("mode", mode="before")
@@ -50,7 +54,7 @@ class ApplicationResearchRequest(BaseModel):
     def normalize_mode(cls, value: object) -> object:
         if isinstance(value, ResearchMode):
             return value
-        return normalize_research_mode(str(value))
+        return normalize_mode_selection(str(value))
 
 
 class ResearchApplicationService:
@@ -83,6 +87,13 @@ class ResearchApplicationService:
             configurable["response_mode_override"] = request.response_mode
         merged_config["configurable"] = configurable
 
+        return await self._invoke_graph(request, merged_config, context,
+            langsmith_extra={"metadata": {"run_id": request.run_id,
+                "thread_id": request.thread_id, "mode": str(request.mode)}})
+
+    @traceable(name="research.run", run_type="chain",
+               process_inputs=application_inputs, process_outputs=application_outputs)
+    async def _invoke_graph(self, request, merged_config, context):
         turn = new_turn(request.run_id, request.question, request.mode)
         aget_state = getattr(self._graph, "aget_state", None)
         snapshot = None
@@ -97,6 +108,15 @@ class ResearchApplicationService:
             # checkpoint instead of starting over (LangGraph resume semantics).
             prior_turn = snapshot.values.get("turn") or {}
             if prior_turn.get("run_id") == request.run_id:
+                if prior_turn.get("research_flow_version") != 2:
+                    raise ValueError(
+                        "legacy_research_checkpoint_requires_original_runtime: "
+                        "use the saved original runtime to resume, or start a new run"
+                    )
+                if (tree := get_current_run_tree()) is not None:
+                    tree.add_metadata({"resumed": True, "checkpoint_id": (
+                        (getattr(snapshot, "config", None) or {}).get("configurable") or {}
+                    ).get("checkpoint_id")})
                 result = await self._graph.ainvoke(
                     None, config=merged_config, context=context
                 )
@@ -107,7 +127,7 @@ class ResearchApplicationService:
             initial_state: dict[str, Any] = {"turn": turn}
         else:
             initial_state = {
-                "conversation": new_conversation(request.thread_id, request.mode),
+                "conversation": new_conversation(request.thread_id, turn["selected_mode"]),
                 "turn": turn,
             }
         result = await self._graph.ainvoke(
@@ -122,27 +142,40 @@ class ResearchApplicationService:
         context: HarnessContext,
     ) -> ApplicationRunResult:
         turn = result["turn"]
+        status = turn.get("status")
+        if status not in TERMINAL_STATUSES:
+            raise RuntimeError(f"graph finished without a terminal status: {status}")
         response_outcome = turn.get("response_outcome")
-        if response_outcome is None:
+        if response_outcome is None and status in {"completed", "partial"}:
             raise RuntimeError(
                 "graph finished without a response outcome: "
                 f"status={turn.get('status')}"
             )
-        status = turn.get("status")
-        if status not in {"completed", "partial"}:
-            raise RuntimeError(f"graph finished without a terminal status: {status}")
-        response = ResponseOutcome.model_validate(response_outcome)
+        response = (
+            ResponseOutcome.model_validate(response_outcome)
+            if response_outcome is not None else None
+        )
         raw_research = turn.get("research_outcome")
         research = (
             ResearchOutcome.model_validate(raw_research)
             if raw_research is not None
             else None
         )
-        reason = response.partial_reason
-        if research is not None and research.termination_reason != "completed":
+        reason = response.partial_reason if response is not None else None
+        if research is not None and not research.delivery_first and research.termination_reason != "completed":
             reason = research.termination_reason
+        gaps = list(research.unresolved_gaps) if research is not None else []
+        if (
+            status == "completed"
+            and research is not None
+            and research.mode == ResearchMode.WORKFLOW
+            and not research.delivery_first
+        ):
+            reason = "workflow_completed"
+            if response is not None and response.partial_reason:
+                gaps = list(dict.fromkeys([*gaps, f"response:{response.partial_reason}"]))
         sources: list[str] = []
-        if response.cited_evidence_ids:
+        if response is not None and response.cited_evidence_ids:
             evidence = await context.evidence_store.get_many(
                 context.workspace_id, response.cited_evidence_ids
             )
@@ -153,11 +186,33 @@ class ResearchApplicationService:
             status=status,
             response_outcome=response,
             research_outcome=research,
-            termination_reason=reason
-            or ("completed" if status == "completed" else "partial"),
+            termination_reason=reason or (
+                "runtime_error" if status == "failed" else status
+            ),
             executed_steps=research.executed_steps if research is not None else 0,
-            unresolved_gaps=list(research.unresolved_gaps)
-            if research is not None
-            else [],
+            unresolved_gaps=gaps,
             sources=sources,
+            research_sufficiency=_research_sufficiency(research, turn),
         )
+
+
+def _research_sufficiency(
+    research: ResearchOutcome | None, turn: dict[str, Any]
+) -> ResearchSufficiency:
+    """Use validated research coverage, never the scheduler's completion flag."""
+    if research is None:
+        if not turn.get("requires_research", True):
+            return ResearchSufficiency.NOT_REQUIRED
+        return ResearchSufficiency.UNKNOWN
+    if not research.delivery_first and research.evidence_contract_version in (2, 3):
+        from deeptrace.strategies.evidence_evaluation import coverage_complete
+
+        if coverage_complete(research.model_dump()):
+            return ResearchSufficiency.SUFFICIENT
+        if research.coverage is not None:
+            return ResearchSufficiency.INSUFFICIENT
+    if research.unresolved_gaps or research.termination_reason in {
+        "insufficient_evidence", "no_sources",
+    }:
+        return ResearchSufficiency.INSUFFICIENT
+    return ResearchSufficiency.UNKNOWN

@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import pytest
 from deeptrace.harness.model_gateway import ChatModelGateway
 from deeptrace.harness.prompts import task_messages
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 
 class Provider:
@@ -47,6 +47,39 @@ async def test_unknown_failure_is_sanitized_and_not_retried():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('body', [
+    {'error': {'code':'credit_quota_exceeded', 'type':'quota_exceeded'}},
+    {'code':'insufficient_quota', 'type':'insufficient_quota'},
+])
+async def test_exhausted_provider_quota_is_not_a_retryable_rate_limit(body):
+    class QuotaError(RuntimeError):
+        status_code = 429
+    error = QuotaError('private provider details')
+    error.body = body
+    provider = Provider(error, AIMessage(content='must not retry'))
+    from deeptrace.harness.model_gateway import ModelCallError
+    from deeptrace.harness.model_recovery import invoke_readonly_with_recovery
+    with pytest.raises(ModelCallError) as caught:
+        await invoke_readonly_with_recovery(
+            ChatModelGateway(provider, retry_attempts=2, retry_base_seconds=0),
+            role='planner', messages=MESSAGES)
+    assert provider.calls == 1
+    assert caught.value.category.value == 'fatal'
+    assert caught.value.code == 'model_quota_exhausted'
+    assert 'private' not in str(caught.value)
+
+
+@pytest.mark.asyncio
+async def test_ordinary_rate_limit_remains_retryable():
+    class RateLimitError(RuntimeError):
+        status_code = 429
+        body = {'error': {'code':'rate_limit_exceeded'}}
+    provider = Provider(RateLimitError(), AIMessage(content='ok'))
+    assert (await ChatModelGateway(provider, retry_base_seconds=0).invoke(role='planner', messages=MESSAGES)).content == 'ok'
+    assert provider.calls == 2
+
+
+@pytest.mark.asyncio
 async def test_gateway_does_not_retry_cancellation():
     provider = Provider(asyncio.CancelledError())
     with pytest.raises(asyncio.CancelledError):
@@ -65,6 +98,18 @@ async def test_gateway_rejects_a_model_call_without_the_context_envelope():
         )
 
     assert provider.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_structured_task_context_does_not_depend_on_chinese_prompt_labels():
+    provider = Provider(AIMessage(content='ok'))
+    gateway = ChatModelGateway(provider)
+    result = await gateway.invoke(role='document-reader', messages=[
+        SystemMessage(content='Read the requested local document.'),
+        HumanMessage(content='Read README.md', additional_kwargs={
+            'task_context': {'task': 'Read README.md', 'constraints': ['Read only']}}),
+    ])
+    assert result.content == 'ok'
 
 
 @pytest.mark.asyncio

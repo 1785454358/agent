@@ -15,7 +15,7 @@ always-on compressor that degrades answer quality.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from functools import lru_cache
 
@@ -80,6 +80,26 @@ class TokenBudgetConfig:
         )
 
 
+async def bounded_run_context(
+    gateway, role: str, config: TokenBudgetConfig, *, remaining_calls: int = 1,
+) -> TokenBudgetConfig:
+    """Select materials within the current run allowance, retaining call reserves.
+
+    Unbudgeted gateways keep the existing model window. This is a selection
+    hint, never an alternative admission path or an increase in run limits.
+    """
+    if remaining_calls < 1:
+        raise ValueError("invalid_remaining_calls")
+    remaining = getattr(gateway, "available_input_tokens", None)
+    if remaining is None:
+        return config
+    allowance = await remaining(role)
+    # Run limits charge input only. Output and model-window safety reserves
+    # must not be subtracted from that allowance a second time.
+    context_cap = allowance // remaining_calls + config.output_reserve_tokens + config.safety_tokens
+    return replace(config, context_tokens=min(config.context_tokens, context_cap))
+
+
 @dataclass
 class BudgetAllocation:
     context_tokens: int
@@ -91,6 +111,8 @@ class BudgetAllocation:
     truncated: list[str]
     pinned_overflow: bool
     bound: bool
+    # Call-local content only: summary() intentionally exposes counts, not text.
+    rendered_segments: dict[str, str] = field(default_factory=dict, repr=False)
 
     def summary(self) -> dict[str, object]:
         return {
@@ -123,8 +145,7 @@ def assemble_with_budget(
             render[index] = segment.text
             remaining -= sizes[index]
     pinned_overflow = remaining < 0
-    if remaining < 0:
-        remaining = 0
+    remaining = max(remaining, 0)
 
     for priority in (SegmentPriority.HIGH, SegmentPriority.NORMAL):
         for index, segment in enumerate(segments):
@@ -159,5 +180,10 @@ def assemble_with_budget(
         truncated=truncated,
         pinned_overflow=pinned_overflow,
         bound=bound,
+        rendered_segments={
+            segment.name: render[index]
+            for index, segment in enumerate(segments)
+            if render[index] is not None
+        },
     )
     return text, allocation

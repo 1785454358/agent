@@ -31,7 +31,12 @@ class SemanticMemoryRetriever:
         self._max_distance = max_distance
 
     async def index(self, records: Sequence[MemoryRecord]) -> None:
-        pending = await self._index.records_requiring_index(records)
+        latest: dict[str, MemoryRecord] = {}
+        for record in records:
+            prior = latest.get(record.id)
+            if prior is None or record.version >= prior.version:
+                latest[record.id] = record
+        pending = await self._index.records_requiring_index(list(latest.values()))
         if not pending:
             return
         vectors = await self._embeddings.embed_documents(

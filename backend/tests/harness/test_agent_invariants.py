@@ -375,8 +375,9 @@ async def test_every_strategy_model_call_has_system_original_task_and_constraint
         },
         context=fixture.context,
     )
-    assert "researcher" in roles and "evaluator" in roles
-    assert result["outcome"].termination_reason == "completed"
+    assert "researcher" in roles and "evaluator" not in roles
+    assert result["outcome"].termination_reason == "no_sources"
+    assert not result["outcome"].read_anchors
     assert len(fixture.gateway.calls) == 2
 
 

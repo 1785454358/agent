@@ -105,6 +105,54 @@ async def seed(fixture, index, body, tenant=TENANT_ID):
 
 
 @pytest.mark.asyncio
+async def test_parallel_tracks_after_eighth_source_remain_visible_within_token_budget():
+    fixture = build_gateway_fixture()
+    records = [await seed(fixture, i, f"Independent track {i}: cancellation detail {i}.")
+               for i in range(16)]
+    view = await assemble_reference_evaluation_view(
+        fixture.context, question="Compare all independent tracks and cancellation",
+        requirements=[ResearchRequirement(id="r1", description="Compare cancellation")],
+        evidence_ids=[r.id for r in records], findings=[], read_anchors=[],
+        budget=TokenBudgetConfig(context_tokens=8000, output_reserve_tokens=0, safety_tokens=0),
+    )
+    assert {p.evidence_id for p in view.passages} == {r.id for r in records}
+    assert view.allocation.used_tokens == count_tokens(view.prompt) <= 8000
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("mode", ["workflow", "plan_execute", "multi_agent"])
+async def test_late_track_sources_survive_full_evaluation_protocol(mode):
+    from langchain_core.messages import AIMessage
+    from langgraph.runtime import Runtime
+    from deeptrace.strategies.workflow.nodes import evaluate_node as workflow
+    from deeptrace.strategies.plan_execute.nodes import evaluate_node as plan_execute
+    from deeptrace.strategies.multi_agent.nodes import supervisor_evaluate_node as multi_agent
+    from strategies.fixtures import evaluation_payload_from_view
+    from strategies.workflow.test_graph import _research_input
+
+    class Assessor:
+        calls = 0
+
+        async def invoke(self, *, messages, **kwargs):
+            self.calls += 1
+            prompt = str(messages[-1].content)
+            return AIMessage(content=json.dumps(evaluation_payload_from_view(
+                prompt, **({"sufficient": True} if mode == "workflow" else {}),
+            )))
+
+    assessor = Assessor()
+    fixture = build_gateway_fixture(model_gateway=assessor)
+    records = [await seed(fixture, i, f"Cancellation detail for track {i}.") for i in range(16)]
+    result = await {"workflow": workflow, "plan_execute": plan_execute, "multi_agent": multi_agent}[mode]({
+        **_research_input("Compare cancellation"), "requirements": [ResearchRequirement(id="r1", description="Cancellation")],
+        "evidence_ids": [r.id for r in records], "evidence_contract_version": 3,
+    }, Runtime(context=fixture.context))
+    assert assessor.calls == 1
+    assert all(result["source_eligibility"][r.id] == "eligible" for r in records)
+    assert result["coverage"].items[0].status == "covered"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("tokens", [0, 250, 600, 2000])
 async def test_final_reference_map_and_telemetry_follow_actual_token_selection(tokens):
     fixture = build_gateway_fixture()
@@ -143,9 +191,9 @@ async def test_final_reference_map_and_telemetry_follow_actual_token_selection(t
 
 
 @pytest.mark.asyncio
-async def test_foreign_source_and_ninth_source_are_never_visible():
+async def test_foreign_source_and_sources_beyond_metadata_cap_are_never_visible():
     fixture = build_gateway_fixture()
-    records = [await seed(fixture, i, f"fact {i}") for i in range(9)]
+    records = [await seed(fixture, i, f"fact {i}") for i in range(33)]
     foreign = await seed(fixture, 20, "foreign secret", tenant="other-workspace")
     ids = [foreign.id, *[r.id for r in records]]
     view = await assemble_reference_evaluation_view(
@@ -159,7 +207,7 @@ async def test_foreign_source_and_ninth_source_are_never_visible():
     assert "foreign secret" not in view.prompt
     assert foreign.id in view.unread_ids
     assert records[-1].id in view.unread_ids
-    assert all(p.evidence_id in {r.id for r in records[:7]} for p in view.passages)
+    assert all(p.evidence_id in {r.id for r in records[:31]} for p in view.passages)
 
 
 @pytest.mark.asyncio

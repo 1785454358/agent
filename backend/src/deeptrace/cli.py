@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 
 from deeptrace.application.agent_adapter import HarnessResearchRunner
 from deeptrace.config import Settings
-from deeptrace.domain import normalize_research_mode
+from deeptrace.domain.execution import normalize_mode_selection
 from deeptrace.models import RunEvent
 from deeptrace.observability import format_role_usage
 from deeptrace.runtime.models import RunRecord
@@ -24,9 +24,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("question", help="研究问题")
     parser.add_argument(
         "--mode",
-        default="workflow",
+        default="auto",
         help=(
-            "workflow 固定并行研究流程；plan_execute 规划、执行与有界重规划；"
+            "auto 按任务特点自动路由（默认）；workflow 固定并行研究流程；plan_execute 规划、执行与有界重规划；"
             "multi_agent 主管协调多个独立研究员（旧值 basic/deep 自动映射）"
         ),
     )
@@ -41,8 +41,8 @@ def _exit_code(status: str) -> int:
     return 0 if status == "completed" else 2
 
 
-async def _run(question: str, mode: str = "workflow") -> int:
-    canonical = normalize_research_mode(mode)
+async def _run(question: str, mode: str = "auto") -> int:
+    canonical = normalize_mode_selection(mode)
     runner = HarnessResearchRunner(Settings.from_env())
     run_id = uuid.uuid4().hex[:12]
     run = RunRecord(

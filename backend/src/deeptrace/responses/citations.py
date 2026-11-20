@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 from deeptrace.domain import CitationRef, ResponseMode, ResponseOutcome
+from deeptrace.responses.markdown import without_code
 from deeptrace.responses.models import ResponseDraft
 
 _MAX_RESPONSE_INPUT_CHARS = 500
@@ -35,8 +36,7 @@ def select_response_mode(user_input: str) -> ResponseMode:
 
     if (
         any(form in text for form in _REPORT_TAIL_FORMS)
-        or stripped.endswith("报告")
-        or stripped.endswith("report")
+        or stripped.endswith(("报告", "report"))
         or _REPORT_VERB_PATTERN.search(lowered) is not None
     ):
         return ResponseMode.REPORT
@@ -54,12 +54,16 @@ def normalize_citation_brackets(content: str) -> str:
     """Normalize full-width / lenticular citation brackets to ASCII [n]."""
     if not content:
         return content or ""
-    return _ALT_MARKER_PATTERN.sub(lambda match: f"[{match.group(1)}]", content)
+    view = without_code(content)
+    return _ALT_MARKER_PATTERN.sub(
+        lambda match: f"[{match.group(1)}]" if view[match.start()] != " " else match.group(),
+        content,
+    )
 
 
 def extract_citation_markers(content: str) -> list[str]:
     markers: list[str] = []
-    for match in _MARKER_PATTERN.finditer(normalize_citation_brackets(content or "")):
+    for match in _MARKER_PATTERN.finditer(without_code(normalize_citation_brackets(content or ""))):
         marker = f"[{match.group(1)}]"
         if marker not in markers:
             markers.append(marker)
@@ -100,8 +104,11 @@ def validate_citations(
         evidence_id: f"[{index}]"
         for index, evidence_id in enumerate(cited_evidence_ids, 1)
     }
+    visible_marker_positions = {match.start() for match in _MARKER_PATTERN.finditer(without_code(cleaned))}
 
     def replace_marker(match: re.Match[str]) -> str:
+        if match.start() not in visible_marker_positions:
+            return match.group()
         evidence_id = known.get(int(match.group(1)))
         return compact_markers.get(evidence_id, "")
 

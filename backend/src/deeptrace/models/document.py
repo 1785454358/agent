@@ -6,7 +6,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ScraperUsed(StrEnum):
@@ -15,6 +15,7 @@ class ScraperUsed(StrEnum):
     SEARCH_PROVIDER = "search_provider"
     HTTPX_TRAFILATURA = "httpx_trafilatura"
     HTTPX_BS4 = "httpx_bs4"
+    HTTPX_PYPDF = "httpx_pypdf"
     PLAYWRIGHT_TRAFILATURA = "playwright_trafilatura"
     PLAYWRIGHT_BS4 = "playwright_bs4"
 
@@ -28,6 +29,10 @@ class RawDocument(BaseModel):
     canonical_url: str | None
     title: str
     content: str
+    media_type: str = "text/html"
+    # Call-local source body for evidence ingestion. The legacy bounded content
+    # remains the serialized preview; full originals never enter state dumps.
+    full_content: str | None = Field(default=None, min_length=1, exclude=True, repr=False)
     content_hash: str
     fetched_at: datetime
     scraper_used: ScraperUsed

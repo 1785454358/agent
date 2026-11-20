@@ -20,18 +20,31 @@ from trafilatura import extract
 
 from deeptrace.models import RawDocument, ScraperUsed
 from deeptrace.tools.scraper.metadata import extract_source_metadata
+from deeptrace.tools.scraper.research_links import (
+    RESEARCH_LINKS_LABEL,
+    original_research_links,
+)
+from deeptrace.tools.scraper.structure import missing_main_code
+from deeptrace.tools.scraper.document_formats import document_format_links, FORMATS_LABEL
+from deeptrace.tools.scraper.pdf import extract_pdf, PdfExtractionError
 from deeptrace.tools.scraper.urls import (
     normalize_url_before_fetch,
     resolve_document_identity,
     validate_public_url,
 )
 
-MAX_RESPONSE_BYTES = 2_000_000
+MAX_RESPONSE_BYTES = 8_000_000
+MAX_DOCUMENT_TEXT_CHARS = 1_000_000
+MAX_PDF_RESPONSE_BYTES = 8_000_000
 DEFAULT_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 )
 BENCHMARK_DNS_PROXY_NETWORK = ipaddress.ip_network("198.18.0.0/15")
+
+
+class PlainText(str):
+    """A bounded HTTP text body that must not pass through HTML extraction."""
 
 
 @dataclass(frozen=True)
@@ -139,7 +152,8 @@ class AsyncWebFetcher:
         self._browser_lock = asyncio.Lock()
         self._dns_cache: dict[str, bool] = {}
 
-    async def fetch(self, url: str) -> RawDocument:
+    async def fetch(self, url: str, *, page_start: int | None = None,
+                    page_end: int | None = None) -> RawDocument:
         """抓取公网 HTML 页面，正文质量不足时启动浏览器降级。"""
         try:
             normalized = normalize_url_before_fetch(url)
@@ -151,8 +165,45 @@ class AsyncWebFetcher:
         http_error: WebFetchError | None = None
         try:
             html, final_url = await self._fetch_httpx(normalized)
+            if isinstance(html, bytes):
+                try:
+                    title, text = await asyncio.wait_for(asyncio.to_thread(
+                        extract_pdf, html, page_start=page_start, page_end=page_end), timeout=self._http_timeout)
+                except PdfExtractionError as exc:
+                    raise WebFetchError(exc.code, "PDF 原文无法提取", format="application/pdf") from exc
+                except TimeoutError as exc:
+                    raise WebFetchError("pdf_extraction_timeout", "PDF 提取超时", format="application/pdf") from exc
+                if not self._is_usable(text):
+                    raise WebFetchError("pdf_text_unavailable", "PDF 可用文本不足", format="application/pdf")
+                final_url = normalize_url_before_fetch(final_url)
+                content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
+                return RawDocument(
+                    doc_id=resolve_document_identity(final_url, None, content_hash),
+                    requested_url=normalized, final_url=final_url, canonical_url=None,
+                    title=title or final_url, content=text[:self._max_page_chars], full_content=text,
+                    media_type="application/pdf", content_hash=content_hash, fetched_at=datetime.now(UTC),
+                    scraper_used=ScraperUsed.HTTPX_PYPDF, status="success",
+                )
+            if page_start is not None or page_end is not None:
+                raise WebFetchError("pdf_invalid_page_range", "页段参数仅适用于 PDF")
+            if isinstance(html, PlainText):
+                text = str(html)
+                if len(text) > MAX_DOCUMENT_TEXT_CHARS:
+                    raise WebFetchError("document_text_limit", "纯文本超过受限存储上限")
+                if not self._is_usable(text):
+                    raise WebFetchError("text_unavailable", "纯文本可用内容不足")
+                content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
+                return RawDocument(
+                    doc_id=resolve_document_identity(final_url, None, content_hash),
+                    requested_url=normalized, final_url=final_url, canonical_url=None,
+                    title=final_url, content=text[:self._max_page_chars], full_content=text,
+                    media_type="text/plain", content_hash=content_hash, fetched_at=datetime.now(UTC),
+                    scraper_used=ScraperUsed.HTTPX_TRAFILATURA, status="success",
+                )
             candidates.extend(self._extract_candidates(html, final_url, browser=False))
         except WebFetchError as exc:
+            if exc.code.startswith("pdf_") or exc.code in {"invalid_pdf", "document_text_limit", "text_unavailable"} or exc.details.get("format") == "application/pdf":
+                raise
             http_error = exc
 
         best = (
@@ -188,6 +239,9 @@ class AsyncWebFetcher:
             )
 
         full_content = best.text.strip()
+        if len(full_content) > MAX_DOCUMENT_TEXT_CHARS:
+            raise WebFetchError("document_text_limit", "正文超过受限存储上限；请读取章节或其他格式",
+                                max_chars=MAX_DOCUMENT_TEXT_CHARS)
         content_hash = hashlib.sha256(full_content.encode("utf-8")).hexdigest()
         final_url = normalize_url_before_fetch(best.source_url)
         canonical = self._safe_canonical_url(best.canonical_url, final_url)
@@ -198,6 +252,7 @@ class AsyncWebFetcher:
             canonical_url=canonical,
             title=best.title or final_url,
             content=full_content[: self._max_page_chars],
+            full_content=full_content,
             content_hash=content_hash,
             fetched_at=datetime.now(UTC),
             scraper_used=best.scraper_used,
@@ -207,7 +262,7 @@ class AsyncWebFetcher:
             publisher=best.publisher,
         )
 
-    async def _fetch_httpx(self, url: str) -> tuple[str, str]:
+    async def _fetch_httpx(self, url: str) -> tuple[str | bytes, str]:
         current = url
         for redirect_count in range(self._max_redirects + 1):
             await self._ensure_public_url(current)
@@ -225,30 +280,41 @@ class AsyncWebFetcher:
                             raise WebFetchError(
                                 "too_many_redirects", "重定向次数超过限制"
                             )
-                        current = normalize_url_before_fetch(
-                            urljoin(str(response.url), location)
-                        )
+                        observed = urljoin(str(response.url), location)
+                        current = normalize_url_before_fetch(observed)
+                        # Canonical identity may discard a trailing slash;
+                        # HTTP transport must preserve the server's Location.
+                        if urlsplit(observed).path.endswith("/") and not urlsplit(current).path.endswith("/"):
+                            parsed = httpx.URL(current)
+                            current = str(parsed.copy_with(path=parsed.path + "/"))
                         continue
                     response.raise_for_status()
                     content_type = response.headers.get("content-type", "").lower()
-                    if "text/html" not in content_type:
+                    is_pdf = "application/pdf" in content_type
+                    is_text = "text/plain" in content_type
+                    if "text/html" not in content_type and not is_pdf and not is_text:
                         raise WebFetchError(
                             "unsupported_content_type",
-                            "只支持 text/html 页面",
+                            "只支持 HTML、TXT 或 PDF 文档",
                             content_type=content_type,
                         )
                     body = bytearray()
+                    limit = MAX_PDF_RESPONSE_BYTES if is_pdf else MAX_RESPONSE_BYTES
                     async for chunk in response.aiter_bytes():
                         body.extend(chunk)
-                        if len(body) > MAX_RESPONSE_BYTES:
+                        if len(body) > limit:
                             raise WebFetchError(
                                 "response_too_large",
                                 "响应大小超过限制",
-                                max_bytes=MAX_RESPONSE_BYTES,
+                                max_bytes=limit,
+                                **({"format": "application/pdf"} if is_pdf else {}),
                             )
-                    return body.decode(
+                    if is_pdf:
+                        return bytes(body), str(response.url)
+                    decoded = body.decode(
                         response.encoding or "utf-8", errors="replace"
-                    ), str(response.url)
+                    )
+                    return (PlainText(decoded) if is_text else decoded), str(response.url)
             except WebFetchError:
                 raise
             except httpx.HTTPError as exc:
@@ -370,12 +436,30 @@ class AsyncWebFetcher:
     ) -> list[ExtractionCandidate]:
         title, canonical = self._metadata(html)
         source_metadata = extract_source_metadata(html)
+        research_links = original_research_links(html, source_url)
+        format_links = document_format_links(html, source_url)
+        def with_metadata(text):
+            if not text:
+                return (text or "").strip()
+            # Keep provenance explicit. This is parsed source HTML metadata,
+            # never a date guessed from search snippets, URL or the fetch clock.
+            headers = []
+            if source_metadata.source_type:
+                headers.append("Source type (HTML metadata): " + source_metadata.source_type)
+            if source_metadata.published_at:
+                headers.append("Published (HTML metadata): " + source_metadata.published_at.date().isoformat())
+            sections = [*headers, text.strip()]
+            if research_links:
+                sections.append(RESEARCH_LINKS_LABEL + "\n" + "\n".join(research_links))
+            if format_links:
+                sections.append(FORMATS_LABEL + "\n" + "\n".join(format_links))
+            return "\n\n".join(sections)
         trafilatura_text = extract(
             html,
             url=source_url,
             include_comments=False,
-            include_tables=False,
-            favor_precision=True,
+            include_tables=True,
+            favor_recall=True,
             output_format="markdown",
         )
         trafilatura_used = (
@@ -384,9 +468,9 @@ class AsyncWebFetcher:
             else ScraperUsed.HTTPX_TRAFILATURA
         )
         bs4_used = ScraperUsed.PLAYWRIGHT_BS4 if browser else ScraperUsed.HTTPX_BS4
-        return [
+        candidates = [
             ExtractionCandidate(
-                text=(trafilatura_text or "").strip(),
+                text=with_metadata(trafilatura_text),
                 title=title,
                 scraper_used=trafilatura_used,
                 source_url=source_url,
@@ -396,7 +480,7 @@ class AsyncWebFetcher:
                 publisher=source_metadata.publisher,
             ),
             ExtractionCandidate(
-                text=self._extract_bs4(html),
+                text=with_metadata(self._extract_bs4(html)),
                 title=title,
                 scraper_used=bs4_used,
                 source_url=source_url,
@@ -406,6 +490,11 @@ class AsyncWebFetcher:
                 publisher=source_metadata.publisher,
             ),
         ]
+        # Length alone cannot detect an apparently usable extraction that lost
+        # every API example. Prefer structured HTML only for demonstrable loss.
+        if missing_main_code(html, trafilatura_text or '', candidates[1].text):
+            candidates.reverse()
+        return candidates
 
     @staticmethod
     def _metadata(html: str) -> tuple[str, str | None]:

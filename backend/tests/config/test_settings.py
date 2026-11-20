@@ -23,6 +23,26 @@ def _set_required_environment(
     monkeypatch.setenv("DEEPTRACE_EMBEDDING_MODEL_PATH", str(model_path))
 
 
+@pytest.mark.parametrize("value", ["strategies", "legacy", "controller"])
+def test_research_orchestrator_selects_runtime(monkeypatch, tmp_path, value):
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv("DEEPTRACE_RESEARCH_ORCHESTRATOR", value)
+    assert Settings.from_env().research_orchestrator == value
+
+
+def test_unknown_research_orchestrator_is_rejected(monkeypatch, tmp_path):
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv("DEEPTRACE_RESEARCH_ORCHESTRATOR", "invented")
+    with pytest.raises(RuntimeError, match="DEEPTRACE_RESEARCH_ORCHESTRATOR"):
+        Settings.from_env()
+
+
+def test_distinct_strategies_are_the_default_runtime(monkeypatch, tmp_path):
+    _set_required_environment(monkeypatch, tmp_path)
+    assert Settings.from_env().research_orchestrator == "strategies"
+    assert Settings.__dataclass_fields__["research_orchestrator"].default == "strategies"
+
+
 def test_basic_defaults(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _set_required_environment(monkeypatch, tmp_path)
 
@@ -44,6 +64,7 @@ def test_basic_defaults(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     assert settings.agent_max_pages == 8
     assert settings.max_fetched_pages == 80
     assert settings.max_tool_calls == 240
+    assert settings.response_fact_review is True
     assert not hasattr(settings, "max_task_rounds")
     assert not hasattr(settings, "task_concurrency")
     assert not hasattr(settings, "query_loop_threshold")
@@ -61,6 +82,13 @@ def test_model_thinking_rejects_unsupported_value(monkeypatch, tmp_path):
     monkeypatch.setenv('DEEPTRACE_MODEL_THINKING', 'fast')
     with pytest.raises(RuntimeError, match='DEEPTRACE_MODEL_THINKING'):
         Settings.from_env()
+
+
+@pytest.mark.parametrize('value,expected', [('true', True), ('false', False)])
+def test_final_answer_review_can_be_configured(monkeypatch, tmp_path, value, expected):
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv('DEEPTRACE_RESPONSE_FACT_REVIEW', value)
+    assert Settings.from_env().response_fact_review is expected
 
 
 def test_branch_and_run_limits_can_be_overridden(monkeypatch, tmp_path):
@@ -174,3 +202,17 @@ def test_model_context_window_is_configurable(
 
     assert settings.model_context_tokens == 64_000
     assert settings.context_safety_tokens == 1_024
+
+
+@pytest.mark.parametrize("scope", ["decomposed", "scope_review"])
+def test_research_completion_scope_is_explicitly_configurable(monkeypatch, tmp_path, scope):
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv("DEEPTRACE_RESEARCH_COMPLETION_SCOPE", scope)
+    assert Settings.from_env().research_completion_scope == scope
+
+
+def test_invalid_research_completion_scope_is_rejected(monkeypatch, tmp_path):
+    _set_required_environment(monkeypatch, tmp_path)
+    monkeypatch.setenv("DEEPTRACE_RESEARCH_COMPLETION_SCOPE", "ignore_missing")
+    with pytest.raises(RuntimeError, match="DEEPTRACE_RESEARCH_COMPLETION_SCOPE"):
+        Settings.from_env()

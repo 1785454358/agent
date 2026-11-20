@@ -29,6 +29,7 @@ from deeptrace.domain.execution import (
     normalize_research_mode,
 )
 from deeptrace.domain.memory import MemoryRecord, MemoryStatus, MemoryType
+from deeptrace.domain.run import FinishReason, ResearchSufficiency, TerminalStatus
 from deeptrace.domain.research import (
     INCOMPLETE_PLAN_REASON,
     ResearchTopicInput,
@@ -58,6 +59,9 @@ __all__ = [
     "EvidenceSupport",
     "ExecutionStatus",
     "Finding",
+    "FinishReason",
+    "ResearchSufficiency",
+    "TerminalStatus",
     "MemoryRecord",
     "MemoryStatus",
     "MemoryType",

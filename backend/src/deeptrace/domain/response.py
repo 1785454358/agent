@@ -20,6 +20,7 @@ MAX_RESPONSE_CONTENT_LENGTH = 50_000
 MAX_CITATION_MARKER_LENGTH = 32
 MAX_CITATIONS = 100
 MAX_ACTIVE_EVIDENCE_IDS = 100
+MAX_VERIFIED_FINDING_IDS = 100
 MAX_PARTIAL_REASON_LENGTH = 500
 
 Question = Annotated[
@@ -80,12 +81,25 @@ class ResponseInput(BaseModel):
         default_factory=list,
         max_length=MAX_ACTIVE_EVIDENCE_IDS,
     )
+    verified_finding_ids: list[EvidenceIdentifier] | None = Field(
+        default=None,
+        max_length=MAX_VERIFIED_FINDING_IDS,
+    )
     context_notes: list[str] = Field(default_factory=list, max_length=24)
 
     @field_validator("active_evidence_ids")
     @classmethod
     def unique_active_evidence_ids(cls, value: list[str]) -> list[str]:
         return _require_unique(value, "active_evidence_ids")
+
+    @field_validator("verified_finding_ids")
+    @classmethod
+    def unique_verified_finding_ids(
+        cls, value: list[str] | None
+    ) -> list[str] | None:
+        if value is None:
+            return None
+        return _require_unique(value, "verified_finding_ids")
 
 
 class ResponseOutcome(BaseModel):

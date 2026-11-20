@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from enum import StrEnum
 from typing import Annotated
 
@@ -62,6 +63,25 @@ class ToolName(StrEnum):
     SEARCH_MEMORY = "search_memory"
 
 
+class CustomToolName(str):
+    """Host-registered tool ID; built-in IDs retain their canonical enum."""
+    def __new__(cls, value):
+        if not isinstance(value, str) or not re.fullmatch(r'[a-z][a-z0-9_]{0,63}', value):
+            raise ValueError('invalid_custom_tool_name')
+        if value in ToolName._value2member_map_:
+            raise ValueError('built-in tool names require ToolName')
+        return super().__new__(cls, value)
+
+    @property
+    def value(self):
+        return str(self)
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source, handler):
+        from pydantic_core import core_schema
+        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())
+
+
 def _json_size(value: JsonValue) -> int:
     try:
         serialized = json.dumps(
@@ -82,7 +102,7 @@ class _ToolCorrelation(BaseModel):
     run_id: ToolIdentifier
     thread_id: ToolIdentifier
     call_id: ToolIdentifier
-    tool: ToolName
+    tool: ToolName | CustomToolName
 
 
 class ToolRequest(_ToolCorrelation):

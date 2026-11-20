@@ -6,12 +6,10 @@ import uuid
 from datetime import UTC, datetime
 
 from deeptrace.persistence.repository import RunRepository
+from deeptrace.domain.run import TERMINAL_STATUSES
 from deeptrace.queue.protocol import ResearchBroker
 from deeptrace.runtime.errors import ThreadBusyError
 from deeptrace.runtime.models import RunMode, RunRecord
-
-TERMINAL_STATUSES = {"completed", "partial", "failed", "cancelled"}
-
 
 class JobDispatchError(RuntimeError):
     """The durable run exists but its queue dispatch failed."""

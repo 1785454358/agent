@@ -19,3 +19,10 @@ def raw_document() -> RawDocument:
         scraper_used=ScraperUsed.HTTPX_TRAFILATURA,
         status="success",
     )
+
+
+@pytest.fixture(autouse=True)
+def disable_cloud_tracing_in_unit_tests(monkeypatch, request):
+    if request.node.get_closest_marker("real") is None:
+        monkeypatch.setenv("LANGSMITH_TRACING", "false")
+        monkeypatch.setenv("LANGCHAIN_TRACING_V2", "false")

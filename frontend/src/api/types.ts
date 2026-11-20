@@ -1,6 +1,15 @@
 /** 镜像后端 deeptrace.runtime.models 的公开字段。 */
 
 export type ResearchMode = "workflow" | "plan_execute" | "multi_agent";
+export type ResearchModeSelection = ResearchMode | "auto";
+
+export type FinishReason =
+  | "completed" | "partial" | "cancelled" | "budget_exhausted"
+  | "iteration_limit" | "planning_limit" | "error_limit" | "context_limit"
+  | "model_error" | "tool_error" | "response_error" | "runtime_error"
+  | "interrupted" | "incomplete_plan" | "insufficient_evidence" | "no_progress" | "unknown";
+
+export type ResearchSufficiency = "sufficient" | "insufficient" | "unknown" | "not_required";
 
 export type RunStatus =
   | "pending"
@@ -41,7 +50,7 @@ export interface RunEvent {
 export interface RunSummary {
   id: string;
   question: string;
-  mode: ResearchMode;
+  mode: ResearchModeSelection;
   status: RunStatus;
   created_at: string;
   thread_id: string;
@@ -55,10 +64,15 @@ export interface ChatMessage {
 export interface RunDetail {
   id: string;
   question: string;
-  mode: ResearchMode;
+  mode: ResearchModeSelection;
+  selected_mode?: ResearchMode | null;
+  routing_reason?: string | null;
   status: RunStatus;
   thread_id: string;
   termination_reason: string;
+  /** Older API deployments may omit these fields. */
+  finish_reason?: FinishReason | null;
+  research_sufficiency?: ResearchSufficiency;
   created_at: string;
   answer: string;
   sources: string[];
@@ -66,6 +80,13 @@ export interface RunDetail {
   unresolved_gaps: string[];
   events: RunEvent[];
   error: string | null;
+  usage?: RunUsage | null;
+}
+
+export interface RunUsage {
+  provider_attempts: number | null;
+  total_tokens: number | null;
+  missing_usage_attempts: number;
 }
 
 export interface CreateRunResponse {

@@ -97,3 +97,41 @@ def test_expanding_context_does_not_double_charge_neighbouring_ranges():
     body, item = "_" * 2000, record()
     supports = [support(item, body, 200, 400), support(item, body, 500, 700)]
     assert supported_ranges(item, body, supports, 700) == [(80, 780)]
+
+
+def test_supported_list_item_keeps_whole_prerequisite_group_before_optional_margins():
+    from deeptrace.tools.evidence_views import select_supported_passages
+    item = record()
+    first = '1. A checkpointer is required to persist state.\n'
+    group = first + '2. A thread identifier is required. ' + 'details ' * 25 + '\n' + (
+        '3. The supplied payload must be JSON-serializable.\n\n')
+    body = 'Background. ' * 100 + '\n\n' + group + 'Unrelated discussion. ' * 100
+    start = body.index(first)
+    passages = select_supported_passages(item, body,
+        [support(item, body, start, start + len(first))],
+        question='What are the prerequisites?', limit=700)
+    assert any(group.strip() in p.text for p in passages)
+    assert sum(len(p.text) for p in passages) <= 700
+    assert all(body[p.start:p.end] == p.text for p in passages)
+
+
+def test_list_context_cannot_displace_another_verified_core():
+    item = record()
+    first = '1. Required item.\n'
+    body = first + '2. ' + 'long condition ' * 50 + '\n\n' + 'Other verified fact.'
+    other = body.index('Other verified fact.')
+    cores = [support(item, body, 0, len(first)), support(item, body, other, len(body))]
+    ranges = supported_ranges(item, body, cores, 200)
+    assert all(any(a <= s.start and s.end <= b for a,b in ranges) for s in cores)
+    assert sum(b-a for a,b in ranges) <= 200
+
+
+def test_verified_sentence_retains_its_paragraph_condition_before_padding():
+    item = record()
+    core = 'The remaining tasks are cancelled. '
+    paragraph = core + 'Context detail. ' * 18 + 'This applies when the failure is not cancellation.\n\n'
+    body = 'Earlier background. ' * 100 + '\n\n' + paragraph + 'Later background. ' * 100
+    start = body.index(core)
+    ranges = supported_ranges(item, body, [support(item, body, start, start+len(core))], 700)
+    assert any(a <= start and start + len(paragraph) <= b for a,b in ranges)
+    assert sum(b-a for a,b in ranges) <= 700

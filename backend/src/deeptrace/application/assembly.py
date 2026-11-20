@@ -10,18 +10,18 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from tavily import TavilyClient
 
+from deeptrace.application.model_provider import build_model_gateway
 from deeptrace.application.research import ResearchApplicationService
 from deeptrace.config import Settings
 from deeptrace.domain import ResearchMode, ResponseMode
 from deeptrace.harness.batch_research import build_batch_research_graph
 from deeptrace.harness.context import HarnessContext
 from deeptrace.harness.graph import build_agent_runtime_graph
+from deeptrace.harness.model_budget import BudgetStateUnavailable, RunBudgetModelGateway
 from deeptrace.harness.model_gateway import ChatModelGateway
-from deeptrace.harness.model_budget import RunBudgetModelGateway
 from deeptrace.harness.registry import (
     ResponseGraphRegistry,
     ResponseRegistration,
@@ -29,17 +29,16 @@ from deeptrace.harness.registry import (
     StrategyRegistry,
 )
 from deeptrace.harness.token_budget import TokenBudgetConfig
+from deeptrace.research.runtime import build_controller_research_graph
 from deeptrace.observability.events import HarnessEventRecorder
+from deeptrace.persistence.execution_ledger import SqlAlchemyToolExecutionStore
 from deeptrace.persistence.memory_store import SqlAlchemyMemoryStore
+from deeptrace.persistence.model_budget import SqlAlchemyModelBudgetStore
+from deeptrace.persistence.schema import ensure_sqlite_schema as _ensure_sqlite_schema
 from deeptrace.responses import (
     build_answer_graph,
     build_brief_graph,
     build_report_graph,
-)
-from deeptrace.strategies import (
-    build_multi_agent_research_graph,
-    build_plan_execute_research_graph,
-    build_workflow_research_graph,
 )
 from deeptrace.tools import AgentToolGateway, build_research_tool_registry
 from deeptrace.tools.budget import (
@@ -50,7 +49,6 @@ from deeptrace.tools.budget import (
 from deeptrace.tools.cache import InMemorySuccessCache, SuccessCacheSingleflight
 from deeptrace.tools.evidence_store import EvidenceStore
 from deeptrace.tools.execution_store import (
-    InMemoryToolExecutionStore,
     ToolExecutionStore,
 )
 from deeptrace.tools.policy import (
@@ -103,14 +101,14 @@ class _SeededBudgets:
                     for mode, units in mode_totals.items():
                         expanded[BudgetScopeKey.for_mode(self._run_id, mode)] = units
                     await self._inner.seed_consumed(expanded)
-            except Exception:
+            except Exception as exc:
                 logging.getLogger(__name__).exception(
                     "failed to rebuild budget usage for run %s; "
-                    "continuing with fresh counters",
+                    "dispatch denied until budget recovery succeeds",
                     self._run_id,
                 )
-            finally:
-                self._loaded = True
+                raise BudgetStateUnavailable() from exc
+            self._loaded = True
 
     async def reserve(self, scope, requested):
         await self._ensure()
@@ -147,6 +145,7 @@ def _build_durable_stores(
     Any,
     EvidenceStore,
     Any,
+    SqlAlchemyModelBudgetStore,
 ]:
     """Checkpoint saver, execution ledger, memory store, evidence store.
 
@@ -155,8 +154,7 @@ def _build_durable_stores(
     Local: the checkpointer, Evidence store and long-term memory store persist
     to a SQLite file under ``runs_dir`` (one shared instance per process, so a
     thread's later turns see earlier evidence/memory and a restart keeps them),
-    while the tool ledger stays process-local per the documented Local
-    guarantees.
+    including the tool ledger and model admission snapshots.
     """
     from deeptrace.persistence.checkpoint import SqlAlchemyCheckpointSaver
     from deeptrace.persistence.database import create_session_factory
@@ -164,16 +162,12 @@ def _build_durable_stores(
 
     dsn = getattr(settings, "mysql_dsn", "")
     if dsn:
-        from deeptrace.persistence.execution_ledger import (
-            SqlAlchemyToolExecutionStore,
-        )
-
         engine, sessions = create_session_factory(dsn)
         saver = SqlAlchemyCheckpointSaver(sessions)
         ledger: ToolExecutionStore = SqlAlchemyToolExecutionStore(sessions)
         memory_store: Any = SqlAlchemyMemoryStore(sessions)
         evidence = SqlAlchemyEvidenceStore(sessions)
-        return saver, ledger, memory_store, evidence, engine
+        return saver, ledger, memory_store, evidence, engine, SqlAlchemyModelBudgetStore(sessions)
 
     runs = Path(runs_dir or "runs")
     runs.mkdir(parents=True, exist_ok=True)
@@ -182,10 +176,10 @@ def _build_durable_stores(
 
     _ensure_sqlite_schema(db_path)
     saver = SqlAlchemyCheckpointSaver(sessions)
-    ledger = InMemoryToolExecutionStore()
+    ledger = SqlAlchemyToolExecutionStore(sessions)
     memory_store = SqlAlchemyMemoryStore(sessions)
     evidence = SqlAlchemyEvidenceStore(sessions)
-    return saver, ledger, memory_store, evidence, engine
+    return saver, ledger, memory_store, evidence, engine, SqlAlchemyModelBudgetStore(sessions)
 
 
 def _build_memory_retriever(
@@ -232,144 +226,6 @@ def _build_memory_retriever(
     return SemanticMemoryRetriever(memory_store, embeddings, index)
 
 
-def _ensure_sqlite_schema(db_path: Path) -> None:
-    """Create/migrate the local SQLite schema synchronously.
-
-    Order matters for databases created by earlier builds:
-    1. create tables (IF NOT EXISTS),
-    2. add missing columns and backfill them,
-    3. only then create indexes (they reference the new columns).
-    """
-    import hashlib
-    import json
-    import sqlite3
-
-    from sqlalchemy import create_engine
-    from sqlalchemy.schema import CreateIndex, CreateTable
-
-    from deeptrace.persistence.orm import (
-        CheckpointRow,
-        CheckpointWriteRow,
-        EvidenceRecordRow,
-        MemoryRecordRow,
-        ThreadLeaseRow,
-    )
-
-    sync_engine = create_engine("sqlite://")
-    table_statements = [
-        str(CreateTable(table).compile(sync_engine))
-        for table in (
-            CheckpointRow.__table__,
-            CheckpointWriteRow.__table__,
-            EvidenceRecordRow.__table__,
-            MemoryRecordRow.__table__,
-            ThreadLeaseRow.__table__,
-        )
-    ]
-    index_statements = [
-        str(CreateIndex(index).compile(sync_engine))
-        for table in (
-            CheckpointRow.__table__,
-            CheckpointWriteRow.__table__,
-            EvidenceRecordRow.__table__,
-            MemoryRecordRow.__table__,
-        )
-        for index in table.indexes
-    ]
-
-    connection = sqlite3.connect(db_path)
-    try:
-        connection.execute(
-            "PRAGMA table_info(evidence_records)"
-        )  # ensure the file exists before CREATE IF NOT EXISTS runs
-        for statement in table_statements:
-            connection.execute(
-                statement.replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS")
-            )
-
-        def _columns(table: str) -> set[str]:
-            return {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
-
-        # column migration + backfill BEFORE the version index exists
-        evidence_columns = _columns("evidence_records")
-        connection.create_function(
-            "deeptrace_sha256_hex",
-            1,
-            lambda value: hashlib.sha256((value or "").encode("utf-8")).hexdigest(),
-        )
-        if "canonical_url_hash" not in evidence_columns:
-            connection.execute(
-                "ALTER TABLE evidence_records ADD COLUMN canonical_url_hash VARCHAR(64)"
-            )
-            connection.execute(
-                "UPDATE evidence_records "
-                "SET canonical_url_hash = deeptrace_sha256_hex(canonical_url)"
-            )
-        elif connection.execute(
-            "SELECT COUNT(*) FROM evidence_records "
-            "WHERE canonical_url_hash IS NULL OR canonical_url_hash = ''"
-        ).fetchone()[0]:
-            connection.execute(
-                "UPDATE evidence_records "
-                "SET canonical_url_hash = deeptrace_sha256_hex(canonical_url) "
-                "WHERE canonical_url_hash IS NULL OR canonical_url_hash = ''"
-            )
-
-        # Older local databases shipped a payload-only memory_records table.
-        # Add the authoritative query columns and backfill them from payload
-        # before the recall index (which references memory_type) is created.
-        memory_columns = _columns("memory_records")
-        memory_required = {
-            "memory_id": "VARCHAR(128)",
-            "memory_type": "VARCHAR(32)",
-            "status": "VARCHAR(32)",
-            "importance": "FLOAT",
-            "confidence": "FLOAT",
-            "created_at": "DATETIME",
-            "expires_at": "DATETIME",
-        }
-        if any(name not in memory_columns for name in memory_required):
-
-            def _memory_field(payload: str | None, key: str) -> object:
-                if not payload:
-                    return None
-                try:
-                    data = json.loads(payload) if isinstance(payload, str) else payload
-                except (TypeError, ValueError):
-                    return None
-                if not isinstance(data, dict):
-                    return None
-                value = data.get(key)
-                return value if isinstance(value, (str, int, float)) else None
-
-            for name, ddl in memory_required.items():
-                if name not in memory_columns:
-                    connection.execute(
-                        f"ALTER TABLE memory_records ADD COLUMN {name} {ddl}"
-                    )
-            connection.create_function("deeptrace_memory_field", 2, _memory_field)
-            connection.execute(
-                "UPDATE memory_records SET "
-                "memory_id = COALESCE(memory_id, deeptrace_memory_field(payload, 'id')), "
-                "memory_type = COALESCE(memory_type, deeptrace_memory_field(payload, 'type')), "
-                "status = COALESCE(status, deeptrace_memory_field(payload, 'status')), "
-                "importance = COALESCE(importance, deeptrace_memory_field(payload, 'importance')), "
-                "confidence = COALESCE(confidence, deeptrace_memory_field(payload, 'confidence')), "
-                "created_at = COALESCE(created_at, deeptrace_memory_field(payload, 'created_at')), "
-                "expires_at = COALESCE(expires_at, deeptrace_memory_field(payload, 'expires_at'))"
-            )
-
-        for statement in index_statements:
-            connection.execute(
-                statement.replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS").replace(
-                    "CREATE UNIQUE INDEX", "CREATE UNIQUE INDEX IF NOT EXISTS"
-                )
-            )
-        connection.commit()
-    finally:
-        connection.close()
-
-
 class HarnessRuntimeBundle:
     """The assembled runtime plus a lifecycle hook for its owned resources.
 
@@ -383,9 +239,11 @@ class HarnessRuntimeBundle:
         service: ResearchApplicationService,
         context_factory: Callable[[str], HarnessContext],
         resources: list[Any],
+        release_run: Callable[[str], None],
     ) -> None:
         self.service = service
         self.context_factory = context_factory
+        self.release_run = release_run
         self._resources = [item for item in resources if item is not None]
 
     async def aclose(self) -> None:
@@ -407,6 +265,14 @@ class HarnessRuntimeBundle:
                     "failed to close harness resource %s",
                     type(resource).__name__,
                 )
+        from langsmith import utils as langsmith_utils
+        from langsmith.run_trees import get_cached_client
+
+        if langsmith_utils.tracing_is_enabled():
+            try:
+                await asyncio.to_thread(get_cached_client().flush, timeout=10)
+            except Exception:
+                logger.exception("failed to flush LangSmith traces during shutdown")
 
 
 def build_harness_runtime(
@@ -420,39 +286,14 @@ def build_harness_runtime(
     is configured, otherwise a SQLite file under ``runs_dir``), so any run can
     resume node-by-node after a crash or restart.
     """
-    saver, ledger, memory_store, evidence_store, engine = _build_durable_stores(
+    saver, ledger, memory_store, evidence_store, engine, model_budget_store = _build_durable_stores(
         settings, runs_dir
     )
     memory_retriever = _build_memory_retriever(
         settings, memory_store, runs_dir=runs_dir
     )
 
-    thinking = settings.model_thinking
-    if thinking == "auto":
-        thinking = (
-            "disabled"
-            if settings.openai_model.lower().startswith(
-                ("doubao-seed-2.0-lite", "doubao-seed-2-0-lite")
-            )
-            else "provider_default"
-        )
-    extra_body = None if thinking == "provider_default" else {"thinking": {"type": thinking}}
-    model = ChatOpenAI(
-        api_key=settings.openai_api_key,
-        base_url=settings.openai_base_url,
-        model=settings.openai_model,
-        temperature=0,
-        max_retries=0,
-        max_tokens=settings.openai_max_tokens,
-        extra_body=extra_body,
-    )
-    model_gateway = ChatModelGateway(
-        model, timeout_seconds=settings.planner_timeout_seconds, retry_attempts=1,
-        role_timeout_seconds={
-            "evaluator": settings.evaluator_timeout_seconds,
-            "responder": settings.writer_timeout_seconds,
-        },
-    )
+    model_gateway = build_model_gateway(settings, ChatModelGateway)
 
     fetcher = AsyncWebFetcher(
         min_chars=settings.min_extracted_chars,
@@ -470,23 +311,15 @@ def build_harness_runtime(
         ),
         source_target=settings.research_source_target,
     )
-    strategies.register(
-        StrategyRegistration(
-            ResearchMode.WORKFLOW, build_workflow_research_graph(executor)
-        )
-    )
-    strategies.register(
-        StrategyRegistration(
-            ResearchMode.PLAN_EXECUTE, build_plan_execute_research_graph(
-                executor, max_tasks=min(6, settings.search_query_count))
-        )
-    )
-    strategies.register(
-        StrategyRegistration(
-            ResearchMode.MULTI_AGENT, build_multi_agent_research_graph(
-                executor, max_researchers=min(5, settings.search_query_count), max_follow_ups=2)
-        )
-    )
+    if settings.research_orchestrator in {"controller", "strategies", "legacy"}:
+        for mode in ResearchMode:
+            strategies.register(StrategyRegistration(mode, build_controller_research_graph(
+                executor, mode=mode, max_tasks=min(6, settings.search_query_count),
+                max_parallel=1 if mode is ResearchMode.PLAN_EXECUTE else 4,
+                max_rounds=2,
+            )))
+    else:
+        raise ValueError("unknown research_orchestrator")
     # Budget is a guardrail, not a compressor: reserve output tokens first so
     # generation always has room, and only trim elastic segments when an input
     # actually approaches the model window.
@@ -508,26 +341,28 @@ def build_harness_runtime(
     graph = build_agent_runtime_graph(strategies, responses, checkpointer=saver)
     service = ResearchApplicationService(graph)
     run_model_gateways: dict[str, RunBudgetModelGateway] = {}
+    run_recorders: dict[str, HarnessEventRecorder] = {}
 
     def context_factory(run_id: str, on_event=None) -> HarnessContext:
-        from deeptrace.persistence.execution_ledger import (
-            SqlAlchemyToolExecutionStore,
-        )
-
-        recorder = HarnessEventRecorder(run_id=run_id)
+        recorder = run_recorders.setdefault(run_id, HarnessEventRecorder(run_id=run_id))
         if run_id not in run_model_gateways:
             run_model_gateways[run_id] = RunBudgetModelGateway(
                 model_gateway, max_calls=settings.max_model_calls,
+                run_id=run_id, store=model_budget_store, event_sink=recorder,
                 max_input_tokens=settings.max_input_tokens,
                 finishing_input_reserve=min(20_000, settings.max_input_tokens // 5),
                 max_seconds=settings.research_max_seconds,
+                finishing_calls=(
+                    min(3, settings.max_model_calls - 1)
+                    if settings.response_fact_review else 2
+                ),
             )
         if on_event is not None:
             recorder.on_sync_event = on_event
         tool_context = ToolContext(tavily=TavilyClient(api_key=settings.tavily_api_key))
 
-        def run_search(query: str) -> Any:
-            return search_web(tool_context, query, max_results=5)
+        def run_search(query: str, **options) -> Any:
+            return search_web(tool_context, query, **options)
 
         registry = build_research_tool_registry(
             search=run_search,
@@ -573,6 +408,12 @@ def build_harness_runtime(
             memory_retriever=memory_retriever,
             memory_recall_limit=settings.memory_top_k,
             research_max_pages=settings.agent_max_pages,
+            response_fact_review=settings.response_fact_review,
+            research_completion_scope=settings.research_completion_scope,
         )
 
-    return HarnessRuntimeBundle(service, context_factory, [engine, fetcher])
+    def release_run(run_id: str) -> None:
+        run_model_gateways.pop(run_id, None)
+        run_recorders.pop(run_id, None)
+
+    return HarnessRuntimeBundle(service, context_factory, [engine, fetcher], release_run)

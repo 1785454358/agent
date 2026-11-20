@@ -222,3 +222,18 @@ def test_each_existing_response_limit_selects_tail_without_budget_growth(limit):
     excerpt = select(body, "Recovery external side effects", limit)
     assert "Recovery does not replay external side effects." in excerpt.text
     assert len(excerpt.text) <= limit
+def test_version_question_preserves_both_language_scopes_from_frozen_document():
+    from pathlib import Path
+
+    path = Path(__file__).parents[1] / "fixtures/langgraph-fault-tolerance.mdx"
+    body = path.read_text(encoding="utf-8")
+    excerpt = select(
+        body,
+        "State the package/version boundary for Python per-node timeouts and node-level error handlers without confusing the JavaScript requirement.",
+        6000,
+    )
+    assert "langgraph>=1.2" in excerpt.text
+    assert "@langchain/langgraph>=1.4.0" in excerpt.text
+    assert ":::python" in excerpt.text
+    assert ":::js" in excerpt.text
+    assert len(excerpt.text) <= 6000
