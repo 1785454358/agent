@@ -1,0 +1,85 @@
+{
+  "verified_at_utc": "2026-11-07T11:37:01.064115+00:00",
+  "client_date": "2026-11-07",
+  "commands": [
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -m \"not real\" -q",
+      "cwd": "backend",
+      "passed": 1603,
+      "deselected": 2,
+      "seconds": 82.98
+    },
+    {
+      "command": ".venv-ragas/Scripts/python.exe -m pytest evaluation/tests -q",
+      "cwd": "backend",
+      "passed": 67,
+      "seconds": 4.95
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m deeptrace.eval --model scripted --include-baseline --repeats 2 --run-prefix engineering-20261107 --out ../tmp/evaluation-20261107/scripted-matrix",
+      "cwd": "backend",
+      "exit_code": 0,
+      "runs": 24,
+      "questions": 3,
+      "model_kind": "scripted"
+    }
+  ],
+  "lint": {
+    "source_rules": "E,F,I,UP,B,SIM,C4; E501 excluded",
+    "test_rules": "F,I",
+    "scoped": true,
+    "result": "passed"
+  },
+  "controlled_gate_exit_codes": {
+    "pass": 0,
+    "fail": 1,
+    "inconclusive": 2
+  },
+  "paid_provider_calls": 0,
+  "remote_ci_executed": false,
+  "human_gold_calibration_completed": false,
+  "real_quality_improvement_measured": false,
+  "source_and_evidence_sha256": {
+    "backend/README.md": "e28848588b1020cb05088a280f7e6e3f0d7d1151967ea600a332f2532e9524d3",
+    "backend/evaluation/ragas_quality.py": "a199078d0d4946d0e7d4a6e10862e9d0cd10511f0bc0b26823a5cbf8d82a47f4",
+    "backend/evaluation/tests/test_ragas_quality.py": "c3c2aee4bdab18954780c61908d431f74cd139fa24e3283c9bdcd40f18d5deca",
+    "backend/src/deeptrace/eval/analysis_inputs.py": "1f0614039be8f2d0ed0a68a83b68a45b869c592dc68ef3b10750014f7323a255",
+    "backend/src/deeptrace/eval/compare_cli.py": "6f06221ec167f37a0268f08167831f8cbc02207fba0ae5fdd52a8320e2fbb3b8",
+    "backend/src/deeptrace/eval/data/policies/regression-v1.json": "ed2cddd008ce79cedecd1840cd5b9bf1942a81a4c92aa292759817e7c980d6d7",
+    "backend/src/deeptrace/eval/regression.py": "4416e97767d7e259e06103d52a2e66c83b8ff4e9cd5586620e449e0407b23b62",
+    "backend/src/deeptrace/eval/regression_cli.py": "f2e94edc510115af739b2ade95cc0ea5bba0e863c83ca7932712ed0f2c821004",
+    "backend/src/deeptrace/eval/regression_report.py": "c2bba94a4e3506aba4df299b22d44012a628d5640d681b493e4368788ca82f83",
+    "backend/tests/eval/regression_fixtures.py": "bc6b7cc9263a91b0693a0a1596097462d969e197810ef0d6c1dbe75574086c81",
+    "backend/tests/eval/test_analysis_inputs.py": "6c0a64a5d556efc7e24fe91202f873743d33ab94b7a2f1b205b5a6cf7dd17d90",
+    "backend/tests/eval/test_regression.py": "b1dd9608a645408b50c789bd47de903997462b565851b12de7bd2613e072dac3",
+    "backend/tests/eval/test_regression_cli.py": "6f0381a4631cd6c494260b75792925e437d2125d39cf0e837d2e50b974138c26",
+    "docs/README.md": "deee44e8258f89db986e2730ce9332ce878d9fce194ba871002a5daaf832581a",
+    "docs/benchmarks/2026-11-07-evaluation/README.md": "458c91d5f421754cf6a447c0fef44d9ce2d9199c80d4f892c5854f2d49c39e24",
+    "docs/benchmarks/2026-11-07-evaluation/controlled-results.json": "49605ca4155128e84a4a51be5d48c9c44920bdf83dffa074fa8df79bd74f079e",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/baseline/metadata.json": "e519195b193d58854233dd7b5c690a459c9cbd20f1e694941bb48a5721b40c55",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/baseline/quality_eval.json": "cda02b2d0a9f73992f975e23c2008a4b752174bd00a505bb53499aafec649963",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/baseline/scores/identity.json": "ca63c78f4ad29506d0cb55e137f42feffd5c40f5c2ffdcb8eecb1a46091d6e26",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/baseline/scores/scores.json": "e917ec7a3312641965772719321f3364e608c0b953f2956bfd9918f3e6523a11",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/fail/candidate/metadata.json": "e519195b193d58854233dd7b5c690a459c9cbd20f1e694941bb48a5721b40c55",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/fail/candidate/quality_eval.json": "cb6e58251dc6e3bebb63400c4b17663b2d6b1937855deb5a13fd0a13c70c84c2",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/fail/candidate/scores/identity.json": "06a3f40ac8ad6341cd782a448c3631b582d3db32f73d56f65087f5a5832594a2",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/fail/candidate/scores/scores.json": "cd36aa3cd319528d7f316df08c78c14dc825c79d8930f29b7c24a529e2af0513",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/fail/report/regression.json": "a53ab93f3b394ba4267fbd0280884956b4f0bad774f48684bcacbb55a8298a3c",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/fail/report/regression.md": "b31d1f75460e1847e2f2195605cb390c3e6af74db232a17e6abe7aa78fa1fea8",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/inconclusive/candidate/metadata.json": "e519195b193d58854233dd7b5c690a459c9cbd20f1e694941bb48a5721b40c55",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/inconclusive/candidate/quality_eval.json": "5fa44fc2db78d86cd23716146d26bd8d873f1371775b5d8ed5941979d51e8711",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/inconclusive/candidate/scores/identity.json": "634da3947ed1579d68af540066543b3e969fd6ddd6304c7a5d552f5ffb20b7ca",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/inconclusive/candidate/scores/scores.json": "4da51e4d54e9f4ce011b7778368d806b6845a24a037eda09d65d3a6ac3c027ba",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/inconclusive/report/regression.json": "782c73fcdabb56aa4eb58876e689b462a7f21697b1e70fbf69ec42b06c1b28de",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/inconclusive/report/regression.md": "209f2d73471155214891180394f9509e68f3dd904939cd984ae803571538e5a1",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/pass/candidate/metadata.json": "e519195b193d58854233dd7b5c690a459c9cbd20f1e694941bb48a5721b40c55",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/pass/candidate/quality_eval.json": "b0fe7ee2d5b51a68e3a9fd0b67f1d6369d36a57bc13b095e6315f1b82d884c50",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/pass/candidate/scores/identity.json": "9fc3b81cb10f3d5619a08e3b29227fa0f6fd1f552b6992c6d10749e45a604fee",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/pass/candidate/scores/scores.json": "bca6dbbce4568a5db5bc5530f54ba8a3b64fb63c8a57de2d44a1dda7599c3d3a",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/pass/report/regression.json": "e5a838f60c06220a6adc225fa4a669fa1cac41f567b734725a1874f3a647c7ec",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/pass/report/regression.md": "eccd966fd508bccb9b57598922d09d763f5587be517607bf8275337e1fd9599b",
+    "docs/benchmarks/2026-11-07-evaluation/controlled/policy.json": "62478a58472a06062d6b90beedb2bf98abb2ff673fab759bdfb3f0cd4c34cd75",
+    "docs/benchmarks/2026-11-07-evaluation/scripted-matrix-summary.json": "cb3b0af64b113b45fa44193be1442a205614e6f0a2b0531dbd67bf3c72558814",
+    "docs/benchmarks/2026-11-07-evaluation/scripted-matrix.md": "1ae68b7a71cb32d08285204e3a26497b202060fc3769431027df658b05a3d70b"
+  }
+}

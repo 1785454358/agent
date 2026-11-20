@@ -1,0 +1,14 @@
+{
+  "status": "blocked",
+  "reason": "model_quota_exhausted",
+  "planned_questions": 8,
+  "planned_runs": 16,
+  "executed_model_task_runs": 0,
+  "preflight_requests": 1,
+  "controlled_fault_regressions_passed": 4,
+  "controlled_fault_regressions_total": 4,
+  "task_acceptance_rate": null,
+  "unsupported_fact_rate": null,
+  "citation_support_rate": null,
+  "input_token_reduction": null
+}

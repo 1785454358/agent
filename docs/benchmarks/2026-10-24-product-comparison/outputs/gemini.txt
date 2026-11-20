@@ -1,0 +1,113 @@
+结论
+
+LangGraph 的 Checkpoint（检查点） 与 Store（存储） 是其持久化架构中互补的两大系统：   
+LangChain
+
+Checkpoint 专注于单线程内（Thread-scoped）的短期状态管理，在每个节点执行后自动保存图状态快照，用于实现故障恢复、对话延续、Time Travel 以及 Human-in-the-Loop（含 interrupt 恢复）。   
+LangChain Docs
++ 1
+
+Store 专注于跨线程（Cross-thread）的长期记忆管理，由开发者显式调用写入（如 store.put()），用于保存跨会话的用户偏好、事实和共享知识。   
+LangChain Docs
+
+在生产环境中，通常需要将两者结合使用以实现完善的记忆与恢复机制。   
+Vilix AI
+
+Checkpoint 与 Store 的核心特性对比
+比较维度	Checkpoint (检查点)	Store (存储)
+主要用途	短期记忆：保存图状态快照、支持故障恢复、对话延续与人机协同	长期记忆：跨线程保存应用定义的数据（如用户偏好、持久事实、共享知识）
+作用域 / 线程边界	严格绑定单线程（由 thread_id 隔离）	跨线程共享（通过自定义命名空间 namespace 隔离和共享）
+写入触发方式	自动触发：每个 superstep（节点执行完毕后）由系统自动保存	显式写入：需在代码中主动调用 store.put() 或 store.aput()
+恢复与读取机制	依靠相同的 thread_id 自动加载最新状态或指定历史快照	通过命名空间与检索（store.get() 或 store.search()）主动查询
+底层持久化依赖	BaseCheckpointSaver 实现（如 PostgresSaver, SqliteSaver）	BaseStore 实现（如内存、PostgreSQL 或其他后端存储）
+不同情境下的行为与前提
+1. 进程重启 (Process Restart)
+
+Checkpoint 的行为与前提：
+
+前提：必须配置持久化的 Checkpointer（如 PostgresSaver 或 SqliteSaver）。若使用 InMemorySaver，进程重启后数据即全部丢失。   
+Vilix AI
+
+行为：进程重启后，只要传入相同的 thread_id 重新调用图执行（如 graph.invoke(None, config)），系统会自动从持久化后端加载最后一次成功的状态快照，从中断或断开处继续。   
+ActiveWizards
+
+Store 的行为与前提：
+
+前提：必须配置持久化的 Store 后端。若使用 InMemoryStore，重启后同样会丢失数据。   
+Vilix AI
+
+行为：持久化 Store 中的数据在进程重启后保持不变，不同线程在重启后依然能够正常检索历史存入的长期事实。
+
+2. Interrupt 恢复 (Interrupt Recovery)
+
+Checkpoint 的行为与前提：
+
+前提：配置了 Checkpointer 且图执行触发了中断（Human-in-the-Loop）。
+
+行为：中断发生时，当前的图状态及挂起写入（pending writes）会被保存在 Checkpoint 中。恢复时通过相同的 thread_id 再次调用 invoke，系统会从挂起点重新水合状态并继续执行后续节点。   
+ActiveWizards
+
+Store 的行为与前提：
+
+前提：节点在运行或中断前后通过运行时上下文（如 runtime.store）与 Store 交互。   
+Hindsight - Vectorize
+
+行为：Store 本身不直接管理图的暂停和状态机步数，但可以在中断触发前或恢复过程中存取长效业务上下文，与 Checkpoint 机制并行互补。   
+Vilix AI
+
+3. 跨线程共享 (Cross-Thread Sharing)   
+Oracle
+
+Checkpoint 的行为与前提：
+
+行为：不支持跨线程共享。不同的 thread_id 拥有各自独立的检查点历史。线程 A 无法直接读取线程 B 的内部状态。   
+Vilix AI
+
+Store 的行为与前提：
+
+前提：多个线程在读写时访问相同的命名空间（Namespace，例如按 user_id 划定的元组）。   
+Vilix AI
+
+行为：这是 Store 的核心应用场景。当用户在会话一（thread_id: 1）中更新了某项偏好并写入 Store 后，当其开启全新的会话二（thread_id: 2）时，Agent 可以直接从 Store 中检索到该偏好。
+
+适用场景
+
+Checkpoint 适用场景：
+
+对话连续性（维持同一会话的上下文）   
+Vilix AI
+
+故障恢复与容错（应对进程崩溃、基础设施中断）   
+ActiveWizards
+
+人机协同（Human-in-the-Loop 的审批、暂停与状态修改）   
+Vilix AI
+
+时间回溯（Time Travel / 调试历史状态）   
+Vilix AI
+
+Store 适用场景：
+
+跨会话长期记忆（跨多个独立 thread_id 的用户偏好、档案、业务事实）   
+LangChain Docs
+
+全局共享知识库（多线程、多用户或多代理需要访问的公共数据）   
+Oracle
+
+事实、推断与无法确认的事项说明   
+Vilix AI
+
+事实（Facts）：根据官方文档，Checkporter 负责自动保存单线程内的图状态快照（按 thread_id 隔离）；Store 负责由代码显式调用的跨线程长效数据存储（按命名空间隔离）。内存版本（InMemory）在进程重启时均不具备持久性。   
+Vilix AI
+
+推断（Inferences）：无。
+
+无法确认的事项（Unconfirmed Matters）：社区自定义 Store 后端在极端高并发分布式写入场景下的行级锁表现及性能吞吐极限，官方基础文档未作穷尽说明。
+
+来源与链接
+
+LangGraph Persistence Concept & Guide (LangChain Official Docs)
+
+LangGraph Stores Reference & Guide (LangChain Official Docs)
+
+LangGraph Checkpoints API Reference (LangChain Official Docs)

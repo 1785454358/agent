@@ -1,0 +1,106 @@
+{
+  "case_id": "multi_hop-test-01",
+  "group": "optimized",
+  "run_id": "88351a73516e41d5a309edaec6742d0d",
+  "status": "completed",
+  "termination_reason": "workflow_completed",
+  "elapsed_seconds": 41.74588709999807,
+  "tool_calls": 12,
+  "model_calls": 6,
+  "usage": {
+    "provider_attempts": 6,
+    "measured_usage_attempts": 6,
+    "missing_usage_attempts": 0,
+    "usage_complete": true,
+    "input_tokens": 18703,
+    "output_tokens": 2372,
+    "total_tokens": 21075,
+    "observed_usage": {
+      "input_tokens": 18703,
+      "output_tokens": 2372,
+      "total_tokens": 21075
+    },
+    "role_usage": {
+      "planner": {
+        "input_tokens": 1538,
+        "output_tokens": 696,
+        "total_tokens": 2234
+      },
+      "executor": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "replanner": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "supervisor": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "researcher": {
+        "input_tokens": 4028,
+        "output_tokens": 131,
+        "total_tokens": 4159
+      },
+      "evaluator": {
+        "input_tokens": 5261,
+        "output_tokens": 789,
+        "total_tokens": 6050
+      },
+      "summarizer": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "memory_consolidator": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "other": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "writer": {
+        "input_tokens": 7876,
+        "output_tokens": 756,
+        "total_tokens": 8632
+      }
+    },
+    "observed_role_usage": {
+      "planner": {
+        "input_tokens": 1538,
+        "output_tokens": 696,
+        "total_tokens": 2234
+      },
+      "researcher": {
+        "input_tokens": 4028,
+        "output_tokens": 131,
+        "total_tokens": 4159
+      },
+      "evaluator": {
+        "input_tokens": 5261,
+        "output_tokens": 789,
+        "total_tokens": 6050
+      },
+      "writer": {
+        "input_tokens": 7876,
+        "output_tokens": 756,
+        "total_tokens": 8632
+      }
+    },
+    "stage_seconds": {
+      "planner": 11.969000000011874,
+      "researcher": 5.297000000020489,
+      "evaluator": 10.84399999998277,
+      "writer": 13.576999999990221
+    },
+    "budget_state_available": true
+  },
+  "service_blocker": null
+}

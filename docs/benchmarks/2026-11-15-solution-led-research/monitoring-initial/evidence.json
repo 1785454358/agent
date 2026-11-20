@@ -1,0 +1,262 @@
+[
+  {
+    "id": "evidence-36f2caab06ae241fc36ff6241fc73ba7845aaff8949f378699da84e61f32db12",
+    "canonical_url": "https://core.telegram.org/bots/faq",
+    "title": "Bots FAQ",
+    "media_type": "text/html",
+    "content_hash": "sha256:3fd9e9ed4fac5f989a8334a2af1863ed6fcddc4dd8a7411fe9cf13777063f8a3",
+    "fetched_at": "2026-11-15T10:51:35.375659Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://core.telegram.org/bots/faq",
+      "final_url": "https://core.telegram.org/bots/faq",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+    "canonical_url": "https://uptimekuma.io/http-https-monitoring-uptime-kuma",
+    "title": "HTTP(s) monitoring with Uptime Kuma: UK guide",
+    "media_type": "text/html",
+    "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+    "fetched_at": "2026-11-15T10:51:44.739014Z",
+    "published_at": "2026-03-17T10:26:10Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://uptimekuma.io/http-https-monitoring-uptime-kuma",
+      "final_url": "https://uptimekuma.io/http-https-monitoring-uptime-kuma",
+      "publisher_canonical_url": "https://uptimekuma.io/http-https-monitoring-uptime-kuma",
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+    "canonical_url": "https://railway.com/guides/uptime-kuma",
+    "title": "Self-Host Uptime Kuma for Uptime Monitoring | Railway",
+    "media_type": "text/html",
+    "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+    "fetched_at": "2026-11-15T10:51:35.833520Z",
+    "published_at": "2026-07-29T00:00:00Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://railway.com/guides/uptime-kuma",
+      "final_url": "https://railway.com/guides/uptime-kuma",
+      "publisher_canonical_url": "https://railway.com/guides/uptime-kuma",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": "Railway"
+    }
+  },
+  {
+    "id": "evidence-22a0258e6715cea72ae81518ba9b362c05d86452275fbcb4f43ad55077dbb12a",
+    "canonical_url": "https://wiki.smartxtechnologies.com/uptime-kuma/blog-telegram-notifications-uptime-kuma",
+    "title": "Telegram notifications from Uptime Kuma: bot setup and best practice | Wiki SmartxTechnologies",
+    "media_type": "text/html",
+    "content_hash": "sha256:fce1d433dfa73b43e338b2020a7ccf71c4559c733a589d6025bd87f6427318be",
+    "fetched_at": "2026-11-15T10:51:36.427750Z",
+    "published_at": "2026-04-22T15:05:10.921000Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://wiki.smartxtechnologies.com/uptime-kuma/blog-telegram-notifications-uptime-kuma",
+      "final_url": "https://wiki.smartxtechnologies.com/uptime-kuma/blog-telegram-notifications-uptime-kuma",
+      "publisher_canonical_url": "https://wiki.smartxtechnologies.com/uptime-kuma/blog-telegram-notifications-uptime-kuma",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": "Smartx Technologies Ltd"
+    }
+  },
+  {
+    "id": "evidence-f942ba051b33afbcfdeb470832e6aa58719157ff92b949a1523e1761a7ae7e0a",
+    "canonical_url": "https://betterstack.com/community/guides/monitoring/uptime-kuma-guide",
+    "title": "A Complete Guide to Monitoring With Uptime Kuma | Better Stack Community",
+    "media_type": "text/html",
+    "content_hash": "sha256:dde2bde373c3540d9410875d4238cdd39b93430f3f5d776050a39f7e98ded0f2",
+    "fetched_at": "2026-11-15T10:51:44.403514Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://betterstack.com/community/guides/monitoring/uptime-kuma-guide",
+      "final_url": "https://betterstack.com/community/guides/monitoring/uptime-kuma-guide",
+      "publisher_canonical_url": "https://betterstack.com/community/guides/monitoring/uptime-kuma-guide",
+      "scraper_used": "playwright_bs4",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+    "canonical_url": "https://github.com/louislam/uptime-kuma",
+    "title": "GitHub - louislam/uptime-kuma: A fancy self-hosted monitoring tool · GitHub",
+    "media_type": "text/html",
+    "content_hash": "sha256:633d4b530ffcdf10073fd41eef369decd3ea40d7c572142062a72c4d709db61c",
+    "fetched_at": "2026-11-15T10:51:35.190147Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://github.com/louislam/uptime-kuma",
+      "final_url": "https://github.com/louislam/uptime-kuma",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-8f978111581202aa14a52b811999c4e52df73fd7f09a91bd78d845963ff2bc83",
+    "canonical_url": "https://www.freecodecamp.org/news/self-host-uptime-kuma-docker",
+    "title": "How to Self-Host Your Own Server Monitoring Dashboard Using Uptime Kuma and Docker",
+    "media_type": "text/html",
+    "content_hash": "sha256:04434212544adc93def2ecaeee8e699e6ff4c687a50ba2d13703048fc016a57e",
+    "fetched_at": "2026-11-15T10:51:35.643379Z",
+    "published_at": "2026-04-06T20:32:31.481000Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.freecodecamp.org/news/self-host-uptime-kuma-docker",
+      "final_url": "https://www.freecodecamp.org/news/self-host-uptime-kuma-docker",
+      "publisher_canonical_url": "https://www.freecodecamp.org/news/self-host-uptime-kuma-docker",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": "freeCodeCamp.org"
+    }
+  },
+  {
+    "id": "evidence-0dddb3526a5b8745fb77e93e5015ba807a5ccaa96d6a6d460a38187d6dbdd547",
+    "canonical_url": "https://wanwang.aliyun.com/domain",
+    "title": "域名注册_域名查询_域名申请_域名购买_域名续费_国际域名-万网-阿里云品牌",
+    "media_type": "text/html",
+    "content_hash": "sha256:e20cec586fa92c0088e8caa744de142bdf5badb1267f3569544157cfe1178ed1",
+    "fetched_at": "2026-11-15T10:52:00.004971Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://wanwang.aliyun.com/domain",
+      "final_url": "https://wanwang.aliyun.com/domain",
+      "publisher_canonical_url": "https://wanwang.aliyun.com/domain",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-978cd2bb128667d1590eb230eb4af3f588285bee26a55088cd96450e6f73b688",
+    "canonical_url": "https://www.cloudflare.com/zh-cn/application-services/solutions/low-cost-domain-names",
+    "title": "便宜域名 - 域名价格 | Cloudflare",
+    "media_type": "text/html",
+    "content_hash": "sha256:ccef67c8d6b4f70ef51d7bc35bce44d31243f1881a9feb60d8d1b598d3e0440e",
+    "fetched_at": "2026-11-15T10:52:05.513596Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.cloudflare.com/zh-cn/application-services/solutions/low-cost-domain-names",
+      "final_url": "https://www.cloudflare.com/zh-cn/application-services/solutions/low-cost-domain-names",
+      "publisher_canonical_url": "https://www.cloudflare.com/zh-cn/application-services/solutions/low-cost-domain-names",
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-f6c86cacf2bf940403cc39a68ccca903a6201ad1868651d6c3b4f95c81d2f203",
+    "canonical_url": "https://buy.cloud.tencent.com/domain/price?type=overview",
+    "title": "域名注册购买_域名注册选购 - 腾讯云",
+    "media_type": "text/html",
+    "content_hash": "sha256:cb3bb610eb82d6143d5bef6ca31287bd5808a16c7c391b1149d389771333f95a",
+    "fetched_at": "2026-11-15T10:52:02.499237Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://buy.cloud.tencent.com/domain/price?type=overview",
+      "final_url": "https://buy.cloud.tencent.com/domain/price?type=overview",
+      "publisher_canonical_url": "https://buy.cloud.tencent.com/domain/price",
+      "scraper_used": "playwright_bs4",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-a36470b8b72eb9ce82f9f282f2f00fa200e63ce959e15019bde3c29fd5ff6c8e",
+    "canonical_url": "https://letsencrypt.org/zh-cn/docs/rate-limits",
+    "title": "速率限制 -  Let's Encrypt",
+    "media_type": "text/html",
+    "content_hash": "sha256:97307558929a17c21e3e33628e2e0f803424140784a101c7aa1b3cd036b5bcf9",
+    "fetched_at": "2026-11-15T10:52:05.845111Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://letsencrypt.org/zh-cn/docs/rate-limits",
+      "final_url": "https://letsencrypt.org/zh-cn/docs/rate-limits",
+      "publisher_canonical_url": null,
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-a9f71ce0479dc6ebf94deeba243e93e5d818be18c77d2be65e3574fa33849c4e",
+    "canonical_url": "https://letsencrypt.org/zh-cn/docs/faq",
+    "title": "常见问题 -  Let's Encrypt",
+    "media_type": "text/html",
+    "content_hash": "sha256:76bdd51229045284d48b7ce9a3315f840e0875a743da6c76e3085734e92d3769",
+    "fetched_at": "2026-11-15T10:52:04.310194Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://letsencrypt.org/zh-cn/docs/faq",
+      "final_url": "https://letsencrypt.org/zh-cn/docs/faq",
+      "publisher_canonical_url": null,
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-e55d4b3db5627022a17cff1a67fd9b47308e4fc1f917aafac9c22d6a12d8801d",
+    "canonical_url": "https://letsencrypt.org/zh-cn/docs/cert-lifetimes",
+    "title": "证书有效期背后的原因与计划 -  Let's Encrypt",
+    "media_type": "text/html",
+    "content_hash": "sha256:4624fd4618bba642c44af5ee5018a6a54f0930acc9c425e0a7b7d7d411638135",
+    "fetched_at": "2026-11-15T10:52:06.246731Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://letsencrypt.org/zh-cn/docs/cert-lifetimes",
+      "final_url": "https://letsencrypt.org/zh-cn/docs/cert-lifetimes",
+      "publisher_canonical_url": null,
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  }
+]

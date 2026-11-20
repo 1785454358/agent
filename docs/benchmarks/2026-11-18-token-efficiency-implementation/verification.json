@@ -1,0 +1,1148 @@
+{
+  "finished_local_date": "2026-11-19",
+  "scope": [
+    "workflow",
+    "plan_execute",
+    "multi_agent"
+  ],
+  "implementation_iteration": "project-wide first iteration",
+  "quality_acceptance_passed": false,
+  "measurement_notes": [
+    "Provider usage is distinct from local prompt estimates.",
+    "Frozen-source runs are not a controlled ablation of the old online baseline.",
+    "Last code-pattern guards were added after the measured frozen responses; their regression tests pass, but those response artifacts remain rejected."
+  ],
+  "tests": {
+    "command": ".venv/Scripts/python -m pytest tests -m \"not real\" -q --tb=short",
+    "working_directory": "backend",
+    "final_result_pending": false,
+    "previous_full_result": {
+      "passed": 1845,
+      "deselected": 1,
+      "warnings": 33
+    },
+    "focused_response_suite": {
+      "passed": 173
+    },
+    "final_result": {
+      "passed": 1846,
+      "deselected": 1,
+      "warnings": 33,
+      "seconds": 133.79
+    }
+  },
+  "runs": {
+    "frozen_three_modes": [
+      {
+        "mode": "multi_agent",
+        "seconds": 50.898,
+        "usage": {
+          "provider_attempts": 5,
+          "measured_usage_attempts": 5,
+          "missing_usage_attempts": 0,
+          "usage_complete": true,
+          "input_tokens": 26459,
+          "output_tokens": 6701,
+          "total_tokens": 33160,
+          "observed_usage": {
+            "input_tokens": 26459,
+            "output_tokens": 6701,
+            "total_tokens": 33160
+          },
+          "role_usage": {
+            "planner": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "executor": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "replanner": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "supervisor": {
+              "input_tokens": 1094,
+              "output_tokens": 646,
+              "total_tokens": 1740
+            },
+            "researcher": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "evaluator": {
+              "input_tokens": 13608,
+              "output_tokens": 2913,
+              "total_tokens": 16521
+            },
+            "summarizer": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "memory_consolidator": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "other": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "writer": {
+              "input_tokens": 11757,
+              "output_tokens": 3142,
+              "total_tokens": 14899
+            }
+          },
+          "observed_role_usage": {
+            "supervisor": {
+              "input_tokens": 1094,
+              "output_tokens": 646,
+              "total_tokens": 1740
+            },
+            "evaluator": {
+              "input_tokens": 13608,
+              "output_tokens": 2913,
+              "total_tokens": 16521
+            },
+            "writer": {
+              "input_tokens": 11757,
+              "output_tokens": 3142,
+              "total_tokens": 14899
+            }
+          },
+          "stage_seconds": {
+            "supervisor": 5.0310000000172295,
+            "evaluator": 19.220000000030268,
+            "writer": 22.95299999997951
+          },
+          "budget_state_available": true
+        },
+        "status": "partial",
+        "termination_reason": "max_follow_ups_reached",
+        "coverage": {
+          "items": [
+            {
+              "requirement_id": "r1",
+              "status": "missing",
+              "reason": "unknown_resolution_not_authorized_or_unchecked",
+              "finding_ids": [
+                "finding-1",
+                "finding-2"
+              ],
+              "unanswered_parts": [
+                "RFC 9110 中 GET 的幂等性定义",
+                "RFC 9110 中自动重试的规范依据与限制"
+              ],
+              "resolution": "not_found",
+              "limitations": [
+                "本次可见片段未包含 GET 方法章节及自动重试相关规则"
+              ]
+            },
+            {
+              "requirement_id": "r2",
+              "status": "missing",
+              "reason": "unknown_resolution_not_authorized_or_unchecked",
+              "finding_ids": [],
+              "unanswered_parts": [
+                "连接断开且未收到响应时请求是否已被处理的不确定性规则",
+                "相应风险表述"
+              ],
+              "resolution": "not_found",
+              "limitations": [
+                "可见片段未覆盖连接失败/响应丢失相关章节"
+              ]
+            },
+            {
+              "requirement_id": "r3",
+              "status": "covered",
+              "reason": "RFC 6585 给出 429 定义、Retry-After 的 MAY 使用及缓存禁止，并说明服务器不必须使用 429。",
+              "finding_ids": [
+                "finding-3"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": [
+                "规范未规定客户端收到 429 后必须重试或必须等待"
+              ]
+            },
+            {
+              "requirement_id": "r4",
+              "status": "missing",
+              "reason": "unknown_resolution_not_authorized_or_unchecked",
+              "finding_ids": [
+                "finding-5"
+              ],
+              "unanswered_parts": [
+                "RFC 9110 中 503 状态码的定义",
+                "503 可重试条件的完整规范表述"
+              ],
+              "resolution": "not_found",
+              "limitations": [
+                "可见片段缺少 15.5.x 中 503 定义正文"
+              ]
+            },
+            {
+              "requirement_id": "r5",
+              "status": "missing",
+              "reason": "unknown_resolution_not_authorized_or_unchecked",
+              "finding_ids": [
+                "finding-4"
+              ],
+              "unanswered_parts": [
+                "Retry-After 缺失时的处理规则",
+                "Retry-After 无效时的处理规则"
+              ],
+              "resolution": "not_found",
+              "limitations": [
+                "可见片段未包含 Retry-After 缺失/无效处理条款"
+              ]
+            },
+            {
+              "requirement_id": "r6",
+              "status": "missing",
+              "reason": "unknown_resolution_not_authorized_or_unchecked",
+              "finding_ids": [
+                "finding-1",
+                "finding-3"
+              ],
+              "unanswered_parts": [
+                "RFC 9110 或 RFC 6585 中关于 POST 去重/幂等键的规范表述",
+                "关于重试必成功的规范表述（含是否存在此类保障）"
+              ],
+              "resolution": "not_found",
+              "limitations": [
+                "可见片段未包含去重、幂等键或重试成功保证相关条款"
+              ]
+            }
+          ]
+        },
+        "unresolved_gaps": [
+          "r1:missing:unknown_resolution_not_authorized_or_unchecked",
+          "r2:missing:unknown_resolution_not_authorized_or_unchecked",
+          "r4:missing:unknown_resolution_not_authorized_or_unchecked",
+          "r5:missing:unknown_resolution_not_authorized_or_unchecked",
+          "r6:missing:unknown_resolution_not_authorized_or_unchecked",
+          "diagnostic:read_anchor_omitted:evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+          "diagnostic:read_anchor_omitted:evidence-f2857ca5db8fba0ab70ac7553f9ea089cbda0590f67e68a1f692a1d6ceabd403"
+        ],
+        "artifact": ".local-artifacts/http-retry-frozen-efficient-final/multi_agent/summary.json",
+        "answer": ".local-artifacts/http-retry-frozen-efficient-final/multi_agent/answer.md",
+        "quality_accepted": false
+      },
+      {
+        "mode": "plan_execute",
+        "seconds": 75.478,
+        "usage": {
+          "provider_attempts": 7,
+          "measured_usage_attempts": 7,
+          "missing_usage_attempts": 0,
+          "usage_complete": true,
+          "input_tokens": 43840,
+          "output_tokens": 11647,
+          "total_tokens": 55487,
+          "observed_usage": {
+            "input_tokens": 43840,
+            "output_tokens": 11647,
+            "total_tokens": 55487
+          },
+          "role_usage": {
+            "planner": {
+              "input_tokens": 1095,
+              "output_tokens": 1141,
+              "total_tokens": 2236
+            },
+            "executor": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "replanner": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "supervisor": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "researcher": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "evaluator": {
+              "input_tokens": 29372,
+              "output_tokens": 6038,
+              "total_tokens": 35410
+            },
+            "summarizer": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "memory_consolidator": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "other": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "writer": {
+              "input_tokens": 13373,
+              "output_tokens": 4468,
+              "total_tokens": 17841
+            }
+          },
+          "observed_role_usage": {
+            "planner": {
+              "input_tokens": 1095,
+              "output_tokens": 1141,
+              "total_tokens": 2236
+            },
+            "evaluator": {
+              "input_tokens": 29372,
+              "output_tokens": 6038,
+              "total_tokens": 35410
+            },
+            "writer": {
+              "input_tokens": 13373,
+              "output_tokens": 4468,
+              "total_tokens": 17841
+            }
+          },
+          "stage_seconds": {
+            "planner": 7.202999999979511,
+            "evaluator": 36.7510000000475,
+            "writer": 27.141000000061467
+          },
+          "budget_state_available": true
+        },
+        "status": "partial",
+        "termination_reason": "no_research_progress",
+        "coverage": {
+          "items": [
+            {
+              "requirement_id": "r1",
+              "status": "missing",
+              "reason": "evaluation_unavailable",
+              "finding_ids": [],
+              "unanswered_parts": [],
+              "resolution": null,
+              "limitations": []
+            },
+            {
+              "requirement_id": "r2",
+              "status": "missing",
+              "reason": "evaluation_unavailable",
+              "finding_ids": [],
+              "unanswered_parts": [],
+              "resolution": null,
+              "limitations": []
+            },
+            {
+              "requirement_id": "r3",
+              "status": "missing",
+              "reason": "evaluation_unavailable",
+              "finding_ids": [],
+              "unanswered_parts": [],
+              "resolution": null,
+              "limitations": []
+            },
+            {
+              "requirement_id": "r4",
+              "status": "missing",
+              "reason": "evaluation_unavailable",
+              "finding_ids": [],
+              "unanswered_parts": [],
+              "resolution": null,
+              "limitations": []
+            },
+            {
+              "requirement_id": "r5",
+              "status": "missing",
+              "reason": "evaluation_unavailable",
+              "finding_ids": [],
+              "unanswered_parts": [],
+              "resolution": null,
+              "limitations": []
+            },
+            {
+              "requirement_id": "r6",
+              "status": "missing",
+              "reason": "evaluation_unavailable",
+              "finding_ids": [],
+              "unanswered_parts": [],
+              "resolution": null,
+              "limitations": []
+            }
+          ]
+        },
+        "unresolved_gaps": [
+          "r1:missing:evaluation_unavailable",
+          "r2:missing:evaluation_unavailable",
+          "r3:missing:evaluation_unavailable",
+          "r4:missing:evaluation_unavailable",
+          "r5:missing:evaluation_unavailable",
+          "r6:missing:evaluation_unavailable",
+          "evaluation_unavailable",
+          "diagnostic:read_anchor_omitted:evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+          "diagnostic:read_anchor_omitted:evidence-f2857ca5db8fba0ab70ac7553f9ea089cbda0590f67e68a1f692a1d6ceabd403",
+          "diagnostic:evaluation_unavailable",
+          "no_research_progress"
+        ],
+        "artifact": ".local-artifacts/http-retry-frozen-efficient-final/plan_execute/summary.json",
+        "answer": ".local-artifacts/http-retry-frozen-efficient-final/plan_execute/answer.md",
+        "quality_accepted": false
+      },
+      {
+        "mode": "workflow",
+        "seconds": 39.915,
+        "usage": {
+          "provider_attempts": 5,
+          "measured_usage_attempts": 5,
+          "missing_usage_attempts": 0,
+          "usage_complete": true,
+          "input_tokens": 24393,
+          "output_tokens": 5406,
+          "total_tokens": 29799,
+          "observed_usage": {
+            "input_tokens": 24393,
+            "output_tokens": 5406,
+            "total_tokens": 29799
+          },
+          "role_usage": {
+            "planner": {
+              "input_tokens": 1096,
+              "output_tokens": 533,
+              "total_tokens": 1629
+            },
+            "executor": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "replanner": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "supervisor": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "researcher": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "evaluator": {
+              "input_tokens": 12559,
+              "output_tokens": 2699,
+              "total_tokens": 15258
+            },
+            "summarizer": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "memory_consolidator": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "other": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "writer": {
+              "input_tokens": 10738,
+              "output_tokens": 2174,
+              "total_tokens": 12912
+            }
+          },
+          "observed_role_usage": {
+            "planner": {
+              "input_tokens": 1096,
+              "output_tokens": 533,
+              "total_tokens": 1629
+            },
+            "evaluator": {
+              "input_tokens": 12559,
+              "output_tokens": 2699,
+              "total_tokens": 15258
+            },
+            "writer": {
+              "input_tokens": 10738,
+              "output_tokens": 2174,
+              "total_tokens": 12912
+            }
+          },
+          "stage_seconds": {
+            "planner": 4.10999999998603,
+            "evaluator": 19.06300000002375,
+            "writer": 14.313000000023749
+          },
+          "budget_state_available": true
+        },
+        "status": "completed",
+        "termination_reason": "workflow_completed",
+        "coverage": {
+          "items": [
+            {
+              "requirement_id": "r1",
+              "status": "covered",
+              "reason": "RFC 9110 对 POST 语义与 PUT 幂等意图的原文支持 POST 非幂等及断连后结果不确定的风险判断。",
+              "finding_ids": [
+                "finding-1"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": []
+            },
+            {
+              "requirement_id": "r2",
+              "status": "covered",
+              "reason": "§10.2.3 给出两种格式、语义与示例；缺失或无效处理规范未规定，属自行建议。",
+              "finding_ids": [
+                "finding-2"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": [
+                "规范未规定 Retry-After 缺失或无效时的客户端处理，需标为自行建议"
+              ]
+            },
+            {
+              "requirement_id": "r3",
+              "status": "covered",
+              "reason": "RFC 6585 §4 给出 429 定义、Retry-After 为 MAY、响应表示 SHOULD 说明条件及不可缓存。",
+              "finding_ids": [
+                "finding-3"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": []
+            },
+            {
+              "requirement_id": "r4",
+              "status": "covered",
+              "reason": "RFC 9110 §15.6.4 给出 503 定义与 Retry-After 为 MAY 的语义。",
+              "finding_ids": [
+                "finding-4"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": []
+            },
+            {
+              "requirement_id": "r5",
+              "status": "covered",
+              "reason": "原文未规定重试次数/时限，可据此区分规范规则与自行建议。",
+              "finding_ids": [
+                "finding-5"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": [
+                "次数与时限为自行建议，非规范要求"
+              ]
+            }
+          ]
+        },
+        "unresolved_gaps": [
+          "diagnostic:read_anchor_omitted:evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+          "diagnostic:read_anchor_omitted:evidence-f2857ca5db8fba0ab70ac7553f9ea089cbda0590f67e68a1f692a1d6ceabd403"
+        ],
+        "artifact": ".local-artifacts/http-retry-frozen-efficient-final/workflow/summary.json",
+        "answer": ".local-artifacts/http-retry-frozen-efficient-final/workflow/answer.md",
+        "quality_accepted": false
+      }
+    ],
+    "frozen_workflow_constraint_check": [
+      {
+        "mode": "workflow",
+        "seconds": 42.245,
+        "usage": {
+          "provider_attempts": 5,
+          "measured_usage_attempts": 5,
+          "missing_usage_attempts": 0,
+          "usage_complete": true,
+          "input_tokens": 25988,
+          "output_tokens": 6686,
+          "total_tokens": 32674,
+          "observed_usage": {
+            "input_tokens": 25988,
+            "output_tokens": 6686,
+            "total_tokens": 32674
+          },
+          "role_usage": {
+            "planner": {
+              "input_tokens": 1096,
+              "output_tokens": 564,
+              "total_tokens": 1660
+            },
+            "executor": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "replanner": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "supervisor": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "researcher": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "evaluator": {
+              "input_tokens": 13271,
+              "output_tokens": 3329,
+              "total_tokens": 16600
+            },
+            "summarizer": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "memory_consolidator": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "other": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "writer": {
+              "input_tokens": 11621,
+              "output_tokens": 2793,
+              "total_tokens": 14414
+            }
+          },
+          "observed_role_usage": {
+            "planner": {
+              "input_tokens": 1096,
+              "output_tokens": 564,
+              "total_tokens": 1660
+            },
+            "evaluator": {
+              "input_tokens": 13271,
+              "output_tokens": 3329,
+              "total_tokens": 16600
+            },
+            "writer": {
+              "input_tokens": 11621,
+              "output_tokens": 2793,
+              "total_tokens": 14414
+            }
+          },
+          "stage_seconds": {
+            "planner": 3.6880000000237487,
+            "evaluator": 17.82799999997951,
+            "writer": 17.875
+          },
+          "budget_state_available": true
+        },
+        "status": "partial",
+        "termination_reason": "insufficient_evidence",
+        "coverage": {
+          "items": [
+            {
+              "requirement_id": "r1",
+              "status": "missing",
+              "reason": "unknown_resolution_not_authorized_or_unchecked",
+              "finding_ids": [
+                "finding-1"
+              ],
+              "unanswered_parts": [
+                "RFC 9110 中幂等性的完整定义",
+                "客户端不得自动重试非幂等请求的具体条件与章节"
+              ],
+              "resolution": "not_found",
+              "limitations": [
+                "本次可见片段未包含 RFC 9110 第 9.2.2 节幂等性定义及自动重试限制原文"
+              ]
+            },
+            {
+              "requirement_id": "r2",
+              "status": "missing",
+              "reason": "unknown_resolution_not_authorized_or_unchecked",
+              "finding_ids": [
+                "finding-2"
+              ],
+              "unanswered_parts": [
+                "Retry-After 缺失时的处理规则",
+                "Retry-After 无效时的处理规则"
+              ],
+              "resolution": "not_found",
+              "limitations": [
+                "本次可见片段未包含 Retry-After 缺失或无效处理的规范原文"
+              ]
+            },
+            {
+              "requirement_id": "r3",
+              "status": "covered",
+              "reason": "已覆盖 503 的临时过载/计划维护语义、MAY 发送 Retry-After 以及 Retry-After 表示预计不可用时长。",
+              "finding_ids": [
+                "finding-3"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": []
+            },
+            {
+              "requirement_id": "r4",
+              "status": "covered",
+              "reason": "已覆盖 429 的速率限制语义及 MAY 包含 Retry-After 指示等待时间。",
+              "finding_ids": [
+                "finding-4"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": []
+            },
+            {
+              "requirement_id": "r5",
+              "status": "missing",
+              "reason": "unknown_resolution_not_authorized_or_unchecked",
+              "finding_ids": [],
+              "unanswered_parts": [
+                "连接失败/关闭后的重试规则",
+                "请求是否已被处理的不确定性"
+              ],
+              "resolution": "not_found",
+              "limitations": [
+                "本次可见片段未包含 RFC 9110 第 9.2.2 节或连接管理相关原文"
+              ]
+            },
+            {
+              "requirement_id": "r6",
+              "status": "covered",
+              "reason": "已覆盖 HTTP-date 的 IMF-fixdate/obs-date 定义、首选格式、接收与发送规则。",
+              "finding_ids": [
+                "finding-5"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": []
+            }
+          ]
+        },
+        "unresolved_gaps": [
+          "r1:missing:unknown_resolution_not_authorized_or_unchecked",
+          "r2:missing:unknown_resolution_not_authorized_or_unchecked",
+          "r5:missing:unknown_resolution_not_authorized_or_unchecked",
+          "diagnostic:read_anchor_omitted:evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+          "diagnostic:read_anchor_omitted:evidence-f2857ca5db8fba0ab70ac7553f9ea089cbda0590f67e68a1f692a1d6ceabd403"
+        ],
+        "artifact": ".local-artifacts/http-retry-frozen-constraint-check/workflow/summary.json",
+        "answer": ".local-artifacts/http-retry-frozen-constraint-check/workflow/answer.md",
+        "quality_accepted": false
+      }
+    ],
+    "frozen_python_diagnostic": [
+      {
+        "mode": "plan_execute",
+        "seconds": 59.682,
+        "usage": {
+          "provider_attempts": 12,
+          "measured_usage_attempts": 12,
+          "missing_usage_attempts": 0,
+          "usage_complete": true,
+          "input_tokens": 33818,
+          "output_tokens": 8806,
+          "total_tokens": 42624,
+          "observed_usage": {
+            "input_tokens": 33818,
+            "output_tokens": 8806,
+            "total_tokens": 42624
+          },
+          "role_usage": {
+            "planner": {
+              "input_tokens": 828,
+              "output_tokens": 975,
+              "total_tokens": 1803
+            },
+            "executor": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "replanner": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "supervisor": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "researcher": {
+              "input_tokens": 7978,
+              "output_tokens": 343,
+              "total_tokens": 8321
+            },
+            "evaluator": {
+              "input_tokens": 14677,
+              "output_tokens": 3197,
+              "total_tokens": 17874
+            },
+            "summarizer": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "memory_consolidator": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "other": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "writer": {
+              "input_tokens": 10335,
+              "output_tokens": 4291,
+              "total_tokens": 14626
+            }
+          },
+          "observed_role_usage": {
+            "planner": {
+              "input_tokens": 828,
+              "output_tokens": 975,
+              "total_tokens": 1803
+            },
+            "researcher": {
+              "input_tokens": 7978,
+              "output_tokens": 343,
+              "total_tokens": 8321
+            },
+            "evaluator": {
+              "input_tokens": 14677,
+              "output_tokens": 3197,
+              "total_tokens": 17874
+            },
+            "writer": {
+              "input_tokens": 10335,
+              "output_tokens": 4291,
+              "total_tokens": 14626
+            }
+          },
+          "stage_seconds": {
+            "planner": 7.0,
+            "researcher": 7.907999999995809,
+            "evaluator": 19.798000000067987,
+            "writer": 24.01500000001397
+          },
+          "budget_state_available": true
+        },
+        "status": "partial",
+        "termination_reason": "max_replans_reached",
+        "coverage": {
+          "items": [
+            {
+              "requirement_id": "r1",
+              "status": "covered",
+              "reason": "文档说明 return_exceptions=False 时异常传播给调用方，且传播后 gather 已 done，再 cancel 不会取消其他可等待对象；未自动取消其余任务。",
+              "finding_ids": [
+                "finding-1"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": []
+            },
+            {
+              "requirement_id": "r2",
+              "status": "covered",
+              "reason": "文档说明 gather 并发运行可等待对象、协程自动调度为 Task，并明确设计为防止一个 Task/Future 的取消导致其他被取消，故首个异常后其余任务继续运行。",
+              "finding_ids": [
+                "finding-2"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": []
+            },
+            {
+              "requirement_id": "r3",
+              "status": "covered",
+              "reason": "文档说明子任务首次非取消异常失败时取消其余任务、禁止新增任务，并将非取消异常聚合为 ExceptionGroup/BaseExceptionGroup 抛出。",
+              "finding_ids": [
+                "finding-3"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": []
+            },
+            {
+              "requirement_id": "r4",
+              "status": "missing",
+              "reason": "unknown_resolution_not_authorized_or_unchecked",
+              "finding_ids": [],
+              "unanswered_parts": [
+                "Task.cancel() 的取消请求语义",
+                "CancelledError 的抛出与处理",
+                "取消完成后的任务状态",
+                "await 被取消任务的行为"
+              ],
+              "resolution": "not_found",
+              "limitations": [
+                "仅检查了 s1 的可见片段，未覆盖 Task.cancel() 相关章节"
+              ]
+            },
+            {
+              "requirement_id": "r5",
+              "status": "covered",
+              "reason": "文档标注 TaskGroup 为 3.11 新增，并称其为比 gather 更现代的并发等待方式，可据此判断版本可用性与兼容性差异。",
+              "finding_ids": [
+                "finding-4"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": []
+            }
+          ]
+        },
+        "unresolved_gaps": [
+          "r4:missing:unknown_resolution_not_authorized_or_unchecked",
+          "diagnostic:read_anchor_omitted:evidence-76358782ef94addea60dc84314b0d704408a36f20f914ff547bb36b54aaced20"
+        ],
+        "artifact": ".local-artifacts/frozen-efficiency-dependent-v7/plan_execute/summary.json",
+        "answer": ".local-artifacts/frozen-efficiency-dependent-v7/plan_execute/answer.md",
+        "quality_accepted": false
+      }
+    ],
+    "frozen_cross_language": [
+      {
+        "mode": "multi_agent",
+        "seconds": 52.425,
+        "usage": {
+          "provider_attempts": 9,
+          "measured_usage_attempts": 9,
+          "missing_usage_attempts": 0,
+          "usage_complete": true,
+          "input_tokens": 38609,
+          "output_tokens": 8228,
+          "total_tokens": 46837,
+          "observed_usage": {
+            "input_tokens": 38609,
+            "output_tokens": 8228,
+            "total_tokens": 46837
+          },
+          "role_usage": {
+            "planner": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "executor": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "replanner": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "supervisor": {
+              "input_tokens": 794,
+              "output_tokens": 821,
+              "total_tokens": 1615
+            },
+            "researcher": {
+              "input_tokens": 5641,
+              "output_tokens": 308,
+              "total_tokens": 5949
+            },
+            "evaluator": {
+              "input_tokens": 16055,
+              "output_tokens": 3514,
+              "total_tokens": 19569
+            },
+            "summarizer": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "memory_consolidator": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "other": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "writer": {
+              "input_tokens": 16119,
+              "output_tokens": 3585,
+              "total_tokens": 19704
+            }
+          },
+          "observed_role_usage": {
+            "supervisor": {
+              "input_tokens": 794,
+              "output_tokens": 821,
+              "total_tokens": 1615
+            },
+            "researcher": {
+              "input_tokens": 5641,
+              "output_tokens": 308,
+              "total_tokens": 5949
+            },
+            "evaluator": {
+              "input_tokens": 16055,
+              "output_tokens": 3514,
+              "total_tokens": 19569
+            },
+            "writer": {
+              "input_tokens": 16119,
+              "output_tokens": 3585,
+              "total_tokens": 19704
+            }
+          },
+          "stage_seconds": {
+            "supervisor": 5.85899999999674,
+            "researcher": 5.703000000037719,
+            "evaluator": 21.07799999997951,
+            "writer": 21.54700000002049
+          },
+          "budget_state_available": true
+        },
+        "status": "partial",
+        "termination_reason": "max_follow_ups_reached",
+        "coverage": {
+          "items": [
+            {
+              "requirement_id": "r1",
+              "status": "covered",
+              "reason": "Python 3.15.2 官方文档给出 awaitable 类型、协程运行方式及 Task 并发调度与 create_task 自动调度。",
+              "finding_ids": [
+                "finding-1",
+                "finding-2"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": [
+                "事件循环内部实现细节未在可见片段中展开"
+              ]
+            },
+            {
+              "requirement_id": "r2",
+              "status": "covered",
+              "reason": "官方文档覆盖 TaskGroup.cancel、CancelledError 传播、取消计数及 wait 超时/取消不取消 futures 的边界。",
+              "finding_ids": [
+                "finding-3",
+                "finding-4",
+                "finding-5"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": [
+                "Task.cancel 方法本身的逐条语义未在可见片段中直接展开"
+              ]
+            },
+            {
+              "requirement_id": "r3",
+              "status": "covered",
+              "reason": "官方文档明确阻塞调用会阻塞事件循环，并说明 to_thread 的 IO 密集适用性与 GIL 对 CPU 密集的限制。",
+              "finding_ids": [
+                "finding-6"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": [
+                "单线程事件循环的完整架构描述未在可见片段中出现"
+              ]
+            },
+            {
+              "requirement_id": "r4",
+              "status": "covered",
+              "reason": "Java SE 21 Thread 官方文档说明虚拟线程为用户态线程、运行时调度、载体线程与资源规模。",
+              "finding_ids": [
+                "finding-7"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": [
+                "JEP 444 规范原文未在本次来源中直接可见"
+              ]
+            },
+            {
+              "requirement_id": "r5",
+              "status": "missing",
+              "reason": "unknown_resolution_not_authorized_or_unchecked",
+              "finding_ids": [
+                "finding-8"
+              ],
+              "unanswered_parts": [
+                "虚拟线程的取消/中断机制",
+                "pinning 限制",
+                "synchronized 导致的 pinning 或限制"
+              ],
+              "resolution": "not_found",
+              "limitations": [
+                "本次可见 Java SE 21 Thread 页面片段未包含取消/中断与 pinning 内容"
+              ]
+            },
+            {
+              "requirement_id": "r6",
+              "status": "covered",
+              "reason": "Go 1.26 发布说明与官方博客覆盖 goroutine 每请求模型、context 取消/截止时间/派生树、goroutine 泄漏限制及版本。",
+              "finding_ids": [
+                "finding-9",
+                "finding-10",
+                "finding-11",
+                "finding-12",
+                "finding-13"
+              ],
+              "unanswered_parts": [],
+              "resolution": "answered",
+              "limitations": [
+                "goroutine 调度器内部实现细节未在可见片段中展开"
+              ]
+            }
+          ]
+        },
+        "unresolved_gaps": [
+          "r5:missing:unknown_resolution_not_authorized_or_unchecked",
+          "diagnostic:read_anchor_omitted:evidence-574dea042698da9f380c7dd00bf8868c105032dacb638ab691ca9b08cab8029e"
+        ],
+        "artifact": ".local-artifacts/frozen-efficiency-parallel-v7/multi_agent/summary.json",
+        "answer": ".local-artifacts/frozen-efficiency-parallel-v7/multi_agent/answer.md",
+        "quality_accepted": false
+      }
+    ]
+  },
+  "remaining": [
+    "Plan-and-Execute and Multi-Agent evidence coverage/reading-window and evaluation-output stability.",
+    "Full important-claim and generated-code acceptance, including unchanged sources and version boundaries.",
+    "Repeated same-source before/after ablation with medians and failure rates."
+  ]
+}

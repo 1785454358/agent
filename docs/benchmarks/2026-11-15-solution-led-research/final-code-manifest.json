@@ -1,0 +1,16 @@
+{
+  "domain/delivery.py": "1ee221bfe3de6bdb429a2497908f6cea3f800013a515fd2ac8a3a02252bf7219",
+  "domain/execution.py": "dddc5ad317d84fb7e3393b7f92a76aa4b2d88c61825745a7b53938deb3471edf",
+  "strategies/delivery_planning.py": "5328959872d786968370a1655dd518164afdfa102cb1f2aa8eac5f662eb36820",
+  "strategies/planning.py": "837d104838f27324ed3aaccdbffb7a45df67dfc241e6df0ff6ec954b7202ccdd",
+  "strategies/evidence_evaluation.py": "f2a5682332ab0e6f0242c6410abfe6f23ebcf937430823169b4996ee21b53ee7",
+  "strategies/scope_review.py": "984741974f39166b5882a9dcfc324aa12f59265cbced1488f7104a6bd00f91c0",
+  "research/planning.py": "652d5afec4aca24b6430d21715fe077023b3f25d467f96562e3c64c7a0ed9b92",
+  "research/quality.py": "88af3fa771cc72c8435405a186e73f9e73445a1d53df4ac16ada8dca570c12e1",
+  "research/runtime.py": "4eccdf93e2ec5a8df481f4dc84369b2d7c7353b480025f744b0f3aee85b68dd0",
+  "responses/consistency.py": "1e24d2ad259ad11aaccd52851acdadd503ca014e2e607cf0b616ef6d1a884e48",
+  "responses/budgets.py": "89b423f8eea918df4a22d25af3fb9e348fbc60ff77518f463b4fd002e893e061",
+  "responses/fact_review.py": "eee5fa79167e337427a8707d30db0957578a51858e64f034f9dcf3b66f66dca4",
+  "responses/graph.py": "006d9fbadee701b223baa0097ccd7c62c09f7712c93e1eb3efb4bf8da1fa3c87",
+  "harness/checkpoint.py": "1c30902cec411f3d5794aa42134aa88ac6eb5e27eff5ac3f5cc0cf6fe93fe949"
+}

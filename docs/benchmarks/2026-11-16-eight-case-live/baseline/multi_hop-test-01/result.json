@@ -1,0 +1,65 @@
+{
+  "run_id": "d2cee02de21943788900942d540c7848",
+  "thread_id": "d2cee02de21943788900942d540c7848",
+  "status": "partial",
+  "response_outcome": {
+    "response_mode": "answer",
+    "content": "本次研究未能生成有引用支持的完整内容。以下是可追溯的资料来源：",
+    "citations": [],
+    "cited_evidence_ids": [],
+    "partial_reason": "no_evidence"
+  },
+  "research_outcome": {
+    "delivery_plan": null,
+    "source_eligibility": {},
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "Whether short-term message history is sufficient for recalling durable user preferences when starting a new conversation thread, according to frozen documentation"
+      },
+      {
+        "id": "r2",
+        "description": "Specific configuration components, parameters, or storage mechanisms required to enable durable preference recall across separate conversation threads"
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "missing",
+          "reason": "no_evidence_collected",
+          "finding_ids": [],
+          "unanswered_parts": []
+        },
+        {
+          "requirement_id": "r2",
+          "status": "missing",
+          "reason": "no_evidence_collected",
+          "finding_ids": [],
+          "unanswered_parts": []
+        }
+      ]
+    },
+    "decomposition_degraded": false,
+    "mode": "workflow",
+    "evidence_ids": [],
+    "findings": [],
+    "unresolved_gaps": [
+      "r1:missing:no_evidence_collected",
+      "r2:missing:no_evidence_collected",
+      "no_evidence_collected"
+    ],
+    "executed_steps": 2,
+    "termination_reason": "no_sources"
+  },
+  "termination_reason": "no_sources",
+  "executed_steps": 2,
+  "unresolved_gaps": [
+    "r1:missing:no_evidence_collected",
+    "r2:missing:no_evidence_collected",
+    "no_evidence_collected"
+  ],
+  "sources": [],
+  "research_sufficiency": "insufficient"
+}

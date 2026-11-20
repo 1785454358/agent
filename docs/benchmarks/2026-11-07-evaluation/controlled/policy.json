@@ -1,0 +1,1 @@
+{"schema_version": 1, "name": "synthetic-gate-demonstration-only", "min_paired_tasks": 2, "min_score_coverage": 1.0, "max_completion_rate_drop": 0.0, "max_answered_rate_drop": 0.0, "metrics": {"factual_correctness": {"max_drop": 0.0, "max_task_drop": 0.1}}}

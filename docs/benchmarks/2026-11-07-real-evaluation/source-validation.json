@@ -1,0 +1,16 @@
+{
+  "research_snapshot_verified_files": 229,
+  "scoring_snapshots_verified": {
+    "ragas": {
+      "scorer_sha256": "d77f1ed60e4d479cc68565c01f4c5c7401ac465c1566366a63cacb32f252dc62",
+      "common_sha256": "f364b7533d35326c936255dad1bfd8719d06be54c39f80b1de7733a0e3df3e2e"
+    },
+    "claims": {
+      "scorer_sha256": "b60af6d9dd1356c2021ec9d33191c68458ff27c53d698226ed05372cdeefb79c",
+      "common_sha256": "f364b7533d35326c936255dad1bfd8719d06be54c39f80b1de7733a0e3df3e2e"
+    }
+  },
+  "live_ragas_v2_snapshot_verified": "6f7ba0b58a89808cdf9a8314bdb27af471db62b91e1c3903b9f063f457ccb81e",
+  "note": "Historical versions preserved; snapshot verification does not assert source semantic correctness.",
+  "driver_sha256_verified": "75aaecd88a11ba15ca0724ca5959948bbe44eebefecca84da1dc0a9f11d25f26"
+}

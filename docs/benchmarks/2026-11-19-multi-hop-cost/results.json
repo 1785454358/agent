@@ -1,0 +1,850 @@
+{
+  "cases": [
+    {
+      "id": "resume-approval",
+      "question": "请依据提供的 LangGraph/LangChain 文档写一份上线设计说明。一个采购审批 Agent 在节点内先创建外部审批单，随后调用 interrupt 等人工决定；服务可能在等待期间重启。说明如何保存进度、怎样提交审批结果继续同一次运行、哪些代码会重跑，以及怎样避免重复建单。请分别引用中断与持久化相关文档。",
+      "checks": [
+        "使用持久化 checkpointer，保持同一 thread_id",
+        "Command(resume=...) 将人工决定送回 interrupt 调用",
+        "恢复时中断节点从头重执行，interrupt 前代码可能重跑",
+        "用稳定业务键做幂等，或把副作用移到独立节点/批准后；不能仅靠 checkpoint 保证恰好一次"
+      ]
+    },
+    {
+      "id": "memory-scope",
+      "question": "请依据提供的 LangGraph/LangChain 文档，为一个多用户研究助手写一份架构决策。助手需要在同一个中断对话里保留消息与待办，又要在新对话里找回同一用户的长期偏好，并向工具注入当前用户身份。请说明分别用什么持久化机制、怎样分配标识和命名空间、工具怎么拿到状态与身份，以及租户权限由哪一层保证。引用不同文档支撑各部分。",
+      "checks": [
+        "线程内消息和待办属于由 checkpointer 按 thread_id 保存的状态",
+        "跨线程偏好落入 Store，使用 user_id 等身份范围的 namespace 和数据 key",
+        "ToolRuntime.state 提供可变线程状态，ToolRuntime.context 提供宿主注入的身份等依赖",
+        "命名空间与注入不替代应用层鉴权，应在宿主和工具侧校验租户权限"
+      ]
+    },
+    {
+      "id": "reviewed-structured-report",
+      "question": "请依据提供的 LangGraph/LangChain 文档设计一个竞品研究 Agent。它要在调用会写入共享知识库的工具前等待人工批准，即使进程重启也能继续；最终报告还要使用 provider-native structured output 提交结构化结果。说明要配置的审查、持久化和恢复方式。如果部署的模型能单独使用工具、也能单独输出结构化结果，却不支持二者同时使用，应如何处理？请引用人工审查、恢复和结构化输出文档。",
+      "checks": [
+        "HITL 中间件按工具配置审批或拒绝写入，保留人工决定路径",
+        "持久化 checkpointer 与同一 thread_id，使用 Command(resume=...) 继续",
+        "同一模型请求同时使用工具和 provider-native structured output 要求模型支持二者组合",
+        "可换支持模型或拆为工具阶段和独立结构化输出阶段；人工审批本身不能补足能力"
+      ]
+    }
+  ],
+  "runs": [
+    {
+      "version": "before",
+      "case": "resume-approval",
+      "config": {
+        "openai_model": "deepseek-v4.1-flash",
+        "model_thinking": "disabled",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "openai_max_tokens": 16000,
+        "max_tool_calls": 240,
+        "research_max_seconds": 600.0,
+        "search_query_count": 3,
+        "research_source_target": 3,
+        "response_fact_review": true,
+        "research_orchestrator": "strategies",
+        "mode": "plan_execute",
+        "corpus_sha256": "4aea5b2df703438fc4f443e703cd12941fe776fbfdd168b97c445fcf6d3b2941"
+      },
+      "seconds": 29.274,
+      "answer": "**结论：用持久化 checkpointer + 固定 thread_id 保存进度，重启后凭同一 thread_id 恢复；审批结果用 `Command(resume=...)` 对同一 thread_id 再次调用图提交，继续同一次运行。恢复时中断所在节点会从头重跑，interrupt 之前的代码会再次执行，因此创建外部审批单必须幂等（如以运行/审批业务键去重），否则会重复建单。**\n\n## 1. 保存进度（持久化文档）\n\n编译图时传入 checkpointer，调用时在 `configurable.thread_id` 指定线程；checkpointer 以 `thread_id` 为主键存取检查点，复用同一值恢复同一检查点，新值则开新线程 [1][2]。生产环境应使用持久化（如数据库支撑）的 checkpointer，而非仅内存 [3]。\n\n检查点在每个 super-step 边界创建，另按节点（任务）级写入 `checkpoint_writes`；若同一 super-step 中另一节点失败，已成功节点的任务级写入已持久化，恢复时无需重跑，完整快照在 super-step 完成后提交 [2]。注意：该任务级写入保证针对同一步骤内其他节点失败的情形，不改变第 3 节所述“中断节点恢复时从头重跑”的语义 [3][2]。\n\n```python\ngraph = builder.compile(checkpointer=durable_checkpointer)\nconfig = {\"configurable\": {\"thread_id\": \"purchase-approval-<业务单号>\"}}\nresult = graph.invoke(inputs, config)   # 首次运行，节点内建单后 interrupt\n```\n\n## 2. 提交审批结果、继续同一次运行（中断文档）\n\n`interrupt()` 暂停执行，LangGraph 用持久化层保存状态并无限等待；中断值经 `__interrupt__` 返回调用方 [3]。恢复时对**同一 thread_id** 再次调用图并传 `Command(resume=...)`，该值成为节点内 `interrupt()` 的返回值，节点继续执行 [3]。`Command(resume=...)` 是唯一设计为 `invoke()`/`stream()` 输入的 Command 形式 [3]。\n\n```python\n# 重启后的服务进程，仍用同一 config\nresult = graph.invoke(new Command(resume={\"approved\": True, \"approver\": \"...\"}), config)\n```\n\n前提：thread_id 在重启前后一致，否则无法加载保存状态 [3][2]。\n\n## 3. 哪些代码会重跑\n\n恢复时运行时**从节点开头重跑整个节点**，不是从 `interrupt()` 所在行继续；interrupt 之前已执行的代码会再次执行 [3]。因此“先建单、后 interrupt”的节点，建单代码在恢复时会再跑一遍。\n\n| 场景 | 是否重跑 | 依据 |\n|---|---|---|\n| 中断节点内 interrupt 之前的代码 | 重跑 | [3] |\n| 同一 super-step 中已成功完成的其他节点（因同一步骤内另一节点失败而恢复时） | 不重跑（任务级写入已持久化） | [2] |\n| 从检查点恢复的已完成 super-step | 不重跑 | [2] |\n\n## 4. 避免重复建单\n\n文档明确要求：interrupt 之前调用的副作用必须幂等，因为中断依赖重跑节点 [3]。这是硬性设计约束，不是可选优化。\n\n落地做法（依据 [3] 的幂等要求，具体实现为设计建议）：\n\n- **幂等键**：以 thread_id（或业务审批单号）作为外部建单的幂等键，外部系统对同键重复请求返回已有单号，不新建。\n- **先查后建**：节点开头按幂等键查询是否已有审批单，有则复用其 ID，无则创建；但“先查后建”在并发下仍可能重复建单，须由外部系统以唯一约束或幂等接口做原子保证（该能力需按实际系统核验）。\n- **建单结果写入状态**：把外部单号写入图状态，供后续节点与审计使用；但恢复时中断节点从头重跑，不能假定该状态写入已提交而跳过幂等检查，仍须以幂等键保证不重复建单 [3]。\n- **顺序取舍（设计判断，非文档原文）**：若把建单放在 interrupt 之后，首次运行不会建单，与“先建单再等人工”的流程不符；因此建议保留“先建单、后 interrupt”的顺序，并以幂等键兜底 [3]。\n\n## 5. 上线检查清单\n\n- 生产 checkpointer 为持久化实现，重启不丢检查点 [3][2]。\n- thread_id 由业务单号稳定生成，客户端重试不换新值 [3][2]。\n- 审批提交走 `Command(resume=...)`，不新建运行 [3]。\n- 建单接口支持幂等键，节点内先查后建 [3]。\n- 中断节点内不包裹 try/except 吞掉中断异常 [3]。\n- 中断载荷与恢复值均为 JSON 可序列化 [3]。\n\n未在可见材料中确认：具体数据库 checkpointer 的部署参数、外部审批系统的幂等接口能力，需按实际系统核验。",
+      "status": "partial",
+      "finish_reason": "response_error",
+      "research_sufficiency": "sufficient",
+      "executed_steps": 32,
+      "sources": [
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/persistence.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/checkpointers.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/interrupts.mdx"
+      ],
+      "run_id": "2d41dd5fbafd40a29852e7e436e68f5e",
+      "tool_calls": 30,
+      "tool_successes": 30,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "provider_attempts": 7,
+        "measured_usage_attempts": 7,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 29573,
+        "output_tokens": 4823,
+        "total_tokens": 34396,
+        "observed_usage": {
+          "input_tokens": 29573,
+          "output_tokens": 4823,
+          "total_tokens": 34396
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 1023,
+            "output_tokens": 846,
+            "total_tokens": 1869
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 7374,
+            "output_tokens": 285,
+            "total_tokens": 7659
+          },
+          "evaluator": {
+            "input_tokens": 8773,
+            "output_tokens": 1184,
+            "total_tokens": 9957
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 12403,
+            "output_tokens": 2508,
+            "total_tokens": 14911
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 1023,
+            "output_tokens": 846,
+            "total_tokens": 1869
+          },
+          "researcher": {
+            "input_tokens": 7374,
+            "output_tokens": 285,
+            "total_tokens": 7659
+          },
+          "evaluator": {
+            "input_tokens": 8773,
+            "output_tokens": 1184,
+            "total_tokens": 9957
+          },
+          "writer": {
+            "input_tokens": 12403,
+            "output_tokens": 2508,
+            "total_tokens": 14911
+          }
+        },
+        "stage_seconds": {
+          "planner": 4.640999999945052,
+          "researcher": 3.2980000000679865,
+          "evaluator": 4.844000000040978,
+          "writer": 12.108999999938533
+        },
+        "budget_state_available": true
+      }
+    },
+    {
+      "version": "after",
+      "case": "resume-approval",
+      "config": {
+        "openai_model": "deepseek-v4.1-flash",
+        "model_thinking": "disabled",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "openai_max_tokens": 16000,
+        "max_tool_calls": 240,
+        "research_max_seconds": 600.0,
+        "search_query_count": 3,
+        "research_source_target": 3,
+        "response_fact_review": true,
+        "research_orchestrator": "strategies",
+        "mode": "plan_execute",
+        "corpus_sha256": "4aea5b2df703438fc4f443e703cd12941fe776fbfdd168b97c445fcf6d3b2941"
+      },
+      "seconds": 21.716,
+      "answer": "## 结论\n\n上线方案应把“外部审批单创建”与“人工决定”拆成两个节点：建单节点只负责幂等创建外部单并把单号写入图状态；审批节点只调用 `interrupt()` 等待决定。图必须编译持久化 checkpointer，并用固定 `thread_id` 标识同一次采购审批运行。服务重启后，用同一 `thread_id` 和 `Command(resume=...)` 恢复，LangGraph 从检查点继续；被中断的审批节点会从头重跑，因此建单不能放在审批节点内，且建单本身要按业务幂等键去重。[1][2][3]\n\n## 保存进度\n\n- 用 checkpointer 持久化线程级图状态；它保存每个 super-step 的状态快照，适合 human-in-the-loop、故障恢复和中断恢复 [1][3]。生产环境应使用持久化 checkpointer（如数据库后端），而不是仅内存实现 [2]。\n- 调用图时必须在 `configurable` 中传 `thread_id`；checkpointer 以它为主键存取检查点，没有它无法保存状态或在中断后恢复 [3]。同一 `thread_id` 恢复同一检查点，新值则开新线程、空状态 [2]。\n- `interrupt()` 触发时，LangGraph 用持久化层保存图状态并无限期等待恢复 [2]。恢复值通过 `Command(resume=...)` 传回，成为节点内 `interrupt()` 的返回值 [2]。\n- 若使用 `PostgresSaver` 或 `AsyncPostgresSaver`，`thread_id` 应控制在 255 字符以内，否则会触发数据库列长度错误；需要确定性 ID 时可用 UUID 或哈希 [1]。\n\n最小调用顺序（Python 示意）：\n\n```python\nconfig = {\"configurable\": {\"thread_id\": \"purchase-approval-<业务单号>\"}}\n\n# 首次运行：建单节点执行，审批节点 interrupt 暂停\nresult = graph.invoke({\"purchase_request\": req}, config)\n# 默认 invoke 下中断载荷在 result[\"__interrupt__\"]\n\n# 服务重启后：同一 thread_id，提交审批结果继续同一次运行\ngraph.invoke(Command(resume={\"approved\": True, \"approver\": \"...\"}), config)\n```\n\n`Command(resume=...)` 是唯一设计为传给 `invoke()`/`stream()`/`stream_events()` 的 `Command` 用法；不要用 `Command(update=...)` 来续跑多轮对话 [2]。\n\n## 哪些代码会重跑\n\n恢复时，被中断的节点会从头重新执行，而不是从 `interrupt()` 那一行之后继续；`Command(resume=...)` 的值只是作为该次 `interrupt()` 调用的返回值注入 [2]。因此：\n\n- 审批节点内 `interrupt()` 之前的代码会在每次恢复时重跑；不要把建单、扣款、发消息等副作用放在 `interrupt()` 之前 [2]。\n- 不要在单个节点里写 `while True` + 多次 `interrupt()` 的循环：每次恢复都会重放之前所有迭代，导致循环体内代码指数级重复执行 [2]。\n- 同一节点内不要重排 `interrupt()` 调用顺序 [2]。\n- 同一 super-step 内其他已成功完成的节点，其写入会被保留，恢复时不必重跑；这是 pending writes 的故障恢复语义 [3]。但被中断节点自身仍从头执行。\n\n## 避免重复建单\n\n建议采用“建单节点 + 幂等键 + 状态记录”的组合：\n\n1. **结构上隔离**：建单放在独立节点，审批节点只做 `interrupt()`。这样恢复时重跑的是审批节点，不会再次执行建单节点 [2][3]。\n2. **业务幂等**：建单节点用采购申请单号或 `thread_id` 派生稳定幂等键，调用外部审批系统时携带该键；外部系统若已存在同键审批单则返回原单号。这是建议，文档只说明检查点与中断语义，未规定外部系统幂等实现 [2][3]。\n3. **状态落图**：建单成功后把 `external_approval_id` 写入图状态；恢复后审批节点读取该字段，不重新建单。若建单节点因故障重跑，先查状态或按幂等键查询外部系统，已存在则复用。\n4. **不要依赖“节点只执行一次”**：checkpointer 保证的是检查点与 pending writes 恢复，不保证有副作用的节点在异常边界绝不重跑；外部副作用必须自身幂等 [3]。\n\n## 取舍与未核实项\n\n- 用持久化 checkpointer 会增加数据库依赖和运维成本，但这是服务重启后恢复同一次运行的前提 [2][3]。\n- 文档未给出外部审批系统的具体幂等 API；上述幂等键方案是设计建议，落地前需按实际审批系统能力核实。\n- 文档未说明 `interrupt()` 在节点内多次调用时的精确重放次数上限，只明确警告循环会导致指数级重执行 [2]；设计上应避免该模式。\n- 若使用 Agent Server，文档称其自动处理持久化，无需手动配置 checkpointer [1][3]；本方案按自建图编译方式说明。",
+      "status": "completed",
+      "finish_reason": "completed",
+      "research_sufficiency": "unknown",
+      "executed_steps": 34,
+      "sources": [
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/persistence.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/interrupts.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/checkpointers.mdx"
+      ],
+      "run_id": "d74660d1767149ad80015b8aaf530f2b",
+      "tool_calls": 33,
+      "tool_successes": 33,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "provider_attempts": 6,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 19809,
+        "output_tokens": 3162,
+        "total_tokens": 22971,
+        "observed_usage": {
+          "input_tokens": 19809,
+          "output_tokens": 3162,
+          "total_tokens": 22971
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 272,
+            "output_tokens": 447,
+            "total_tokens": 719
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5960,
+            "output_tokens": 308,
+            "total_tokens": 6268
+          },
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 13577,
+            "output_tokens": 2407,
+            "total_tokens": 15984
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 272,
+            "output_tokens": 447,
+            "total_tokens": 719
+          },
+          "researcher": {
+            "input_tokens": 5960,
+            "output_tokens": 308,
+            "total_tokens": 6268
+          },
+          "writer": {
+            "input_tokens": 13577,
+            "output_tokens": 2407,
+            "total_tokens": 15984
+          }
+        },
+        "stage_seconds": {
+          "planner": 2.827999999979511,
+          "researcher": 3.468999999924563,
+          "writer": 11.313000000081956
+        },
+        "budget_state_available": true
+      }
+    },
+    {
+      "version": "before",
+      "case": "memory-scope",
+      "config": {
+        "openai_model": "deepseek-v4.1-flash",
+        "model_thinking": "disabled",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "openai_max_tokens": 16000,
+        "max_tool_calls": 240,
+        "research_max_seconds": 600.0,
+        "search_query_count": 3,
+        "research_source_target": 3,
+        "response_fact_review": true,
+        "research_orchestrator": "strategies",
+        "mode": "plan_execute",
+        "corpus_sha256": "4aea5b2df703438fc4f443e703cd12941fe776fbfdd168b97c445fcf6d3b2941"
+      },
+      "seconds": 53.1,
+      "answer": "**结论：** 同一中断对话用 checkpointer 按 `thread_id` 保存图状态（消息与待办）；跨对话长期偏好用 store 保存；工具通过 `ToolRuntime` 读取 `runtime.context` 的用户身份和 `runtime.store` 中的偏好；认证可在中间件层用 `runtime.server_info.user` 校验，但仅在 Server 环境且 `server` 非 None 时生效 [1][2][3]。租户级权限的独立保证层在可见原文中未明确，不能断言。\n\n**持久化分工**\n\n| 需求 | 机制 | 标识/命名空间 |\n|---|---|---|\n| 中断对话保留消息与待办 | checkpointer | `configurable.thread_id` 为主键；中断恢复必须同一 thread_id [4][5] |\n| 新对话找回长期偏好 | store | 应用自定义命名空间，如 `(\"users\",)`，键为 `user_id` [2] |\n\n两者互补：checkpointer 跟踪当前线程，store 跟踪跨线程信息 [1]。中断恢复场景应使用持久化 checkpointer，而非仅内存实现 [4]。\n\n**标识分配**\n\n- `thread_id` 是持久游标：复用恢复同一 checkpoint，新值开启空状态新线程 [4][5]。\n- `checkpoint_ns` 是图结构命名空间（父图为 `\"\"`，子图为 `\"node_name:uuid\"`）[5]；原文未说明其用于租户隔离。\n- 用户偏好按文档示例：命名空间 `(\"users\",)`，键 `user_id` [2]。\n\n**工具获取状态与身份**\n\n工具用 `ToolRuntime` 参数访问 Runtime：`runtime.context.user_id` 取身份，`runtime.store.get((\"users\",), user_id)` 读偏好 [2]。State 提供对话期短期记忆（消息与自定义字段）[3]。在 LangGraph Server 上还可从 `runtime.server_info.user.identity` 取已认证用户；非 Server 环境 `server_info` 为 `None` [3]。\n\n**权限层**\n\n文档示例在 `before_model` 中间件检查 `server is not None and server.user is None` 并抛错，说明认证校验可在中间件层实施；但 `server` 为 `None`（非 Server 环境）时该检查不拦截 [2]。**租户级权限（跨用户数据隔离、store 命名空间强制校验）由哪一层保证，可见原文未明确**；不能把中间件认证示例等同于完整租户授权。建议（非原文规则）在应用层对每次 store 读写强制以已认证 user_id 作为键，并另行核查文档中是否有租户策略说明。",
+      "status": "partial",
+      "finish_reason": "planning_limit",
+      "research_sufficiency": "insufficient",
+      "executed_steps": 94,
+      "sources": [
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/persistence.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/runtime.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/tools.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/interrupts.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/checkpointers.mdx"
+      ],
+      "run_id": "38a89d9145124beaac497c9526a89b67",
+      "tool_calls": 90,
+      "tool_successes": 90,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "provider_attempts": 12,
+        "measured_usage_attempts": 12,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 57521,
+        "output_tokens": 8610,
+        "total_tokens": 66131,
+        "observed_usage": {
+          "input_tokens": 57521,
+          "output_tokens": 8610,
+          "total_tokens": 66131
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 960,
+            "output_tokens": 454,
+            "total_tokens": 1414
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 9263,
+            "output_tokens": 798,
+            "total_tokens": 10061
+          },
+          "evaluator": {
+            "input_tokens": 24861,
+            "output_tokens": 3745,
+            "total_tokens": 28606
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 22437,
+            "output_tokens": 3613,
+            "total_tokens": 26050
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 960,
+            "output_tokens": 454,
+            "total_tokens": 1414
+          },
+          "researcher": {
+            "input_tokens": 9263,
+            "output_tokens": 798,
+            "total_tokens": 10061
+          },
+          "evaluator": {
+            "input_tokens": 24861,
+            "output_tokens": 3745,
+            "total_tokens": 28606
+          },
+          "writer": {
+            "input_tokens": 22437,
+            "output_tokens": 3613,
+            "total_tokens": 26050
+          }
+        },
+        "stage_seconds": {
+          "planner": 2.375,
+          "researcher": 6.781999999773689,
+          "evaluator": 16.751000000047497,
+          "writer": 16.406999999890104
+        },
+        "budget_state_available": true
+      }
+    },
+    {
+      "version": "after",
+      "case": "memory-scope",
+      "config": {
+        "openai_model": "deepseek-v4.1-flash",
+        "model_thinking": "disabled",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "openai_max_tokens": 16000,
+        "max_tool_calls": 240,
+        "research_max_seconds": 600.0,
+        "search_query_count": 3,
+        "research_source_target": 3,
+        "response_fact_review": true,
+        "research_orchestrator": "strategies",
+        "mode": "plan_execute",
+        "corpus_sha256": "4aea5b2df703438fc4f443e703cd12941fe776fbfdd168b97c445fcf6d3b2941"
+      },
+      "seconds": 16.637,
+      "answer": "**结论：** 用 checkpointer 保存同一中断对话的消息与待办（thread 级短期状态），用 store 保存跨对话的长期偏好（按用户命名空间），用 Runtime 的 context 注入当前用户身份，工具通过 `ToolRuntime` 同时拿到 state、context 和 store；租户权限不能靠 LangGraph 持久化层自动保证，需在应用/服务端鉴权层校验，LangGraph 只提供按 thread_id 和 namespace 隔离的机制 [1][2][3][4]。\n\n## 1. 两种持久化机制的分工\n\n| 需求 | 机制 | 作用域 | 依据 |\n|---|---|---|---|\n| 同一中断对话保留消息与待办 | Checkpointer | 单个 thread | checkpointer 保存 thread 的图状态快照，用于对话连续性、human-in-the-loop、故障恢复 [1]；中断后靠 `thread_id` 加载状态恢复执行 [5] |\n| 新对话找回同一用户长期偏好 | Store | 跨 thread | store 保存应用自定义键值数据，跨 thread 可访问，适合用户偏好、事实、共享知识 [1][2] |\n\n两者互补：checkpointer 跟踪当前 thread，store 跟踪跨 thread 的持久信息，多数应用应同时使用 [1]。待办（pending writes）属于 checkpoint 的一部分，由 checkpointer 的 `put_writes` 保存 [5]，因此中断对话里的待办随 thread 状态一起保留，不需要另建存储。\n\n生产环境不要用 `InMemorySaver`/`InMemoryStore`：`MemorySaver` 重启后不持久 [1]，`InMemoryStore` 只适合开发测试，生产应换 `PostgresStore`、`MongoDBStore`、`RedisStore` 等 [2]。\n\n## 2. 标识与命名空间分配\n\n- **thread_id**：每次对话一个，放在 `config.configurable.thread_id`，是 checkpointer 存取的主键，缺了就无法保存状态或在中断后恢复 [5]。用 UUID 生成，并控制在 255 字符以内（`PostgresSaver` 的列长度限制）[1]。\n- **用户标识**：`user_id` 作为调用时传入的 context 字段，通过 `context_schema` 声明、invoke 时传 `context=Context(user_id=...)` [3][2]。\n- **store 命名空间**：用元组 `(user_id, \"memories\")`，命名空间可为任意长度、可表示任意含义，不强制用户相关 [2]。每条记忆再用唯一 key（如 `str(uuid.uuid4())`）区分 [2]。\n- **checkpoint_ns**：由 LangGraph 自动管理，标识图/子图归属（根图为 `\"\"`，子图为 `\"node_name:uuid\"`，嵌套用 `|` 连接）[5]，业务侧不需要手工分配。\n\n注意 `store.search` 的 `namespace_prefix` 是前缀匹配而非精确匹配，`(\"alice\",)` 也会返回 `(\"alice\", \"memories\")` 下的项；要限定单层就传完整命名空间或在客户端按 `item.namespace` 过滤 [2]。\n\n## 3. 工具如何拿到状态与身份\n\n工具用 `ToolRuntime` 参数访问运行时信息，它统一提供 State（当前对话可变数据）、Context（调用时传入的不可变配置，如 user_id）、Store（长期记忆）、执行信息等 [4][3]。`runtime` 和 `config` 是保留参数名，不要自定义同名参数 [4]。\n\n最小调用形态（Python，依据 [3][2]）：\n\n```python\nfrom dataclasses import dataclass\nfrom langchain.tools import tool, ToolRuntime\n\n@dataclass\nclass Context:\n    user_id: str\n\n@tool\ndef get_preferences(runtime: ToolRuntime[Context]) -> str:\n    user_id = runtime.context.user_id          # 身份\n    ns = (user_id, \"memories\")                 # 命名空间\n    if runtime.store:\n        items = runtime.store.search(ns, limit=10)\n        return \"\\n\".join(i.value.get(\"memory\", \"\") for i in items)\n    return \"\"\n```\n\n节点内同理：`runtime.context.user_id` 取身份，`runtime.store.aput(namespace, memory_id, {...})` 写记忆 [2]。工具读 state（消息历史等）也走 `ToolRuntime` 的 State 组件 [4]。\n\n## 4. 租户权限由哪一层保证\n\n**结论：由应用/服务端的鉴权层保证，不是 LangGraph 持久化层。** 依据与边界：\n\n- 文档只说明 checkpointer 以 `thread_id` 为主键存取、store 以 namespace/key 组织数据 [5][2][6]，这是**隔离机制**，不是**授权机制**：拿到别人的 `thread_id` 或 `user_id` 就能读写对应数据，文档未描述任何访问控制。\n- 因此必须在调用图之前校验：请求方是否有权使用该 `thread_id`、该 `user_id` 是否属于当前租户，并把校验后的身份写入 context，而不是信任客户端传入的 `user_id`。\n- 若部署在 LangGraph Server，Runtime 的 Server info 含“authenticated user”等元数据 [3]，可作为服务端已认证身份的来源之一；但文档摘录未展开其鉴权细节，**具体如何配置认证与租户映射本次未核实**，需查 Agent Server 认证文档确认。\n\n## 5. 未核实与建议\n\n- 未核实：LangGraph Server 的认证/授权配置细节、store 各后端是否支持行级权限。\n- 建议（非原文事实）：在 context 中同时携带 `tenant_id`，store 命名空间用 `(tenant_id, user_id, \"memories\")` 形成层级，便于按租户前缀检索与审计；写入前在应用层校验 `user_id` 归属该 `tenant_id`。\n- 建议：长期偏好写入用独立节点或工具完成，读取时按最近消息做语义检索（`store.search` 带 `query`）[2]，避免全量拉取。",
+      "status": "completed",
+      "finish_reason": "completed",
+      "research_sufficiency": "unknown",
+      "executed_steps": 37,
+      "sources": [
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/persistence.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/stores.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/runtime.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/tools.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/checkpointers.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/long-term-memory.mdx"
+      ],
+      "run_id": "60c8be88faf84f4c9b14b830ab31cd42",
+      "tool_calls": 36,
+      "tool_successes": 36,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "provider_attempts": 5,
+        "measured_usage_attempts": 5,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 15368,
+        "output_tokens": 2132,
+        "total_tokens": 17500,
+        "observed_usage": {
+          "input_tokens": 15368,
+          "output_tokens": 2132,
+          "total_tokens": 17500
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 279,
+            "output_tokens": 393,
+            "total_tokens": 672
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5905,
+            "output_tokens": 304,
+            "total_tokens": 6209
+          },
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 9184,
+            "output_tokens": 1435,
+            "total_tokens": 10619
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 279,
+            "output_tokens": 393,
+            "total_tokens": 672
+          },
+          "researcher": {
+            "input_tokens": 5905,
+            "output_tokens": 304,
+            "total_tokens": 6209
+          },
+          "writer": {
+            "input_tokens": 9184,
+            "output_tokens": 1435,
+            "total_tokens": 10619
+          }
+        },
+        "stage_seconds": {
+          "planner": 2.39000000001397,
+          "researcher": 3.281000000075437,
+          "writer": 7.297000000020489
+        },
+        "budget_state_available": true
+      }
+    },
+    {
+      "version": "before",
+      "case": "reviewed-structured-report",
+      "config": {
+        "openai_model": "deepseek-v4.1-flash",
+        "model_thinking": "disabled",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "openai_max_tokens": 16000,
+        "max_tool_calls": 240,
+        "research_max_seconds": 600.0,
+        "search_query_count": 3,
+        "research_source_target": 3,
+        "response_fact_review": true,
+        "research_orchestrator": "strategies",
+        "mode": "plan_execute",
+        "corpus_sha256": "4aea5b2df703438fc4f443e703cd12941fe776fbfdd168b97c445fcf6d3b2941"
+      },
+      "seconds": 33.135,
+      "answer": "**结论：** 用 LangGraph 图实现：研究节点 → 写库工具前 `interrupt()` 审批 → 批准后执行写库 → 最终报告节点用 `ProviderStrategy` 输出。持久化用 checkpointer（生产用持久型），恢复靠同一 `thread_id` + `Command(resume=...)`。模型不能同时用工具与结构化输出时，**分两阶段、必要时分两模型**：工具阶段用支持工具调用的模型，最终报告阶段单独调用支持原生结构化输出的模型，建议不在同一请求里同时指定工具和 `response_format`（文档要求：若指定工具，模型必须支持同时使用工具与结构化输出 [1]）。\n\n## 1. 审查（写库前人工批准）\n\n在写库工具节点之前插入审批节点，调用 `interrupt()` 暂停；载荷须 JSON 可序列化，恢复值成为 `interrupt()` 的返回值 [2]。使用 `interrupt()` 需要三件事：checkpointer、config 中的 `thread_id`、在暂停处调用 `interrupt()` [2]。\n\n也可用 LangChain HITL 中间件：按 `interrupt_on` 策略检查每个工具调用，需要干预时发出 interrupt 并借 LangGraph 持久化层保存状态 [3]。`interrupt_on` 是工具名到审批配置的映射，值可为 `True`（默认中断）、`False`（自动批准）或 `InterruptOnConfig`；`allowed_decisions` 可限定为 `approve`/`edit`/`reject`（Python 另有 `respond`）[3]。对写共享知识库的工具，建议只允许 `approve`/`edit`/`reject`，不要用 `respond` 冒充成功结果 [3]。\n\n```python\nfrom langgraph.types import interrupt\n\ndef approve_write(state):\n    decision = interrupt({\"action\": \"write_kb\", \"payload\": state[\"draft\"]})\n    if decision.get(\"type\") != \"approve\":\n        return {\"approved\": False, \"feedback\": decision}\n    return {\"approved\": True}\n\n# 图中：approve_write 之后用条件边，approved 为 False 时终止或回到研究节点\n```\n\n## 2. 持久化\n\ncheckpointer 在每个 super-step 保存图状态快照，按 thread 组织；用它编译图即可启用 HITL、time travel、容错与对话记忆 [4]。编译时同时传 `checkpointer` 和 `store`：checkpointer 存线程内图状态，store 存跨线程共享知识 [5]。调用时必须在 `configurable` 中传 `thread_id`，否则无法保存状态或在 interrupt 后恢复 [4]。\n\n```python\ngraph = builder.compile(checkpointer=checkpointer, store=store)\nconfig = {\"configurable\": {\"thread_id\": \"research-001\"}}\n```\n\n生产用持久型 checkpointer（如 `AsyncPostgresSaver`、`MongoDBSaver`），测试用 `InMemorySaver` [3]。durability 选 `\"sync\"` 最稳：在下一步开始前同步写入变更，崩溃可恢复；`\"async\"` 在下一步执行期间异步写入，进程崩溃时有小概率未写入 checkpoint；`\"exit\"` 仅在执行退出（成功、出错或 HITL 中断）时持久化，进程中途崩溃无法恢复 [4]。\n\n## 3. 恢复\n\ninterrupt 后再次调用图并传入 `Command(resume=...)`，resume 值回传给 `interrupt()` 使节点继续 [2]。同一 `thread_id` 恢复同一 checkpoint，新值则开新线程 [2]。节点失败时从最后成功 super-step 重启；同一 super-step 内已成功完成的节点，其 pending writes 会被保存，恢复时不会重跑 [4]。\n\n```python\nfrom langgraph.types import Command\ngraph.invoke(Command(resume={\"type\": \"approve\"}), config)\n```\n\n## 4. 结构化输出与“不能同时用”的处理\n\n`ProviderStrategy` 用 provider 原生结构化输出；直接传 schema 类型时，支持原生结构化输出的模型（OpenAI、Anthropic、xAI）自动选 `ProviderStrategy`，其余用 `ToolStrategy` [1]。结果在最终状态的 `structured_response` 键中 [1]。\n\n文档明确限制：**如果指定了工具，模型必须支持同时使用工具与结构化输出** [1]。因此对“能单独用工具、也能单独输出结构化结果、但不能同时用”的模型，按对象×事件决策：\n\n| 阶段 | 前提 | 动作 | 停止条件 |\n|---|---|---|---|\n| 研究/写库 | 模型支持工具调用 | 只绑定工具，不设 `response_format` | 写库完成或审批被拒 |\n| 最终报告 | 模型支持原生结构化输出 | 不绑定工具，单独调用 `ProviderStrategy(ReportSchema)` | 得到 `structured_response` |\n| 单模型不可兼得 | 同一请求不能同时用 | 两阶段分离（同一模型分两次请求）；如需可再换用不同模型 | 两阶段各自成功 |\n\n若必须单模型完成，则报告阶段不再挂工具，把已收集材料作为输入单独请求结构化输出；注意文档的“不支持原生结构化输出时回退到工具调用策略”是另一条件，本场景要求 provider-native，故优先在报告阶段换用支持原生结构化输出的模型 [1]。\n\n## 5. 关键取舍\n\n- 审批用 `interrupt()` 还是 HITL 中间件：前者控制粒度细、可自定义载荷；后者配置少、按工具名批量管控 [3][2]。\n- durability 用 `sync` 换可靠性，接受性能开销 [4]。\n- 两阶段分离会增加一次模型调用，但规避了“工具+结构化输出同时使用”的硬限制 [1]。",
+      "status": "partial",
+      "finish_reason": "response_error",
+      "research_sufficiency": "sufficient",
+      "executed_steps": 31,
+      "sources": [
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/interrupts.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/human-in-the-loop.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/checkpointers.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/persistence.mdx"
+      ],
+      "run_id": "2eff8bdbc61f4ae49507235ecd53e84f",
+      "tool_calls": 29,
+      "tool_successes": 29,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "provider_attempts": 7,
+        "measured_usage_attempts": 7,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 45320,
+        "output_tokens": 5836,
+        "total_tokens": 51156,
+        "observed_usage": {
+          "input_tokens": 45320,
+          "output_tokens": 5836,
+          "total_tokens": 51156
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 1068,
+            "output_tokens": 816,
+            "total_tokens": 1884
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 7380,
+            "output_tokens": 286,
+            "total_tokens": 7666
+          },
+          "evaluator": {
+            "input_tokens": 14611,
+            "output_tokens": 1720,
+            "total_tokens": 16331
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 22261,
+            "output_tokens": 3014,
+            "total_tokens": 25275
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 1068,
+            "output_tokens": 816,
+            "total_tokens": 1884
+          },
+          "researcher": {
+            "input_tokens": 7380,
+            "output_tokens": 286,
+            "total_tokens": 7666
+          },
+          "evaluator": {
+            "input_tokens": 14611,
+            "output_tokens": 1720,
+            "total_tokens": 16331
+          },
+          "writer": {
+            "input_tokens": 22261,
+            "output_tokens": 3014,
+            "total_tokens": 25275
+          }
+        },
+        "stage_seconds": {
+          "planner": 4.25,
+          "researcher": 3.1870000001508743,
+          "evaluator": 7.045999999972992,
+          "writer": 14.045999999972992
+        },
+        "budget_state_available": true
+      }
+    },
+    {
+      "version": "after",
+      "case": "reviewed-structured-report",
+      "config": {
+        "openai_model": "deepseek-v4.1-flash",
+        "model_thinking": "disabled",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "openai_max_tokens": 16000,
+        "max_tool_calls": 240,
+        "research_max_seconds": 600.0,
+        "search_query_count": 3,
+        "research_source_target": 3,
+        "response_fact_review": true,
+        "research_orchestrator": "strategies",
+        "mode": "plan_execute",
+        "corpus_sha256": "4aea5b2df703438fc4f443e703cd12941fe776fbfdd168b97c445fcf6d3b2941"
+      },
+      "seconds": 17.879,
+      "answer": "**结论：** 用 LangGraph 的 checkpointer 配合 `interrupt()`（或 HITL middleware 的 `interrupt_on`）实现“写共享知识库前人工批准、进程重启后可继续”；最终报告用 `ProviderStrategy` 走 provider-native structured output。若部署模型能单独用工具、也能单独输出结构化结果，但不能同时使用，就把“研究/工具阶段”和“报告结构化阶段”拆成两次模型调用：前者带工具、不带结构化输出；后者不带工具、只带 `ProviderStrategy` 输出报告。\n\n## 1. 审查（人工批准）\n\n- 在写知识库的工具调用前设审批节点，用 `interrupt()` 暂停，payload 需 JSON 可序列化 [1]。\n- 也可用 HITL middleware 的 `interrupt_on` 按工具名配置审批策略，工具调用匹配映射即中断 [2]。\n- 决策用 `approve`/`edit`/`reject`；拒绝用 `reject`，不要用 `respond` 否决不安全工具（其消息会被当作成功结果）[2]。\n- 恢复用 `Command(resume=...)`，它是唯一可作为 `invoke()`/`stream()`/`stream_events()` 输入的 Command 模式 [1]。\n\n```python\ndef approval_node(state):\n    ok = interrupt({\"action\": \"write_kb\", \"payload\": state[\"draft\"]})\n    return {\"approved\": ok}\n```\n\n## 2. 持久化\n\n- 编译图时挂 checkpointer；生产用持久化实现（如 `AsyncPostgresSaver`、`MongoDBSaver`），`InMemorySaver` 仅测试且重启即丢 [3][2]。\n- 每次调用传 `thread_id`，它是恢复游标；换新值即新线程 [1][4]。\n- 共享知识库本身用 Store（跨线程长期记忆），与 checkpointer 分工 [3]。\n- 要抗进程崩溃，durability 用 `\"sync\"`；`\"exit\"` 只在退出/中断时落盘，中途崩溃不可恢复 [4]。\n\n## 3. 恢复\n\n- 中断时状态已存，图无限等待；重启后用同一 `thread_id` 再调 `Command(resume=...)` 继续 [1]。\n- 推荐事件流：检查 `stream.interrupted`，从 `stream.interrupts` 读 payload，循环恢复直到不再中断 [1]。\n- 同一 super-step 内已完成节点的写入已持久化，恢复时不必重跑 [4]。\n\n## 4. 结构化输出\n\n- 用 `ProviderStrategy[Report]` 走 provider-native 结构化输出；模型不支持时回退 `ToolStrategy` [5]。\n- 注意：若同时指定工具，模型必须支持工具与结构化输出并用 [5]。\n\n## 5. 模型不能同时用工具和结构化输出时\n\n拆成两段调用，避免同一请求同时要求二者：\n\n1. **研究阶段**：模型带工具（含写知识库工具，经审批），产出自由文本/中间结果。\n2. **报告阶段**：另起一次调用，不带工具，仅用 `ProviderStrategy` 输出结构化报告。\n\n这样既满足“写库前审批”，又满足“最终报告 provider-native 结构化”。代价是多一次模型调用、需在状态里传递中间结果；若 provider 原生结构化不可用，则报告阶段回退 `ToolStrategy` [5]。\n\n**未核实项：** 原文未给出具体 provider 的能力矩阵，实际是否支持并用需按模型 profile 确认 [5]。",
+      "status": "completed",
+      "finish_reason": "completed",
+      "research_sufficiency": "unknown",
+      "executed_steps": 43,
+      "sources": [
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/interrupts.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/human-in-the-loop.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/persistence.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/checkpointers.mdx",
+        "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx"
+      ],
+      "run_id": "626a63a601284a4a91a369face53bbd2",
+      "tool_calls": 42,
+      "tool_successes": 42,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "provider_attempts": 6,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 23380,
+        "output_tokens": 2373,
+        "total_tokens": 25753,
+        "observed_usage": {
+          "input_tokens": 23380,
+          "output_tokens": 2373,
+          "total_tokens": 25753
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 287,
+            "output_tokens": 361,
+            "total_tokens": 648
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 6015,
+            "output_tokens": 360,
+            "total_tokens": 6375
+          },
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 17078,
+            "output_tokens": 1652,
+            "total_tokens": 18730
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 287,
+            "output_tokens": 361,
+            "total_tokens": 648
+          },
+          "researcher": {
+            "input_tokens": 6015,
+            "output_tokens": 360,
+            "total_tokens": 6375
+          },
+          "writer": {
+            "input_tokens": 17078,
+            "output_tokens": 1652,
+            "total_tokens": 18730
+          }
+        },
+        "stage_seconds": {
+          "planner": 1.952999999979511,
+          "researcher": 3.1559999998426065,
+          "writer": 8.094000000040978
+        },
+        "budget_state_available": true
+      }
+    }
+  ],
+  "source_fingerprints": {
+    "before": {
+      "sha256": "6f6126bdf4aa93bdaa481dc2fcdec0f850f72831f680da074078a2ad29bede82",
+      "files": 207
+    },
+    "after": {
+      "sha256": "655b9f4e270c6e139561032f1925beeb251c6af133ec6ce4f553dd7c3829f64b",
+      "files": 208
+    }
+  },
+  "settings": {
+    "openai_model": "deepseek-v4.1-flash",
+    "model_thinking": "disabled",
+    "max_model_calls": 20,
+    "max_input_tokens": 100000,
+    "openai_max_tokens": 16000,
+    "max_tool_calls": 240,
+    "research_max_seconds": 600.0,
+    "search_query_count": 3,
+    "research_source_target": 3,
+    "response_fact_review": true,
+    "research_orchestrator": "strategies",
+    "mode": "plan_execute",
+    "corpus_sha256": "4aea5b2df703438fc4f443e703cd12941fe776fbfdd168b97c445fcf6d3b2941"
+  },
+  "totals": {
+    "before": {
+      "provider_attempts": 26,
+      "input_tokens": 132414,
+      "output_tokens": 19269,
+      "total_tokens": 151683,
+      "tool_calls": 149,
+      "evaluator_input_tokens": 48245
+    },
+    "after": {
+      "provider_attempts": 17,
+      "input_tokens": 58557,
+      "output_tokens": 7667,
+      "total_tokens": 66224,
+      "tool_calls": 111,
+      "evaluator_input_tokens": 0
+    }
+  }
+}

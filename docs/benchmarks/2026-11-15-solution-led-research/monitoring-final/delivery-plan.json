@@ -1,0 +1,46 @@
+{
+  "approach": "选定 Uptime Kuma 开源自托管主线：部署在现有闲置 Linux 服务器上，用 Docker 运行，监控 20 个 HTTPS 站点，配置 SMTP 邮件通知，保留 30 天历史；费用主要为服务器电费/带宽（已有硬件，按 0 元增量计）与可选邮件服务费，控制在 300 元/月内。",
+  "assumptions": [
+    "闲置 Linux 服务器可安装 Docker 并具备公网或可出网访问 20 个目标站点",
+    "团队已有可用 SMTP 邮箱或可申请免费邮箱 SMTP 作为通知渠道",
+    "服务器电费与带宽视为已有沉没成本，不计入增量月费",
+    "监控检查频率设为每 60 秒一次，20 个站点在单机可承受范围内"
+  ],
+  "outline": [
+    "确认 Uptime Kuma 的 HTTPS 监控、通知渠道与历史保留能力及版本条件",
+    "确定检查频率与 30 天历史的数据保留配置",
+    "核算费用分项：服务器增量成本、邮件通知成本、可选域名/证书成本",
+    "编写 Docker 部署步骤与初始配置步骤",
+    "配置 20 个 HTTPS 监控项与 SMTP 通知",
+    "验证故障通知与 30 天历史留存，核对总费用一致性"
+  ],
+  "evidence_needs": [
+    {
+      "requirement_id": "r1",
+      "query": "Uptime Kuma HTTPS monitor notification history retention documentation"
+    },
+    {
+      "requirement_id": "r2",
+      "query": "Uptime Kuma Docker install docker run documentation"
+    },
+    {
+      "requirement_id": "r3",
+      "query": "Uptime Kuma SMTP email notification setup documentation"
+    },
+    {
+      "requirement_id": "r4",
+      "query": "Uptime Kuma data retention 30 days history configuration"
+    },
+    {
+      "requirement_id": "r5",
+      "query": "Uptime Kuma check interval heartbeat frequency setting"
+    }
+  ],
+  "consistency_checks": [
+    "20 个监控项与每 60 秒检查频率是否在单机资源与免费额度内",
+    "30 天历史保留是否由 Uptime Kuma 自身配置实现而非假设付费功能",
+    "SMTP 通知渠道是否覆盖全部 20 个监控项且无额外付费依赖",
+    "费用分项（服务器增量、邮件、域名/证书）合计是否不超过 300 元/月",
+    "部署步骤依赖（Docker、端口、SMTP 凭据）是否齐全且顺序可行"
+  ]
+}

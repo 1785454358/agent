@@ -1,0 +1,64 @@
+{
+  "stability": [
+    [
+      "branch_isolation",
+      "tests/research/test_runtime.py::test_ordinary_branch_failure_preserves_sibling_evidence_without_false_completion"
+    ],
+    [
+      "sqlite_checkpoint_resume",
+      "tests/research/test_runtime.py::test_sqlite_resume_reuses_completed_sibling_on_new_graph"
+    ],
+    [
+      "transient_model_retry",
+      "tests/harness/test_model_gateway.py::test_transport_timeout_retries_once"
+    ],
+    [
+      "bounded_tool_retries",
+      "tests/tools/test_gateway.py::test_transient_failure_is_retried_once_inside_the_gateway"
+    ],
+    [
+      "fatal_tool_no_retry",
+      "tests/tools/test_gateway.py::test_unhandled_tool_exception_is_fatal_and_never_retried"
+    ],
+    [
+      "tool_timeout",
+      "tests/tools/test_gateway.py::test_timeout_is_sanitized_recorded_and_charged"
+    ],
+    [
+      "cancelled_budget_persists",
+      "tests/harness/test_durable_model_budget.py::test_cancelled_call_consumption_survives_restart"
+    ],
+    [
+      "duplicate_recovery_stops",
+      "tests/research/test_adaptive_completion.py::test_unresolved_duplicate_recovery_stops_without_redispatching"
+    ]
+  ],
+  "budget_boundary": [
+    [
+      "task_model_cap",
+      "tests/research/test_runtime.py::test_task_model_limit_is_enforced_before_provider_dispatch"
+    ],
+    [
+      "concurrent_reservations",
+      "tests/harness/test_model_run_budget.py::test_concurrent_research_calls_reserve_the_shared_run_budget_atomically"
+    ],
+    [
+      "token_cap_and_writer_reserve",
+      "tests/harness/test_model_run_budget.py::test_provider_input_usage_limits_next_call_without_spending_writer_reserve"
+    ],
+    [
+      "final_review_call_reserve",
+      "tests/harness/test_model_run_budget.py::test_final_review_has_a_call_reserved_within_the_existing_total_cap"
+    ],
+    [
+      "research_and_finishing_deadlines",
+      "tests/harness/test_model_run_budget.py::test_elapsed_research_window_leaves_a_separate_finishing_window"
+    ],
+    [
+      "durable_run_caps",
+      "tests/research/test_runtime.py::test_contract_budget_restores_original_run_limits_before_planning"
+    ]
+  ],
+  "source_live_experiment": "docs\\benchmarks\\2026-11-16-eight-case-live",
+  "script_sha256": "15b1d6e047db4dfab42b583b835d80fa3a178cb43a51c62f41eaad2178ded749"
+}

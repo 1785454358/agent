@@ -1,0 +1,40 @@
+{
+  "ambiguous_inflight_runs": [
+    "real-dev-20261107-multi_hop-dev-02-workflow",
+    "real-dev-20261107-multi_hop-dev-01-workflow",
+    "real-dev-20261107-single_hop-dev-02-workflow"
+  ],
+  "completed_records": 4,
+  "conservative_provider_reservation": 148,
+  "exact_total_usage": null,
+  "new_research_provider_ceiling": 752,
+  "reason": "Evaluation selected tool-loop while production defaults to batch; stop remaining wrong-path trials.",
+  "records": [
+    {
+      "id": "real-dev-20261107-single_hop-dev-01-baseline",
+      "model_calls": 1,
+      "provider_attempts": 1,
+      "status": "completed"
+    },
+    {
+      "id": "real-dev-20261107-single_hop-dev-01-multi_agent",
+      "model_calls": 20,
+      "provider_attempts": 20,
+      "status": "failed"
+    },
+    {
+      "id": "real-dev-20261107-single_hop-dev-01-workflow",
+      "model_calls": 20,
+      "provider_attempts": 20,
+      "status": "failed"
+    },
+    {
+      "id": "real-dev-20261107-single_hop-dev-01-plan_execute",
+      "model_calls": 17,
+      "provider_attempts": 17,
+      "status": "completed"
+    }
+  ],
+  "rerun_policy": "Do not delete stale claims or resume this identity; preserve all pilot records.",
+  "saved_provider_attempts": 58
+}

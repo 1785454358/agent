@@ -1,0 +1,119 @@
+{
+  "run_id": "e80662ddfffe44c3aff7171a33f3c650",
+  "thread_id": "e80662ddfffe44c3aff7171a33f3c650",
+  "status": "completed",
+  "response_outcome": {
+    "response_mode": "answer",
+    "content": "**结论**：`ProviderStrategy` 的 `strict` 参数要求 `langchain>=1.2`；其 provider 支持边界是：仅当所选模型与 provider 支持原生结构化输出时适用，文档列举 OpenAI、Anthropic (Claude)、xAI (Grok) 为例，其他模型使用 `ToolStrategy` [1]。\n\n**版本边界**：`strict: bool | None = None` 参数明确要求 `langchain>=1.2` [1]。\n\n**Provider 支持边界**：当直接提供 schema 类型时，LangChain 自动选择策略——若模型和 provider 支持原生结构化输出（例如 OpenAI、Anthropic (Claude)、xAI (Grok)）则使用 `ProviderStrategy`，所有其他模型使用 `ToolStrategy` [1]。文档另在 Provider strategy 章节提及 Gemini 也支持原生结构化输出 [1]。\n\n**补充条件**：原生结构化输出支持从模型的 profile 数据动态读取（需 `langchain>=1.1`）；若数据不可用，需手动指定 profile 或使用其他条件；若同时指定 tools，模型必须支持 tools 与结构化输出的同时使用 [1]。",
+    "citations": [
+      {
+        "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+        "marker": "[1]"
+      }
+    ],
+    "cited_evidence_ids": [
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+    ],
+    "partial_reason": null
+  },
+  "research_outcome": {
+    "delivery_plan": null,
+    "source_eligibility": {
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375": "eligible"
+    },
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "The exact version of ProviderStrategy strict as stated in the frozen documentation"
+      },
+      {
+        "id": "r2",
+        "description": "The provider-support boundary for ProviderStrategy strict as defined in the frozen documentation"
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "covered",
+          "reason": "The frozen documentation explicitly states the `strict` param requires `langchain>=1.2`.",
+          "finding_ids": [
+            "finding-1"
+          ],
+          "unanswered_parts": []
+        },
+        {
+          "requirement_id": "r2",
+          "status": "covered",
+          "reason": "The documentation defines the boundary: ProviderStrategy applies when the model/provider supports native structured output (e.g., OpenAI, Anthropic, xAI), otherwise ToolStrategy is used.",
+          "finding_ids": [
+            "finding-2"
+          ],
+          "unanswered_parts": []
+        }
+      ]
+    },
+    "decomposition_degraded": false,
+    "mode": "workflow",
+    "evidence_ids": [
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+    ],
+    "findings": [
+      {
+        "id": "finding-1",
+        "claim": "The `strict` parameter of `ProviderStrategy` requires `langchain>=1.2`, as stated in the frozen documentation.",
+        "evidence_ids": [
+          "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+        ],
+        "confidence": 1.0,
+        "supports": [
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 5160,
+            "end": 5606,
+            "quote": "## Provider strategy\n\nSome model providers support structured output natively through their APIs (e.g. OpenAI, xAI (Grok), Gemini, Anthropic (Claude)). This is the most reliable method when available.\n\nTo use this strategy, configure a `ProviderStrategy`:\n\n:::python\n```python\nclass ProviderStrategy(Generic[SchemaT]):\n    schema: type[SchemaT]\n    strict: bool | None = None\n```\n<Info>\n    The `strict` param requires `langchain>=1.2`.\n</Info>\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-2",
+        "claim": "The provider-support boundary for `ProviderStrategy` is that it is used only when the chosen model and provider support native structured output; the documentation names OpenAI, Anthropic (Claude), and xAI (Grok) as examples, with `ToolStrategy` used for all other models.",
+        "evidence_ids": [
+          "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+        ],
+        "confidence": 1.0,
+        "supports": [
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 1591,
+            "end": 2089,
+            "quote": "- `ProviderStrategy` if the model and provider chosen supports native structured output (e.g. [OpenAI](/oss/integrations/providers/openai), [Anthropic (Claude)](/oss/integrations/providers/anthropic), or [xAI (Grok)](/oss/integrations/providers/xai)).\n- `ToolStrategy` for all other models.\n\n<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>\n\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 5160,
+            "end": 5606,
+            "quote": "## Provider strategy\n\nSome model providers support structured output natively through their APIs (e.g. OpenAI, xAI (Grok), Gemini, Anthropic (Claude)). This is the most reliable method when available.\n\nTo use this strategy, configure a `ProviderStrategy`:\n\n:::python\n```python\nclass ProviderStrategy(Generic[SchemaT]):\n    schema: type[SchemaT]\n    strict: bool | None = None\n```\n<Info>\n    The `strict` param requires `langchain>=1.2`.\n</Info>\n\n"
+          }
+        ]
+      }
+    ],
+    "unresolved_gaps": [],
+    "executed_steps": 4,
+    "termination_reason": "completed"
+  },
+  "termination_reason": "workflow_completed",
+  "executed_steps": 4,
+  "unresolved_gaps": [],
+  "sources": [
+    "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx"
+  ],
+  "research_sufficiency": "sufficient"
+}

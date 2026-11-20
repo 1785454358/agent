@@ -1,0 +1,71 @@
+{
+  "run_id": "7193d3ba5e174a448856eb42a45cea6b",
+  "thread_id": "7193d3ba5e174a448856eb42a45cea6b",
+  "status": "partial",
+  "response_outcome": {
+    "response_mode": "answer",
+    "content": "本次研究未能生成有引用支持的完整内容。以下是可追溯的资料来源：",
+    "citations": [],
+    "cited_evidence_ids": [],
+    "partial_reason": "no_evidence"
+  },
+  "research_outcome": {
+    "delivery_plan": null,
+    "source_eligibility": {
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375": "eligible"
+    },
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "The name of the strategy identified as universally cheapest and lowest-latency in the frozen documentation's structured-output guide"
+      },
+      {
+        "id": "r2",
+        "description": "The specific cost savings figure or percentage associated with that strategy as stated in the documentation"
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "missing",
+          "reason": "The visible passages describe ProviderStrategy as 'most reliable' with 'high reliability and strict validation' but do not identify any strategy as universally cheapest or lowest-latency.",
+          "finding_ids": [],
+          "unanswered_parts": [
+            "Name of the universally cheapest and lowest-latency strategy"
+          ]
+        },
+        {
+          "requirement_id": "r2",
+          "status": "missing",
+          "reason": "No cost savings figure or percentage is mentioned in any visible passage.",
+          "finding_ids": [],
+          "unanswered_parts": [
+            "Specific cost savings figure or percentage"
+          ]
+        }
+      ]
+    },
+    "decomposition_degraded": false,
+    "mode": "workflow",
+    "evidence_ids": [
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+    ],
+    "findings": [],
+    "unresolved_gaps": [
+      "r1:missing:The visible passages describe ProviderStrategy as 'most reliable' with 'high reliability and strict validation' but do not identify any strategy as universally cheapest or lowest-latency.",
+      "r2:missing:No cost savings figure or percentage is mentioned in any visible passage."
+    ],
+    "executed_steps": 10,
+    "termination_reason": "insufficient_evidence"
+  },
+  "termination_reason": "insufficient_evidence",
+  "executed_steps": 10,
+  "unresolved_gaps": [
+    "r1:missing:The visible passages describe ProviderStrategy as 'most reliable' with 'high reliability and strict validation' but do not identify any strategy as universally cheapest or lowest-latency.",
+    "r2:missing:No cost savings figure or percentage is mentioned in any visible passage."
+  ],
+  "sources": [],
+  "research_sufficiency": "insufficient"
+}

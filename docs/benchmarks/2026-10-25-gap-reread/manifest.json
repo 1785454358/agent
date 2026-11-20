@@ -1,0 +1,625 @@
+{
+  "date": "2026-10-25",
+  "original_manifests_verified": {
+    "2026-10-24-product-comparison": {
+      "files": 28,
+      "manifest_sha256": "00dc731cff22f716f7af73772784989344cbd479d0452615143565230cb80cfb"
+    },
+    "2026-10-24-research-recovery": {
+      "files": 8,
+      "manifest_sha256": "d893d31434a79f762da5a4b1478817641b1838bd963c6d4f92893f9661fe1ab8"
+    },
+    "2026-10-25-reading-fidelity": {
+      "files": 15,
+      "manifest_sha256": "8e42d7fb80d9c0b0513c072ef66d9972293918d0e5d3e81bb11faebe5cf202dd"
+    }
+  },
+  "files": {
+    "outputs/frozen-before.md": {
+      "bytes": 4056,
+      "sha256": "f1048c2d6930f9289d0b9090fbb49079f2598d8772860832c88bfec0c77479a4"
+    },
+    "outputs/frozen-initial-after.md": {
+      "bytes": 3716,
+      "sha256": "b64d0917cd9820974a23f95773b950a6d72a1473122b43d125f276d577002a3b"
+    },
+    "outputs/frozen-protocol-fix-after.md": {
+      "bytes": 2662,
+      "sha256": "865db120fc38de33edfab70a59721dbd21d24d97b667126afd67fc0443afac00"
+    },
+    "outputs/network-comparison.md": {
+      "bytes": 3428,
+      "sha256": "d57c06d3a2c3215c95f76cdbbab345ab1040a4af141352d9ef9c4efcc40f1414"
+    },
+    "outputs/network-sqlite.md": {
+      "bytes": 4745,
+      "sha256": "715cf0fbebed310b80c73ba81a0ea9453357931ef9a3b9f637176b5f70e77391"
+    },
+    "results.md": {
+      "bytes": 8569,
+      "sha256": "9d96d99dc677f4e46510b57faef605ee7c7bf6ebc1f546962b4fb003440904ee"
+    },
+    "runs.json": {
+      "bytes": 237295,
+      "sha256": "9261399225623521dfc609598d2d7b2877d5c22d9240090aea7b5ee120e7d65f"
+    }
+  },
+  "changes": {
+    "backend/src/deeptrace/strategies/evidence_evaluation.py": {
+      "before_sha256": "632d40c522c978ce714c62776656d62721f184dfacba0d146966a7147b5f2528",
+      "after_sha256": "f3ad8edf06351a1e5cd413f5ac09ad96b51b5618451ffb7f2449ea7d40dd7b8b",
+      "changed_this_iteration": true
+    },
+    "backend/src/deeptrace/strategies/evaluation_materials.py": {
+      "before_sha256": "e281be7e1cd6d364913b4c069a2e774450ea8924754ccd3d3f395201262434f0",
+      "after_sha256": "70b261d1585403845518208d26f4ce348abc0b2c727a8668b09a87e0aa8b5c22",
+      "changed_this_iteration": true
+    },
+    "backend/src/deeptrace/strategies/workflow/recovery.py": {
+      "before_sha256": "03a2ded1869d3bc563c2ee1761c5ca9bed08578938bf88dcdee57b5dfeb14137",
+      "after_sha256": "a16c989afe3bf8050d608d0ee5bb293b29a3299cbc776fea9e859c944af1fb52",
+      "changed_this_iteration": true
+    },
+    "backend/src/deeptrace/strategies/workflow/graph.py": {
+      "before_sha256": "6791318eb1af632664afaa5151a2ab41c2d600b16f9a390df50dc276db4bea12",
+      "after_sha256": "206a0607e35797d594ea810e6b8458e65f45c00fc51d9bd8e3db7f80f0b51c12",
+      "changed_this_iteration": true
+    },
+    "backend/src/deeptrace/strategies/workflow/nodes.py": {
+      "before_sha256": "aad9c73fde992324e9a884ed1a9299f8dccff4d00b8f970f1f9039a3e7cbcfbd",
+      "after_sha256": "0b94a7ae05209cf0e5b63f13b0ec77ff69340f511e171745529890cb45198cca",
+      "changed_this_iteration": true
+    },
+    "backend/src/deeptrace/strategies/workflow/state.py": {
+      "before_sha256": "543777211ae257e37a0a156cea9fc0c696abf74f6f3dfd0139cd89dddacf45df",
+      "after_sha256": "96d9ae2f2a363982da1ee303254f8c0cdb6d565cfda95da09e54053773fd524a",
+      "changed_this_iteration": true
+    },
+    "backend/src/deeptrace/tools/evidence_units.py": {
+      "before_sha256": "de7438b266da2a9e8a820b34573a2f0c71f0a85f7e3755f4e7f60e591c520b88",
+      "after_sha256": "d3c8f54ec9ed0ce1133b162820d359cf44d71bf18c9bc56d52d3766e788e2f96",
+      "changed_this_iteration": true
+    },
+    "backend/tests/strategies/workflow/test_recovery.py": {
+      "before_sha256": "d1c7cbb6835e0c3b51afe05c7848efa4f2f556d1c562d08e06dff1159928920f",
+      "after_sha256": "d1c7cbb6835e0c3b51afe05c7848efa4f2f556d1c562d08e06dff1159928920f",
+      "changed_this_iteration": false
+    },
+    "docs/README.md": {
+      "before_sha256": "fb58f1fc0cc6e0a369b428e4760c01b2c2362a226ebcb2f8478b0a21cb73fe5a",
+      "after_sha256": "612848df1a9155342024f28bdc9a83f00f7f11322de89068a6f705705721fdcb",
+      "changed_this_iteration": true
+    },
+    "backend/README.md": {
+      "before_sha256": "79bcfbd31d5edf9226f429adde16e5e53514447893b9cf1a9598cc78f20d32cf",
+      "after_sha256": "c281c96c1b5e5318fb4716081d912599ddd17e4b932d0e2bca93d53bdc9f8861",
+      "changed_this_iteration": true
+    },
+    "backend/src/deeptrace/strategies/source_reread.py": {
+      "before_sha256": null,
+      "after_sha256": "d71f46cdfcc02a9c2500bcc952e1e9582a111013675cbdd5cb1fec0d6f9d4ce7",
+      "new_this_iteration": true
+    },
+    "backend/src/deeptrace/strategies/workflow/reread.py": {
+      "before_sha256": null,
+      "after_sha256": "8b2bf4b9f068258812c084febf9b6ed51392e3cebd390771e27489ab6ec45c77",
+      "new_this_iteration": true
+    },
+    "backend/tests/strategies/test_source_reread.py": {
+      "before_sha256": null,
+      "after_sha256": "ce7fba2488ff31a7c0f3ee2fd7e106743880a6f2951b3ceb3649d2e24a0ed856",
+      "new_this_iteration": true
+    },
+    "backend/tests/strategies/workflow/test_reread.py": {
+      "before_sha256": null,
+      "after_sha256": "f5100b29b5049aafbb2448634f80ef01167ff5b534b343af2131447d04377029",
+      "new_this_iteration": true
+    }
+  },
+  "local_test_logs": {
+    ".local-notes/gap-reread-2026-10-25/backend-final-tests.log": {
+      "bytes": 11391,
+      "sha256": "29adb9f44dfe76782394b30cdff5fa1c6d47640ef2753328c50e69063ef0579a"
+    },
+    ".local-notes/gap-reread-2026-10-25/backend-tests.log": {
+      "bytes": 1829,
+      "sha256": "dd3324b372315d6834e203396fb8bf31a20e8e2fe9fe7422d7927fd8b0d220cc"
+    },
+    ".local-notes/gap-reread-2026-10-25/evaluation-final-tests.log": {
+      "bytes": 101,
+      "sha256": "07bf76f22149cae10dfe5a07a1b70cc6547f92af3e4eeda737cc180618eca1a1"
+    },
+    ".local-notes/gap-reread-2026-10-25/focused-final-tests.log": {
+      "bytes": 101,
+      "sha256": "c44638c0103f94e1c3ae9810272344b8a8e5ce255c9a94d3490ec24f357b8599"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen-after.log": {
+      "bytes": 115,
+      "sha256": "eefa09bbe2fec1154de43e7507528b6825296db22990dd3700ca7818875897f3"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen-before.log": {
+      "bytes": 116,
+      "sha256": "ca2a7ba2f5578a38579eda67ebf4b4638d5d19d0cd523b93953d914730d26185"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen-protocol-fix.log": {
+      "bytes": 96,
+      "sha256": "e6fe67a8c401b21bee6a4c79b6731ac8a02c6b5c7b7d81ca521e3e48730f52c3"
+    },
+    ".local-notes/gap-reread-2026-10-25/network-comparison.log": {
+      "bytes": 223,
+      "sha256": "0d582ed16bc00a4340fa93bb8fe8d5c929123b872fd953b89fbda9c958397a61"
+    },
+    ".local-notes/gap-reread-2026-10-25/network-sqlite.log": {
+      "bytes": 197,
+      "sha256": "a409340dfb3cba3f741b9724982c7ce10610d1b05f6d08e4789da87bdd199832"
+    },
+    ".local-notes/gap-reread-2026-10-25/ruff-final.log": {
+      "bytes": 20,
+      "sha256": "a4443afdcfb6d7363adb285762515ccf7cf50473b1a05c20c1a50f6bed4d26b0"
+    },
+    ".local-notes/gap-reread-2026-10-25/whitespace-final.log": {
+      "bytes": 11366,
+      "sha256": "06e7a60d18a4e3cdb06f9bc4785cfa7928d647f1e878a25494bf5c932e4cba25"
+    }
+  },
+  "raw_run_files": {
+    ".local-notes/gap-reread-2026-10-25/frozen/before/assessment.json": {
+      "bytes": 43016,
+      "sha256": "51b141be17b41c57ba0dc1bc469bde91f9087de99bdbc9c86acccec44cc25155"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/before/events.json": {
+      "bytes": 47335,
+      "sha256": "3747b7b50c70bfd4a630506a2f428a617104daedbcde9ba3c3ba40efc93d89b6"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/before/input-state.json": {
+      "bytes": 57422,
+      "sha256": "216c1dc65d33fcb48c77177a1f62f42e1aca11e5e2fa85ffe3948e9143dcc023"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/before/model-01-evaluator.json": {
+      "bytes": 39029,
+      "sha256": "a69ca1db0175513ef714ebb11828b18fafd6e946e2a65996dc0bb01ad939a07d"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/before/model-02-responder.json": {
+      "bytes": 36173,
+      "sha256": "f64c8229d801d0a147cef2e23a4281243020dff29d44db8f8a708de54edddb02"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/before/model-03-responder.json": {
+      "bytes": 35854,
+      "sha256": "ea38f5f94e48f6c208cb03b4fa5cdffbb08d2ad5cef0f8170a50ce3fd2c3833b"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/before/result.json": {
+      "bytes": 45781,
+      "sha256": "c2ed70d1e7969f7552b8a126b23ea173da38ceaf76ed209ecf9d4bc31b99d586"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/after/assessment.json": {
+      "bytes": 48621,
+      "sha256": "1d8cc1c4ed78bf9e37b37230a62c20508792115ceabaf56f514a3f12b3fd43b3"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/after/events.json": {
+      "bytes": 49481,
+      "sha256": "970089cf20dac4fb59b4543f8be458e2e2daf8d8da44748052d8bb70716eea8b"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/after/input-state.json": {
+      "bytes": 57420,
+      "sha256": "03781e52bb94de569081c0bcec43f8fa1ad0896fdf7da86f332aa04521b34f29"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/after/model-01-replanner.json": {
+      "bytes": 70410,
+      "sha256": "89fc23230a6723f64b3fff3b63dcb4ef694ba9898e7d83b2e3d3d34cf2a9dda0"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/after/model-02-evaluator.json": {
+      "bytes": 38522,
+      "sha256": "8cb93f5f406895a5737ef4cc2f27b791e2ae04fd1d2e374025db1f86441ca5df"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/after/model-03-responder.json": {
+      "bytes": 33522,
+      "sha256": "167ca5c4ad22b255aebb59f07d6ad89d0df8980fa5569b03fed1b2860b27b3a0"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/after/model-04-responder.json": {
+      "bytes": 34078,
+      "sha256": "224d6c13d2566f4b50ef55d294f54484bde74c1cf19511b0e178d6e4b99866c2"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/after/recovery-plan.json": {
+      "bytes": 7689,
+      "sha256": "26aaa7d2376cf9f15645000baeda5cecc52c392ed6ce0d56d34e393dacee3d97"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/after/reread-result.json": {
+      "bytes": 264,
+      "sha256": "2fd7c728d8de7271fe757eda2f23aa68117b451b0bfa5d57007877aa751e069d"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/after/result.json": {
+      "bytes": 56689,
+      "sha256": "30fbfa8436aea988fd87718fce4478613ff55032673d6b9ae8ede5e065a9db6f"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/after/tool-01.json": {
+      "bytes": 2425,
+      "sha256": "7cb049019c55f293bf7d0a7f2247e872906ee0f3736c335cbb89db866909a909"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/after/tool-02.json": {
+      "bytes": 2392,
+      "sha256": "0dfb19e7404004eba048b9e13b416e1cea53b4015110e0e63c40a05ee24c121e"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/protocol-fix/after/assessment.json": {
+      "bytes": 35364,
+      "sha256": "27b730d57e0d703a64c3bd79f24d48bd274ba54f3c1b6e4099d7f8a488e107ab"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/protocol-fix/after/events.json": {
+      "bytes": 49954,
+      "sha256": "4a8f8e485706d3492f3d3668659ce92b4ed0bf93cfbbab83dad1591c5f1aa0a6"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/protocol-fix/after/input-state.json": {
+      "bytes": 57446,
+      "sha256": "fd983ce1ebf4f21d44cf07c83cf30bcbbde4ad8abc6e463712c4bef96dd4a974"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/protocol-fix/after/model-01-evaluator.json": {
+      "bytes": 38332,
+      "sha256": "aea87acbb773be9b498e17f19356481b6e9c57fc539574ddf17493ecdb55ff49"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/protocol-fix/after/model-02-responder.json": {
+      "bytes": 33083,
+      "sha256": "37a825cf585f822b19a3330dc30a7da6c8c517eec1d6d16f21b617f1499c6669"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/protocol-fix/after/model-03-responder.json": {
+      "bytes": 32225,
+      "sha256": "2bb6b24ee1367238b5260eca4ecdd14c3668b6d4411aecfd40134230489826ff"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/protocol-fix/after/recovery-plan.json": {
+      "bytes": 7689,
+      "sha256": "26aaa7d2376cf9f15645000baeda5cecc52c392ed6ce0d56d34e393dacee3d97"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/protocol-fix/after/reread-outcomes.json": {
+      "bytes": 1721,
+      "sha256": "08554e376ee42c9c22e5bccfae3f265cb87837c25e4f145115561b2a678ac8bf"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/protocol-fix/after/reread-result.json": {
+      "bytes": 189,
+      "sha256": "fa3ad2ce982f8c9ef7e66421fd1e60968774459e57dbd496f357e6f57e219570"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/protocol-fix/after/result.json": {
+      "bytes": 42294,
+      "sha256": "0c57528f4ce29e73fe4db4d933079783c5e8a379d5ccb0d9f757da38a9179fd0"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/protocol-fix/after/tool-01.json": {
+      "bytes": 2477,
+      "sha256": "b7a3219a44077ccca64143a701c978e878fa89fb55fb2f3364ddc019f1e5368a"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen/protocol-fix/after/tool-02.json": {
+      "bytes": 2444,
+      "sha256": "d791f8eb635a833d82aff5755bacb752d0bd15f0ea5f784f694e107433700f94"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/events.json": {
+      "bytes": 90558,
+      "sha256": "c5ea3944972d48d9998e86d4a66b056ae4cf8a838fd85852a3b30849df89fd8d"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/model-01-planner.json": {
+      "bytes": 19962,
+      "sha256": "764367a64c7c3d2fb013746c575b6fbb1b4af3c21202bf2b61dc4e26215ec01e"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/model-02-researcher.json": {
+      "bytes": 12351,
+      "sha256": "29171f304e633878b2b8fa14e6c07dc7fe2633d921d443c2d34ad2daadb4f599"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/model-03-researcher.json": {
+      "bytes": 11670,
+      "sha256": "66f2977557768f41f61fc4775e58405f14c87316e8979575ecd0fc2826ebfe10"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/model-04-researcher.json": {
+      "bytes": 11576,
+      "sha256": "bee98b04fd46d30452c5f7151be3e59d874fcd2bfe1c8155f2ad8dd2f07b8bba"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/model-05-evaluator.json": {
+      "bytes": 30767,
+      "sha256": "c87a688ca13b04d1bfd61d328c0bcebb32a13bf6fadb270aed562851179adccd"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/model-06-responder.json": {
+      "bytes": 31485,
+      "sha256": "d428c7b5b268488bbc2100c5b2681132cb74be8b61ff439dbd8e04ada8d19eea"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/model-07-responder.json": {
+      "bytes": 30442,
+      "sha256": "72d53ccd4ef6e8939776cc597d0035810e1e269161a969275f0d0eadf186456a"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/result.json": {
+      "bytes": 44691,
+      "sha256": "76ad0989196f14b01a1c3034c8770882607150d743e64cf987aaf54390da8b21"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/sources.json": {
+      "bytes": 67507,
+      "sha256": "ee591a0bbd136f1d25fe634022dd4eb045d5ddedeb09229a5fc3939454dccac0"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-01-search_web.json": {
+      "bytes": 4818,
+      "sha256": "33a9a4cbba8738344675309ce20f42fd233ed9814edd8496d868a15b5b2407d6"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-02-search_web.json": {
+      "bytes": 4391,
+      "sha256": "88f067cf379bced2f18c618e23b9ec9be543b8a89e3c0b77d3971b59c0657067"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-03-search_web.json": {
+      "bytes": 4558,
+      "sha256": "6542f2a8e3db5be937723e3e7c36fb1f287b879974876cdc9eb34b165d1115f0"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-04-search_web.json": {
+      "bytes": 4365,
+      "sha256": "81d441dad3733dfe5c026adf9c6aacf662051814360583241f2abf360410546d"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-05-search_web.json": {
+      "bytes": 4579,
+      "sha256": "9f2c580e2a3d1b5fc9df165c409b430f22a9e61a4137f2183b1f00034261a256"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-06-search_web.json": {
+      "bytes": 4597,
+      "sha256": "9b4cd57d9964a7ef9d859fd3f8f6f9af27a9b250585b6c892606db14d2d65aac"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-07-fetch_page.json": {
+      "bytes": 1314,
+      "sha256": "819b3a470df0c61492b31b2c032028fabeb52c2bf8efd72433e7605a7dd9b0fe"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-08-fetch_page.json": {
+      "bytes": 1319,
+      "sha256": "0cb6617df488f4f80996598d9bd937344e9b97ef0eeecd7bdf05312eee54ffb5"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-09-fetch_page.json": {
+      "bytes": 1318,
+      "sha256": "adfea77ed5b1b7f87039b1b5b23243cd472c8b3be412ad89be75226c27eaf9c2"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-10-fetch_page.json": {
+      "bytes": 1333,
+      "sha256": "51f5eee465c817ef7437d1f99501fcfda35d0c1dbb642c6658dceb4a2ad1289f"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-11-read_evidence.json": {
+      "bytes": 5146,
+      "sha256": "fc0c7a8da30cb1ff2c76c84778c8b5bb19198b35dd62d49c233c33697733ce2a"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-12-read_evidence.json": {
+      "bytes": 5139,
+      "sha256": "f57e3e4add1822f19d93d9263ea298348bd62aab4450c6a0163d5ac90442a7ed"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-13-read_evidence.json": {
+      "bytes": 5147,
+      "sha256": "24b22f105fdd83a4af7a695eafac807b327f24c6a3b9364e4df21a62ef4765ca"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-14-read_evidence.json": {
+      "bytes": 5108,
+      "sha256": "2a11d0eaece09afced8cf43b948f4538abdeab0b7fea9415f56f64ab859e9342"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-15-read_evidence.json": {
+      "bytes": 5232,
+      "sha256": "09adb6fdee40bb12caee03a44512082662f68857e4790b68a60de3ac2e270b89"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-16-read_evidence.json": {
+      "bytes": 5231,
+      "sha256": "49999b5a51d3d03987999ceea904bf6d50b6064c337461cb9762a5b8571c155e"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-17-read_evidence.json": {
+      "bytes": 5228,
+      "sha256": "1745477407842154b3887c946b5554efe654ddda8321c9dac9612c962683187f"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-18-read_evidence.json": {
+      "bytes": 5240,
+      "sha256": "fdc313e0495f01f2081604de7c017a8af7a9ba17f42cb58d9513c6ee14f645e9"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-19-read_evidence.json": {
+      "bytes": 5257,
+      "sha256": "9539bf0606c7d1424bf4b2081c403331c5bda0f63f78cce1645ac4be920615c5"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-20-read_evidence.json": {
+      "bytes": 4055,
+      "sha256": "d373e4fb8b5273c1e3f4ae132c28192e7ee6fa2df9f2063f5b6867cadcf4df78"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/comparison/tool-21-read_evidence.json": {
+      "bytes": 4072,
+      "sha256": "eb48f72883c35ffa7dac92071c3cc87156686938138d4dd2f5d4e46bdcae1408"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/events.json": {
+      "bytes": 153587,
+      "sha256": "0473f58bb1cb31a1e761db9b0372545621129fddd0c36a1f584c5c2dc165be66"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/model-01-planner.json": {
+      "bytes": 18439,
+      "sha256": "206122af40da75487704f99b237f3ba510f9e3f8a550cd928158426caeec8127"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/model-02-researcher.json": {
+      "bytes": 10563,
+      "sha256": "bdfdbbe9ab4c84f8b3075640dec952844c32e71be60ff52c91b755ecab98728f"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/model-03-researcher.json": {
+      "bytes": 10928,
+      "sha256": "ad341de7ba694116ff8365949eda48429740864795c2f61be8cd00c6af770391"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/model-04-researcher.json": {
+      "bytes": 10001,
+      "sha256": "fe833ae1bfd73c98df3491adbfef67037fa3d585459be06ba8c6d45a026fd53b"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/model-05-evaluator.json": {
+      "bytes": 49034,
+      "sha256": "c3737c44374fb33885f6b4a9030e240f26a4161db39802b5ed01c188dcb92207"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/model-06-responder.json": {
+      "bytes": 48245,
+      "sha256": "4861b43ed15a0bccd0bda28a523b2757d4576eadfb37a2997dbb5c793000e28e"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/model-07-responder.json": {
+      "bytes": 47998,
+      "sha256": "657ee8f363460825ca0704f18d5ed15c518458f94a1c228d3bbe856e76e7f13d"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/result.json": {
+      "bytes": 77511,
+      "sha256": "ecc95117bacc18c1284934fdf7d76ba8f49a45309300c58803714fbc5ce114f1"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/sources.json": {
+      "bytes": 169841,
+      "sha256": "844667e79899e137f5a0396bda228c754f570f6d2acf80abae05444f3f64e6d0"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-01-search_web.json": {
+      "bytes": 4338,
+      "sha256": "ff61a8071249cb7f3b0aa18d6af524bf1c136627b56b70075e2594ba66f99fb6"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-02-search_web.json": {
+      "bytes": 4091,
+      "sha256": "3d867a07ead09385ba38cfa734574710bd68313c96bcefcb13da4fbd583c8461"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-03-search_web.json": {
+      "bytes": 4236,
+      "sha256": "b426e40f5718734dac7b629c61ea2765c94b85a7751dc4db23a094b4eca15ca6"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-04-search_web.json": {
+      "bytes": 4183,
+      "sha256": "232595f25387a3689fb28fb9897c53b9843ec7e844300d46d18aef557a9874a7"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-05-search_web.json": {
+      "bytes": 4396,
+      "sha256": "0e6378a2905ac5f611f0972616b8d578800c456b123cb75223f9daf375d0baaa"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-06-search_web.json": {
+      "bytes": 4242,
+      "sha256": "40d28966c2507074fce163e8c9d9dbb63e5b2b45a8972f3277a2212b40870b51"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-07-fetch_page.json": {
+      "bytes": 1279,
+      "sha256": "35f5f75a9531f216e592d66a9e583b7f1cf6f759dd8560fa70b74c27737e1dc8"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-08-fetch_page.json": {
+      "bytes": 1262,
+      "sha256": "b7e4498067fc7234596c4f3808cd71c34a9c365cc7b8d1519bdd9449735e2a5a"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-09-fetch_page.json": {
+      "bytes": 1251,
+      "sha256": "e4164c34bcfbaea6a1f616b5d9804f8704473366181a83157167516b1749b8f0"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-10-fetch_page.json": {
+      "bytes": 1238,
+      "sha256": "2074c902682899d08cb195f2fdbf3b42622cb2de9dc27f77f474714fe7c6e990"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-11-fetch_page.json": {
+      "bytes": 1261,
+      "sha256": "6082bfdae8556e708596899f515aca9432a687cfa01bea64a650c8b0cdf92c58"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-12-fetch_page.json": {
+      "bytes": 1280,
+      "sha256": "3f1c2164a6fb203535368d43fa74d31e16c0f22f770e6608bf1689bb391c3d9b"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-13-read_evidence.json": {
+      "bytes": 4803,
+      "sha256": "0e70e47988e14ab04f9b5edccbcd3974069157a144543340f4f938f1e6a348c7"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-14-read_evidence.json": {
+      "bytes": 4073,
+      "sha256": "c2468028277f8ce37f2021656f30d0bb0b7a6d508d5e2638caef4e16870947bc"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-15-read_evidence.json": {
+      "bytes": 5096,
+      "sha256": "752d4edcdc0d70f670bcc7f78098e25b3c5e1cdd695b779df7cdb2c7a64e70bc"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-16-read_evidence.json": {
+      "bytes": 4116,
+      "sha256": "39db3668abcc1ae3fcb154dc70c2f521759ecaf6aa6f2f00d0b290da97b45669"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-17-read_evidence.json": {
+      "bytes": 5265,
+      "sha256": "f077947d469cd64e5630c51248eb020244a11aea1f769f5b6b0a7cadde689442"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-18-read_evidence.json": {
+      "bytes": 3989,
+      "sha256": "d210f69b3c1d06109e678423c783fb183a63017a270ba8376d5e4fe3ce01797d"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-19-read_evidence.json": {
+      "bytes": 4974,
+      "sha256": "053ae3f1ef1361236d71e146ff0741d27f6b6f088761cdd4d53feb3c277b2116"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-20-read_evidence.json": {
+      "bytes": 2807,
+      "sha256": "97dfea4dc92f0aed8fa8fd2f242a6b6d4428140b3018d1684c463373fe8a34f5"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-21-read_evidence.json": {
+      "bytes": 2755,
+      "sha256": "57624329744142224bdd30ce74e11cf0c697c3f510037ca09839b8434a888a5f"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-22-read_evidence.json": {
+      "bytes": 5324,
+      "sha256": "0a8c264ec7312ca19dd7299803ca7453c546594800c2083f2f164bd3e14b7a79"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-23-read_evidence.json": {
+      "bytes": 5138,
+      "sha256": "c6ab71bc96491bc9999bdb624e0af512c5b90d0036e703d9da5ebe4daedd22cf"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-24-read_evidence.json": {
+      "bytes": 4683,
+      "sha256": "625bf7aab0bba1e254db92c4bb2b5102c8d9efe9beeaf9883949452a01254b77"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-25-read_evidence.json": {
+      "bytes": 4568,
+      "sha256": "3e3fa366f91cfbdc8d3ff0b850f484ac8902a518cf2e0b4220d44e2cdc94c59d"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-26-read_evidence.json": {
+      "bytes": 2738,
+      "sha256": "93ba407345b60cccfda0f91d928ac2c4469eaee9a45ae562288c12fe9585ed45"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-27-read_evidence.json": {
+      "bytes": 4433,
+      "sha256": "73aab90e60e71f05ccbbaacdaaf55a5fce3dbee6aef1260dbacd8157019d85a5"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-28-read_evidence.json": {
+      "bytes": 3738,
+      "sha256": "4631a01480b45cc59072277b0abf3088cf0631895bd80226d50d06fb599af3d3"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-29-read_evidence.json": {
+      "bytes": 5268,
+      "sha256": "e58e5414476ebcce84d2d35df3046b7c5711b30a76a6598a4ca71f1faf37bdeb"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-30-read_evidence.json": {
+      "bytes": 3820,
+      "sha256": "65d6e1b0525464977bbd2a8904e14c8d9917f02a209f381a6435fe93dc7757ed"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-31-read_evidence.json": {
+      "bytes": 5304,
+      "sha256": "77eb76144f6fb860e1cfe3229859f7583dfc4fdf432a1afcc258f5c472f683cd"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-32-read_evidence.json": {
+      "bytes": 1899,
+      "sha256": "d2a2ef6e8d07af93be26c32e62efb00afdebb83ab4fdeca8925f830ad41d8849"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-33-read_evidence.json": {
+      "bytes": 5206,
+      "sha256": "618d2dc0f7f7590f6cc8e807ff8d011e388088f642d3730a484337883c2dffbc"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-34-fetch_page.json": {
+      "bytes": 1237,
+      "sha256": "c98091cbdb25e98720cd0202426c7bffba612f67a45afe6c9c98e3427635aedd"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-35-fetch_page.json": {
+      "bytes": 1261,
+      "sha256": "48b63942fb8ccb7c328e6a484e47e03b7ce8e779067e7d17b0e1f0a1e5433749"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-36-read_evidence.json": {
+      "bytes": 5119,
+      "sha256": "d875c543cd44bb29d5e46d91c440f207894869b20310acf9f8b0035f03df9e42"
+    },
+    ".local-notes/gap-reread-2026-10-25/final-network/sqlite/tool-37-read_evidence.json": {
+      "bytes": 5166,
+      "sha256": "28ed072709c8ce09cdb666eb4c72076e502fa091794f8931342a5edb2d59c0b5"
+    }
+  },
+  "probe_scripts": {
+    ".local-notes/gap-reread-2026-10-25/build_report.py": {
+      "bytes": 7905,
+      "sha256": "d5cc54de39524bb73602a970b0f42e002fb5d647055b986825d6ea87def85a02"
+    },
+    ".local-notes/gap-reread-2026-10-25/frozen_probe.py": {
+      "bytes": 8548,
+      "sha256": "2b1a59c9818a72edcd26eaccf4bc2edc3a6108d70b9a80b4dd9bde1c4e662e95"
+    },
+    ".local-notes/gap-reread-2026-10-25/run_probe.py": {
+      "bytes": 5513,
+      "sha256": "64d4d65c6ef76fea295d26a0d36a347f916a608195f979d4cb9ee4b32fc04f1a"
+    }
+  },
+  "verification": {
+    "backend": "1565 passed, 2 deselected, 4 aiosqlite thread warnings, 78.13s",
+    "evaluation": "66 passed, 5.22s",
+    "new_tests": "23 passed, warnings treated as errors",
+    "scoped_ruff": "passed",
+    "whitespace": "passed",
+    "review": "Inline review against iteration-before copies: source/version/hash and sealed-gap authority, actual short-reference union, no preview admission, bounded phases/budgets, cancellation, Ledger replay, default strategy schema and new-turn reset. No dependency changes. Remaining semantic limits recorded in results.md."
+  }
+}

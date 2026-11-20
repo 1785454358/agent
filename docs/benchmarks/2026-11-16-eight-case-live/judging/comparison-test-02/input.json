@@ -1,0 +1,170 @@
+{
+  "question": "Using only the frozen documentation, compare trimming, deleting and summarizing messages for long conversations.",
+  "reference_answer": "Trimming removes selected first/last messages before an LLM call. Deletion permanently removes messages from graph state and can clear history. Summarization replaces earlier messages with a summary. They address context growth but have different state semantics; any resulting history must still satisfy provider message/tool-call constraints.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text": "Before-call trim"
+    },
+    {
+      "id": "R2",
+      "text": "Permanent delete"
+    },
+    {
+      "id": "R3",
+      "text": "Summary replacement"
+    },
+    {
+      "id": "R4",
+      "text": "Protocol validity"
+    }
+  ],
+  "candidates": {
+    "A": {
+      "answer": "## 结论\n\n按冻结文档，三者都是应对长对话超出上下文窗口的常见方案 [1]，但机制与持久性不同：**trimming** 是调用 LLM 前临时裁剪发送给模型的消息（transient，不改已保存状态）[1][2]；**deleting** 是从 LangGraph 状态中永久移除消息，适合删除特定消息或清空整个历史 [1]；**summarizing** 是把较早消息总结成摘要并**永久**替换进状态，供后续所有轮次使用，同时保留最近消息 [2]。文档没有给出三者之间的显式排序或组合使用指引，只明确对比了 transient trimming 与 persistent summarization [2]。\n\n## 逐项对比\n\n| 维度 | Trimming | Deleting | Summarizing |\n|---|---|---|---|\n| 机制 | 调用 LLM 前移除前/后 N 条消息；可按 token 计数在接近上限时截断，用 trim messages 工具指定保留 token 数与 strategy（如保留最后 max_tokens）[1] | 用 `RemoveMessage` 从图状态删除；要求状态键使用 `add_messages` reducer（默认 `AgentState` 已提供）[1] | `SummarizationMiddleware` 在超过 token 上限时自动：用一次独立 LLM 调用总结旧消息、在状态中永久替换为摘要、保留最近消息 [2] |\n| 实现位置 | 中间件：Python 用 `@before_model` 装饰器，JS 用 `createMiddleware` 的 `beforeModel` 钩子 [1] | 图状态层面（reducer 机制）[1] | 内置中间件，可配置 `trigger`（如 tokens: 4000）与 `keep`（如保留 20 条）[2] |\n| 持久性 | Transient：只改单次调用发给模型的内容，不改已保存状态 [2] | 永久：从状态中删除 [1] | 永久：状态被持久更新，未来轮次看到摘要而非原始消息 [2] |\n| 适用场景 | 长对话超出上下文窗口时的常见方案 [1] | 想移除特定消息或清空整个消息历史时 [1] | 对话过长时自动压缩历史 [2] |\n\n## 共同动机与取舍\n\n文档指出，长对话可能放不进上下文窗口，导致上下文丢失或报错；即使模型支持完整上下文长度，多数 LLM 在长上下文上表现仍差——被陈旧/离题内容分散注意力，响应更慢、成本更高 [1]。这是三者共同要解决的问题。\n\n有据可依的取舍：\n\n- **信息保留**：summarizing 以摘要形式保留旧信息的要点，而 trimming/deleting 直接丢弃被移除的内容（文档只描述摘要\"替换旧消息\"，未承诺信息无损）[2]。\n- **额外开销**：summarizing 需要一次独立的 LLM 调用 [2]；trimming/deleting 的文档描述中没有此类额外调用。\n- **可逆性**：trimming 不动已保存状态，被裁掉的消息仍在状态中 [2]；deleting 与 summarizing 都是永久修改状态 [1][2]。\n\n## 文档未覆盖之处\n\n可见材料未给出：三者之间的显式选择排序、组合使用指引、摘要质量/信息损失的量化说明，以及 trimming 与 deleting 在效果上的直接对比。这些缺口仅说明本次可见材料不足，不能推断完整文档没有相关内容。",
+      "citation_map": {
+        "[1]": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+        "[2]": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f"
+      },
+      "visible_passages": [
+        {
+          "ref": "P1",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 232,
+          "end": 1708,
+          "text": "Memory is a system that remembers information about previous interactions. For AI agents, memory is crucial because it lets them remember previous interactions, learn from feedback, and adapt to user preferences. As agents tackle more complex tasks with numerous user interactions, this capability becomes essential for both efficiency and user satisfaction.\n\nShort term memory lets your application remember previous interactions within a single thread or conversation.\n\n<Note>\n    A thread organizes multiple interactions in a session, similar to the way email groups messages in a single conversation.\n</Note>\n\nConversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\n\nEven if your model supports the full context length, most LLMs still perform poorly over long contexts. They get \"distracted\" by stale or off-topic content, all while suffering from slower response times and higher costs.\n\nChat models accept context using [messages](/oss/langchain/messages), which include instructions (a system message) and inputs (human messages). In chat applications, messages alternate between human inputs and model responses, resulting in a list of messages that grows longer over time. Because context windows are limited, many applications can benefit from using techniques to remove or \"forget\" stale information.\n\n"
+        },
+        {
+          "ref": "P2",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 5620,
+          "end": 8488,
+          "text": "```typescript\nimport { createAgent, createMiddleware } from \"langchain\";\nimport { StateSchema, MemorySaver } from \"@langchain/langgraph\";\nimport * as z from \"zod\";\n\nconst CustomState = new StateSchema({  // [!code highlight]\n    userId: z.string(),  // [!code highlight]\n    preferences: z.record(z.string(), z.any()),  // [!code highlight]\n});  // [!code highlight]\n\nconst stateExtensionMiddleware = createMiddleware({\n    name: \"StateExtension\",\n    stateSchema: CustomState,  // [!code highlight]\n});\n\nconst checkpointer = new MemorySaver();\nconst agent = createAgent({\n    model: \"gpt-5.5\",\n    tools: [],\n    middleware: [stateExtensionMiddleware],  // [!code highlight]\n    checkpointer,\n});\n\n// Custom state can be passed in invoke\nconst result = await agent.invoke({\n    messages: [{ role: \"user\", content: \"Hello\" }],\n    userId: \"user_123\",  // [!code highlight]\n    preferences: { theme: \"dark\" },  // [!code highlight]\n});\n```\n:::\n\n## Common patterns\n\nWith [short-term memory](#usage) enabled, long conversations can exceed the LLM's context window. Common solutions are:\n\n<CardGroup cols={2}>\n    <Card title=\"Trim messages\" icon=\"scissors\" href=\"#trim-messages\" arrow>\n        Remove first or last N messages (before calling LLM)\n    </Card>\n    <Card title=\"Delete messages\" icon=\"trash\" href=\"#delete-messages\" arrow>\n        Delete messages from LangGraph state permanently\n    </Card>\n    <Card title=\"Summarize messages\" icon=\"stack-2\" href=\"#summarize-messages\" arrow>\n        Summarize earlier messages in the history and replace them with a summary\n    </Card>\n    <Card title=\"Custom strategies\" icon=\"adjustments\">\n        Custom strategies (e.g., message filtering, etc.)\n    </Card>\n</CardGroup>\n\nThis allows the agent to keep track of the conversation without exceeding the LLM's context window.\n\n### Trim messages\n\nMost LLMs have a maximum supported context window (denominated in tokens).\n\n:::python\nOne way to decide when to truncate messages is to count the tokens in the message history and truncate whenever it approaches that limit. If you're using LangChain, you can use the trim messages utility and specify the number of tokens to keep from the list, as well as the `strategy` (e.g., keep the last `max_tokens`) to use for handling the boundary.\n:::\n:::js\nOne way to decide when to truncate messages is to count the tokens in the message history and truncate whenever it approaches that limit. If you're using LangChain, you can use the trim messages utility and specify the number of tokens to keep from the list, as well as the `strategy` (e.g., keep the last `maxTokens`) to use for handling the boundary.\n:::\n\n:::python\nTo trim message history in an agent, use the @[`@before_model`] middleware decorator:\n\n```python\nfrom langchain.messages import RemoveMessage\nfrom langgraph.graph.message import REMOVE_ALL_MESSAGES\nfrom lang"
+        },
+        {
+          "ref": "P3",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 9909,
+          "end": 11552,
+          "text": " told me that earlier.\nIf you'd like me to call you a nickname or use a different name, just say the word.\n\"\"\"\n```\n:::\n\n:::js\nTo trim message history in an agent, use @[`createMiddleware`] with a `beforeModel` hook:\n\n```typescript\nimport { RemoveMessage } from \"@langchain/core/messages\";\nimport { createAgent, createMiddleware } from \"langchain\";\nimport { MemorySaver, REMOVE_ALL_MESSAGES } from \"@langchain/langgraph\";\n\nconst trimMessages = createMiddleware({\n  name: \"TrimMessages\",\n  beforeModel: (state) => {\n    const messages = state.messages;\n\n    if (messages.length <= 3) {\n      return; // No changes needed\n    }\n\n    const firstMsg = messages[0];\n    const recentMessages =\n      messages.length % 2 === 0 ? messages.slice(-3) : messages.slice(-4);\n    const newMessages = [firstMsg, ...recentMessages];\n\n    return {\n      messages: [\n        new RemoveMessage({ id: REMOVE_ALL_MESSAGES }),\n        ...newMessages,\n      ],\n    };\n  },\n});\n\nconst checkpointer = new MemorySaver();\nconst agent = createAgent({\n  model: \"gpt-5.5\",\n  tools: [...],\n  middleware: [trimMessages],\n  checkpointer,\n});\n```\n:::\n\n### Delete messages\n\nYou can delete messages from the graph state to manage the message history.\n\nThis is useful when you want to remove specific messages or clear the entire message history.\n\n:::python\nTo delete messages from the graph state, you can use the `RemoveMessage`.\n\nFor `RemoveMessage` to work, you need to use a state key with @[`add_messages`] [reducer](/oss/langgraph/graph-api#reducers).\n\nThe default @[`AgentState`] provides this.\n\nTo remove specific messages:\n\n```python\nfrom langchain.messages import Remov"
+        },
+        {
+          "ref": "P4",
+          "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/context-engineering.mdx",
+          "start": 19376,
+          "end": 22449,
+          "text": "    :::js\n    ```typescript\n    import * as z from \"zod\";\n    import { createMiddleware, HumanMessage } from \"langchain\";\n\n    const contextSchema = z.object({\n      userJurisdiction: z.string(),\n      industry: z.string(),\n      complianceFrameworks: z.array(z.string()),\n    });\n\n    type Context = z.infer<typeof contextSchema>;\n\n    const injectComplianceRules = createMiddleware<Context>({\n      name: \"InjectComplianceRules\",\n      contextSchema,\n      wrapModelCall: (request, handler) => {\n        // Read from Runtime Context: get compliance requirements\n        const { userJurisdiction, industry, complianceFrameworks } = request.runtime.context;  // [!code highlight]\n\n        // Build compliance constraints\n        const rules = [];\n        if (complianceFrameworks.includes(\"GDPR\")) {\n          rules.push(\"- Must obtain explicit consent before processing personal data\");\n          rules.push(\"- Users have right to data deletion\");\n        }\n        if (complianceFrameworks.includes(\"HIPAA\")) {\n          rules.push(\"- Cannot share patient health information without authorization\");\n          rules.push(\"- Must use secure, encrypted communication\");\n        }\n        if (industry === \"finance\") {\n          rules.push(\"- Cannot provide financial advice without proper disclaimers\");\n        }\n\n        if (rules.length > 0) {\n          const complianceContext = `Compliance requirements for ${userJurisdiction}:\n${rules.join(\"\\n\")}`;\n\n          // Append at end - models pay more attention to final messages\n          const messages = [\n            ...request.messages,\n            new HumanMessage(complianceContext)\n          ];\n          request = { ...request, messages };  // [!code highlight]\n        }\n\n        return handler(request);\n      },\n    });\n    ```\n    :::\n  </Tab>\n\n</Tabs>\n\n<Note>\n**Transient vs Persistent Message Updates:**\n\nThe examples above use `wrap_model_call` to make **transient** updates - modifying what messages are sent to the model for a single call without changing what's saved in state.\n\nFor **persistent** updates that modify state, you can:\n\n:::python\n- Return a @[`ExtendedModelResponse`] with a @[`Command`] from `wrap_model_call` to inject state updates from the model call layer.\n- Use life-cycle hooks like `before_model`, `after_model`, or `wrap_tool_call` (for tool returns) to update the conversation history. See the [middleware documentation](/oss/langchain/middleware) for more details.\n:::\n\n:::js\n- Return a @[`Command`] directly from `wrapModelCall` to inject state updates from the model call layer.\n- Use life-cycle hooks like `beforeModel`, `afterModel`, or `wrapToolCall` (for tool returns) to update the conversation history. See the [middleware documentation](/oss/langchain/middleware) for more details.\n:::\n\nSee [State updates](/oss/langchain/middleware/custom#state-updates) for more information.\n</Note>\n\n### Tools\n\nTools let the model interact with databases, APIs, and external systems. How you define and select tools directly impacts whether the model can complete tasks effectively.\n\n"
+        },
+        {
+          "ref": "P5",
+          "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/context-engineering.mdx",
+          "start": 62551,
+          "end": 64214,
+          "text": "<div style={{ display: \"flex\", justifyContent: \"center\" }}>\n  <img\n    src=\"/oss/images/middleware_final.png\"\n    alt=\"Middleware hooks in the agent loop\"\n    className=\"rounded-lg\"\n  />\n</div>\n\n### Example: Summarization\n\nOne of the most common life-cycle patterns is automatically condensing conversation history when it gets too long. Unlike the transient message trimming shown in [Model Context](#messages), summarization **persistently updates state** - permanently replacing old messages with a summary that's saved for all future turns.\n\nLangChain offers built-in middleware for this:\n\n:::python\n```python\nfrom langchain.agents import create_agent\nfrom langchain.agents.middleware import SummarizationMiddleware\n\nagent = create_agent(\n    model=\"gpt-5.5\",\n    tools=[...],\n    middleware=[\n        SummarizationMiddleware(\n            model=\"gpt-5.4-mini\",\n            trigger={\"tokens\": 4000},\n            keep=(\"messages\", 20),\n        ),\n    ],\n)\n```\n:::\n\n:::js\n```typescript\nimport { createAgent, summarizationMiddleware } from \"langchain\";\n\nconst agent = createAgent({\n  model: \"gpt-5.5\",\n  tools: [...],\n  middleware: [\n    summarizationMiddleware({\n      model: \"gpt-5.4-mini\",\n      trigger: { tokens: 4000 },\n      keep: { messages: 20 },\n    }),\n  ],\n});\n```\n:::\n\nWhen the conversation exceeds the token limit, `SummarizationMiddleware` automatically:\n1. Summarizes older messages using a separate LLM call\n2. Replaces them with a summary message in State (permanently)\n3. Keeps recent messages intact for context\n\nThe summarized conversation history is permanently updated - future turns will see the summary instead of the original messages.\n\n"
+        }
+      ]
+    },
+    "B": {
+      "answer": "**结论**：三种方法都用于解决长对话超出 LLM 上下文窗口的问题，但核心区别在于**持久性**和**信息保留方式**：Trimming 是**临时性**的（Transient，仅在调用 LLM 前处理，不永久改变状态），Deleting 是**永久性删除**（从图状态中彻底移除特定消息），Summarizing 是**永久性替换**（用摘要替换旧消息，保留核心信息）[1][2]。\n\n## 机制对比\n\n| 维度 | Trimming | Deleting | Summarizing |\n|------|----------|----------|-------------|\n| **持久性** | 临时（Transient） | 永久（Persistent） | 永久（Persistent） |\n| **操作对象** | 发送给 LLM 的消息 | 图状态（Graph State）中的消息 | 图状态中的消息 |\n| **实现方式** | `trim_messages` 工具或 `@before_model` 中间件 | `RemoveMessage` 配合 `add_messages` reducer | `SummarizationMiddleware` |\n| **触发时机** | 每次调用 LLM 前 | 显式调用时 | 超过 token 限制时自动触发 |\n| **信息去向** | 被截断的消息不发送给 LLM，但状态保持完整 | 被永久移除 | 被摘要替换，原始内容丢失 |\n\n## 详细机制与适用场景\n\n**Trimming（修剪）**\n- **机制**：在调用 LLM 前，根据 token 计数移除消息列表的开头或结尾 N 条消息。使用 `trim_messages` 工具并指定 `strategy`（如保留最后 `max_tokens`），或通过 `@before_model` 中间件（Python）/ `createMiddleware` 的 `beforeModel` 钩子（JS）实现 [1]。\n- **适用场景**：适合**临时性**控制上下文长度，保留完整历史在状态中以供后续使用。适用于需要灵活调整上下文窗口，但不想永久丢失任何消息的场景 [1][2]。\n\n**Deleting（删除）**\n- **机制**：使用 `RemoveMessage` 从图状态中永久移除特定消息或清空全部历史。要求状态键必须配置 `add_messages` reducer 才能生效 [1]。\n- **适用场景**：适合**精确控制**状态内容，如移除敏感信息、错误消息或完全重置对话 [1]。\n\n**Summarizing（总结）**\n- **机制**：当对话超过 token 限制时，`SummarizationMiddleware` 自动触发，使用单独的 LLM 调用将旧消息压缩为摘要，并用该摘要**永久替换**状态中的原始消息，同时保留最近的消息不变 [2]。\n- **适用场景**：适合**长期对话**需要保留历史上下文但受限于 token 的情况。通过牺牲细节保留核心信息，平衡上下文长度与信息完整性 [2]。\n\n## 关键取舍\n\n1. **状态一致性**：Trimming 不改变持久化状态，状态保持完整；Deleting 和 Summarizing 会永久改变状态，影响所有后续轮次 [1][2]。\n2. **信息保留**：Trimming 和 Deleting 都会丢失被移除消息的详细内容；Summarizing 保留核心信息但丢失细节 [2]。\n3. **实现复杂度**：Trimming 相对简单（客户端截断）；Deleting 需要正确配置 reducer；Summarizing 需要额外 LLM 调用生成摘要 [1][2]。\n\n**选择建议**：\n- 需要**灵活调整**且保留完整历史 → Trimming\n- 需要**精确移除**特定内容或重置对话 → Deleting  \n- 需要**长期维护**对话且接受信息压缩 → Summarizing",
+      "citation_map": {
+        "[1]": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+        "[2]": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f"
+      },
+      "visible_passages": [
+        {
+          "ref": "P1",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 232,
+          "end": 1708,
+          "text": "Memory is a system that remembers information about previous interactions. For AI agents, memory is crucial because it lets them remember previous interactions, learn from feedback, and adapt to user preferences. As agents tackle more complex tasks with numerous user interactions, this capability becomes essential for both efficiency and user satisfaction.\n\nShort term memory lets your application remember previous interactions within a single thread or conversation.\n\n<Note>\n    A thread organizes multiple interactions in a session, similar to the way email groups messages in a single conversation.\n</Note>\n\nConversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\n\nEven if your model supports the full context length, most LLMs still perform poorly over long contexts. They get \"distracted\" by stale or off-topic content, all while suffering from slower response times and higher costs.\n\nChat models accept context using [messages](/oss/langchain/messages), which include instructions (a system message) and inputs (human messages). In chat applications, messages alternate between human inputs and model responses, resulting in a list of messages that grows longer over time. Because context windows are limited, many applications can benefit from using techniques to remove or \"forget\" stale information.\n\n"
+        },
+        {
+          "ref": "P2",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 1946,
+          "end": 2754,
+          "text": "To add short-term memory (thread-level persistence) to an agent, you need to specify a `checkpointer` when creating an agent.\n\n<Info>\n    LangChain's agent manages short-term memory as a part of your agent's state.\n\n    By storing these in the graph's state, the agent can access the full context for a given conversation while maintaining separation between different threads.\n\n    State is persisted to a database (or memory) using a checkpointer so the thread can be resumed at any time.\n\n    Short-term memory updates when the agent is invoked or a step (like a tool call) is completed, and the state is read at the start of each step.\n</Info>\n\n:::python\n\n<ShortTermMemoryUsagePy />\n\n:::\n:::js\n\n<ShortTermMemoryUsageJs />\n\n:::\n\n### In production\n\nIn production, use a checkpointer backed by a database:\n\n"
+        },
+        {
+          "ref": "P3",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 4085,
+          "end": 4630,
+          "text": "<Note>\n    For more checkpointer options including SQLite, Postgres, and Azure Cosmos DB, see the [list of checkpointer libraries](/oss/langgraph/checkpointers#checkpointer-libraries) in the Persistence documentation.\n</Note>\n\n## Customizing agent memory\n\n:::python\nBy default, agents use @[`AgentState`] to manage short term memory, specifically the conversation history via a `messages` key.\n\nYou can extend @[`AgentState`] to add additional fields. Custom state schemas are passed to @[`create_agent`] using the @[`state_schema`] parameter.\n\n"
+        },
+        {
+          "ref": "P4",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 5620,
+          "end": 7474,
+          "text": "```typescript\nimport { createAgent, createMiddleware } from \"langchain\";\nimport { StateSchema, MemorySaver } from \"@langchain/langgraph\";\nimport * as z from \"zod\";\n\nconst CustomState = new StateSchema({  // [!code highlight]\n    userId: z.string(),  // [!code highlight]\n    preferences: z.record(z.string(), z.any()),  // [!code highlight]\n});  // [!code highlight]\n\nconst stateExtensionMiddleware = createMiddleware({\n    name: \"StateExtension\",\n    stateSchema: CustomState,  // [!code highlight]\n});\n\nconst checkpointer = new MemorySaver();\nconst agent = createAgent({\n    model: \"gpt-5.5\",\n    tools: [],\n    middleware: [stateExtensionMiddleware],  // [!code highlight]\n    checkpointer,\n});\n\n// Custom state can be passed in invoke\nconst result = await agent.invoke({\n    messages: [{ role: \"user\", content: \"Hello\" }],\n    userId: \"user_123\",  // [!code highlight]\n    preferences: { theme: \"dark\" },  // [!code highlight]\n});\n```\n:::\n\n## Common patterns\n\nWith [short-term memory](#usage) enabled, long conversations can exceed the LLM's context window. Common solutions are:\n\n<CardGroup cols={2}>\n    <Card title=\"Trim messages\" icon=\"scissors\" href=\"#trim-messages\" arrow>\n        Remove first or last N messages (before calling LLM)\n    </Card>\n    <Card title=\"Delete messages\" icon=\"trash\" href=\"#delete-messages\" arrow>\n        Delete messages from LangGraph state permanently\n    </Card>\n    <Card title=\"Summarize messages\" icon=\"stack-2\" href=\"#summarize-messages\" arrow>\n        Summarize earlier messages in the history and replace them with a summary\n    </Card>\n    <Card title=\"Custom strategies\" icon=\"adjustments\">\n        Custom strategies (e.g., message filtering, etc.)\n    </Card>\n</CardGroup>\n\nThis allows the agent to keep track of the conversation without exceeding the LLM's context window.\n\n### Trim messages\n\nMost LLMs h"
+        },
+        {
+          "ref": "P5",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 7539,
+          "end": 8368,
+          "text": ":::python\nOne way to decide when to truncate messages is to count the tokens in the message history and truncate whenever it approaches that limit. If you're using LangChain, you can use the trim messages utility and specify the number of tokens to keep from the list, as well as the `strategy` (e.g., keep the last `max_tokens`) to use for handling the boundary.\n:::\n:::js\nOne way to decide when to truncate messages is to count the tokens in the message history and truncate whenever it approaches that limit. If you're using LangChain, you can use the trim messages utility and specify the number of tokens to keep from the list, as well as the `strategy` (e.g., keep the last `maxTokens`) to use for handling the boundary.\n:::\n\n:::python\nTo trim message history in an agent, use the @[`@before_model`] middleware decorator:\n\n"
+        },
+        {
+          "ref": "P6",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 11027,
+          "end": 11432,
+          "text": "### Delete messages\n\nYou can delete messages from the graph state to manage the message history.\n\nThis is useful when you want to remove specific messages or clear the entire message history.\n\n:::python\nTo delete messages from the graph state, you can use the `RemoveMessage`.\n\nFor `RemoveMessage` to work, you need to use a state key with @[`add_messages`] [reducer](/oss/langgraph/graph-api#reducers).\n\n"
+        },
+        {
+          "ref": "P7",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 11476,
+          "end": 11506,
+          "text": "To remove specific messages:\n\n"
+        },
+        {
+          "ref": "P8",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 11815,
+          "end": 11844,
+          "text": "To remove **all** messages:\n\n"
+        },
+        {
+          "ref": "P9",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 19147,
+          "end": 19171,
+          "text": "### Summarize messages\n\n"
+        },
+        {
+          "ref": "P10",
+          "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/context-engineering.mdx",
+          "start": 5280,
+          "end": 7569,
+          "text": "    ```python\n    from langchain.agents import create_agent\n    from langchain.agents.middleware import dynamic_prompt, ModelRequest\n\n    @dynamic_prompt\n    def state_aware_prompt(request: ModelRequest) -> str:\n        # request.messages is a shortcut for request.state[\"messages\"]\n        message_count = len(request.messages)\n\n        base = \"You are a helpful assistant.\"\n\n        if message_count > 10:\n            base += \"\\nThis is a long conversation - be extra concise.\"\n\n        return base\n\n    agent = create_agent(\n        model=\"gpt-5.5\",\n        tools=[...],\n        middleware=[state_aware_prompt]\n    )\n    ```\n    :::\n\n    :::js\n    ```typescript\n    import { createAgent } from \"langchain\";\n\n    const agent = createAgent({\n      model: \"gpt-5.5\",\n      tools: [...],\n      middleware: [\n        dynamicSystemPromptMiddleware((state) => {\n          // Read from State: check conversation length\n          const messageCount = state.messages.length;\n\n          let base = \"You are a helpful assistant.\";\n\n          if (messageCount > 10) {\n            base += \"\\nThis is a long conversation - be extra concise.\";\n          }\n\n          return base;\n        }),\n      ],\n    });\n    ```\n    :::\n  </Tab>\n\n  <Tab title=\"Store\">\n    Access user preferences from long-term memory:\n\n    :::python\n\n    ```python\n    from dataclasses import dataclass\n    from langchain.agents import create_agent\n    from langchain.agents.middleware import dynamic_prompt, ModelRequest\n    from langgraph.store.memory import InMemoryStore\n\n    @dataclass\n    class Context:\n        user_id: str\n\n    @dynamic_prompt\n    def store_aware_prompt(request: ModelRequest) -> str:\n        user_id = request.runtime.context.user_id\n\n        # Read from Store: get user preferences\n        store = request.runtime.store\n        user_prefs = store.get((\"preferences\",), user_id)\n\n        base = \"You are a helpful assistant.\"\n\n        if user_prefs:\n            style = user_prefs.value.get(\"communication_style\", \"balanced\")\n            base += f\"\\nUser prefers {style} responses.\"\n\n        return base\n\n    agent = create_agent(\n        model=\"gpt-5.5\",\n        tools=[...],\n        middleware=[store_aware_prompt],\n        context_schema=Context,\n        store=InMemoryStore()\n    )\n    ```\n    :::\n\n"
+        },
+        {
+          "ref": "P11",
+          "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/context-engineering.mdx",
+          "start": 62551,
+          "end": 64391,
+          "text": "<div style={{ display: \"flex\", justifyContent: \"center\" }}>\n  <img\n    src=\"/oss/images/middleware_final.png\"\n    alt=\"Middleware hooks in the agent loop\"\n    className=\"rounded-lg\"\n  />\n</div>\n\n### Example: Summarization\n\nOne of the most common life-cycle patterns is automatically condensing conversation history when it gets too long. Unlike the transient message trimming shown in [Model Context](#messages), summarization **persistently updates state** - permanently replacing old messages with a summary that's saved for all future turns.\n\nLangChain offers built-in middleware for this:\n\n:::python\n```python\nfrom langchain.agents import create_agent\nfrom langchain.agents.middleware import SummarizationMiddleware\n\nagent = create_agent(\n    model=\"gpt-5.5\",\n    tools=[...],\n    middleware=[\n        SummarizationMiddleware(\n            model=\"gpt-5.4-mini\",\n            trigger={\"tokens\": 4000},\n            keep=(\"messages\", 20),\n        ),\n    ],\n)\n```\n:::\n\n:::js\n```typescript\nimport { createAgent, summarizationMiddleware } from \"langchain\";\n\nconst agent = createAgent({\n  model: \"gpt-5.5\",\n  tools: [...],\n  middleware: [\n    summarizationMiddleware({\n      model: \"gpt-5.4-mini\",\n      trigger: { tokens: 4000 },\n      keep: { messages: 20 },\n    }),\n  ],\n});\n```\n:::\n\nWhen the conversation exceeds the token limit, `SummarizationMiddleware` automatically:\n1. Summarizes older messages using a separate LLM call\n2. Replaces them with a summary message in State (permanently)\n3. Keeps recent messages intact for context\n\nThe summarized conversation history is permanently updated - future turns will see the summary instead of the original messages.\n\n<Note>\nFor a complete list of built-in middleware, available hooks, and how to create custom middleware, see the [Middleware documentation](/oss/langchain/middleware).\n</Note>\n\n"
+        }
+      ]
+    }
+  }
+}

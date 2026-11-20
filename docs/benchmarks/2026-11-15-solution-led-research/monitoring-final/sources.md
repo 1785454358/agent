@@ -1,0 +1,8 @@
+- https://railway.com/guides/uptime-kuma
+- https://github.com/louislam/uptime-kuma/wiki/%F0%9F%94%A7-How-to-Install
+- https://rafftechnologies.com/learn/tutorials/deploy-uptime-kuma-docker-ubuntu-24-04
+- https://uptimekuma.io/http-https-monitoring-uptime-kuma
+- https://blog.elest.io/how-to-set-up-uptime-monitoring-with-uptime-kuma-on-elestio
+- https://wiki.smartxtechnologies.com/uptime-kuma/notify-email
+- https://uptimekuma.io/smtp-email-notifications-uptime-kuma
+- https://github.com/louislam/uptime-kuma/issues/2992

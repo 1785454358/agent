@@ -1,0 +1,143 @@
+{
+  "run_id": "58eef493a8624e61b4d3e00a42216d3c",
+  "thread_id": "58eef493a8624e61b4d3e00a42216d3c",
+  "status": "completed",
+  "response_outcome": {
+    "response_mode": "answer",
+    "content": "**结论**：`create_agent` 把校验后的结构化输出放在 agent 最终状态的 `structured_response` 键中；直接向 `response_format` 传入 schema 类型（`type[StructuredResponseT]`）会让 LangChain 按模型能力自动选策略——模型/提供商支持原生结构化输出时用 `ProviderStrategy`，否则用 `ToolStrategy`。[1]\n\n**返回位置**：文档说明，模型生成结构化数据后会被捕获、校验，并返回到 agent 状态的 `'structured_response'` 键；并明确为“agent's final state”的 `structured_response` 键。示例中 `result[\"structured_response\"]` 得到 `ContactInfo(...)` 实例。[1]\n\n**策略选择**：`response_format` 可接收 `ToolStrategy[StructuredResponseT]`、`ProviderStrategy[StructuredResponseT]`、`type[StructuredResponseT]` 或 `None`。当直接提供 schema 类型时，LangChain 自动选择：若所选模型和提供商支持原生结构化输出（如 OpenAI、Anthropic/Claude、xAI/Grok），用 `ProviderStrategy`；其他所有模型用 `ToolStrategy`。文档还注明 `langchain>=1.1` 时原生结构化输出支持会动态读取模型 profile 数据；若不可用需另行指定或手动配置，且若同时使用工具，模型须支持工具与结构化输出同时使用。[1]",
+    "citations": [
+      {
+        "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+        "marker": "[1]"
+      }
+    ],
+    "cited_evidence_ids": [
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+    ],
+    "partial_reason": null
+  },
+  "research_outcome": {
+    "delivery_plan": null,
+    "source_eligibility": {
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375": "eligible"
+    },
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "Identify where create_agent returns validated structured output according to the frozen documentation."
+      },
+      {
+        "id": "r2",
+        "description": "Explain how passing a schema type selects a strategy according to the frozen documentation."
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "covered",
+          "reason": "The frozen documentation explicitly states that validated structured output is returned in the 'structured_response' key of the agent's state.",
+          "finding_ids": [
+            "finding-1"
+          ],
+          "unanswered_parts": []
+        },
+        {
+          "requirement_id": "r2",
+          "status": "covered",
+          "reason": "The documentation explains that passing a schema type directly triggers automatic strategy selection based on model capabilities, specifically using ProviderStrategy when native structured output is supported.",
+          "finding_ids": [
+            "finding-2"
+          ],
+          "unanswered_parts": []
+        }
+      ]
+    },
+    "decomposition_degraded": false,
+    "mode": "workflow",
+    "evidence_ids": [
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+    ],
+    "findings": [
+      {
+        "id": "finding-1",
+        "claim": "According to the frozen documentation, create_agent returns validated structured output in the 'structured_response' key of the agent's state (final state).",
+        "evidence_ids": [
+          "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+        ],
+        "confidence": 1.0,
+        "supports": [
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 45,
+            "end": 446,
+            "quote": "Structured output allows agents to return data in a specific, predictable format. Instead of parsing natural language responses, you get structured data in the form of JSON objects, [Pydantic models](https://docs.pydantic.dev/latest/concepts/models/#basic-model-usage), or dataclasses that your application can use directly.\n\n<Tip>\nThis page covers structured output with agents using `create_agent`. "
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 446,
+            "end": 931,
+            "quote": "To use structured output directly on a model (outside of agents), see [Models - Structured output](/oss/langchain/models#structured-output).\n</Tip>\n\nLangChain's @[`create_agent`] handles structured output automatically. The user sets their desired structured output schema, and when the model generates the structured data, it's captured, validated, and returned in the `'structured_response'` key of the agent's state.\n\n```python\ndef create_agent(\n    ...\n    response_format: Union[\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 931,
+            "end": 1083,
+            "quote": "        ToolStrategy[StructuredResponseT],\n        ProviderStrategy[StructuredResponseT],\n        type[StructuredResponseT],\n        None,\n    ]\n)\n```\n\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 2601,
+            "end": 2869,
+            "quote": "The structured response is returned in the `structured_response` key of the agent's final state.\n:::\n:::js\nStructured output allows agents to return data in a specific, predictable format. Instead of parsing natural language responses, you get typed structured data.\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-2",
+        "claim": "Passing a schema type directly to response_format (type[StructuredResponseT]) automatically selects the best strategy based on model capabilities: LangChain uses ProviderStrategy when the model supports native structured output, otherwise it falls back to ToolStrategy.",
+        "evidence_ids": [
+          "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+        ],
+        "confidence": 1.0,
+        "supports": [
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 6360,
+            "end": 6563,
+            "quote": "LangChain automatically uses `ProviderStrategy` when you pass a schema type directly to @[`create_agent.response_format`][create_agent(response_format)] and the model supports native structured output:\n\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 1103,
+            "end": 1591,
+            "quote": "Use `response_format` to control how the agent returns structured data:\n\n- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n"
+          }
+        ]
+      }
+    ],
+    "unresolved_gaps": [],
+    "executed_steps": 4,
+    "termination_reason": "completed"
+  },
+  "termination_reason": "workflow_completed",
+  "executed_steps": 4,
+  "unresolved_gaps": [],
+  "sources": [
+    "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx"
+  ],
+  "research_sufficiency": "sufficient"
+}

@@ -1,0 +1,4 @@
+{
+  "reason": "Initial raw SQLite timestamp loading omitted the UTC normalization used by the production store; failed before any provider invocation. Fixed replay adapter only.",
+  "provider_attempts": 0
+}

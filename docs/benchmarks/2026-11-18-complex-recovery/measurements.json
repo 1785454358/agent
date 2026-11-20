@@ -1,0 +1,102 @@
+{
+  "date": "2026-11-18",
+  "model": "qwen3.8-max-0902",
+  "limits": {
+    "max_model_calls": 20,
+    "max_input_tokens": 100000,
+    "research_seconds": 600
+  },
+  "backend_tests": {
+    "passed": 1809,
+    "deselected": 1
+  },
+  "cases": [
+    {
+      "name": "复杂诊断题",
+      "question": "根据 Python 3.11 官方文档，先分析 asyncio.gather 中一个任务异常后其他任务仍在运行的原因；再依据分析结果选择 TaskGroup 或手动取消方案，给出修复步骤；最后逐项验证异常传播、取消后清理和兼容性。后续修复选择要以先前的诊断结果为依据。",
+      "before": {
+        "status": "partial",
+        "termination_reason": "max_replans_reached",
+        "seconds": 260.92,
+        "source_count": 1,
+        "model_calls": 18,
+        "input_tokens": 64200,
+        "total_tokens": 75310
+      },
+      "after": {
+        "run_id": "110aae763787",
+        "status": "completed",
+        "termination_reason": "completed",
+        "selected_mode": "plan_execute",
+        "seconds": 159.0,
+        "source_count": 2,
+        "answer_chars": 2482,
+        "model_calls": 10,
+        "input_tokens": 41949,
+        "total_tokens": 48330,
+        "usage_complete": true,
+        "unresolved_gaps": [
+          "diagnostic:read_anchor_omitted:evidence-6272382a7d21590dec6231b29f4503d5d38fa3d1e733e95d93331822b3ed8bd5",
+          "diagnostic:read_anchor_omitted:evidence-76358782ef94addea60dc84314b0d704408a36f20f914ff547bb36b54aaced20"
+        ],
+        "writer_calls": 2,
+        "fact_review_completed": true,
+        "server_seconds": 156.13
+      }
+    },
+    {
+      "name": "跨语言调查题",
+      "question": "请分别独立调查 Python asyncio、Java 虚拟线程和 Go goroutine 的并发模型、取消机制与适用限制，每个方向由独立研究分支取材，最后汇总成选型对比。优先各自官方文档，注明版本；不要预先假设某种方案总是更快。",
+      "before": {
+        "status": "partial",
+        "termination_reason": "max_follow_ups_reached",
+        "seconds": 510.02,
+        "source_count": 7,
+        "model_calls": 16,
+        "input_tokens": 97305,
+        "total_tokens": 108009
+      },
+      "after": {
+        "run_id": "f4e507ef4834",
+        "status": "partial",
+        "termination_reason": "insufficient_evidence",
+        "selected_mode": "multi_agent",
+        "seconds": 291.77,
+        "source_count": 6,
+        "answer_chars": 3179,
+        "model_calls": 17,
+        "input_tokens": 88103,
+        "total_tokens": 100568,
+        "usage_complete": true,
+        "unresolved_gaps": [
+          "r1:missing:evaluation_unavailable",
+          "r2:missing:evaluation_unavailable",
+          "r3:missing:evaluation_unavailable",
+          "r4:missing:evaluation_unavailable",
+          "r5:missing:evaluation_unavailable",
+          "evaluation_unavailable",
+          "diagnostic:read_anchor_omitted:evidence-574dea042698da9f380c7dd00bf8868c105032dacb638ab691ca9b08cab8029e",
+          "diagnostic:read_anchor_omitted:evidence-caa581be2e681b4023bcdbe0a78cc2f4557ecc30ee837cee0d3d3b48bb45cbcb",
+          "diagnostic:unread_evidence:evidence-574dea042698da9f380c7dd00bf8868c105032dacb638ab691ca9b08cab8029e",
+          "diagnostic:unread_evidence:evidence-1e9bbc4f02e89b67b190e25e0024efc7927a9e6901fae0532ca674fd860f5fa7",
+          "diagnostic:unread_evidence:evidence-6feb44c2f8d923385efa673b8c9e3bfcc51e5402a5549098e6e2c340771ce841",
+          "diagnostic:unread_evidence:evidence-bf99c31799283ff4510540a53740f06ce4d043c375a2fc5f4c20c9d49a86f222",
+          "diagnostic:unread_evidence:evidence-be24f04862f2ac0026732e92217875eac0214dd0374eec33fa8e09ab5743b5b7",
+          "diagnostic:evaluation_material_omitted",
+          "diagnostic:unread_evidence:evidence-caa581be2e681b4023bcdbe0a78cc2f4557ecc30ee837cee0d3d3b48bb45cbcb",
+          "diagnostic:unread_evidence:evidence-e623145122ba60f9a70e85eed79315a68cf2e5cbc83e0eb186062739f85e379e",
+          "diagnostic:evaluation_context_limit",
+          "diagnostic:evaluation_unavailable"
+        ],
+        "writer_calls": 2,
+        "fact_review_completed": true,
+        "server_seconds": 288.34,
+        "remaining_limits": [
+          "原始来源获取有失败",
+          "调度机制、取消边界与 Go 版本依据不足",
+          "后续评估窗口缩减，最后一轮评估窗口不足"
+        ]
+      }
+    }
+  ]
+}

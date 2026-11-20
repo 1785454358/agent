@@ -1,0 +1,8 @@
+{
+  "model": "kimi-k3",
+  "thinking": "disabled",
+  "method": "Eight synthetic error-injected drafts with one known fault and retained correct control; real production review_answer and actual model calls.",
+  "not": "Not eight additional open-ended questions, not naturally generated hallucination-rate measurement, not full-agent retrieval evaluation.",
+  "assessment": "Root assistant checks correction, correct-control retention, no wholesale deletion; raw review retained.",
+  "script_sha256": "5e90d783f9c2d70b7577a0a9f73140310d93ebabe67ac4a77482811da06471fe"
+}

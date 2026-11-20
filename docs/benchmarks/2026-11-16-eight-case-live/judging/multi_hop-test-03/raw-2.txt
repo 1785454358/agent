@@ -1,0 +1,332 @@
+{
+  "A": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "回答明确说明 HITL middleware 在模型提出需审查操作时暂停执行、等待人工决定，通过 interrupt 中断并借助 checkpointer 持久化状态以便恢复，覆盖 policy pause 的解释。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "回答引用文档说明若同时指定 tools，模型必须支持 tools 与 structured output 的同时使用，并指出 HITL 场景必然存在 tools 时模型须支持并用，覆盖同时能力要求。"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "回答结论明确加入 HITL 不免除 provider-native structured output 的模型能力要求，两者独立，文档无豁免条款，未声称 HITL 改变模型支持。"
+      }
+    ],
+    "claims": [
+      {
+        "quote": "在可见的冻结文档中，加入 HITL 人工审核工具调用，并不免除 provider-native structured output 对模型能力的要求；两者是独立机制，文档未给出任何 HITL 相关的豁免条款。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P3"],
+        "reason": "P1 描述 HITL 仅针对 tool calls 的审查暂停机制，P3 描述 structured output 的模型能力要求，两者文档各自独立，无交叉豁免内容，支持该结论。",
+        "citations": [
+          {
+            "marker": "P1",
+            "status": "supported",
+            "reason": "P1 说明 HITL 是对 tool calls 的人工监督，通过 policy 检查并 interrupt 暂停，未提及 structured output 或能力豁免。"
+          },
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 说明 native structured output 支持从模型 profile 读取且 tools 指定时需同时支持，未提及 HITL 可豁免。"
+          }
+        ]
+      },
+      {
+        "quote": "当模型提出可能需要审查的操作时，middleware 暂停执行、等待人工决定（approve/edit/reject/respond），通过 interrupt 中断并借助 checkpointer 持久化状态以便恢复 [1]。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P2"],
+        "reason": "P1 描述 middleware 在模型提出需审查操作时 pause execution 等待 decision，通过 interrupt 中断并用 persistence layer 保存状态；P2 说明需配置 checkpointer 持久化状态，allowed_decisions 包含 approve/edit/reject/respond。",
+        "citations": [
+          {
+            "marker": "P1",
+            "status": "supported",
+            "reason": "P1 原文支持 pause execution、wait for a decision、issues an interrupt、state saved using persistence layer。"
+          },
+          {
+            "marker": "P2",
+            "status": "supported",
+            "reason": "P2 原文支持 checkpointer 配置要求及 allowed_decisions 列表含 approve/edit/reject/respond。"
+          }
+        ]
+      },
+      {
+        "quote": "文档描述的是对 tool call 的审批流程，不涉及结构化输出的生成策略。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P2"],
+        "reason": "P1 与 P2 均仅描述 tool call 的审查、interrupt、决策与持久化配置，未涉及 structured output 生成策略。",
+        "citations": [
+          {
+            "marker": "P1",
+            "status": "supported",
+            "reason": "P1 内容限于 tool calls 的人工监督与暂停恢复机制。"
+          },
+          {
+            "marker": "P2",
+            "status": "supported",
+            "reason": "P2 内容限于 checkpointer 配置与 interrupt_on 等审批配置项。"
+          }
+        ]
+      },
+      {
+        "quote": "Provider-native structured output 有明确的模型能力门槛：是否支持从模型的 profile 数据动态读取；若同时指定了 tools，模型必须支持 tools 与 structured output 的同时使用 [2]。",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 原文说明 native structured output 支持从模型 profile 数据动态读取，且若指定 tools 模型必须支持 tools 与 structured output 同时使用。",
+        "citations": [
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 原文完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "默认情况下 agent 使用 tool calling 策略生成结构化输出，只有特定模型支持 native 策略 [2]。",
+        "status": "supported",
+        "evidence_refs": ["P4"],
+        "reason": "P4 原文说明默认 agent 使用 tool calling 策略，某些模型支持 native structured output 时会改用该策略。",
+        "citations": [
+          {
+            "marker": "P4",
+            "status": "supported",
+            "reason": "P4 原文完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "两者可以叠加在同一 agent 上：HITL 审核工具调用，structured output 控制最终响应格式。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P3"],
+        "reason": "P1 表明 HITL 作用于 tool calls，P3 表明 structured output 通过 response_format 控制返回格式，两者机制不同可共存于 agent，文档未提示冲突。",
+        "citations": [
+          {
+            "marker": "P1",
+            "status": "supported",
+            "reason": "P1 支持 HITL 针对 tool calls 的审核定位。"
+          },
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 支持 structured output 由 response_format 控制返回格式。"
+          }
+        ]
+      },
+      {
+        "quote": "模型 profile 必须声明支持 native structured output；",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 说明 native structured output 支持从模型 profile 数据读取，数据不可用时需手动指定 profile，隐含需 profile 声明支持。",
+        "citations": [
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 原文支持 profile 数据决定 native structured output 支持。"
+          }
+        ]
+      },
+      {
+        "quote": "由于 HITL 场景必然存在 tools，模型还须支持 tools 与 structured output 并用 [2]。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P3"],
+        "reason": "P1 表明 HITL 针对 tool calls 故场景存在 tools，P3 要求指定 tools 时模型须支持 tools 与 structured output 同时使用。",
+        "citations": [
+          {
+            "marker": "P1",
+            "status": "supported",
+            "reason": "P1 支持 HITL 作用于 tool calls，即存在 tools。"
+          },
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 支持 tools 指定时的同时能力要求。"
+          }
+        ]
+      },
+      {
+        "quote": "若模型不满足条件，文档提供的路径是改用 `ToolStrategy`（默认策略，无 native 能力要求），而不是用 HITL 绕过 [2]。",
+        "status": "supported",
+        "evidence_refs": ["P4"],
+        "reason": "P4 说明默认使用 tool calling 策略，可通过 toolStrategy 强制使用该策略，文档未提供 HITL 绕过能力要求的路径。",
+        "citations": [
+          {
+            "marker": "P4",
+            "status": "supported",
+            "reason": "P4 原文支持默认 tool calling 策略及可用 toolStrategy 包装。"
+          }
+        ]
+      },
+      {
+        "quote": "冻结文档中没有任何段落声明 HITL 会移除该能力要求，但这仅表示本次可见资料未提供此类豁免，不能推出全部文档均无相关说明。",
+        "status": "nonfactual",
+        "evidence_refs": [],
+        "reason": "这是对可见材料范围的边界性说明与谨慎表述，属于对证据范围的限定而非可核验事实断言。",
+        "citations": []
+      }
+    ]
+  },
+  "B": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "回答说明 HITL middleware 在模型生成响应后检查 tool calls，对需人工介入的调用构建 HITLRequest 并发出 interrupt 暂停执行，状态由 LangGraph 持久层保存，覆盖 policy pause 解释。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "回答引用文档说明若同时指定 tools，模型必须支持 tools 与 structured output 的同时使用，覆盖同时能力要求。"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "回答结论明确加入 HITL 不会移除模型能力要求，能力门槛在模型层，HITL 是编排层审查，两者互不替代，未声称 HITL 改变模型支持。"
+      }
+    ],
+    "claims": [
+      {
+        "quote": "加入 HITL 不会移除模型能力要求。Provider-native structured output 的能力门槛在模型层，HITL 是生成后的编排层审查，两者作用于不同阶段，互不替代。",
+        "status": "supported",
+        "evidence_refs": ["P2", "P3"],
+        "reason": "P3 表明能力要求由模型 profile 决定，P2 表明 HITL 在模型生成响应后通过 after_model hook 审查 tool calls，两者阶段不同，文档无替代关系。",
+        "citations": [
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 支持能力要求来自模型 profile 数据。"
+          },
+          {
+            "marker": "P2",
+            "status": "supported",
+            "reason": "P2 支持 HITL 在模型响应后、工具执行前运行的 after_model hook 定位。"
+          }
+        ]
+      },
+      {
+        "quote": "Provider-native structured output 的支持是**从模型 profile 数据动态读取**的；若同时指定 tools，模型必须支持 tools 与 structured output 的同时使用 [1]。",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 原文说明 native structured output 支持从模型 profile 数据动态读取，且指定 tools 时模型必须支持 tools 与 structured output 同时使用。",
+        "citations": [
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 原文完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "当直接传入 schema 类型时，LangChain 自动选择策略：模型与 provider 支持原生结构化输出（如 OpenAI、Anthropic、xAI）时用 `ProviderStrategy`，其余模型用 `ToolStrategy` [1]。",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 原文说明直接提供 schema 类型时 LangChain 自动选择：模型与 provider 支持原生结构化输出（举例 OpenAI、Anthropic、xAI）时用 ProviderStrategy，其余模型用 ToolStrategy。",
+        "citations": [
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 原文完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "即能力不满足时框架回退到 ToolStrategy，而非由 HITL 补足。",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 说明不支持原生结构化输出的模型自动使用 ToolStrategy，文档未提及 HITL 补足能力。",
+        "citations": [
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 支持其余模型使用 ToolStrategy 的回退路径。"
+          }
+        ]
+      },
+      {
+        "quote": "HITL middleware 通过 `after_model` hook 工作：模型生成响应**之后**、工具调用执行之前，检查响应中的 tool calls，对需要人工介入的调用构建 `HITLRequest` 并发出 `interrupt` 暂停执行，状态由 LangGraph 持久层保存 [2]。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P2"],
+        "reason": "P2 原文描述 after_model hook 在模型生成响应后、工具执行前检查 tool calls，构建 HITLRequest 并调用 interrupt；P1 说明状态由 LangGraph persistence layer 保存。",
+        "citations": [
+          {
+            "marker": "P2",
+            "status": "supported",
+            "reason": "P2 原文完整支持 after_model hook 工作流程与 HITLRequest/interrupt。"
+          },
+          {
+            "marker": "P1",
+            "status": "supported",
+            "reason": "P1 支持 graph state 由 LangGraph persistence layer 保存。"
+          }
+        ]
+      },
+      {
+        "quote": "它是对已生成 tool calls 的审查/放行机制，不参与结构化输出的生成方式。",
+        "status": "supported",
+        "evidence_refs": ["P2"],
+        "reason": "P2 描述 middleware 检查响应中的 tool calls 并基于决策执行批准/编辑的调用，未涉及 structured output 生成方式。",
+        "citations": [
+          {
+            "marker": "P2",
+            "status": "supported",
+            "reason": "P2 内容限于 tool calls 的审查与执行决策。"
+          }
+        ]
+      },
+      {
+        "quote": "用 `create_agent` 并设置 `response_format`：直接传 schema 类型让框架按模型能力自动选 `ProviderStrategy`/`ToolStrategy`；若要用 provider-native，需模型 profile 支持且（有 tools 时）支持 tools+structured output 并用 [1]。",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 说明 create_agent 的 response_format 参数可直接传 schema 类型自动选择策略，并说明 profile 支持与 tools 同时能力要求。",
+        "citations": [
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 原文完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "加 HITL middleware，在 `interrupt_on` 中配置每个工具的策略；middleware 在模型响应后按策略检查 tool calls，需要时 `interrupt` 暂停，人工以 `approve`/`edit`/`reject`（Python 另有 `respond`）决策后恢复执行 [2]。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P2"],
+        "reason": "P1 说明决策类型取决于 interrupt_on 中配置的策略，Python 有 approve/edit/reject/respond 四种而 JS 三种；P2 说明 middleware 在模型响应后检查 tool calls 并 interrupt，基于决策恢复执行。",
+        "citations": [
+          {
+            "marker": "P1",
+            "status": "supported",
+            "reason": "P1 支持 interrupt_on 配置策略及 Python 四种决策（含 respond）、JS 三种的差异。"
+          },
+          {
+            "marker": "P2",
+            "status": "supported",
+            "reason": "P2 支持模型响应后检查 tool calls、interrupt 暂停及决策后恢复执行。"
+          }
+        ]
+      },
+      {
+        "quote": "若模型不支持原生结构化输出，文档路径是回退到 `ToolStrategy`（用 tool calling 实现结构化输出）[1]；这与 HITL 审查 tool calls 可共存，但不等于“用 HITL 替代原生能力”。",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 说明 ToolStrategy 使用 tool calling 实现结构化输出且不支持原生的模型自动使用该策略，文档未提供 HITL 替代原生能力的说法。",
+        "citations": [
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 支持 ToolStrategy 用 tool calling 及自动回退路径。"
+          }
+        ]
+      },
+      {
+        "quote": "可见材料未说明 HITL 与 `ProviderStrategy` 同时启用时的额外限制或冲突细节；以上组合仅依据两者各自文档所述机制，实际联调行为需以运行验证为准。",
+        "status": "nonfactual",
+        "evidence_refs": [],
+        "reason": "这是对可见材料范围的边界说明与待验证事项的建议性表述，非可核验事实断言。",
+        "citations": []
+      }
+    ]
+  }
+}

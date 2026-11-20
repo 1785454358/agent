@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="52.396" timestamp="2026-11-08T23:40:16.491348+08:00" hostname="DESKTOP-8HBNEFK"><testcase classname="tests.real.test_real_smoke" name="test_real_workflow_run_returns_cited_answer" time="52.364" /></testsuite></testsuites>

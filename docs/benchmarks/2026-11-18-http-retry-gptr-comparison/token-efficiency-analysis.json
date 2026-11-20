@@ -1,0 +1,185 @@
+{
+  "scope": "Single-question measured trace plus source inspection; proposed savings are targets, not observed results.",
+  "profiles": [
+    {
+      "mode": "workflow",
+      "roles": {
+        "planner": {
+          "calls": 1,
+          "input_tokens": 2045,
+          "output_tokens": 2195
+        },
+        "researcher": {
+          "calls": 3,
+          "input_tokens": 8903,
+          "output_tokens": 320
+        },
+        "evaluator": {
+          "calls": 3,
+          "input_tokens": 19619,
+          "output_tokens": 3471
+        },
+        "replanner": {
+          "calls": 1,
+          "input_tokens": 7533,
+          "output_tokens": 154
+        },
+        "responder": {
+          "calls": 2,
+          "input_tokens": 8751,
+          "output_tokens": 3228
+        }
+      },
+      "input_tokens": 46851,
+      "control_input_tokens": 27152
+    },
+    {
+      "mode": "plan_execute",
+      "roles": {
+        "planner": {
+          "calls": 2,
+          "input_tokens": 5956,
+          "output_tokens": 4146
+        },
+        "researcher": {
+          "calls": 3,
+          "input_tokens": 8520,
+          "output_tokens": 267
+        },
+        "evaluator": {
+          "calls": 2,
+          "input_tokens": 12576,
+          "output_tokens": 1893
+        },
+        "replanner": {
+          "calls": 2,
+          "input_tokens": 15156,
+          "output_tokens": 286
+        },
+        "responder": {
+          "calls": 2,
+          "input_tokens": 7856,
+          "output_tokens": 3168
+        }
+      },
+      "input_tokens": 50064,
+      "control_input_tokens": 27732
+    },
+    {
+      "mode": "multi_agent",
+      "roles": {
+        "supervisor": {
+          "calls": 2,
+          "input_tokens": 6590,
+          "output_tokens": 5410
+        },
+        "researcher": {
+          "calls": 3,
+          "input_tokens": 9662,
+          "output_tokens": 573
+        },
+        "evaluator": {
+          "calls": 3,
+          "input_tokens": 17727,
+          "output_tokens": 3228
+        },
+        "follow_up": {
+          "calls": 2,
+          "input_tokens": 15901,
+          "output_tokens": 234
+        },
+        "responder": {
+          "calls": 2,
+          "input_tokens": 10731,
+          "output_tokens": 5471
+        }
+      },
+      "input_tokens": 60611,
+      "control_input_tokens": 33628
+    }
+  ],
+  "gptr_calls": [
+    {
+      "index": 1,
+      "model": "deepseek-v4.1-flash",
+      "status": "completed",
+      "started_at": "2026-11-18T12:06:41.076602+00:00",
+      "usage": {
+        "input_tokens": 481,
+        "output_tokens": 2378,
+        "total_tokens": 2859,
+        "input_token_details": {
+          "cache_read": 0
+        },
+        "output_token_details": {}
+      },
+      "seconds": 15.141
+    },
+    {
+      "index": 2,
+      "model": "deepseek-v4.1-flash",
+      "status": "completed",
+      "started_at": "2026-11-18T12:07:00.443095+00:00",
+      "usage": {
+        "input_tokens": 3024,
+        "output_tokens": 95,
+        "total_tokens": 3119,
+        "input_token_details": {
+          "cache_read": 0
+        },
+        "output_token_details": {}
+      },
+      "seconds": 1.094
+    },
+    {
+      "index": 3,
+      "model": "deepseek-v4.1-flash",
+      "status": "completed",
+      "started_at": "2026-11-18T12:07:10.038758+00:00",
+      "usage": {
+        "input_tokens": 13928,
+        "output_tokens": 4557,
+        "total_tokens": 18485,
+        "input_token_details": {
+          "cache_read": 0
+        },
+        "output_token_details": {}
+      },
+      "seconds": 25.063
+    }
+  ],
+  "retrieval": {
+    "raw_source_chars": 556746,
+    "after_per_document_prefix_cap_chars": 159140,
+    "writer_context_chars": 43674,
+    "prefix_cap": 50000,
+    "non_idempotent_clause_raw_offset": 161053,
+    "retry_after_syntax_raw_offset": 204673,
+    "embedding": "local MiniLM; does not generate text with the chat model"
+  },
+  "estimated_schema_tokens": {
+    "tokenizer": "local cl100k_base estimate, not provider billing attribution",
+    "GapResearchPlan": 696,
+    "GapRecoveryPlan": 852,
+    "ReferenceExecutorDecision": 2043
+  },
+  "temperature_correction": {
+    "agent_new_actual": 0,
+    "gptr_global_config": 0,
+    "gptr_native_calls_from_source": [
+      {
+        "stage": "agent_choice",
+        "temperature": 0.15
+      },
+      {
+        "stage": "query_generation",
+        "temperature": 0.4
+      },
+      {
+        "stage": "report_writing",
+        "temperature": 0.35
+      }
+    ],
+    "note": "Corrected from source inspection; the prior observer captured usage but not per-request temperature."
+  }
+}

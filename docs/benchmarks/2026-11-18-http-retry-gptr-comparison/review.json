@@ -1,0 +1,82 @@
+{
+  "method": "Manual inspection against the same predeclared criteria as agent_new; pseudocode not executed.",
+  "result": "report generated, but user requirements and correctness review not passed",
+  "checks": [
+    {
+      "id": "C1",
+      "status": "satisfied",
+      "note": "区分 GET 与 POST 在结果未知时的风险；POST 连接断开分支默认停止。"
+    },
+    {
+      "id": "C2",
+      "status": "partial",
+      "note": "覆盖六种组合，但错误声称 429 保证请求未处理。"
+    },
+    {
+      "id": "C3",
+      "status": "satisfied",
+      "note": "说明非负整数秒和 HTTP-date，并将过去日期的等待取为 0。"
+    },
+    {
+      "id": "C4",
+      "status": "missing",
+      "note": "有效 Retry-After 被 min(hint,10秒) 裁短，未保留服务器提示的等待。"
+    },
+    {
+      "id": "C5",
+      "status": "satisfied",
+      "note": "最多三次，首次在循环内计数。"
+    },
+    {
+      "id": "C6",
+      "status": "partial",
+      "note": "每次请求使用 remaining，但没有循环入口的剩余时间非正检查，也未明确单调时钟。"
+    },
+    {
+      "id": "C7",
+      "status": "missing",
+      "note": "先把 120 秒提示裁为 10 秒再检查预算，无法正确执行题目的超预算停止条件。"
+    },
+    {
+      "id": "C8",
+      "status": "missing",
+      "note": "should_retry 在 status==429 时直接返回 TRUE，未区分非幂等 POST 的额外安全条件。"
+    },
+    {
+      "id": "C9",
+      "status": "missing",
+      "note": "正文与文末大量依赖第三方来源；未直接引用已抓取的官方 RFC9110 原文。"
+    },
+    {
+      "id": "C10",
+      "status": "partial",
+      "note": "提到了失败自动重试不应继续重试的建议，也不承诺成功，但三次尝试代码没有落实该边界。"
+    }
+  ],
+  "counterexamples": [
+    {
+      "kind": "manual_trace_not_network_execution",
+      "input": {
+        "method": "GET",
+        "status": 429,
+        "retry_after_seconds": 120,
+        "remaining_seconds": 30,
+        "backoff_cap_seconds": 10
+      },
+      "generated_logic_wait_seconds": 10,
+      "generated_logic_continues": true,
+      "required_by_question": "Stop without sending another attempt because the indicated wait exceeds remaining time."
+    },
+    {
+      "kind": "manual_branch_inspection",
+      "input": {
+        "method": "POST",
+        "status": 429,
+        "deduplication_contract": false,
+        "known_not_applied": false
+      },
+      "generated_should_retry": true,
+      "problem": "The report treats the status code itself as proof that the operation was not applied."
+    }
+  ]
+}

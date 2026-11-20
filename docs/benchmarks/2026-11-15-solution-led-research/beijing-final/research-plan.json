@@ -1,0 +1,134 @@
+{
+  "plan_id": "plan-beijing-live-c0d45b2dbe4a",
+  "run_id": "beijing-live-c0d45b2dbe4a",
+  "contract_revision": 1,
+  "revision": 2,
+  "parent_revision": 1,
+  "revision_reason": "Acquire evidence for verified coverage gaps",
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "discover",
+      "objective": "Gather and verify original sources for: 故宫博物院门票价格预约规则 2026",
+      "in_scope": "Requirements assigned to this research task",
+      "out_of_scope": "Final answer synthesis and other tasks",
+      "requirement_ids": [
+        "r1",
+        "r4"
+      ],
+      "depends_on": [],
+      "capabilities": [
+        "search_web",
+        "fetch_page",
+        "read_evidence"
+      ],
+      "query_seeds": [
+        "故宫博物院门票价格预约规则 2026",
+        "天坛公园 景山公园 门票价格 预约"
+      ],
+      "expected_output": "Findings with host-verified source spans",
+      "acceptance": [
+        "Every assigned requirement has a verified support"
+      ],
+      "budget": {
+        "max_calls": 2,
+        "max_pages": 3
+      },
+      "execution_hint": "auto"
+    },
+    {
+      "id": "t2",
+      "type": "discover",
+      "objective": "Gather and verify original sources for: 天安门广场预约参观规则 升旗",
+      "in_scope": "Requirements assigned to this research task",
+      "out_of_scope": "Final answer synthesis and other tasks",
+      "requirement_ids": [
+        "r2",
+        "r5"
+      ],
+      "depends_on": [],
+      "capabilities": [
+        "search_web",
+        "fetch_page",
+        "read_evidence"
+      ],
+      "query_seeds": [
+        "天安门广场预约参观规则 升旗",
+        "北京 经济型酒店 双床房 价格 前门 王府井 2026"
+      ],
+      "expected_output": "Findings with host-verified source spans",
+      "acceptance": [
+        "Every assigned requirement has a verified support"
+      ],
+      "budget": {
+        "max_calls": 2,
+        "max_pages": 3
+      },
+      "execution_hint": "auto"
+    },
+    {
+      "id": "t3",
+      "type": "discover",
+      "objective": "Gather and verify original sources for: 八达岭长城 慕田峪长城 门票价格 预约 交通",
+      "in_scope": "Requirements assigned to this research task",
+      "out_of_scope": "Final answer synthesis and other tasks",
+      "requirement_ids": [
+        "r3",
+        "r6"
+      ],
+      "depends_on": [],
+      "capabilities": [
+        "search_web",
+        "fetch_page",
+        "read_evidence"
+      ],
+      "query_seeds": [
+        "八达岭长城 慕田峪长城 门票价格 预约 交通",
+        "北京 地铁 公交 票价 一卡通 2026"
+      ],
+      "expected_output": "Findings with host-verified source spans",
+      "acceptance": [
+        "Every assigned requirement has a verified support"
+      ],
+      "budget": {
+        "max_calls": 2,
+        "max_pages": 3
+      },
+      "execution_hint": "auto"
+    },
+    {
+      "id": "t4",
+      "type": "discover",
+      "objective": "Gather and verify original sources for: 北京 前门 王府井 经济型酒店 双床房 价格 一晚",
+      "in_scope": "Requirements assigned to this research task",
+      "out_of_scope": "Final answer synthesis and other tasks",
+      "requirement_ids": [
+        "r5"
+      ],
+      "depends_on": [],
+      "capabilities": [
+        "search_web",
+        "fetch_page",
+        "read_evidence"
+      ],
+      "query_seeds": [
+        "北京 前门 王府井 经济型酒店 双床房 价格 一晚"
+      ],
+      "expected_output": "Findings with host-verified source spans",
+      "acceptance": [
+        "Every assigned requirement has a verified support"
+      ],
+      "budget": {
+        "max_calls": 2,
+        "max_pages": 3
+      },
+      "execution_hint": "auto"
+    }
+  ],
+  "stop_conditions": [
+    "All acceptance requirements are covered"
+  ],
+  "replan_triggers": [
+    "A requirement remains missing after this wave"
+  ]
+}

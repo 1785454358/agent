@@ -1,0 +1,4920 @@
+{
+  "dataset": "deeptrace-multi-source-20261119-v1",
+  "dataset_url": "https://smith.langchain.com/o/d90581d5-a6ea-478d-9c45-9407e1a70582/datasets/da53c1cd-a975-47ff-9ebc-e7668d10d113",
+  "requested_as_of": "2026-11-19T11:05:46.439133+00:00",
+  "dataset_files": {
+    "cases.jsonl": "8715aadcc4269943e8ffecb87648e2dca399fba4fa190fc2226e6e199203cd24"
+  },
+  "source": {
+    "head": "3e50bdda1c71a30f59d2bc7aa88ef90b86af714d",
+    "working_tree_dirty": true,
+    "sha256": "2515e3a832d7d5a1c42b283af2f597dee5fa69ebc24bf1ab9384fcebf24895ab",
+    "file_count": 210
+  },
+  "per_mode_concurrency": 1,
+  "repetitions": 1,
+  "projects": {
+    "workflow": {
+      "id": "c3a264ab-2512-47ec-b6d0-2db166e6f92d",
+      "url": "https://smith.langchain.com/o/d90581d5-a6ea-478d-9c45-9407e1a70582/projects/p/c3a264ab-2512-47ec-b6d0-2db166e6f92d",
+      "name": "deeptrace-strategies-workflow-61dfa957",
+      "start_time": "2026-11-19T11:06:03.417408+00:00",
+      "end_time": null,
+      "metadata": {
+        "dataset_version": "2026-11-19T11:05:39.165615+00:00",
+        "git_revision": "3e50bdda1c71a30f59d2bc7aa88ef90b86af714d",
+        "working_tree_dirty": true,
+        "model": "deepseek-v4.1-flash",
+        "model_thinking": "disabled",
+        "judge_model": "deepseek-v4.1-flash",
+        "judge_rubric": "actual-writer-context-citation-aligned-v4.1",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "research_max_seconds": 600,
+        "research_source_target": 3,
+        "search_query_count": 3,
+        "research_orchestrator": "strategies",
+        "reference_scope": "live_retrieval",
+        "response_fact_review": true
+      }
+    },
+    "plan_execute": {
+      "id": "e9fca17e-3f72-4ef2-a3af-0483bd8c84c5",
+      "url": "https://smith.langchain.com/o/d90581d5-a6ea-478d-9c45-9407e1a70582/projects/p/e9fca17e-3f72-4ef2-a3af-0483bd8c84c5",
+      "name": "deeptrace-strategies-plan_execute-eb0576c9",
+      "start_time": "2026-11-19T11:06:03.452501+00:00",
+      "end_time": null,
+      "metadata": {
+        "dataset_version": "2026-11-19T11:05:39.165615+00:00",
+        "git_revision": "3e50bdda1c71a30f59d2bc7aa88ef90b86af714d",
+        "working_tree_dirty": true,
+        "model": "deepseek-v4.1-flash",
+        "model_thinking": "disabled",
+        "judge_model": "deepseek-v4.1-flash",
+        "judge_rubric": "actual-writer-context-citation-aligned-v4.1",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "research_max_seconds": 600,
+        "research_source_target": 3,
+        "search_query_count": 3,
+        "research_orchestrator": "strategies",
+        "reference_scope": "live_retrieval",
+        "response_fact_review": true
+      }
+    },
+    "multi_agent": {
+      "id": "da28f11c-f66c-4e00-8b09-6fa495301e9a",
+      "url": "https://smith.langchain.com/o/d90581d5-a6ea-478d-9c45-9407e1a70582/projects/p/da28f11c-f66c-4e00-8b09-6fa495301e9a",
+      "name": "deeptrace-strategies-multi_agent-0802feaa",
+      "start_time": "2026-11-19T11:06:03.428776+00:00",
+      "end_time": null,
+      "metadata": {
+        "dataset_version": "2026-11-19T11:05:39.165615+00:00",
+        "git_revision": "3e50bdda1c71a30f59d2bc7aa88ef90b86af714d",
+        "working_tree_dirty": true,
+        "model": "deepseek-v4.1-flash",
+        "model_thinking": "disabled",
+        "judge_model": "deepseek-v4.1-flash",
+        "judge_rubric": "actual-writer-context-citation-aligned-v4.1",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "research_max_seconds": 600,
+        "research_source_target": 3,
+        "search_query_count": 3,
+        "research_orchestrator": "strategies",
+        "reference_scope": "live_retrieval",
+        "response_fact_review": true
+      }
+    }
+  },
+  "runs": [
+    {
+      "mode": "multi_agent",
+      "case": "competitive-object-storage",
+      "category": "competitive",
+      "trace_id": "01a1f37c-2b24-79d0-8aed-bc3890219a20",
+      "application_run_id": "5211f3d0e27b4dcba6f94ebbb86381b3",
+      "project_id": "da28f11c-f66c-4e00-8b09-6fa495301e9a",
+      "seconds": 32.07831,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "unknown",
+      "sources": [
+        "https://developers.cloudflare.com/r2/pricing",
+        "https://www.cloudflare.com/products/r2",
+        "https://r2-calculator.cloudflare.com/",
+        "https://aws.amazon.com/s3/pricing",
+        "https://www.cloudflare.com/pg-cloudflare-r2-vs-aws-s3"
+      ],
+      "reference_source_urls": [
+        "https://developers.cloudflare.com/r2/pricing/",
+        "https://aws.amazon.com/s3/pricing/"
+      ],
+      "tool_calls": 27,
+      "tool_successes": 27,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 17542,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "researcher": {
+            "input_tokens": 5778,
+            "output_tokens": 270,
+            "total_tokens": 6048
+          },
+          "supervisor": {
+            "input_tokens": 280,
+            "output_tokens": 487,
+            "total_tokens": 767
+          },
+          "writer": {
+            "input_tokens": 11484,
+            "output_tokens": 2732,
+            "total_tokens": 14216
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 17542,
+          "output_tokens": 3489,
+          "total_tokens": 21031
+        },
+        "output_tokens": 3489,
+        "provider_attempts": 6,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5778,
+            "output_tokens": 270,
+            "total_tokens": 6048
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 280,
+            "output_tokens": 487,
+            "total_tokens": 767
+          },
+          "writer": {
+            "input_tokens": 11484,
+            "output_tokens": 2732,
+            "total_tokens": 14216
+          }
+        },
+        "stage_seconds": {
+          "researcher": 4.093999999924563,
+          "supervisor": 3.8119999999180436,
+          "writer": 16.186999999918044
+        },
+        "total_tokens": 21031,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f37c-2c6f-7f81-9f3d-ae2dd317d5ec",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 3.811124,
+          "input_tokens": 280,
+          "output_tokens": 487,
+          "total_tokens": 767,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-442c-71a0-b563-27d1e14968e7",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.287489,
+          "input_tokens": 1937,
+          "output_tokens": 90,
+          "total_tokens": 2027,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-444c-7033-b692-c3337aaa0140",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.355152,
+          "input_tokens": 1938,
+          "output_tokens": 89,
+          "total_tokens": 2027,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-4853-75a2-ba2d-b236550d1b63",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.449705,
+          "input_tokens": 1903,
+          "output_tokens": 91,
+          "total_tokens": 1994,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-688d-7a42-b642-2c9b164be224",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 9.795155,
+          "input_tokens": 5095,
+          "output_tokens": 1366,
+          "total_tokens": 6461,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-8eed-7621-83af-a259307e3dc8",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 6.365445,
+          "input_tokens": 6389,
+          "output_tokens": 1366,
+          "total_tokens": 7755,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": null,
+        "tool_success_rate": 1.0,
+        "answer_correctness_v4": 0.95,
+        "answer_groundedness_v4": 0.95,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "回答满足题目核心要求：分别比较了存储、读取请求和互联网出流量，并正确指出在公开下载、直连对象存储且下载量很大的场景下，最可能拉大成本差距的是互联网出流量；同时说明 R2 不收 egress 费，而 S3 有 Data Transfer OUT 费用。回答还列出了报价所需变量：存储量、GET/读取次数、出网 GB、AWS 区域、价格阶梯/计费口径、免费额度等，并明确不强行给出 S3 精确月费，符合题目“无需精确月费”的要求。来源列示清楚，主要事实与官方摘录一致。轻微扣分点在于：对“不是存储或请求”的表述略强，但后文补充了其仍可产生费用；另外“S3 免费额度与账户类型有关”等细节在摘录中未被直接证实，属于轻微超出证据的表述。整体事实正确性和题目满足度很高。\n\nGroundedness 也较高：R2 的 $0.015/GB-month、前 10 GB-month 免费、Class B $0.36/百万次、GetObject 属于 Class B、egress 免费，以及 S3 的请求计费、Data Transfer OUT、加速传输 $0.04/GB、存储按二进制 GB 计算等，均能在 evidence_excerpts 中找到对应支持；未直接给出 S3 Standard 普通存储/GET/普通 egress 费率并说明可见摘录不足，处理谨慎。仅有个别细节如 S3 免费额度与账户类型关系超出摘录支持，因此未给满分。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "d5806c69-4057-481f-be25-740bf08337be",
+          "seconds": 30.954829,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f37c-af2a-7750-8a7d-575929839993",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 29.239833,
+              "input_tokens": 6356,
+              "output_tokens": 5111,
+              "total_tokens": 11467,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "Cloudflare R2 official docs": true,
+        "AWS S3 official pricing/docs": true
+      },
+      "citation_count": 5,
+      "two_source_families": true,
+      "semantic_and_sources_pass": true
+    },
+    {
+      "mode": "multi_agent",
+      "case": "competitive-serverless",
+      "category": "competitive",
+      "trace_id": "01a1f37d-2168-71b3-8547-5c9686f9dd63",
+      "application_run_id": "a6debdcbcba64ada9944e2363c879196",
+      "project_id": "da28f11c-f66c-4e00-8b09-6fa495301e9a",
+      "seconds": 35.169657,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "unknown",
+      "sources": [
+        "https://docs.cloud.google.com/run/docs/configuring/request-timeout",
+        "https://docs.cloud.google.com/run/docs/configuring/request-timeout?hl=en",
+        "https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html",
+        "https://docs.aws.amazon.com/lambda/latest/api/API_Invoke.html",
+        "https://docs.aws.amazon.com/lambda/latest/dg/invocation-sync.html",
+        "https://docs.aws.amazon.com/cli/latest/reference/lambda/invoke.html"
+      ],
+      "reference_source_urls": [
+        "https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html",
+        "https://docs.cloud.google.com/run/docs/configuring/request-timeout"
+      ],
+      "tool_calls": 46,
+      "tool_successes": 46,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 23956,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "researcher": {
+            "input_tokens": 5497,
+            "output_tokens": 328,
+            "total_tokens": 5825
+          },
+          "supervisor": {
+            "input_tokens": 289,
+            "output_tokens": 415,
+            "total_tokens": 704
+          },
+          "writer": {
+            "input_tokens": 18170,
+            "output_tokens": 2934,
+            "total_tokens": 21104
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 23956,
+          "output_tokens": 3677,
+          "total_tokens": 27633
+        },
+        "output_tokens": 3677,
+        "provider_attempts": 6,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5497,
+            "output_tokens": 328,
+            "total_tokens": 5825
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 289,
+            "output_tokens": 415,
+            "total_tokens": 704
+          },
+          "writer": {
+            "input_tokens": 18170,
+            "output_tokens": 2934,
+            "total_tokens": 21104
+          }
+        },
+        "stage_seconds": {
+          "researcher": 4.578000000095926,
+          "supervisor": 3.1869999999180436,
+          "writer": 17.57799999997951
+        },
+        "total_tokens": 27633,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f37d-220a-7cd3-bbd6-6ba6c66e1d84",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 3.196406,
+          "input_tokens": 289,
+          "output_tokens": 415,
+          "total_tokens": 704,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-328f-7ea1-823e-53bbc1a97f5b",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.19318,
+          "input_tokens": 1828,
+          "output_tokens": 124,
+          "total_tokens": 1952,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-3740-7631-b6b9-dd2a830985d6",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.774216,
+          "input_tokens": 1764,
+          "output_tokens": 100,
+          "total_tokens": 1864,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-37f1-7c92-b036-7bbd8d517c14",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.600817,
+          "input_tokens": 1905,
+          "output_tokens": 104,
+          "total_tokens": 2009,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-65ab-7141-a201-8a52ea5ab44e",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 10.775234,
+          "input_tokens": 8166,
+          "output_tokens": 1467,
+          "total_tokens": 9633,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-8fee-7fb3-ab58-fdc539041910",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 6.773524,
+          "input_tokens": 10004,
+          "output_tokens": 1467,
+          "total_tokens": 11471,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": null,
+        "tool_success_rate": 1.0,
+        "answer_correctness_v4": 0.95,
+        "answer_groundedness_v4": 0.93,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "事实正确性与需求满足：候选答案正确给出 Lambda Event Function 最长 900 秒、Cloud Run services 默认 300 秒/最长 3600 秒，并正确判断 20 分钟任务不能由 Lambda 单次同步调用完成、但可在 Cloud Run 配置后覆盖。它也覆盖了 Cloud Run 504/容器可能继续处理、Lambda 长超时同步调用的客户端断连与 keep-alive 风险，以及保留同步接口 vs 改异步作业的边界。未把 Cloud Run jobs 或 Lambda Managed Instances 配额套入比较。少量扣分来自一些实用但略推断性的表述，如客户端重试导致重复执行、Lambda 客户端断开后服务端仍继续、21–25 分钟超时建议等，不影响核心结论。\n\n证据支撑：主要事实都能由候选给出的官方摘录直接支持，包括 Lambda 超时、Cloud Run 请求超时与 504 行为、>15 分钟重连/幂等建议、Lambda 同步响应/状态码/自动重试、Lambda 异步队列/重试/DLQ。个别风险判断和推荐属于合理推断而非原文直述；候选也正确标注了 Lambda 超时后是否继续、Lambda 超时具体 HTTP 状态码、Cloud Run 客户端主动断开时容器行为等未核实项。因此 groundedness 很高但非满分。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "e8a47c1b-79ff-4623-9c3a-b9ed277bdcea",
+          "seconds": 47.035003,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f37d-b349-7753-b5f2-b0e4ff4f864b",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 44.860585,
+              "input_tokens": 10062,
+              "output_tokens": 8022,
+              "total_tokens": 18084,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "AWS Lambda official docs": true,
+        "Google Cloud Run official docs": true
+      },
+      "citation_count": 6,
+      "two_source_families": true,
+      "semantic_and_sources_pass": true
+    },
+    {
+      "mode": "multi_agent",
+      "case": "industry-data-centers",
+      "category": "industry",
+      "trace_id": "01a1f37e-628f-7f81-8bf9-269d51041a82",
+      "application_run_id": "a5bd732e582f438090dda368d198bdc4",
+      "project_id": "da28f11c-f66c-4e00-8b09-6fa495301e9a",
+      "seconds": 73.755125,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "insufficient",
+      "sources": [
+        "https://www.iea.org/reports/energy-and-ai/executive-summary",
+        "https://www.energy.gov/articles/doe-releases-new-report-evaluating-increase-electricity-demand-data-centers",
+        "https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report_1.pdf",
+        "https://ca.finance.yahoo.com/news/global-trade-war-may-produce-040819748.html",
+        "https://finance.yahoo.com/news/growing-energy-demand-data-centres-160100598.html",
+        "https://finance.yahoo.com/news/global-electricity-demand-data-centres-153000066.html"
+      ],
+      "reference_source_urls": [
+        "https://www.iea.org/reports/energy-and-ai/energy-demand-from-ai",
+        "https://energyanalysis.lbl.gov/news/berkeley-lab-report-evaluates-increase-electricity-demand-data-centers"
+      ],
+      "tool_calls": 37,
+      "tool_successes": 35,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 11946,
+        "measured_usage_attempts": 5,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "researcher": {
+            "input_tokens": 5315,
+            "output_tokens": 402,
+            "total_tokens": 5717
+          },
+          "supervisor": {
+            "input_tokens": 275,
+            "output_tokens": 419,
+            "total_tokens": 694
+          },
+          "writer": {
+            "input_tokens": 6356,
+            "output_tokens": 1206,
+            "total_tokens": 7562
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 11946,
+          "output_tokens": 2027,
+          "total_tokens": 13973
+        },
+        "output_tokens": 2027,
+        "provider_attempts": 5,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5315,
+            "output_tokens": 402,
+            "total_tokens": 5717
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 275,
+            "output_tokens": 419,
+            "total_tokens": 694
+          },
+          "writer": {
+            "input_tokens": 6356,
+            "output_tokens": 1206,
+            "total_tokens": 7562
+          }
+        },
+        "stage_seconds": {
+          "researcher": 8.672000000020489,
+          "supervisor": 2.969000000040978,
+          "writer": 9.702999999979511
+        },
+        "total_tokens": 13973,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f37e-62f9-7000-8b63-b20015dc8d9b",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 2.974575,
+          "input_tokens": 275,
+          "output_tokens": 419,
+          "total_tokens": 694,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37e-77dc-7fd1-bc32-80384c2489ee",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.5253,
+          "input_tokens": 1707,
+          "output_tokens": 154,
+          "total_tokens": 1861,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37e-7a5d-7b63-91a2-5a4a1f6a5f4a",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.309707,
+          "input_tokens": 1848,
+          "output_tokens": 115,
+          "total_tokens": 1963,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37e-7f6e-70d3-83cf-75e58cefe4e5",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 4.303899,
+          "input_tokens": 1760,
+          "output_tokens": 133,
+          "total_tokens": 1893,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37f-5c53-7892-bbe5-3db763097377",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 9.69905,
+          "input_tokens": 6356,
+          "output_tokens": 1206,
+          "total_tokens": 7562,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [
+        {
+          "trace_run_id": "01a1f37e-7ddf-7cc3-b38c-45b1b7395b05",
+          "span": "tool.execute",
+          "error": "pdf_extraction_timeout"
+        },
+        {
+          "trace_run_id": "01a1f37e-7e13-7ad2-b0c7-d615093e6512",
+          "span": "tool.provider_attempt",
+          "error": "pdf_extraction_timeout"
+        },
+        {
+          "trace_run_id": "01a1f37e-7e31-7463-a398-af0bc0378b7e",
+          "span": "tool.provider_attempt",
+          "error": "provider_timeout"
+        },
+        {
+          "trace_run_id": "01a1f37e-966d-75f3-9b2d-0edf2fdf69ef",
+          "span": "tool.execute",
+          "error": "insufficient_content"
+        },
+        {
+          "trace_run_id": "01a1f37e-96ce-71d0-abfe-7fdb98f6ff57",
+          "span": "tool.provider_attempt",
+          "error": "provider_timeout"
+        },
+        {
+          "trace_run_id": "01a1f37f-1d2c-7212-a363-fe5a28c8ef6a",
+          "span": "tool.provider_attempt",
+          "error": "insufficient_content"
+        }
+      ],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": 0.0,
+        "tool_success_rate": 0.9459,
+        "answer_correctness_v4": 0.93,
+        "answer_groundedness_v4": 0.9,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "事实正确性高：候选答案完整列出了 IEA 全球口径与美国 LBNL 口径的历史估计、未来投影、年份和单位（415 TWh/2024、945 TWh/2030、约 1 200 TWh/2035；美国 58 TWh/2014、176 TWh/2023、325–580 TWh/2028），并正确说明两份报告因地理范围、年份、情景和建模方法不同而不能直接相减；也给出了选址所需本地电网、电价、可靠性、冷却、排放和竞争负荷等数据。轻微扣分点在于把 IEA 描述为“自上而下”等具体建模方法在给定证据中并未明确支持，且部分本地数据细节属于合理建议而非证据直接支撑；未特别提醒 LBNL 后续更新版本，但已明确使用 2024 年报告。\n\n有据性较高：核心数字均可由候选附带的 IEA 执行摘要、LBNL PDF、DOE 新闻稿和 Reuters/IEA 报道摘录直接支持；对 670 TWh 逆风情景、20% 项目延期风险、美国 50% 在建项目集中于既有集群等也做了来源区分，并明确提示 Precedence Research 数据不应混作 IEA 来源。扣分主要来自少数未在摘录中直接出现的表述，例如 IEA“自上而下”方法、水价/政策许可/可靠性指标等本地数据项，以及个别把政策约束归到 LBNL 来源的轻微过度归因。整体无重大矛盾或核心数字错误。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "0c94b938-fd5c-4fe9-a073-08823938bcc5",
+          "seconds": 29.691026,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f37f-89eb-74c2-8185-a6a421b3630b",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 27.833983,
+              "input_tokens": 7512,
+              "output_tokens": 4932,
+              "total_tokens": 12444,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "IEA Energy and AI 2025": true,
+        "Berkeley Lab 2024 report or official DOE release": true
+      },
+      "citation_count": 6,
+      "two_source_families": true,
+      "semantic_and_sources_pass": true
+    },
+    {
+      "mode": "multi_agent",
+      "case": "industry-ev",
+      "category": "industry",
+      "trace_id": "01a1f37f-f6ae-7d93-b837-f3592b8759d2",
+      "application_run_id": "53b2ed69ba054d4a830ceee09609bbb5",
+      "project_id": "da28f11c-f66c-4e00-8b09-6fa495301e9a",
+      "seconds": 61.118739,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "insufficient",
+      "sources": [
+        "https://www.iea.org/reports/global-ev-outlook-2025/trends-in-electric-car-markets-2",
+        "https://iea.blob.core.windows.net/assets/87e3f17b-3e36-4f56-9fb0-cabfb7009248/Webinar-Slides.pdf",
+        "https://www.iea.org/reports/global-ev-outlook-2026/trends-in-electric-cars",
+        "https://www.iea.org/reports/global-ev-outlook-2026/executive-summary"
+      ],
+      "reference_source_urls": [
+        "https://www.iea.org/reports/global-ev-outlook-2025/trends-in-electric-car-markets-2",
+        "https://www.iea.org/reports/global-ev-outlook-2026/trends-in-electric-cars"
+      ],
+      "tool_calls": 34,
+      "tool_successes": 33,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 15943,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "researcher": {
+            "input_tokens": 5698,
+            "output_tokens": 346,
+            "total_tokens": 6044
+          },
+          "supervisor": {
+            "input_tokens": 281,
+            "output_tokens": 440,
+            "total_tokens": 721
+          },
+          "writer": {
+            "input_tokens": 9964,
+            "output_tokens": 1903,
+            "total_tokens": 11867
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 15943,
+          "output_tokens": 2689,
+          "total_tokens": 18632
+        },
+        "output_tokens": 2689,
+        "provider_attempts": 6,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5698,
+            "output_tokens": 346,
+            "total_tokens": 6044
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 281,
+            "output_tokens": 440,
+            "total_tokens": 721
+          },
+          "writer": {
+            "input_tokens": 9964,
+            "output_tokens": 1903,
+            "total_tokens": 11867
+          }
+        },
+        "stage_seconds": {
+          "researcher": 3.9850000001024455,
+          "supervisor": 2.968999999924563,
+          "writer": 11.141000000061467
+        },
+        "total_tokens": 18632,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f37f-f725-7191-8682-b37cf2586adc",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 2.975348,
+          "input_tokens": 281,
+          "output_tokens": 440,
+          "total_tokens": 721,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f380-0736-7463-9f5c-e1848b163198",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.00628,
+          "input_tokens": 1854,
+          "output_tokens": 98,
+          "total_tokens": 1952,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f380-0b5a-71b1-b70f-5251fbfd80e4",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.674518,
+          "input_tokens": 2000,
+          "output_tokens": 143,
+          "total_tokens": 2143,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f380-a940-77d3-8786-f48b7edf1bc5",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.293331,
+          "input_tokens": 1844,
+          "output_tokens": 105,
+          "total_tokens": 1949,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f380-b943-70a1-8105-52b6cb00f03c",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 5.258088,
+          "input_tokens": 4662,
+          "output_tokens": 817,
+          "total_tokens": 5479,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f380-cdf9-7010-bbf9-6e6c6bf829b7",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 5.868701,
+          "input_tokens": 5302,
+          "output_tokens": 1086,
+          "total_tokens": 6388,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [
+        {
+          "trace_run_id": "01a1f380-037e-78c1-95cf-998fad802582",
+          "span": "tool.provider_attempt",
+          "error": "provider_timeout"
+        },
+        {
+          "trace_run_id": "01a1f380-0b6f-77b3-82f1-ffd52b0a3cc5",
+          "span": "tool.execute",
+          "error": "pdf_page_limit"
+        },
+        {
+          "trace_run_id": "01a1f380-0bb4-7873-8cd8-4b268248af8c",
+          "span": "tool.provider_attempt",
+          "error": "pdf_page_limit"
+        },
+        {
+          "trace_run_id": "01a1f380-53a6-7e63-9614-1680dcc8ddb6",
+          "span": "tool.provider_attempt",
+          "error": "provider_timeout"
+        }
+      ],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": 0.0,
+        "tool_success_rate": 0.9706,
+        "answer_correctness_v4": 0.92,
+        "answer_groundedness_v4": 0.95,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "正确性与满足度：0.92。回答完整覆盖了题目要求：2024/2025 全球电动乘用车销量及同比、2025 全球销量份额，中国/欧洲/美国增长方向或份额方向，报告年份—统计年份—销量份额的区别，以及能否直接推算全球纯电乘用车销量的限制。主要数据与参考一致，如 2024 超 1700 万辆、+25%以上、2025 超 2000 万辆、+20%、份额 25%、欧洲由停滞转为 +30% 至超 400 万辆、美国份额略低于 10% 且年末下滑。扣分点较少：中国 2025 只给了“贡献全球增量一半以上/增速略放缓”，未给出具体销量份额；美国 2024 约 160 万辆的参考细节未写入；对“IEA electric cars 合并 BEV 与 PHEV”这一点表述不够直白，虽已正确说明不能用总量和 65% 直接得到精确纯电销量，但“粗略下限”表述可更谨慎。\n\n依据充分性：0.95。候选答案中的具体数字和方向基本都能在 evidence_excerpts 的 GEVO 2025 Trends、GEVO 2026 Trends 和 webinar 幻灯片中找到依据，包括 17m、+25%、>20%、>20m、+20%、25%、65% BEV 占比、7.5% EREV、中国“全球增量一半以上”、欧洲停滞与 +30%/>4m、美国略低于 10% 和 Q4 下滑等。引用映射也基本正确；(4) 的 Executive summary 摘录较简短，只能弱支持“报告年份为 2026”，但不影响主体事实的 groundedness。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "1ae30f24-a81d-48c6-8d75-476a81ce5a68",
+          "seconds": 24.01578,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f380-ed18-7ef1-a7fe-5668922aa2f0",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 22.054468,
+              "input_tokens": 5650,
+              "output_tokens": 3852,
+              "total_tokens": 9502,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "IEA Global EV Outlook 2025": true,
+        "IEA Global EV Outlook 2026": true
+      },
+      "citation_count": 4,
+      "two_source_families": true,
+      "semantic_and_sources_pass": true
+    },
+    {
+      "mode": "multi_agent",
+      "case": "technical-kubernetes",
+      "category": "technical",
+      "trace_id": "01a1f381-4345-74b1-a6c8-ce7fbc8ab9a2",
+      "application_run_id": "82910bdc20f44ae7a61f7fc458d9774a",
+      "project_id": "da28f11c-f66c-4e00-8b09-6fa495301e9a",
+      "seconds": 32.727723,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "unknown",
+      "sources": [
+        "https://kubernetes.io/docs/concepts/workloads/pods/disruptions",
+        "https://v1-35.docs.kubernetes.io/docs/tasks/administer-cluster/safely-drain-node",
+        "https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node",
+        "https://kubernetes.io/docs/concepts/workloads/controllers/deployment",
+        "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes"
+      ],
+      "reference_source_urls": [
+        "https://kubernetes.io/docs/concepts/workloads/pods/disruptions/",
+        "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"
+      ],
+      "tool_calls": 35,
+      "tool_successes": 35,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 12129,
+        "measured_usage_attempts": 5,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "researcher": {
+            "input_tokens": 5596,
+            "output_tokens": 337,
+            "total_tokens": 5933
+          },
+          "supervisor": {
+            "input_tokens": 286,
+            "output_tokens": 493,
+            "total_tokens": 779
+          },
+          "writer": {
+            "input_tokens": 6247,
+            "output_tokens": 1128,
+            "total_tokens": 7375
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 12129,
+          "output_tokens": 1958,
+          "total_tokens": 14087
+        },
+        "output_tokens": 1958,
+        "provider_attempts": 5,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5596,
+            "output_tokens": 337,
+            "total_tokens": 5933
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 286,
+            "output_tokens": 493,
+            "total_tokens": 779
+          },
+          "writer": {
+            "input_tokens": 6247,
+            "output_tokens": 1128,
+            "total_tokens": 7375
+          }
+        },
+        "stage_seconds": {
+          "researcher": 3.7330000000074506,
+          "supervisor": 3.10999999998603,
+          "writer": 8.25
+        },
+        "total_tokens": 14087,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f381-43d3-77b2-b265-49c7fa0297c3",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 3.097104,
+          "input_tokens": 286,
+          "output_tokens": 493,
+          "total_tokens": 779,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f381-55c9-7a81-b2ad-e216cbaec894",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.352528,
+          "input_tokens": 1919,
+          "output_tokens": 141,
+          "total_tokens": 2060,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f381-58ef-7520-8ffd-802cfe359d7a",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.078786,
+          "input_tokens": 1877,
+          "output_tokens": 86,
+          "total_tokens": 1963,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f381-59b3-7f60-89c8-53df29bb88be",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.30227,
+          "input_tokens": 1800,
+          "output_tokens": 110,
+          "total_tokens": 1910,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f381-a264-7fb0-8785-ff2e2651f193",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 8.242913,
+          "input_tokens": 6247,
+          "output_tokens": 1128,
+          "total_tokens": 7375,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": null,
+        "tool_success_rate": 1.0,
+        "answer_correctness_v4": 0.88,
+        "answer_groundedness_v4": 0.72,
+        "task_accepted_v4": 0.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "事实正确答案度较高：drain/Eviction 受 PDB minAvailable=2 约束、一次最多不可用 1 个 Pod，drain 会阻塞/重试；突然宕机属非自愿中断，PDB 不能阻止但计入预算；滚动更新由 maxUnavailable/maxSurge 控制，示例 0/1 合理且提到额外容量；readiness 作为“可用”判定前提也正确。主要不足是未明确说明参考要求中的关键交互：滚动更新期间产生的不可用仍会消耗 PDB 预算，可能影响后续 Eviction；PDB 不驱动 Deployment 控制器，但并非与可用性预算无关。另 0/1 已满足示例要求，未给 1/1 取舍不是重大缺失。\n\n接地性中等：drain、非自愿中断、PDB 阻塞和 readiness 等核心断言均有 evidence_excerpts 直接支持；但 Deployment 摘录(4)并未包含 maxUnavailable/maxSurge 的具体语义或 0/1 示例，因此关键 RollingUpdate 细节未被实际证据充分支撑。“PDB 不约束滚动更新”是合理推断且候选已披露为推断，不是直接原文。startup probe 的“慢启动避免误判”也未在所给摘录中直接出现。故不能给高 groundedness。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "a53df870-3aa6-4dce-8986-83eaef398f68",
+          "seconds": 71.216716,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f382-64bb-7f03-b402-841404e4a772",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 29.840448,
+              "input_tokens": 7445,
+              "output_tokens": 5048,
+              "total_tokens": 12493,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "Kubernetes Disruptions": true,
+        "Kubernetes Deployments": true
+      },
+      "citation_count": 5,
+      "two_source_families": true,
+      "semantic_and_sources_pass": false
+    },
+    {
+      "mode": "multi_agent",
+      "case": "technical-postgres",
+      "category": "technical",
+      "trace_id": "01a1f382-d955-72f2-8be2-d161ba2534ab",
+      "application_run_id": "cadf8d7a211943f18a23010218881e69",
+      "project_id": "da28f11c-f66c-4e00-8b09-6fa495301e9a",
+      "seconds": 71.135035,
+      "status": "partial",
+      "finish_reason": "response_error",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "unknown",
+      "sources": [],
+      "reference_source_urls": [
+        "https://www.postgresql.org/docs/17/transaction-iso.html",
+        "https://www.postgresql.org/docs/17/explicit-locking.html"
+      ],
+      "tool_calls": 32,
+      "tool_successes": 32,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": null,
+        "measured_usage_attempts": 4,
+        "missing_usage_attempts": 1,
+        "observed_role_usage": {
+          "researcher": {
+            "input_tokens": 5298,
+            "output_tokens": 288,
+            "total_tokens": 5586
+          },
+          "supervisor": {
+            "input_tokens": 285,
+            "output_tokens": 473,
+            "total_tokens": 758
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 5583,
+          "output_tokens": 761,
+          "total_tokens": 6344
+        },
+        "output_tokens": null,
+        "provider_attempts": 5,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5298,
+            "output_tokens": 288,
+            "total_tokens": 5586
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 285,
+            "output_tokens": 473,
+            "total_tokens": 758
+          },
+          "writer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "stage_seconds": {
+          "researcher": 4.079000000027008,
+          "supervisor": 3.625,
+          "writer": 57.71799999999348
+        },
+        "total_tokens": null,
+        "usage_complete": false
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f382-da0d-75a3-aaca-710f088d7cb5",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 3.616504,
+          "input_tokens": 285,
+          "output_tokens": 473,
+          "total_tokens": 758,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f382-ef86-72c1-b91d-d4b96192cd8e",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.073171,
+          "input_tokens": 1788,
+          "output_tokens": 88,
+          "total_tokens": 1876,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f382-f026-77b3-82e1-d1ecfe423f59",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.900335,
+          "input_tokens": 1737,
+          "output_tokens": 142,
+          "total_tokens": 1879,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f382-f1d1-7c53-9e08-0646b5caa45d",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.082992,
+          "input_tokens": 1773,
+          "output_tokens": 58,
+          "total_tokens": 1831,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f383-0d3f-7da0-91e3-b50771dc5581",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 57.710022,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error": "LengthFinishReasonError('Could not parse response content as the length limit was reached - CompletionUsage(completion_tokens=16000, prompt_tokens=6169, total_tokens=22169, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None, audio_tokens=None, reasoning_tokens=None, rejected_prediction_tokens=None, text_tokens=16000), compute_units=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cache_write_tokens=None, cached_tokens=1024, image_tokens=0, text_tokens=6169))')Traceback (most recent call last):\n\n\n  File \"D:\\Dev\\Projects\\agent_new\\backend\\.venv\\Lib\\site-packages\\langchain_core\\language_models\\chat_models.py\", line 2179, in _agenerate_with_cache\n    result = await self._agenerate(\n             ^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"D:\\Dev\\Projects\\agent_new\\backend\\.venv\\Lib\\site-packages\\langchain_openai\\chat_models\\base.py\", line 2190, in _agenerate\n    raise e\n\n\n  File \"D:\\Dev\\Projects\\agent_new\\backend\\.venv\\Lib\\site-packages\\langchain_openai\\chat_models\\base.py\", line 2141, in _agenerate\n    response = raw_response.parse()\n               ^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"D:\\Dev\\Projects\\agent_new\\backend\\.venv\\Lib\\site-packages\\openai\\_legacy_response.py\", line 140, in parse\n    parsed = self._options.post_parser(parsed)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"D:\\Dev\\Projects\\agent_new\\backend\\.venv\\Lib\\site-packages\\openai\\resources\\chat\\completions\\completions.py\", line 1798, in parser\n    return _parse_chat_completion(\n           ^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"D:\\Dev\\Projects\\agent_new\\backend\\.venv\\Lib\\site-packages\\openai\\lib\\_parsing\\_completions.py\", line 100, in parse_chat_completion\n    raise LengthFinishReasonError(completion=chat_completion)\n\n\nopenai.LengthFinishReasonError: Could not parse response content as the length limit was reached - CompletionUsage(completion_tokens=16000, prompt_tokens=6169, total_tokens=22169, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None, audio_tokens=None, reasoning_tokens=None, rejected_prediction_tokens=None, text_tokens=16000), compute_units=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cache_write_tokens=None, cached_tokens=1024, image_tokens=0, text_tokens=6169))",
+          "provider_usage_in_exception": {
+            "input_tokens": 6169,
+            "output_tokens": 16000,
+            "total_tokens": 22169
+          }
+        }
+      ],
+      "tool_error_spans": [],
+      "scores": {
+        "execution_completed": 0.0,
+        "evidence_sufficient": null,
+        "tool_success_rate": 1.0,
+        "answer_correctness_v4": 0.1,
+        "answer_groundedness_v4": 0.25,
+        "task_accepted_v4": 0.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "'The response explicitly says it could not produce a reliable final report and does not answer the question. It omits the core conclusions: Repeatable Read permits write skew/serialization anomalies in this scenario; Serializable can abort one risky transaction; retry must restart the entire transaction from the beginning, including all reads and business decisions, not just the UPDATE; and per-row SELECT FOR UPDATE on only each transaction's target row does not protect the shared 'at least one doctor on duty' constraint or provide a common locking protocol. It also does not provide the requested technical selection recommendation. The provided excerpts are genuine and contain some relevant documentation",
+        " such as serialization failures and row-level locking",
+        " but they are only fragments and are not used to support a complete answer. The citation URLs also point to 'current' rather than PostgreSQL 17 documentation",
+        " so the version-specific citation requirement is not satisfied.'"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "9b29e586-8bd8-4e17-9fc2-7aa435fcdb99",
+          "seconds": 24.844858,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f383-f3e1-7d60-b0fc-289879992bda",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 23.653437,
+              "input_tokens": 6361,
+              "output_tokens": 3773,
+              "total_tokens": 10134,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "PostgreSQL 17 isolation": false,
+        "PostgreSQL 17 explicit locking": false
+      },
+      "citation_count": 0,
+      "two_source_families": false,
+      "semantic_and_sources_pass": false
+    },
+    {
+      "mode": "plan_execute",
+      "case": "competitive-object-storage",
+      "category": "competitive",
+      "trace_id": "01a1f37c-2b3c-7423-80bb-933bf102ddab",
+      "application_run_id": "281483e4fbbf4b69abef9b56b509a3e6",
+      "project_id": "e9fca17e-3f72-4ef2-a3af-0483bd8c84c5",
+      "seconds": 35.574988,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "unknown",
+      "sources": [
+        "https://developers.cloudflare.com/r2/pricing",
+        "https://www.cloudflare.com/products/r2",
+        "https://r2-calculator.cloudflare.com/",
+        "https://aws.amazon.com/s3/pricing"
+      ],
+      "reference_source_urls": [
+        "https://developers.cloudflare.com/r2/pricing/",
+        "https://aws.amazon.com/s3/pricing/"
+      ],
+      "tool_calls": 32,
+      "tool_successes": 32,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 17184,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 280,
+            "output_tokens": 390,
+            "total_tokens": 670
+          },
+          "researcher": {
+            "input_tokens": 5523,
+            "output_tokens": 331,
+            "total_tokens": 5854
+          },
+          "writer": {
+            "input_tokens": 11381,
+            "output_tokens": 1460,
+            "total_tokens": 12841
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 17184,
+          "output_tokens": 2181,
+          "total_tokens": 19365
+        },
+        "output_tokens": 2181,
+        "provider_attempts": 6,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 280,
+            "output_tokens": 390,
+            "total_tokens": 670
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5523,
+            "output_tokens": 331,
+            "total_tokens": 5854
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 11381,
+            "output_tokens": 1460,
+            "total_tokens": 12841
+          }
+        },
+        "stage_seconds": {
+          "planner": 2.905999999959022,
+          "researcher": 4.609000000054948,
+          "writer": 9.671999999904074
+        },
+        "total_tokens": 19365,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f37c-2cc6-7443-b8f2-5ee50cde06d8",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 2.894388,
+          "input_tokens": 280,
+          "output_tokens": 390,
+          "total_tokens": 670,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-4158-7e23-85a7-053c5d3d54a0",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.773728,
+          "input_tokens": 1860,
+          "output_tokens": 119,
+          "total_tokens": 1979,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-641c-7bb0-b8a5-252df7eb8ee8",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.346963,
+          "input_tokens": 1835,
+          "output_tokens": 101,
+          "total_tokens": 1936,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-7ed8-71f1-8780-d2a06fb9ab7c",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.480808,
+          "input_tokens": 1828,
+          "output_tokens": 111,
+          "total_tokens": 1939,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-8ff1-7de1-b35e-b108a5b460d3",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 5.994418,
+          "input_tokens": 5350,
+          "output_tokens": 730,
+          "total_tokens": 6080,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-a77d-7c70-b996-c0aec7e2e577",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 3.665777,
+          "input_tokens": 6031,
+          "output_tokens": 730,
+          "total_tokens": 6761,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": null,
+        "tool_success_rate": 1.0,
+        "answer_correctness_v4": 0.9,
+        "answer_groundedness_v4": 0.86,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "The answer correctly compares the three requested cost components for R2 Standard vs S3 Standard, identifies internet egress as the dominant divergence at high download volume, and lists the necessary variables for a comparable quote: AWS region, GB-month storage, GET/read request counts, egress GB/TB, free allowances/tiers, and optional acceleration features. It correctly gives R2’s storage, Class B request, and egress pricing and free allowances, while explicitly avoiding invented S3 unit rates because the supplied AWS excerpt lacks them. It also cites sources. Minor weaknesses: the claim that S3 storage/request prices are 'close' and usually not the main driver is not directly established by the supplied excerpts, and the 'tiered' S3 egress detail is only weakly supported; however, these do not undermine the main conclusion. Groundedness is high because nearly all specific R2 numbers and S3 statements are supported by the cited excerpts, with appropriate caveats for missing S3 rates."
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "ea49956f-c1a5-4ce5-8d9c-f1b514bd3cd1",
+          "seconds": 23.480928,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f37c-be2b-74d1-adb3-743d7b34ce53",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 21.447009,
+              "input_tokens": 5973,
+              "output_tokens": 3491,
+              "total_tokens": 9464,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "Cloudflare R2 official docs": true,
+        "AWS S3 official pricing/docs": true
+      },
+      "citation_count": 4,
+      "two_source_families": true,
+      "semantic_and_sources_pass": true
+    },
+    {
+      "mode": "plan_execute",
+      "case": "competitive-serverless",
+      "category": "competitive",
+      "trace_id": "01a1f37d-11f6-7393-a0a8-918e86f0d2b3",
+      "application_run_id": "c07e1cbc79db4fb299dec241f9e1a4d9",
+      "project_id": "e9fca17e-3f72-4ef2-a3af-0483bd8c84c5",
+      "seconds": 38.12378,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "unknown",
+      "sources": [
+        "https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html",
+        "https://docs.aws.amazon.com/lambda/latest/api/API_Invoke.html",
+        "https://docs.cloud.google.com/run/docs/configuring/request-timeout",
+        "https://docs.aws.amazon.com/lambda/latest/dg/lambda-invocation.html",
+        "https://docs.aws.amazon.com/lambda/latest/dg/invocation-sync.html"
+      ],
+      "reference_source_urls": [
+        "https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html",
+        "https://docs.cloud.google.com/run/docs/configuring/request-timeout"
+      ],
+      "tool_calls": 42,
+      "tool_successes": 42,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 19625,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 289,
+            "output_tokens": 435,
+            "total_tokens": 724
+          },
+          "researcher": {
+            "input_tokens": 5475,
+            "output_tokens": 303,
+            "total_tokens": 5778
+          },
+          "writer": {
+            "input_tokens": 13861,
+            "output_tokens": 2514,
+            "total_tokens": 16375
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 19625,
+          "output_tokens": 3252,
+          "total_tokens": 22877
+        },
+        "output_tokens": 3252,
+        "provider_attempts": 6,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 289,
+            "output_tokens": 435,
+            "total_tokens": 724
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5475,
+            "output_tokens": 303,
+            "total_tokens": 5778
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 13861,
+            "output_tokens": 2514,
+            "total_tokens": 16375
+          }
+        },
+        "stage_seconds": {
+          "planner": 3.2660000000614673,
+          "researcher": 3.875,
+          "writer": 16.188000000081956
+        },
+        "total_tokens": 22877,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f37d-1260-71a3-be6e-f04fd60862fb",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 3.258444,
+          "input_tokens": 289,
+          "output_tokens": 435,
+          "total_tokens": 724,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-2745-7dc0-9af2-4d80641efd7f",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.458046,
+          "input_tokens": 1847,
+          "output_tokens": 125,
+          "total_tokens": 1972,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-39e5-7da0-8925-800c561b5c94",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.262793,
+          "input_tokens": 1885,
+          "output_tokens": 125,
+          "total_tokens": 2010,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-5d21-7b62-9453-f19e7d81aef0",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.128334,
+          "input_tokens": 1743,
+          "output_tokens": 53,
+          "total_tokens": 1796,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-670d-7fb2-b1b2-0050c305e228",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 10.104705,
+          "input_tokens": 6239,
+          "output_tokens": 1257,
+          "total_tokens": 7496,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-8ea8-7123-b161-99bc3da81f24",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 6.068465,
+          "input_tokens": 7622,
+          "output_tokens": 1257,
+          "total_tokens": 8879,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": null,
+        "tool_success_rate": 1.0,
+        "answer_correctness_v4": 0.93,
+        "answer_groundedness_v4": 0.88,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "事实正确性与任务满足度较高：正确指出 Lambda Event Functions 同步执行的函数超时上限为 900 秒（15 分钟），因此 20 分钟任务不能靠单次同步 Lambda 完成；正确说明 Cloud Run services 默认请求超时 5 分钟、最高可配置到 60 分钟，足以覆盖 20 分钟前提是客户端和中间链路也能等待；正确说明 Cloud Run 超时返回 504、容器可能继续处理已中止请求，以及超过 15 分钟需考虑重连、幂等或断点恢复；也给出了保留同步接口与改为异步作业/任务 ID 轮询或回调的选型边界。它还明确排除了 Cloud Run jobs 和 Lambda Managed Instances 的 5400 秒配额，符合题目要求。轻微扣分点：开头“两者都能覆盖 20 分钟以内的运行时长”与后文 Lambda 20 分钟不能同步完成存在措辞矛盾；应表述为“8 分钟两者可覆盖，20 分钟仅 Cloud Run services 可同步覆盖”。总体仍满足参考答案要求。\n\nGroundedness 较高：超时数值、Cloud Run 504、容器继续处理、重连/幂等建议、Lambda 同步断开风险和异步重试等大多能由给出的 AWS/Google Cloud 文档摘录直接支持；引用标签虽经压缩后不完全直观，但按来源 URL 看归属基本正确。轻微扣分点：如“Lambda 侧不会替调用方保留结果”“函数被 Lambda 终止”等推断超出摘录的明确表述，尽管后文“未核实项”已作了限定，仍属于轻度外推。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "9a9d2128-f324-44df-ada4-378d463237ed",
+          "seconds": 23.887597,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f37d-ad58-7632-9bd4-99176a5058fa",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 22.235957,
+              "input_tokens": 7659,
+              "output_tokens": 3800,
+              "total_tokens": 11459,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "AWS Lambda official docs": true,
+        "Google Cloud Run official docs": true
+      },
+      "citation_count": 5,
+      "two_source_families": true,
+      "semantic_and_sources_pass": true
+    },
+    {
+      "mode": "plan_execute",
+      "case": "industry-data-centers",
+      "category": "industry",
+      "trace_id": "01a1f37e-043a-7680-82cf-d09ef2750d38",
+      "application_run_id": "e83b17ab182f4a0aafac4f5b5215c6fb",
+      "project_id": "e9fca17e-3f72-4ef2-a3af-0483bd8c84c5",
+      "seconds": 45.858879,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "insufficient",
+      "sources": [
+        "https://www.iea.org/reports/energy-and-ai/energy-demand-from-ai",
+        "https://ca.finance.yahoo.com/news/global-trade-war-may-produce-040819748.html",
+        "https://www.energy.gov/articles/doe-releases-new-report-evaluating-increase-electricity-demand-data-centers",
+        "https://finance.yahoo.com/news/growing-energy-demand-data-centres-160100598.html",
+        "https://finance.yahoo.com/sectors/energy/articles/open-letter-45th-47th-president-195000975.html",
+        "https://finance.yahoo.com/sectors/energy/articles/open-letter-45th-47th-president-195000970.html"
+      ],
+      "reference_source_urls": [
+        "https://www.iea.org/reports/energy-and-ai/energy-demand-from-ai",
+        "https://energyanalysis.lbl.gov/news/berkeley-lab-report-evaluates-increase-electricity-demand-data-centers"
+      ],
+      "tool_calls": 30,
+      "tool_successes": 28,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 11210,
+        "measured_usage_attempts": 5,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 275,
+            "output_tokens": 401,
+            "total_tokens": 676
+          },
+          "researcher": {
+            "input_tokens": 5363,
+            "output_tokens": 308,
+            "total_tokens": 5671
+          },
+          "writer": {
+            "input_tokens": 5572,
+            "output_tokens": 1268,
+            "total_tokens": 6840
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 11210,
+          "output_tokens": 1977,
+          "total_tokens": 13187
+        },
+        "output_tokens": 1977,
+        "provider_attempts": 5,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 275,
+            "output_tokens": 401,
+            "total_tokens": 676
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5363,
+            "output_tokens": 308,
+            "total_tokens": 5671
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 5572,
+            "output_tokens": 1268,
+            "total_tokens": 6840
+          }
+        },
+        "stage_seconds": {
+          "planner": 3.280999999959022,
+          "researcher": 3.688999999896623,
+          "writer": 8.437000000034459
+        },
+        "total_tokens": 13187,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f37e-049a-7b43-9168-4fbe393ee595",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 3.289931,
+          "input_tokens": 275,
+          "output_tokens": 401,
+          "total_tokens": 676,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37e-1bdb-7b93-b363-067f773a7e70",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.060123,
+          "input_tokens": 1847,
+          "output_tokens": 112,
+          "total_tokens": 1959,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37e-3fd0-7690-8ab9-b6cd7fdd7a9c",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.230584,
+          "input_tokens": 1792,
+          "output_tokens": 84,
+          "total_tokens": 1876,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37e-62fa-78b0-9db1-b58ded5c6a31",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.386553,
+          "input_tokens": 1724,
+          "output_tokens": 112,
+          "total_tokens": 1836,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37e-95d1-7bb0-a074-849cb6a63292",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 8.436818,
+          "input_tokens": 5572,
+          "output_tokens": 1268,
+          "total_tokens": 6840,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [
+        {
+          "trace_run_id": "01a1f37e-68b0-7b53-8b73-c20c4964da0d",
+          "span": "tool.execute",
+          "error": "response_too_large"
+        },
+        {
+          "trace_run_id": "01a1f37e-68d0-7952-b67e-126f7ce3b122",
+          "span": "tool.provider_attempt",
+          "error": "response_too_large"
+        },
+        {
+          "trace_run_id": "01a1f37e-8852-70a0-8168-062f564606a1",
+          "span": "tool.execute",
+          "error": "insufficient_content"
+        },
+        {
+          "trace_run_id": "01a1f37e-885a-7623-8ab7-577178acdf13",
+          "span": "tool.provider_attempt",
+          "error": "insufficient_content"
+        }
+      ],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": 0.0,
+        "tool_success_rate": 0.9333,
+        "answer_correctness_v4": 0.93,
+        "answer_groundedness_v4": 0.9,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "事实正确性较高：候选答案准确给出了 IEA 2025 的关键数字（2024 年全球约 415 TWh、约占全球用电 1.5%、2030 年基准情景约 945 TWh；另提逆风情景约 670 TWh）以及 LBNL 2024 报告的关键数字（2014 年 58 TWh、2023 年 176 TWh、占美国用电 4.4%；2028 年 325–580 TWh、占 6.7%–12%），并按要求列出年份、单位、历史估计与未来投影。它也正确说明 IEA 全球口径与 LBNL 美国口径不能直接相减，理由是地理范围、年份、情景和统计/估计方法不同；选址所需本地数据也覆盖了电网接入容量、并网排队、电价、可靠性、水冷、审批和负荷曲线等。逐项来源基本齐全，2035 年 700–1,700 TWh 也谨慎标为二手转述。轻微扣分点包括：候选称未取得 IEA 对数据中心的完整边界定义，但证据中 IEA 摘录已给出数据中心构成说明；来源描述里把公开信中的 90%–95% 电网容量转述与 LBNL 数字放在一起，归属略不够精确；“美国占全球增长约 80%（美、中、欧合计）”措辞应为“美中欧合计占”。这些不影响核心结论。\n\n接地性较高：候选答案的大部分实质数字和判断都能由其实际 evidence_excerpts 支撑，包括 IEA 415 TWh/1.5%/12%、Reuters 的 945 与 670 TWh、DOE 新闻稿中的 LBNL 58/176/4.4%/325–580/6.7%–12%、公开信中的 90%–95% 容量转述，以及 Precedence 二手来源的 2035 年区间。扣分主要是少量表述与证据不完全一致或归属不够精确，例如“未取得 IEA 数据中心边界定义”与其 IEA 摘录内容有轻微冲突，以及电网备用裕度的来源归属略含混。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "97316b88-39cc-4142-88b2-cd8ee5583113",
+          "seconds": 32.160603,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f37e-c1f4-7953-97f0-76249ad56c19",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 29.450253,
+              "input_tokens": 6702,
+              "output_tokens": 5333,
+              "total_tokens": 12035,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "IEA Energy and AI 2025": true,
+        "Berkeley Lab 2024 report or official DOE release": true
+      },
+      "citation_count": 6,
+      "two_source_families": true,
+      "semantic_and_sources_pass": true
+    },
+    {
+      "mode": "plan_execute",
+      "case": "industry-ev",
+      "category": "industry",
+      "trace_id": "01a1f37f-3506-79a0-bf8f-6fb3c9594648",
+      "application_run_id": "f375e6a38c82456cb74b730cc52551ed",
+      "project_id": "e9fca17e-3f72-4ef2-a3af-0483bd8c84c5",
+      "seconds": 42.189768,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "insufficient",
+      "sources": [
+        "https://www.iea.org/reports/global-ev-outlook-2025/executive-summary",
+        "https://www.iea.org/reports/global-ev-outlook-2025/trends-in-electric-car-markets-2",
+        "https://www.iea.org/reports/global-ev-outlook-2026/executive-summary",
+        "https://www.iea.org/reports/global-ev-outlook-2026/trends-in-electric-cars",
+        "https://iea.blob.core.windows.net/assets/26c5cdde-6a5d-4ba8-b17b-0caceeab586f/Webinar-Slides-forPDFv2.pdf",
+        "https://www.iea.org/reports/global-ev-outlook-2026,"
+      ],
+      "reference_source_urls": [
+        "https://www.iea.org/reports/global-ev-outlook-2025/trends-in-electric-car-markets-2",
+        "https://www.iea.org/reports/global-ev-outlook-2026/trends-in-electric-cars"
+      ],
+      "tool_calls": 45,
+      "tool_successes": 44,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 18974,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 281,
+            "output_tokens": 421,
+            "total_tokens": 702
+          },
+          "researcher": {
+            "input_tokens": 5495,
+            "output_tokens": 412,
+            "total_tokens": 5907
+          },
+          "writer": {
+            "input_tokens": 13198,
+            "output_tokens": 2216,
+            "total_tokens": 15414
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 18974,
+          "output_tokens": 3049,
+          "total_tokens": 22023
+        },
+        "output_tokens": 3049,
+        "provider_attempts": 6,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 281,
+            "output_tokens": 421,
+            "total_tokens": 702
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5495,
+            "output_tokens": 412,
+            "total_tokens": 5907
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 13198,
+            "output_tokens": 2216,
+            "total_tokens": 15414
+          }
+        },
+        "stage_seconds": {
+          "planner": 3.0,
+          "researcher": 4.092999999993481,
+          "writer": 12.110000000102445
+        },
+        "total_tokens": 22023,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f37f-3567-7e60-ab39-bf68d6567496",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 2.997933,
+          "input_tokens": 281,
+          "output_tokens": 421,
+          "total_tokens": 702,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37f-47bd-7f31-abb6-dd47a29e60e2",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.078273,
+          "input_tokens": 1831,
+          "output_tokens": 100,
+          "total_tokens": 1931,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37f-6b9a-7b01-90c7-dc9e0242142d",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.414282,
+          "input_tokens": 1861,
+          "output_tokens": 131,
+          "total_tokens": 1992,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37f-90cd-7b41-9ac3-711f3c62bc1a",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.611759,
+          "input_tokens": 1803,
+          "output_tokens": 181,
+          "total_tokens": 1984,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37f-a9c8-7642-bb18-cdf7d313a50d",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 7.212149,
+          "input_tokens": 6101,
+          "output_tokens": 1108,
+          "total_tokens": 7209,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37f-c615-7051-8f14-7d3fafacd2a3",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 4.883146,
+          "input_tokens": 7097,
+          "output_tokens": 1108,
+          "total_tokens": 8205,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [
+        {
+          "trace_run_id": "01a1f37f-7165-7c92-9559-acdbe2a4b43b",
+          "span": "tool.execute",
+          "error": "pdf_page_limit"
+        },
+        {
+          "trace_run_id": "01a1f37f-71a4-7220-9724-53e2891ce67f",
+          "span": "tool.provider_attempt",
+          "error": "pdf_page_limit"
+        }
+      ],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": 0.0,
+        "tool_success_rate": 0.9778,
+        "answer_correctness_v4": 0.95,
+        "answer_groundedness_v4": 0.9,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "事实正确性与题目满足度约 0.95：回答准确覆盖了 2024/2025 全球销量、同比、全球销量份额，以及中国、欧洲、美国的方向或份额；也正确区分报告年份、统计年份、销量份额，并说明不能直接由“电动车”总销量推算纯电乘用车销量。表格和逐项来源较完整，基本满足原问题。轻微不足是未给出参考中可选的美国 2024 年约 160 万辆这一细节，但题目只要求区域份额或增长方向，因此不构成主要缺失；个别表述略超出已引材料。\n\nGroundedness 约 0.9：主要数字和区域判断都能在 evidence_excerpts 中直接找到支持，引用映射也基本正确。例如“2024 超过 1700 万辆、增长 25%”“2025 超过 2000 万辆、增长 20%”“中国近半/近 55%”“欧洲 2024 停滞、2025 增长超 30%”“美国略低于 10%”等均有据。轻微问题：候选答案明确写“electric car 包含纯电与插电混动”，但所提供的摘录主要直接显示 BEV 占比、EREV 等，PHEV 这一具体类别没有在摘录中逐字出现；另 (6) 被描述为“用于确认报告存在”，但对应摘录实际是 404/页面不存在页面。总体 groundedness 仍高，因为核心数据支撑充分，且候选也谨慎标注了推算限制。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "35bb9c9b-f228-49fb-9232-c45a6b9ce281",
+          "seconds": 41.300983,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f37f-f56c-7192-8a19-a3a03fe633ba",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 34.2366,
+              "input_tokens": 7233,
+              "output_tokens": 6066,
+              "total_tokens": 13299,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "IEA Global EV Outlook 2025": true,
+        "IEA Global EV Outlook 2026": true
+      },
+      "citation_count": 6,
+      "two_source_families": true,
+      "semantic_and_sources_pass": true
+    },
+    {
+      "mode": "plan_execute",
+      "case": "technical-kubernetes",
+      "category": "technical",
+      "trace_id": "01a1f380-7b32-74a2-96c8-ba29d4027ba3",
+      "application_run_id": "e6f2fd9daa524460b9f7a501342582a0",
+      "project_id": "e9fca17e-3f72-4ef2-a3af-0483bd8c84c5",
+      "seconds": 50.917815,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "unknown",
+      "sources": [
+        "https://kubernetes.io/docs/concepts/workloads/pods/disruptions",
+        "https://v1-35.docs.kubernetes.io/docs/tasks/administer-cluster/safely-drain-node",
+        "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes"
+      ],
+      "reference_source_urls": [
+        "https://kubernetes.io/docs/concepts/workloads/pods/disruptions/",
+        "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"
+      ],
+      "tool_calls": 38,
+      "tool_successes": 38,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 12051,
+        "measured_usage_attempts": 5,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 286,
+            "output_tokens": 490,
+            "total_tokens": 776
+          },
+          "researcher": {
+            "input_tokens": 5540,
+            "output_tokens": 377,
+            "total_tokens": 5917
+          },
+          "writer": {
+            "input_tokens": 6225,
+            "output_tokens": 886,
+            "total_tokens": 7111
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 12051,
+          "output_tokens": 1753,
+          "total_tokens": 13804
+        },
+        "output_tokens": 1753,
+        "provider_attempts": 5,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 286,
+            "output_tokens": 490,
+            "total_tokens": 776
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5540,
+            "output_tokens": 377,
+            "total_tokens": 5917
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 6225,
+            "output_tokens": 886,
+            "total_tokens": 7111
+          }
+        },
+        "stage_seconds": {
+          "planner": 3.35999999998603,
+          "researcher": 4.657000000006519,
+          "writer": 6.140999999945052
+        },
+        "total_tokens": 13804,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f380-7be5-7271-83e1-1dffb243d1c0",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 3.351962,
+          "input_tokens": 286,
+          "output_tokens": 490,
+          "total_tokens": 776,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f380-9237-71f1-ac76-ff3ca07d5c9f",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.76212,
+          "input_tokens": 1915,
+          "output_tokens": 143,
+          "total_tokens": 2058,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f380-f02f-7e10-89dc-b852b2d01e66",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.086043,
+          "input_tokens": 1879,
+          "output_tokens": 84,
+          "total_tokens": 1963,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f381-0e36-7df0-bb32-d1a76bd863ca",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.797404,
+          "input_tokens": 1746,
+          "output_tokens": 150,
+          "total_tokens": 1896,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f381-299e-7da2-a5de-091ae57107c7",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 6.132969,
+          "input_tokens": 6225,
+          "output_tokens": 886,
+          "total_tokens": 7111,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": null,
+        "tool_success_rate": 1.0,
+        "answer_correctness_v4": 0.85,
+        "answer_groundedness_v4": 0.75,
+        "task_accepted_v4": 0.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "事实正确性与题目满足度约 0.85。候选答案的核心判断基本与参考一致：三副本且 PDB minAvailable=2 时，kubectl drain 的 Eviction 受 PDB 约束，一次只允许有限的自愿中断，并会等待/重试；突然节点宕机是非自愿中断，PDB 不能阻止但会计入预算；Deployment 滚动更新不受 PDB 限制，而由 RollingUpdate 策略控制，但滚动中不可用 Pod 仍计入中断预算；给出的 maxUnavailable=0/maxSurge=1 是合理示例，并说明了额外容量取舍；readiness 等健康检查前提也覆盖到了。主要扣分点是题目明确要求引用 Disruptions 与 Deployments 两类文档，回答没有明确引用 Deployments 文档，且把 maxUnavailable/maxSurge 相关内容归到 Disruptions 文档；另外没有讨论跨节点分布/故障叠加对可用性的影响。内容上未发现与参考相反的事实错误。\n\nGroundedness 约 0.75。PDB 对 drain/Eviction 的约束、非自愿中断不能由 PDB 阻止但计入预算、Deployment 滚动升级不受 PDB 限制等，直接由提供的 Disruptions 摘录支撑；drain 成功语义、重试、nodeName/unschedulable 等由 drain 文档摘录支撑；readiness 探针使 Pod 就绪并接收流量由探针摘录支撑。按给定映射，(3) 标注不必按标签数字扣分。但 maxUnavailable/maxSurge 的字段名、YAML 和具体建议值在所提供的 Deployments 摘录中没有实际出现，也未正确引用该文档；“PDB 的可用判断依赖 Pod readiness”是从探针行为推断，摘录未明确把 PDB 可用性与 readiness 连接起来。由于这些是设计建议且候选已声明“不是文档原文规定”，不应判为完全无依据，但关键发布参数缺少直接证据支持，因此 groundedness 不宜给高。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "9f60af16-2cf0-4a6c-857e-1fe53a7db469",
+          "seconds": 51.810304,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f381-4852-7771-9df2-b429a2804e32",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 50.212643,
+              "input_tokens": 7157,
+              "output_tokens": 8613,
+              "total_tokens": 15770,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "Kubernetes Disruptions": true,
+        "Kubernetes Deployments": false
+      },
+      "citation_count": 3,
+      "two_source_families": false,
+      "semantic_and_sources_pass": false
+    },
+    {
+      "mode": "plan_execute",
+      "case": "technical-postgres",
+      "category": "technical",
+      "trace_id": "01a1f382-0c82-7793-b8ce-280296f3e91e",
+      "application_run_id": "e9d3663303b144eea0304744d6aad4fd",
+      "project_id": "e9fca17e-3f72-4ef2-a3af-0483bd8c84c5",
+      "seconds": 34.055824,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "unknown",
+      "sources": [
+        "https://www.postgresql.org/docs/current/transaction-iso.html",
+        "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html",
+        "https://www.postgresql.org/docs/current/explicit-locking.html"
+      ],
+      "reference_source_urls": [
+        "https://www.postgresql.org/docs/17/transaction-iso.html",
+        "https://www.postgresql.org/docs/17/explicit-locking.html"
+      ],
+      "tool_calls": 25,
+      "tool_successes": 25,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 17113,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 285,
+            "output_tokens": 353,
+            "total_tokens": 638
+          },
+          "researcher": {
+            "input_tokens": 5134,
+            "output_tokens": 272,
+            "total_tokens": 5406
+          },
+          "writer": {
+            "input_tokens": 11694,
+            "output_tokens": 2286,
+            "total_tokens": 13980
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 17113,
+          "output_tokens": 2911,
+          "total_tokens": 20024
+        },
+        "output_tokens": 2911,
+        "provider_attempts": 6,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 285,
+            "output_tokens": 353,
+            "total_tokens": 638
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5134,
+            "output_tokens": 272,
+            "total_tokens": 5406
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 11694,
+            "output_tokens": 2286,
+            "total_tokens": 13980
+          }
+        },
+        "stage_seconds": {
+          "planner": 2.4070000000065193,
+          "researcher": 3.4059999998426065,
+          "writer": 15.171000000089407
+        },
+        "total_tokens": 20024,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f382-0d1f-7521-9178-fc9c8500e907",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 2.391929,
+          "input_tokens": 285,
+          "output_tokens": 353,
+          "total_tokens": 638,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f382-1d73-7ac0-9010-723fd7a4e61d",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.057837,
+          "input_tokens": 1777,
+          "output_tokens": 64,
+          "total_tokens": 1841,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f382-2ffa-70f3-aec1-9f2107dc4f81",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.100185,
+          "input_tokens": 1665,
+          "output_tokens": 104,
+          "total_tokens": 1769,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f382-4117-7bd1-a71d-9d92c4685abb",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.246004,
+          "input_tokens": 1692,
+          "output_tokens": 104,
+          "total_tokens": 1796,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f382-55c9-7933-89c3-3bfec6cd2862",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 9.268031,
+          "input_tokens": 5332,
+          "output_tokens": 1143,
+          "total_tokens": 6475,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f382-7a19-71c0-ac68-d8e84532a974",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 5.900775,
+          "input_tokens": 6362,
+          "output_tokens": 1143,
+          "total_tokens": 7505,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": null,
+        "tool_success_rate": 1.0,
+        "answer_correctness_v4": 0.95,
+        "answer_groundedness_v4": 1.0,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "答案完整回答了核心问题：Repeatable Read 允许该写偏差，Serializable 会检测冲突并触发序列化失败（SQLSTATE 40001），应用必须重试整个事务及其业务决策逻辑；对两笔事务只锁各自要更新的不同行，无法互斥，也无法覆盖共同约束。它正确引用了事务隔离、序列化失败处理和显式锁材料，并说明可用 Serializable 或对共同对象加锁来串行化。唯一扣分点是：原题要求基于 PostgreSQL 17 文档，而实际证据和引用主要来自 PostgreSQL 18/current 文档；答案也明确承认未单独加载 17 版页面。尽管所述语义与 17 文档高度一致，这仍是轻微但不完全满足来源版本要求的问题。\n\nGroundedness 给满分：候选答案的核心事实均有 evidence_excerpts 支持，包括表 13.1 中 Repeatable Read 仍可能发生序列化异常、Serializable 的监控与序列化失败、40001 后重试完整事务、只读事务不会产生序列化冲突、行级锁只阻塞同一行的写入者/加锁者，以及不同行的 FOR UPDATE 不足以互斥。没有发现无依据的具体数字或与证据矛盾的内容。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "b7fce5f3-6e63-429f-b551-dbaa68df1462",
+          "seconds": 28.906652,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f382-9761-7061-830b-512efa43890d",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 27.411871,
+              "input_tokens": 6310,
+              "output_tokens": 4603,
+              "total_tokens": 10913,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "PostgreSQL 17 isolation": false,
+        "PostgreSQL 17 explicit locking": false
+      },
+      "citation_count": 3,
+      "two_source_families": false,
+      "semantic_and_sources_pass": false
+    },
+    {
+      "mode": "workflow",
+      "case": "competitive-object-storage",
+      "category": "competitive",
+      "trace_id": "01a1f37c-2b19-7162-b5fc-ad494b9b2f7e",
+      "application_run_id": "281e60c7c8fc438d99e7d9065027aa8b",
+      "project_id": "c3a264ab-2512-47ec-b6d0-2db166e6f92d",
+      "seconds": 37.650395,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "unknown",
+      "sources": [
+        "https://developers.cloudflare.com/r2/pricing",
+        "https://www.cloudflare.com/products/r2",
+        "https://r2-calculator.cloudflare.com/",
+        "https://aws.amazon.com/s3/pricing",
+        "https://docs.aws.amazon.com/AmazonS3/latest/userguide/aws-usage-report-understand.html"
+      ],
+      "reference_source_urls": [
+        "https://developers.cloudflare.com/r2/pricing/",
+        "https://aws.amazon.com/s3/pricing/"
+      ],
+      "tool_calls": 33,
+      "tool_successes": 33,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 18035,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 280,
+            "output_tokens": 391,
+            "total_tokens": 671
+          },
+          "researcher": {
+            "input_tokens": 5477,
+            "output_tokens": 343,
+            "total_tokens": 5820
+          },
+          "writer": {
+            "input_tokens": 12278,
+            "output_tokens": 1784,
+            "total_tokens": 14062
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 18035,
+          "output_tokens": 2518,
+          "total_tokens": 20553
+        },
+        "output_tokens": 2518,
+        "provider_attempts": 6,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 280,
+            "output_tokens": 391,
+            "total_tokens": 671
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5477,
+            "output_tokens": 343,
+            "total_tokens": 5820
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 12278,
+            "output_tokens": 1784,
+            "total_tokens": 14062
+          }
+        },
+        "stage_seconds": {
+          "planner": 3.0,
+          "researcher": 4.077999999979511,
+          "writer": 12.062999999965541
+        },
+        "total_tokens": 20553,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f37c-2ca7-7493-b255-9c592debeef4",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 2.992998,
+          "input_tokens": 280,
+          "output_tokens": 391,
+          "total_tokens": 671,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-411a-7af0-b1f0-855e80fa039f",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.290506,
+          "input_tokens": 1860,
+          "output_tokens": 118,
+          "total_tokens": 1978,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-5ec7-7d50-b98c-6523cc4f9b8b",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.489034,
+          "input_tokens": 1777,
+          "output_tokens": 116,
+          "total_tokens": 1893,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-7ffb-73e0-abb5-646782796509",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.281804,
+          "input_tokens": 1840,
+          "output_tokens": 109,
+          "total_tokens": 1949,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-8e74-77c3-ae37-ab74c6527377",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 7.173437,
+          "input_tokens": 5683,
+          "output_tokens": 892,
+          "total_tokens": 6575,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37c-aa98-7ff0-8808-7c7433610414",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 4.876429,
+          "input_tokens": 6595,
+          "output_tokens": 892,
+          "total_tokens": 7487,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": null,
+        "tool_success_rate": 1.0,
+        "answer_correctness_v4": 0.94,
+        "answer_groundedness_v4": 0.91,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "答案准确回答了成本结构比较：R2 Standard 存储与 Class B 读取请求按量计费，互联网 egress 免费；S3 Standard 存储、GET 等请求和互联网 Data Transfer Out 均计费。结论也正确指出大下载量下主要拉开差距的是互联网出流量，并列出报价所需关键变量：存储 GB-month、下载 GB、读取请求次数、AWS 区域、出流量阶梯/目的地、免费额度，以及对象大小/请求模式。没有强行给出不必要或不准确的精确月费。引用来源与 Cloudflare R2 官方定价页、R2 计算器及 AWS S3 官方定价/计费文档基本对应。轻微不足是“S3 出流量按目的地和用量阶梯计价”及“对象大小影响额外操作”在摘录中未完全展开，属于一般性补充；个别表述如“存储和读取请求量级差距通常远小于出流量”偏概括，但已用条件限定，不构成主要事实错误。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "cd12a19f-5a4f-4a33-bb3d-b55054f1af5b",
+          "seconds": 24.729673,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f37c-c508-7f92-a40f-bdd238665891",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 22.975399,
+              "input_tokens": 6568,
+              "output_tokens": 3932,
+              "total_tokens": 10500,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "Cloudflare R2 official docs": true,
+        "AWS S3 official pricing/docs": true
+      },
+      "citation_count": 5,
+      "two_source_families": true,
+      "semantic_and_sources_pass": true
+    },
+    {
+      "mode": "workflow",
+      "case": "competitive-serverless",
+      "category": "competitive",
+      "trace_id": "01a1f37d-1ed1-7442-bac3-5b024308c542",
+      "application_run_id": "2f33bbb486504033adfa50c5031ebd47",
+      "project_id": "c3a264ab-2512-47ec-b6d0-2db166e6f92d",
+      "seconds": 38.691548,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "unknown",
+      "sources": [
+        "https://docs.cloud.google.com/run/docs/configuring/request-timeout",
+        "https://docs.cloud.google.com/run/docs/configuring/request-timeout?hl=en",
+        "https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html",
+        "https://docs.aws.amazon.com/lambda/latest/api/API_Invoke.html",
+        "https://docs.aws.amazon.com/lambda/latest/dg/invocation-sync.html"
+      ],
+      "reference_source_urls": [
+        "https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html",
+        "https://docs.cloud.google.com/run/docs/configuring/request-timeout"
+      ],
+      "tool_calls": 37,
+      "tool_successes": 37,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 18358,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 289,
+            "output_tokens": 439,
+            "total_tokens": 728
+          },
+          "researcher": {
+            "input_tokens": 5546,
+            "output_tokens": 267,
+            "total_tokens": 5813
+          },
+          "writer": {
+            "input_tokens": 12523,
+            "output_tokens": 2742,
+            "total_tokens": 15265
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 18358,
+          "output_tokens": 3448,
+          "total_tokens": 21806
+        },
+        "output_tokens": 3448,
+        "provider_attempts": 6,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 289,
+            "output_tokens": 439,
+            "total_tokens": 728
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5546,
+            "output_tokens": 267,
+            "total_tokens": 5813
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 12523,
+            "output_tokens": 2742,
+            "total_tokens": 15265
+          }
+        },
+        "stage_seconds": {
+          "planner": 3.062000000034459,
+          "researcher": 3.64000000001397,
+          "writer": 16.95400000002701
+        },
+        "total_tokens": 21806,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f37d-1f36-7e80-86d3-25a7940a6c52",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 3.059295,
+          "input_tokens": 289,
+          "output_tokens": 439,
+          "total_tokens": 728,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-37b6-7f00-8f24-53e2b50c997b",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.249971,
+          "input_tokens": 1842,
+          "output_tokens": 105,
+          "total_tokens": 1947,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-468d-7d92-b4ed-3804ff36c8ac",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.116217,
+          "input_tokens": 1924,
+          "output_tokens": 84,
+          "total_tokens": 2008,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-6869-7483-bc3a-01806c02d018",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.286259,
+          "input_tokens": 1780,
+          "output_tokens": 78,
+          "total_tokens": 1858,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-730a-7783-819f-08cda5721322",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 10.356744,
+          "input_tokens": 5567,
+          "output_tokens": 1371,
+          "total_tokens": 6938,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37d-9b9a-7271-a759-c3aed238729b",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 6.592088,
+          "input_tokens": 6956,
+          "output_tokens": 1371,
+          "total_tokens": 8327,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": null,
+        "tool_success_rate": 1.0,
+        "answer_correctness_v4": 0.95,
+        "answer_groundedness_v4": 0.93,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "事实正确性很高：正确比较了 Lambda Event Function 的 900 秒上限与 Cloud Run services 默认 5 分钟、最高 60 分钟的请求超时；正确判断 8 分钟任务两端均可配置完成，而 20 分钟任务无法在 Lambda 单次同步执行中完成；正确描述了 Cloud Run 超时后返回 504、关闭连接但容器可能继续处理，以及长超时下客户端断连、重连、幂等/断点恢复风险；也正确给出了保留同步接口与改为异步作业的边界，并明确排除了 Lambda Managed Instances 和 Cloud Run jobs 的配额。轻微不足是“常见客户端/代理默认空闲超时”缺乏所给证据直接支持，且结论中“两者都要处理服务端可能继续跑”的风险对 Lambda 而言原文并未确认，虽然正文后面已将其标为未核实。\n\n接地性较高：主要事实均能由提供的 AWS 超时、Invoke API、同步调用文档和 Cloud Run 请求超时文档摘录支持。Cloud Run 的 504、容器继续处理、>15 分钟重连建议、Lambda 900 秒上限、客户端断连警告、异步重试/队列/DLQ 等均有对应证据。扣分主要因为少量泛化表述和 Lambda 服务端断连后继续执行风险的框架性说法未被证据直接支持；引用编号经历了压缩，但按 URL 对应关系看属正确来源归属，不因编号样式扣分。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "5c245705-e1d3-4093-8d90-aee5e3bbde7d",
+          "seconds": 29.739171,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f37d-bbea-78c3-bfaa-94144234c667",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 28.214798,
+              "input_tokens": 6992,
+              "output_tokens": 4874,
+              "total_tokens": 11866,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "AWS Lambda official docs": true,
+        "Google Cloud Run official docs": true
+      },
+      "citation_count": 5,
+      "two_source_families": true,
+      "semantic_and_sources_pass": true
+    },
+    {
+      "mode": "workflow",
+      "case": "industry-data-centers",
+      "category": "industry",
+      "trace_id": "01a1f37e-2a29-7c12-9a39-b0d857ded91b",
+      "application_run_id": "e407a6b54db34a7dba344967d6762dcc",
+      "project_id": "c3a264ab-2512-47ec-b6d0-2db166e6f92d",
+      "seconds": 87.163086,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "insufficient",
+      "sources": [
+        "https://www.iea.org/reports/energy-and-ai/executive-summary",
+        "https://newscenter.lbl.gov/2025/01/15/berkeley-lab-report-evaluates-increase-in-electricity-demand-from-data-centers",
+        "https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report_1.pdf",
+        "https://www.iea.org/reports/energy-and-ai/energy-demand-from-ai",
+        "https://www.energy.gov/articles/doe-releases-new-report-evaluating-increase-electricity-demand-data-centers",
+        "https://www.iea.org/reports/energy-and-ai"
+      ],
+      "reference_source_urls": [
+        "https://www.iea.org/reports/energy-and-ai/energy-demand-from-ai",
+        "https://energyanalysis.lbl.gov/news/berkeley-lab-report-evaluates-increase-electricity-demand-data-centers"
+      ],
+      "tool_calls": 46,
+      "tool_successes": 43,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 12557,
+        "measured_usage_attempts": 5,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 275,
+            "output_tokens": 360,
+            "total_tokens": 635
+          },
+          "researcher": {
+            "input_tokens": 5312,
+            "output_tokens": 409,
+            "total_tokens": 5721
+          },
+          "writer": {
+            "input_tokens": 6970,
+            "output_tokens": 1481,
+            "total_tokens": 8451
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 12557,
+          "output_tokens": 2250,
+          "total_tokens": 14807
+        },
+        "output_tokens": 2250,
+        "provider_attempts": 5,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 275,
+            "output_tokens": 360,
+            "total_tokens": 635
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5312,
+            "output_tokens": 409,
+            "total_tokens": 5721
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 6970,
+            "output_tokens": 1481,
+            "total_tokens": 8451
+          }
+        },
+        "stage_seconds": {
+          "planner": 2.3429999999934807,
+          "researcher": 4.797000000136904,
+          "writer": 10.890999999945052
+        },
+        "total_tokens": 14807,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f37e-2a8e-75f0-bb40-71504d3b35b6",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 2.344148,
+          "input_tokens": 275,
+          "output_tokens": 360,
+          "total_tokens": 635,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37e-3b5f-71a3-adaf-7313e8513eea",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.347885,
+          "input_tokens": 1742,
+          "output_tokens": 138,
+          "total_tokens": 1880,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37e-6a66-71e2-9638-7e964c602240",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.934434,
+          "input_tokens": 1772,
+          "output_tokens": 144,
+          "total_tokens": 1916,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37e-e0d5-7942-adda-7b8fce76d80b",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.489779,
+          "input_tokens": 1798,
+          "output_tokens": 127,
+          "total_tokens": 1925,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37f-5396-7941-920b-ac8ba5c860b6",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 10.884298,
+          "input_tokens": 6970,
+          "output_tokens": 1481,
+          "total_tokens": 8451,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [
+        {
+          "trace_run_id": "01a1f37e-40b0-7193-98de-0d683183f654",
+          "span": "tool.execute",
+          "error": "response_too_large"
+        },
+        {
+          "trace_run_id": "01a1f37e-40e5-7172-9370-ab7386a4aee0",
+          "span": "tool.provider_attempt",
+          "error": "response_too_large"
+        },
+        {
+          "trace_run_id": "01a1f37e-7206-7ca1-a3a2-50c246023743",
+          "span": "tool.execute",
+          "error": "insufficient_content"
+        },
+        {
+          "trace_run_id": "01a1f37e-724e-7e42-a958-1c0e4bbe1081",
+          "span": "tool.provider_attempt",
+          "error": "insufficient_content"
+        },
+        {
+          "trace_run_id": "01a1f37e-e6b9-79b0-9e29-43da7420a3b3",
+          "span": "tool.execute",
+          "error": "pdf_extraction_timeout"
+        },
+        {
+          "trace_run_id": "01a1f37e-e6ef-7860-86a4-d2cf4b898525",
+          "span": "tool.provider_attempt",
+          "error": "pdf_extraction_timeout"
+        }
+      ],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": 0.0,
+        "tool_success_rate": 0.9348,
+        "answer_correctness_v4": 0.96,
+        "answer_groundedness_v4": 0.93,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "Factual correctness and requirement satisfaction are high. The candidate correctly cross-checks IEA 2025 and LBNL 2024, gives historical estimates and projections with years and units, explains why the figures cannot be directly subtracted to estimate non-US electricity use, identifies local siting data gaps, and provides itemized source mapping. Key numbers match the reference: IEA 415 TWh in 2024 and about 945 TWh by 2030; LBNL 176 TWh in 2023 and 325–580 TWh by 2028. Extra details such as IEA 2035 and LBNL 2014/2018 are supported and not harmful. Minor deductions only for some broad wording about the two reports lacking a methodology crosswalk, which is not fully demonstrated by the excerpts, and for generic local-data checklist items that are appropriately labeled as recommendations rather than sourced facts. Groundedness is also high: the main factual claims are entailed by the supplied evidence excerpts and citations map to the correct source URLs despite label-number changes. Recommendations are clearly marked as unverified suggestions, so they do not undermine groundedness."
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "3a729220-a22a-4206-a636-316d45281040",
+          "seconds": 27.665817,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f37f-85b6-7df3-b637-90f570370f37",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 25.856214,
+              "input_tokens": 8475,
+              "output_tokens": 4942,
+              "total_tokens": 13417,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "IEA Energy and AI 2025": true,
+        "Berkeley Lab 2024 report or official DOE release": true
+      },
+      "citation_count": 6,
+      "two_source_families": true,
+      "semantic_and_sources_pass": true
+    },
+    {
+      "mode": "workflow",
+      "case": "industry-ev",
+      "category": "industry",
+      "trace_id": "01a1f37f-eac0-74b2-89b8-ff2330f5d1ee",
+      "application_run_id": "34c497d311914c4094596cda80176780",
+      "project_id": "c3a264ab-2512-47ec-b6d0-2db166e6f92d",
+      "seconds": 71.517985,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "insufficient",
+      "sources": [
+        "https://www.iea.org/reports/global-ev-outlook-2025/trends-in-electric-car-markets-2",
+        "https://www.iea.org/reports/global-ev-outlook-2026/executive-summary",
+        "https://www.iea.org/reports/global-ev-outlook-2026/trends-in-electric-cars",
+        "https://www.iea.org/reports/global-ev-outlook-2025/outlook-for-electric-mobility",
+        "https://iea.blob.core.windows.net/assets/a096b500-9d47-411d-a5db-b297a5d95927/ElectricCarMarketsinaTimeofUncertainty.pdf"
+      ],
+      "reference_source_urls": [
+        "https://www.iea.org/reports/global-ev-outlook-2025/trends-in-electric-car-markets-2",
+        "https://www.iea.org/reports/global-ev-outlook-2026/trends-in-electric-cars"
+      ],
+      "tool_calls": 47,
+      "tool_successes": 46,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 21404,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 281,
+            "output_tokens": 434,
+            "total_tokens": 715
+          },
+          "researcher": {
+            "input_tokens": 5632,
+            "output_tokens": 420,
+            "total_tokens": 6052
+          },
+          "writer": {
+            "input_tokens": 15491,
+            "output_tokens": 2216,
+            "total_tokens": 17707
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 21404,
+          "output_tokens": 3070,
+          "total_tokens": 24474
+        },
+        "output_tokens": 3070,
+        "provider_attempts": 6,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 281,
+            "output_tokens": 434,
+            "total_tokens": 715
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5632,
+            "output_tokens": 420,
+            "total_tokens": 6052
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 15491,
+            "output_tokens": 2216,
+            "total_tokens": 17707
+          }
+        },
+        "stage_seconds": {
+          "planner": 2.906000000075437,
+          "researcher": 4.3600000001024455,
+          "writer": 13.670999999972992
+        },
+        "total_tokens": 24474,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f37f-eb50-7092-833b-e6efc39388fa",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 2.907861,
+          "input_tokens": 281,
+          "output_tokens": 434,
+          "total_tokens": 715,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f37f-feb6-72d1-8ccd-c95912758c72",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.153479,
+          "input_tokens": 1851,
+          "output_tokens": 96,
+          "total_tokens": 1947,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f380-2634-7381-89ce-4e1b209c5c44",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.649082,
+          "input_tokens": 1910,
+          "output_tokens": 149,
+          "total_tokens": 2059,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f380-b25b-7ff0-a0f2-680ebd0e61bd",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.536339,
+          "input_tokens": 1871,
+          "output_tokens": 175,
+          "total_tokens": 2046,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f380-cc17-7d63-bfb2-8275ff8f04ba",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 8.046317,
+          "input_tokens": 7217,
+          "output_tokens": 1097,
+          "total_tokens": 8314,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f380-ebaf-7590-822d-cfd6a4876798",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 5.600248,
+          "input_tokens": 8274,
+          "output_tokens": 1119,
+          "total_tokens": 9393,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [
+        {
+          "trace_run_id": "01a1f380-0346-70c2-ad96-88c24ed4e9bc",
+          "span": "tool.execute",
+          "error": "pdf_page_limit"
+        },
+        {
+          "trace_run_id": "01a1f380-036c-73e0-82f6-b9bd5f366bf6",
+          "span": "tool.provider_attempt",
+          "error": "pdf_page_limit"
+        },
+        {
+          "trace_run_id": "01a1f380-595f-7793-9c37-fbfb1fb83ad6",
+          "span": "tool.provider_attempt",
+          "error": "provider_timeout"
+        }
+      ],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": 0.0,
+        "tool_success_rate": 0.9787,
+        "answer_correctness_v4": 0.92,
+        "answer_groundedness_v4": 0.9,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "事实正确性与满足度较高：核心数字与 IEA GEO 2025/2026 一致，包括 2024 年全球电动乘用车销量超过 1700 万辆、同比增长超过 25%，2025 年超过 2000 万辆、同比增长约 20%，以及全球销量份额约 25%；中国、欧洲、美国的方向性描述也基本符合参考。报告年份、统计年份、销量份额三者的区分清楚；对能否直接推算全球纯电乘用车销量的回答也基本正确，并说明需要拆分 BEV/PHEV 口径、只能用 65% 做带假设粗估。逐项来源基本到位。轻微扣分点：补充的 2025 年一季度数据中，“其中约 60% 在中国”容易被理解为占当季总销量的 60%，但原文更准确的意思是新增销量中约 60% 来自中国；另外美国 2024 年约 160 万辆这一参考细节未给出，但问题只要求份额或增长方向，因此不是致命缺失。\n\nGroundedness 较高：候选答案的大多数具体数字、区域方向和概念解释都能由所给 evidence_excerpts 直接支持，且来源 URL/标签映射基本正确。主要扣分点是上述一季度“60% 在中国”的表述与证据原文的指代范围不完全一致，属于轻微不支持/误读；此外“原文未给出纯电绝对销量”更稳妥应表述为“可见摘录未给出”而非对整份报告作绝对判断。整体证据支撑充分，故给 0.9。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "9119b4cd-5c88-4b4f-bdba-2773b696ab1e",
+          "seconds": 38.527698,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f381-0aa9-7db1-be1b-23fe98a9ca6a",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 36.343562,
+              "input_tokens": 8404,
+              "output_tokens": 6760,
+              "total_tokens": 15164,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "IEA Global EV Outlook 2025": true,
+        "IEA Global EV Outlook 2026": true
+      },
+      "citation_count": 5,
+      "two_source_families": true,
+      "semantic_and_sources_pass": true
+    },
+    {
+      "mode": "workflow",
+      "case": "technical-kubernetes",
+      "category": "technical",
+      "trace_id": "01a1f381-98a6-7391-8df8-7ee74f7939fc",
+      "application_run_id": "2331dbd92bb948f28722abaccdc52315",
+      "project_id": "c3a264ab-2512-47ec-b6d0-2db166e6f92d",
+      "seconds": 43.737769,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "unknown",
+      "sources": [
+        "https://kubernetes.io/docs/concepts/workloads/pods/disruptions",
+        "https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node",
+        "https://kubernetes.io/docs/concepts/workloads/controllers/deployment",
+        "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes",
+        "https://kubernetes.io/docs/tasks/run-application/configure-pdb"
+      ],
+      "reference_source_urls": [
+        "https://kubernetes.io/docs/concepts/workloads/pods/disruptions/",
+        "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"
+      ],
+      "tool_calls": 35,
+      "tool_successes": 35,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 11931,
+        "measured_usage_attempts": 5,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 286,
+            "output_tokens": 453,
+            "total_tokens": 739
+          },
+          "researcher": {
+            "input_tokens": 5527,
+            "output_tokens": 328,
+            "total_tokens": 5855
+          },
+          "writer": {
+            "input_tokens": 6118,
+            "output_tokens": 1089,
+            "total_tokens": 7207
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 11931,
+          "output_tokens": 1870,
+          "total_tokens": 13801
+        },
+        "output_tokens": 1870,
+        "provider_attempts": 5,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 286,
+            "output_tokens": 453,
+            "total_tokens": 739
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5527,
+            "output_tokens": 328,
+            "total_tokens": 5855
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 6118,
+            "output_tokens": 1089,
+            "total_tokens": 7207
+          }
+        },
+        "stage_seconds": {
+          "planner": 2.75,
+          "researcher": 4.0149999998975545,
+          "writer": 7.812000000034459
+        },
+        "total_tokens": 13801,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f381-9934-7d13-b658-0bd588866a16",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 2.743738,
+          "input_tokens": 286,
+          "output_tokens": 453,
+          "total_tokens": 739,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f381-b211-7622-95e7-5062d90e888d",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.424232,
+          "input_tokens": 1853,
+          "output_tokens": 135,
+          "total_tokens": 1988,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f381-e4ae-7442-8732-d8daffda20d7",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.209174,
+          "input_tokens": 1857,
+          "output_tokens": 82,
+          "total_tokens": 1939,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f382-06a3-7831-b3d0-1c0546d6953e",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.390645,
+          "input_tokens": 1817,
+          "output_tokens": 111,
+          "total_tokens": 1928,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f382-245a-7c43-8c57-87ba037c8125",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 7.804491,
+          "input_tokens": 6118,
+          "output_tokens": 1089,
+          "total_tokens": 7207,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": null,
+        "tool_success_rate": 1.0,
+        "answer_correctness_v4": 0.94,
+        "answer_groundedness_v4": 0.9,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "正确性/需求满足度高：准确区分了自愿中断（kubectl drain 的 Eviction）受 PDB 约束、突然节点宕机属于非自愿中断且 PDB 不能阻止但计入预算、Deployment 滚动更新不由 PDB 限制而由 maxUnavailable/maxSurge 控制；给出了合理的 maxUnavailable: 0 / maxSurge: 1，并说明 readinessProbe 是“可用”判断的关键前提。引用也覆盖了 Disruptions 与 Deployments 两类文档。扣分点主要是：未明确强调跨节点分布/反亲和与故障叠加对可用性的影响；“必须配置 readinessProbe”说法略绝对；maxUnavailable:1/maxSurge:0 的替代方案虽然数值上可在健康前提下保持至少 2 个可用副本，但比参考建议的 0/1 或 1/1 更缺少冗余，且未充分强调叠加故障风险。Groundedness 较高：核心结论均能由提供的 Disruptions、Safely Drain、PDB 配置和探针文档片段推出；一次最多驱逐 1 个是按 PDB 语义做出的合理推算。轻微扣分来自 startupProbe/initialDelaySeconds 等可选细节在给定摘录中没有充分展开，以及“必须”这种规范性措辞略强。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "67228239-4efc-49b1-ba13-e10e6afe8233",
+          "seconds": 40.447112,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f382-633c-7d51-82a7-bd118bbf4754",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 32.323222,
+              "input_tokens": 7308,
+              "output_tokens": 5561,
+              "total_tokens": 12869,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "Kubernetes Disruptions": true,
+        "Kubernetes Deployments": true
+      },
+      "citation_count": 5,
+      "two_source_families": true,
+      "semantic_and_sources_pass": true
+    },
+    {
+      "mode": "workflow",
+      "case": "technical-postgres",
+      "category": "technical",
+      "trace_id": "01a1f382-e189-7223-87c3-49a9353a0ba5",
+      "application_run_id": "380452a816d64892ac12bae3f014bdce",
+      "project_id": "c3a264ab-2512-47ec-b6d0-2db166e6f92d",
+      "seconds": 35.460254,
+      "status": "completed",
+      "finish_reason": "completed",
+      "error": null,
+      "has_answer": true,
+      "research_sufficiency": "unknown",
+      "sources": [
+        "https://www.postgresql.org/docs/current/transaction-iso.html",
+        "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html",
+        "https://www.postgresql.org/docs/current/explicit-locking.html"
+      ],
+      "reference_source_urls": [
+        "https://www.postgresql.org/docs/17/transaction-iso.html",
+        "https://www.postgresql.org/docs/17/explicit-locking.html"
+      ],
+      "tool_calls": 19,
+      "tool_successes": 19,
+      "source_scope_ok": true,
+      "budget_compliant": true,
+      "usage": {
+        "budget_state_available": true,
+        "input_tokens": 14101,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 285,
+            "output_tokens": 409,
+            "total_tokens": 694
+          },
+          "researcher": {
+            "input_tokens": 5345,
+            "output_tokens": 229,
+            "total_tokens": 5574
+          },
+          "writer": {
+            "input_tokens": 8471,
+            "output_tokens": 2936,
+            "total_tokens": 11407
+          }
+        },
+        "observed_usage": {
+          "input_tokens": 14101,
+          "output_tokens": 3574,
+          "total_tokens": 17675
+        },
+        "output_tokens": 3574,
+        "provider_attempts": 6,
+        "role_usage": {
+          "evaluator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "planner": {
+            "input_tokens": 285,
+            "output_tokens": 409,
+            "total_tokens": 694
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 5345,
+            "output_tokens": 229,
+            "total_tokens": 5574
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 8471,
+            "output_tokens": 2936,
+            "total_tokens": 11407
+          }
+        },
+        "stage_seconds": {
+          "planner": 3.39000000001397,
+          "researcher": 3.3750000001164153,
+          "writer": 18.750000000116415
+        },
+        "total_tokens": 17675,
+        "usage_complete": true
+      },
+      "model_spans": [
+        {
+          "trace_run_id": "01a1f382-e248-7ee0-874a-08874aee6015",
+          "node": "plan",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 3.380702,
+          "input_tokens": 285,
+          "output_tokens": 409,
+          "total_tokens": 694,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f382-f5ef-71b3-a64e-87af796e18f5",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.222551,
+          "input_tokens": 1816,
+          "output_tokens": 60,
+          "total_tokens": 1876,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f383-089f-7170-bbf1-0cf0468af8ea",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.121103,
+          "input_tokens": 1749,
+          "output_tokens": 104,
+          "total_tokens": 1853,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f383-172a-7a80-ba0a-eaab5ee1bc09",
+          "node": "select_sources",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 1.026097,
+          "input_tokens": 1780,
+          "output_tokens": 65,
+          "total_tokens": 1845,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f383-222a-7772-8032-ed0423586388",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 11.528252,
+          "input_tokens": 3615,
+          "output_tokens": 1468,
+          "total_tokens": 5083,
+          "error": null
+        },
+        {
+          "trace_run_id": "01a1f383-4f4a-72d3-b15d-873bb9e96a92",
+          "node": "generate",
+          "model": "deepseek-v4.1-flash",
+          "seconds": 7.204445,
+          "input_tokens": 4856,
+          "output_tokens": 1468,
+          "total_tokens": 6324,
+          "error": null
+        }
+      ],
+      "tool_error_spans": [],
+      "scores": {
+        "execution_completed": 1.0,
+        "evidence_sufficient": null,
+        "tool_success_rate": 1.0,
+        "answer_correctness_v4": 0.92,
+        "answer_groundedness_v4": 0.88,
+        "task_accepted_v4": 1.0
+      },
+      "feedback_errors": {},
+      "quality_comments": [
+        "综合正确性/满足度 0.92：候选答案完整回答了核心问题——Repeatable Read 允许题述写偏差/序列化异常；Serializable 会检测读写依赖并中止冲突事务；应用遇到 SQLSTATE 40001 应重试完整事务（含读取和业务判断），而不是只重发 UPDATE；并解释了分别对两笔事务各自目标行加 SELECT FOR UPDATE 不能互斥、不能维护跨行“至少一人在岗”约束。还引用了事务隔离、序列化失败处理和显式锁文档。主要扣分点是：所引证据实际是 current/PostgreSQL 18 文档，而非直接的 17 专属页面；候选已诚实披露这一点，因此不视为严重事实错误，但没有完全满足“基于 PostgreSQL 17 官方文档”的来源要求。\n\n证据落地性 0.88：候选答案的大多数具体主张都能由 evidence_excerpts 支持或合理推出，包括隔离级别表、Serializable 的谓词锁/序列化失败、40001 重试完整事务、行级 FOR UPDATE 的作用范围，以及显式锁增加死锁可能性。扣分主要因为“PostgreSQL 17”版本标签本身未被所给 PG18/current 摘录直接建立；另外“行锁不覆盖跨行约束”是从行锁文档作出的正确推断而非原文直述。整体没有严重无依据的具体数字或矛盾。"
+      ],
+      "judge_traces": [
+        {
+          "trace_id": "8b291743-7106-42d8-8df8-dea1ef84846a",
+          "seconds": 42.756366,
+          "error": null,
+          "model_spans": [
+            {
+              "trace_run_id": "01a1f383-739b-7630-9a8c-7f5f76a1614e",
+              "node": null,
+              "model": "deepseek-v4.1-flash",
+              "seconds": 40.821845,
+              "input_tokens": 4805,
+              "output_tokens": 6689,
+              "total_tokens": 11494,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "source_family_matches": {
+        "PostgreSQL 17 isolation": false,
+        "PostgreSQL 17 explicit locking": false
+      },
+      "citation_count": 3,
+      "two_source_families": false,
+      "semantic_and_sources_pass": false
+    }
+  ],
+  "summary": {
+    "workflow": {
+      "runs": 6,
+      "status": {
+        "completed": 6
+      },
+      "finish_reason": {
+        "completed": 6
+      },
+      "with_answer": 6,
+      "uncaught_target_errors": 0,
+      "source_check_pass": 6,
+      "model_budget_check_pass": 6,
+      "accepted": 6,
+      "rejected": 0,
+      "missing_acceptance": 0,
+      "score_distributions": {
+        "answer_correctness_v4": {
+          "n": 6,
+          "min": 0.92,
+          "p50": 0.94,
+          "p95": 0.96,
+          "max": 0.96,
+          "sum": 5.63
+        },
+        "answer_groundedness_v4": {
+          "n": 6,
+          "min": 0.88,
+          "p50": 0.905,
+          "p95": 0.93,
+          "max": 0.93,
+          "sum": 5.45
+        }
+      },
+      "latency_seconds": {
+        "n": 6,
+        "min": 35.460254,
+        "p50": 41.2146585,
+        "p95": 87.163086,
+        "max": 87.163086,
+        "sum": 314.221037
+      },
+      "gateway_model_attempts": {
+        "n": 6,
+        "min": 5,
+        "p50": 6.0,
+        "p95": 6,
+        "max": 6,
+        "sum": 34
+      },
+      "model_spans": 34,
+      "model_span_errors": 0,
+      "model_span_latency_seconds": {
+        "n": 34,
+        "min": 1.026097,
+        "p50": 1.791758,
+        "p95": 10.884298,
+        "max": 11.528252,
+        "sum": 121.714082
+      },
+      "model_attempts_with_usage": 34,
+      "model_attempts_without_usage": 0,
+      "research_usage_complete_runs": 6,
+      "per_run_usage_when_complete": {
+        "input_tokens": {
+          "n": 6,
+          "min": 11931,
+          "p50": 16068.0,
+          "p95": 21404,
+          "max": 21404,
+          "sum": 96386
+        },
+        "output_tokens": {
+          "n": 6,
+          "min": 1870,
+          "p50": 2794.0,
+          "p95": 3574,
+          "max": 3574,
+          "sum": 16730
+        },
+        "total_tokens": {
+          "n": 6,
+          "min": 13801,
+          "p50": 19114.0,
+          "p95": 24474,
+          "max": 24474,
+          "sum": 113116
+        }
+      },
+      "observed_research_tokens": {
+        "input_tokens": 96386,
+        "output_tokens": 16730,
+        "total_tokens": 113116
+      },
+      "tool_calls": 217,
+      "tool_successes": 213,
+      "tool_execute_error_codes": {
+        "response_too_large": 1,
+        "insufficient_content": 1,
+        "pdf_extraction_timeout": 1,
+        "pdf_page_limit": 1
+      },
+      "judge_traces": 6,
+      "judge_trace_errors": 0,
+      "judge_trace_latency_seconds": {
+        "n": 6,
+        "min": 24.729673,
+        "p50": 34.1334345,
+        "p95": 42.756366,
+        "max": 42.756366,
+        "sum": 203.865837
+      },
+      "judge_model_spans": 6,
+      "judge_model_spans_with_usage": 6,
+      "judge_model_span_errors": 0,
+      "judge_model_latency_seconds": {
+        "n": 6,
+        "min": 22.975399,
+        "p50": 30.26901,
+        "p95": 40.821845,
+        "max": 40.821845,
+        "sum": 186.53504
+      },
+      "observed_judge_tokens": {
+        "input_tokens": 42552,
+        "output_tokens": 32758,
+        "total_tokens": 75310
+      },
+      "stage_seconds_per_run": {
+        "planner": {
+          "n": 6,
+          "min": 2.3429999999934807,
+          "p50": 2.9530000000377186,
+          "p95": 3.39000000001397,
+          "max": 3.39000000001397,
+          "sum": 17.451000000117347
+        },
+        "researcher": {
+          "n": 6,
+          "min": 3.3750000001164153,
+          "p50": 4.046499999938533,
+          "p95": 4.797000000136904,
+          "max": 4.797000000136904,
+          "sum": 24.2650000002468
+        },
+        "writer": {
+          "n": 6,
+          "min": 7.812000000034459,
+          "p50": 12.866999999969266,
+          "p95": 18.750000000116415,
+          "max": 18.750000000116415,
+          "sum": 80.14100000006147
+        }
+      },
+      "with_at_least_two_cited_urls": 6,
+      "both_source_families_cited": 5,
+      "quality_and_both_source_families": 5,
+      "model_attempts_with_usage_in_exception_only": 0,
+      "research_tokens_in_exceptions": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "research_tokens_including_exceptions": {
+        "input_tokens": 96386,
+        "output_tokens": 16730,
+        "total_tokens": 113116
+      }
+    },
+    "plan_execute": {
+      "runs": 6,
+      "status": {
+        "completed": 6
+      },
+      "finish_reason": {
+        "completed": 6
+      },
+      "with_answer": 6,
+      "uncaught_target_errors": 0,
+      "source_check_pass": 6,
+      "model_budget_check_pass": 6,
+      "accepted": 5,
+      "rejected": 1,
+      "missing_acceptance": 0,
+      "score_distributions": {
+        "answer_correctness_v4": {
+          "n": 6,
+          "min": 0.85,
+          "p50": 0.93,
+          "p95": 0.95,
+          "max": 0.95,
+          "sum": 5.51
+        },
+        "answer_groundedness_v4": {
+          "n": 6,
+          "min": 0.75,
+          "p50": 0.89,
+          "p95": 1.0,
+          "max": 1.0,
+          "sum": 5.29
+        }
+      },
+      "latency_seconds": {
+        "n": 6,
+        "min": 34.055824,
+        "p50": 40.156774,
+        "p95": 50.917815,
+        "max": 50.917815,
+        "sum": 246.72105399999998
+      },
+      "gateway_model_attempts": {
+        "n": 6,
+        "min": 5,
+        "p50": 6.0,
+        "p95": 6,
+        "max": 6,
+        "sum": 34
+      },
+      "model_spans": 34,
+      "model_span_errors": 0,
+      "model_span_latency_seconds": {
+        "n": 34,
+        "min": 1.057837,
+        "p50": 1.785566,
+        "p95": 9.268031,
+        "max": 10.104705,
+        "sum": 110.133679
+      },
+      "model_attempts_with_usage": 34,
+      "model_attempts_without_usage": 0,
+      "research_usage_complete_runs": 6,
+      "per_run_usage_when_complete": {
+        "input_tokens": {
+          "n": 6,
+          "min": 11210,
+          "p50": 17148.5,
+          "p95": 19625,
+          "max": 19625,
+          "sum": 96157
+        },
+        "output_tokens": {
+          "n": 6,
+          "min": 1753,
+          "p50": 2546.0,
+          "p95": 3252,
+          "max": 3252,
+          "sum": 15123
+        },
+        "total_tokens": {
+          "n": 6,
+          "min": 13187,
+          "p50": 19694.5,
+          "p95": 22877,
+          "max": 22877,
+          "sum": 111280
+        }
+      },
+      "observed_research_tokens": {
+        "input_tokens": 96157,
+        "output_tokens": 15123,
+        "total_tokens": 111280
+      },
+      "tool_calls": 212,
+      "tool_successes": 209,
+      "tool_execute_error_codes": {
+        "response_too_large": 1,
+        "insufficient_content": 1,
+        "pdf_page_limit": 1
+      },
+      "judge_traces": 6,
+      "judge_trace_errors": 0,
+      "judge_trace_latency_seconds": {
+        "n": 6,
+        "min": 23.480928,
+        "p50": 30.5336275,
+        "p95": 51.810304,
+        "max": 51.810304,
+        "sum": 201.547067
+      },
+      "judge_model_spans": 6,
+      "judge_model_spans_with_usage": 6,
+      "judge_model_span_errors": 0,
+      "judge_model_latency_seconds": {
+        "n": 6,
+        "min": 21.447009,
+        "p50": 28.431062,
+        "p95": 50.212643,
+        "max": 50.212643,
+        "sum": 184.994333
+      },
+      "observed_judge_tokens": {
+        "input_tokens": 41034,
+        "output_tokens": 31906,
+        "total_tokens": 72940
+      },
+      "stage_seconds_per_run": {
+        "planner": {
+          "n": 6,
+          "min": 2.4070000000065193,
+          "p50": 3.1330000000307336,
+          "p95": 3.35999999998603,
+          "max": 3.35999999998603,
+          "sum": 18.21999999997206
+        },
+        "researcher": {
+          "n": 6,
+          "min": 3.4059999998426065,
+          "p50": 3.9839999999967404,
+          "p95": 4.657000000006519,
+          "max": 4.657000000006519,
+          "sum": 24.328999999794178
+        },
+        "writer": {
+          "n": 6,
+          "min": 6.140999999945052,
+          "p50": 10.89100000000326,
+          "p95": 16.188000000081956,
+          "max": 16.188000000081956,
+          "sum": 67.7190000001574
+        }
+      },
+      "with_at_least_two_cited_urls": 6,
+      "both_source_families_cited": 4,
+      "quality_and_both_source_families": 4,
+      "model_attempts_with_usage_in_exception_only": 0,
+      "research_tokens_in_exceptions": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "research_tokens_including_exceptions": {
+        "input_tokens": 96157,
+        "output_tokens": 15123,
+        "total_tokens": 111280
+      }
+    },
+    "multi_agent": {
+      "runs": 6,
+      "status": {
+        "completed": 5,
+        "partial": 1
+      },
+      "finish_reason": {
+        "completed": 5,
+        "response_error": 1
+      },
+      "with_answer": 6,
+      "uncaught_target_errors": 0,
+      "source_check_pass": 6,
+      "model_budget_check_pass": 6,
+      "accepted": 4,
+      "rejected": 2,
+      "missing_acceptance": 0,
+      "score_distributions": {
+        "answer_correctness_v4": {
+          "n": 6,
+          "min": 0.1,
+          "p50": 0.925,
+          "p95": 0.95,
+          "max": 0.95,
+          "sum": 4.73
+        },
+        "answer_groundedness_v4": {
+          "n": 6,
+          "min": 0.25,
+          "p50": 0.915,
+          "p95": 0.95,
+          "max": 0.95,
+          "sum": 4.7
+        }
+      },
+      "latency_seconds": {
+        "n": 6,
+        "min": 32.07831,
+        "p50": 48.144198,
+        "p95": 73.755125,
+        "max": 73.755125,
+        "sum": 305.984589
+      },
+      "gateway_model_attempts": {
+        "n": 6,
+        "min": 5,
+        "p50": 5.5,
+        "p95": 6,
+        "max": 6,
+        "sum": 33
+      },
+      "model_spans": 33,
+      "model_span_errors": 1,
+      "model_span_latency_seconds": {
+        "n": 33,
+        "min": 1.00628,
+        "p50": 1.900335,
+        "p95": 10.775234,
+        "max": 57.710022,
+        "sum": 167.722869
+      },
+      "model_attempts_with_usage": 32,
+      "model_attempts_without_usage": 1,
+      "research_usage_complete_runs": 5,
+      "per_run_usage_when_complete": {
+        "input_tokens": {
+          "n": 5,
+          "min": 11946,
+          "p50": 15943,
+          "p95": 23956,
+          "max": 23956,
+          "sum": 81516
+        },
+        "output_tokens": {
+          "n": 5,
+          "min": 1958,
+          "p50": 2689,
+          "p95": 3677,
+          "max": 3677,
+          "sum": 13840
+        },
+        "total_tokens": {
+          "n": 5,
+          "min": 13973,
+          "p50": 18632,
+          "p95": 27633,
+          "max": 27633,
+          "sum": 95356
+        }
+      },
+      "observed_research_tokens": {
+        "input_tokens": 87099,
+        "output_tokens": 14601,
+        "total_tokens": 101700
+      },
+      "tool_calls": 211,
+      "tool_successes": 208,
+      "tool_execute_error_codes": {
+        "pdf_extraction_timeout": 1,
+        "insufficient_content": 1,
+        "pdf_page_limit": 1
+      },
+      "judge_traces": 6,
+      "judge_trace_errors": 0,
+      "judge_trace_latency_seconds": {
+        "n": 6,
+        "min": 24.01578,
+        "p50": 30.3229275,
+        "p95": 71.216716,
+        "max": 71.216716,
+        "sum": 227.75821200000001
+      },
+      "judge_model_spans": 6,
+      "judge_model_spans_with_usage": 6,
+      "judge_model_span_errors": 0,
+      "judge_model_latency_seconds": {
+        "n": 6,
+        "min": 22.054468,
+        "p50": 28.536908,
+        "p95": 44.860585,
+        "max": 44.860585,
+        "sum": 177.482754
+      },
+      "observed_judge_tokens": {
+        "input_tokens": 43386,
+        "output_tokens": 30738,
+        "total_tokens": 74124
+      },
+      "stage_seconds_per_run": {
+        "researcher": {
+          "n": 6,
+          "min": 3.7330000000074506,
+          "p50": 4.086499999975786,
+          "p95": 8.672000000020489,
+          "max": 8.672000000020489,
+          "sum": 29.141000000177883
+        },
+        "supervisor": {
+          "n": 6,
+          "min": 2.968999999924563,
+          "p50": 3.148499999952037,
+          "p95": 3.8119999999180436,
+          "max": 3.8119999999180436,
+          "sum": 19.67199999978766
+        },
+        "writer": {
+          "n": 6,
+          "min": 8.25,
+          "p50": 13.663999999989755,
+          "p95": 57.71799999999348,
+          "max": 57.71799999999348,
+          "sum": 120.57699999993201
+        }
+      },
+      "with_at_least_two_cited_urls": 5,
+      "both_source_families_cited": 5,
+      "quality_and_both_source_families": 4,
+      "model_attempts_with_usage_in_exception_only": 1,
+      "research_tokens_in_exceptions": {
+        "input_tokens": 6169,
+        "output_tokens": 16000,
+        "total_tokens": 22169
+      },
+      "research_tokens_including_exceptions": {
+        "input_tokens": 93268,
+        "output_tokens": 30601,
+        "total_tokens": 123869
+      }
+    },
+    "overall": {
+      "runs": 18,
+      "status": {
+        "completed": 17,
+        "partial": 1
+      },
+      "finish_reason": {
+        "completed": 17,
+        "response_error": 1
+      },
+      "with_answer": 18,
+      "uncaught_target_errors": 0,
+      "source_check_pass": 18,
+      "model_budget_check_pass": 18,
+      "accepted": 15,
+      "rejected": 3,
+      "missing_acceptance": 0,
+      "score_distributions": {
+        "answer_correctness_v4": {
+          "n": 18,
+          "min": 0.1,
+          "p50": 0.93,
+          "p95": 0.96,
+          "max": 0.96,
+          "sum": 15.87
+        },
+        "answer_groundedness_v4": {
+          "n": 18,
+          "min": 0.25,
+          "p50": 0.9,
+          "p95": 1.0,
+          "max": 1.0,
+          "sum": 15.44
+        }
+      },
+      "latency_seconds": {
+        "n": 18,
+        "min": 32.07831,
+        "p50": 40.440658,
+        "p95": 87.163086,
+        "max": 87.163086,
+        "sum": 866.92668
+      },
+      "gateway_model_attempts": {
+        "n": 18,
+        "min": 5,
+        "p50": 6.0,
+        "p95": 6,
+        "max": 6,
+        "sum": 101
+      },
+      "model_spans": 101,
+      "model_span_errors": 1,
+      "model_span_latency_seconds": {
+        "n": 101,
+        "min": 1.00628,
+        "p50": 1.797404,
+        "p95": 10.104705,
+        "max": 57.710022,
+        "sum": 399.57063
+      },
+      "model_attempts_with_usage": 100,
+      "model_attempts_without_usage": 1,
+      "research_usage_complete_runs": 17,
+      "per_run_usage_when_complete": {
+        "input_tokens": {
+          "n": 17,
+          "min": 11210,
+          "p50": 17113,
+          "p95": 23956,
+          "max": 23956,
+          "sum": 274059
+        },
+        "output_tokens": {
+          "n": 17,
+          "min": 1753,
+          "p50": 2689,
+          "p95": 3677,
+          "max": 3677,
+          "sum": 45693
+        },
+        "total_tokens": {
+          "n": 17,
+          "min": 13187,
+          "p50": 19365,
+          "p95": 27633,
+          "max": 27633,
+          "sum": 319752
+        }
+      },
+      "observed_research_tokens": {
+        "input_tokens": 279642,
+        "output_tokens": 46454,
+        "total_tokens": 326096
+      },
+      "tool_calls": 640,
+      "tool_successes": 630,
+      "tool_execute_error_codes": {
+        "pdf_extraction_timeout": 2,
+        "insufficient_content": 3,
+        "pdf_page_limit": 3,
+        "response_too_large": 2
+      },
+      "judge_traces": 18,
+      "judge_trace_errors": 0,
+      "judge_trace_latency_seconds": {
+        "n": 18,
+        "min": 23.480928,
+        "p50": 30.347,
+        "p95": 71.216716,
+        "max": 71.216716,
+        "sum": 633.171116
+      },
+      "judge_model_spans": 18,
+      "judge_model_spans_with_usage": 18,
+      "judge_model_span_errors": 0,
+      "judge_model_latency_seconds": {
+        "n": 18,
+        "min": 21.447009,
+        "p50": 28.7273155,
+        "p95": 50.212643,
+        "max": 50.212643,
+        "sum": 549.012127
+      },
+      "observed_judge_tokens": {
+        "input_tokens": 126972,
+        "output_tokens": 95402,
+        "total_tokens": 222374
+      },
+      "stage_seconds_per_run": {
+        "planner": {
+          "n": 12,
+          "min": 2.3429999999934807,
+          "p50": 3.0,
+          "p95": 3.39000000001397,
+          "max": 3.39000000001397,
+          "sum": 35.67100000008941
+        },
+        "researcher": {
+          "n": 18,
+          "min": 3.3750000001164153,
+          "p50": 4.07850000000326,
+          "p95": 8.672000000020489,
+          "max": 8.672000000020489,
+          "sum": 77.73500000021886
+        },
+        "supervisor": {
+          "n": 6,
+          "min": 2.968999999924563,
+          "p50": 3.148499999952037,
+          "p95": 3.8119999999180436,
+          "max": 3.8119999999180436,
+          "sum": 19.67199999978766
+        },
+        "writer": {
+          "n": 18,
+          "min": 6.140999999945052,
+          "p50": 12.086500000033993,
+          "p95": 57.71799999999348,
+          "max": 57.71799999999348,
+          "sum": 268.4370000001509
+        }
+      },
+      "with_at_least_two_cited_urls": 17,
+      "both_source_families_cited": 14,
+      "quality_and_both_source_families": 13,
+      "model_attempts_with_usage_in_exception_only": 1,
+      "research_tokens_in_exceptions": {
+        "input_tokens": 6169,
+        "output_tokens": 16000,
+        "total_tokens": 22169
+      },
+      "research_tokens_including_exceptions": {
+        "input_tokens": 285811,
+        "output_tokens": 62454,
+        "total_tokens": 348265
+      }
+    }
+  },
+  "case_summary": {
+    "industry-ev": {
+      "runs": 3,
+      "accepted": 3,
+      "matched_both_source_families": 3,
+      "quality_and_both_source_families": 3
+    },
+    "industry-data-centers": {
+      "runs": 3,
+      "accepted": 3,
+      "matched_both_source_families": 3,
+      "quality_and_both_source_families": 3
+    },
+    "competitive-serverless": {
+      "runs": 3,
+      "accepted": 3,
+      "matched_both_source_families": 3,
+      "quality_and_both_source_families": 3
+    },
+    "competitive-object-storage": {
+      "runs": 3,
+      "accepted": 3,
+      "matched_both_source_families": 3,
+      "quality_and_both_source_families": 3
+    },
+    "technical-postgres": {
+      "runs": 3,
+      "accepted": 2,
+      "matched_both_source_families": 0,
+      "quality_and_both_source_families": 0
+    },
+    "technical-kubernetes": {
+      "runs": 3,
+      "accepted": 1,
+      "matched_both_source_families": 2,
+      "quality_and_both_source_families": 1
+    }
+  },
+  "source_family_rules": {
+    "industry-ev": [
+      [
+        "IEA Global EV Outlook 2025",
+        [
+          "iea.org",
+          "/reports/global-ev-outlook-2025"
+        ]
+      ],
+      [
+        "IEA Global EV Outlook 2026",
+        [
+          "iea.org",
+          "/reports/global-ev-outlook-2026"
+        ]
+      ]
+    ],
+    "industry-data-centers": [
+      [
+        "IEA Energy and AI 2025",
+        [
+          "iea.org",
+          "/reports/energy-and-ai"
+        ]
+      ],
+      [
+        "Berkeley Lab 2024 report or official DOE release",
+        [
+          "lbl.gov",
+          "data-center"
+        ],
+        [
+          "energy.gov",
+          "/articles/doe-releases-new-report-evaluating-increase-electricity-demand-data-centers"
+        ]
+      ]
+    ],
+    "competitive-serverless": [
+      [
+        "AWS Lambda official docs",
+        [
+          "docs.aws.amazon.com",
+          "/lambda/"
+        ]
+      ],
+      [
+        "Google Cloud Run official docs",
+        [
+          "cloud.google.com",
+          "/run/"
+        ]
+      ]
+    ],
+    "competitive-object-storage": [
+      [
+        "Cloudflare R2 official docs",
+        [
+          "developers.cloudflare.com",
+          "/r2/"
+        ]
+      ],
+      [
+        "AWS S3 official pricing/docs",
+        [
+          "aws.amazon.com",
+          "/s3/"
+        ],
+        [
+          "aws.amazon.com",
+          "/amazons3/"
+        ]
+      ]
+    ],
+    "technical-postgres": [
+      [
+        "PostgreSQL 17 isolation",
+        [
+          "postgresql.org",
+          "/docs/17/transaction-iso.html"
+        ]
+      ],
+      [
+        "PostgreSQL 17 explicit locking",
+        [
+          "postgresql.org",
+          "/docs/17/explicit-locking.html"
+        ]
+      ]
+    ],
+    "technical-kubernetes": [
+      [
+        "Kubernetes Disruptions",
+        [
+          "kubernetes.io",
+          "/docs/concepts/workloads/pods/disruptions"
+        ]
+      ],
+      [
+        "Kubernetes Deployments",
+        [
+          "kubernetes.io",
+          "/docs/concepts/workloads/controllers/deployment"
+        ]
+      ]
+    ]
+  }
+}

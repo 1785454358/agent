@@ -1,0 +1,683 @@
+[
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:1",
+      "role": "planner",
+      "estimated_input_tokens": 2451
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:1",
+      "role": "planner",
+      "duration_ms": 14156,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1505,
+      "output_tokens": 661
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:2",
+      "role": "researcher",
+      "estimated_input_tokens": 2410
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:3",
+      "role": "researcher",
+      "estimated_input_tokens": 2411
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:2",
+      "role": "researcher",
+      "duration_ms": 2765,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1937,
+      "output_tokens": 43
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-ae34c3d03bd6d01c51690983c878c942",
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "thread_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "3ed246bcfd11ea1adc2f11ef395dfe7e",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "tool call toolmessage pairing removemessage valid message history structure compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-ae34c3d03bd6d01c51690983c878c942",
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "thread_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "5e51da2da435a50502c0ee00b02cd9ee",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "tool call toolmessage pairing removemessage valid message history structure compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-ae34c3d03bd6d01c51690983c878c942",
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "thread_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "3ed246bcfd11ea1adc2f11ef395dfe7e",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 58
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-ae34c3d03bd6d01c51690983c878c942",
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "thread_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "f3d13f018422ae54aa71fdee19314585",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "tool call toolmessage pairing removemessage valid message history structure compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-ae34c3d03bd6d01c51690983c878c942",
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "thread_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "5e51da2da435a50502c0ee00b02cd9ee",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 123
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-ae34c3d03bd6d01c51690983c878c942",
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "thread_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "f3d13f018422ae54aa71fdee19314585",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 107
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation tool-call tool-result message structure requirements",
+      "tool_call_id": "batch-2dbabf131a72906a46314e25d9c675a1",
+      "call_id": "5e51da2da435a50502c0ee00b02cd9ee",
+      "tool": "read_evidence",
+      "query": "tool call toolmessage pairing removemessage valid message history structure compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518\",\"version\":1,\"content_hash\":\"sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118\",\"historical\":false,\"passages\":[{\"ref\":\"n1\",\"start\":2073,\"end\":2438,\"text\":\"<Info>\\n    LangChain's agent manages short-term memory as a part of your agent's state.\\n\\n    By storing these in the graph's state, the agent can access the full context for a given conversation while maintaining separation between different threads.\\n\\n    State is persisted to a database (or memory) using a checkpointer so the thread can be resumed at any time.\\n\\n\"},{\"ref\":\"n2\",\"start\":2438,\"end\":2595,\"text\":\"    Short-term memory updates when the agent is invoked or a step (like a tool call) is completed, and the state is read at the start of each step.\\n</Info>\\n\\n\"},{\"ref\":\"n3\",\"start\":8271,\"end\":8368,\"text\":\":::python\\nTo trim message history in an agent, use the @[`@before_model`] middleware decorator:\\n\\n\"},{\"ref\":\"n4\",\"start\":10029,\"end\":10126,\"text\":\":::js\\nTo trim message history in an agent, use @[`createMiddleware`] with a `beforeModel` hook:\\n\\n\"},{\"ref\":\"n5\",\"start\":11048,\"end\":11432,\"text\":\"You can delete messages from the graph state to manage the message history.\\n\\nThis is useful when you want to remove specific messages or clear the entire message history.\\n\\n:::python\\nTo delete messages from the graph state, you can use the `RemoveMessage`.\\n\\nFor `RemoveMessage` to work, you need to use a state key with @[`add_messages`] [reducer](/oss/langgraph/graph-api#reducers).\\n\\n\"},{\"ref\":\"n6\",\"start\":11844,\"end\":12055,\"text\":\"```python\\nfrom langgraph.graph.message import REMOVE_ALL_MESSAGES  # [!code highlight]\\n\\ndef delete_messages(state):\\n    return {\\\"messages\\\": [RemoveMessage(id=REMOVE_ALL_MESSAGES)]}  # [!code highlight]\\n```\\n:::\\n\\n\"},{\"ref\":\"n7\",\"start\":12721,\"end\":13097,\"text\":\"<Warning>\\n    When deleting messages, **make sure** that the resulting message history is valid. Check the limitations of the LLM provider you're using. For example:\\n\\n    * Some providers expect message history to start with a `user` message\\n    * Most providers require `assistant` messages with tool calls to be followed by corresponding `tool` result messages.\\n</Warning>\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":36526,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation tool-call tool-result message structure requirements",
+      "tool_call_id": "batch-601ff2df9d70aea4585f57e8b8b172a8",
+      "call_id": "f3d13f018422ae54aa71fdee19314585",
+      "tool": "read_evidence",
+      "query": "tool call toolmessage pairing removemessage valid message history structure compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-7b54f7d34c3077c6949c46501548ea1f5257c252b1210c76778407c6603ba7a5\",\"version\":1,\"content_hash\":\"sha256:31ebe09a2320e5224b7cdd36ad701a70f9429e04b3b52e0041d0f00ac27cc1ed\",\"historical\":false,\"passages\":[{\"ref\":\"n8\",\"start\":3660,\"end\":3985,\"text\":\"<Warning>\\n    Prefer `snake_case` for tool names (e.g., `web_search` instead of `Web Search`). Some model providers have issues with or reject names containing spaces or special characters with errors. Sticking to alphanumeric characters, underscores, and hyphens helps to improve compatibility across providers.\\n</Warning>\\n\\n\"},{\"ref\":\"n9\",\"start\":3996,\"end\":4050,\"text\":\"### Customize tool properties\\n\\n#### Custom tool name\\n\\n\"},{\"ref\":\"n10\",\"start\":10019,\"end\":10223,\"text\":\"State represents short-term memory that exists for the duration of a conversation. It includes the message history and any custom fields you define in your [graph state](/oss/langgraph/graph-api#state).\\n\\n\"},{\"ref\":\"n11\",\"start\":11387,\"end\":11588,\"text\":\"Use @[`Command`] to update the agent's state. This is useful for tools that need to update custom state fields.\\nInclude a `ToolMessage` in the update so the model can see the result of the tool call:\\n\\n\"},{\"ref\":\"n12\",\"start\":22165,\"end\":22184,\"text\":\"## Tool execution\\n\\n\"},{\"ref\":\"n13\",\"start\":22574,\"end\":22598,\"text\":\"### Tool return values\\n\\n\"},{\"ref\":\"n14\",\"start\":23065,\"end\":23258,\"text\":\"- The return value is converted to a `ToolMessage`.\\n- The model sees that text and decides what to do next.\\n- No agent state fields are changed unless the model or another tool does so later.\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":50735,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation tool-call tool-result message structure requirements",
+      "tool_call_id": "batch-30537427d11a0e9496e77df0ed459acf",
+      "call_id": "3ed246bcfd11ea1adc2f11ef395dfe7e",
+      "tool": "read_evidence",
+      "query": "tool call toolmessage pairing removemessage valid message history structure compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f\",\"version\":1,\"content_hash\":\"sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6\",\"historical\":false,\"passages\":[{\"ref\":\"n15\",\"start\":287,\"end\":443,\"text\":\"When agents fail, it's usually because the LLM call inside the agent took the wrong action / didn't do what we expected. LLMs fail for one of two reasons:\\n\\n\"},{\"ref\":\"n16\",\"start\":1211,\"end\":1425,\"text\":\"1. **Model call** - calls the LLM with a prompt and available tools, returns either a response or a request to execute tools\\n2. **Tool execution** - executes the tools that the LLM requested, returns tool results\\n\\n\"},{\"ref\":\"n17\",\"start\":5174,\"end\":5265,\"text\":\"<Tabs>\\n  <Tab title=\\\"State\\\">\\n    Access message count or conversation context from state:\\n\\n\"},{\"ref\":\"n18\",\"start\":21192,\"end\":21621,\"text\":\"<Note>\\n**Transient vs Persistent Message Updates:**\\n\\nThe examples above use `wrap_model_call` to make **transient** updates - modifying what messages are sent to the model for a single call without changing what's saved in state.\\n\\nFor **persistent** updates that modify state, you can:\\n\\n:::python\\n- Return a @[`ExtendedModelResponse`] with a @[`Command`] from `wrap_model_call` to inject state updates from the model call layer.\\n\"},{\"ref\":\"n19\",\"start\":21621,\"end\":22081,\"text\":\"- Use life-cycle hooks like `before_model`, `after_model`, or `wrap_tool_call` (for tool returns) to update the conversation history. See the [middleware documentation](/oss/langchain/middleware) for more details.\\n:::\\n\\n:::js\\n- Return a @[`Command`] directly from `wrapModelCall` to inject state updates from the model call layer.\\n- Use life-cycle hooks like `beforeModel`, `afterModel`, or `wrapToolCall` (for tool returns) to update the conversation history. \"},{\"ref\":\"n20\",\"start\":22081,\"end\":22265,\"text\":\"See the [middleware documentation](/oss/langchain/middleware) for more details.\\n:::\\n\\nSee [State updates](/oss/langchain/middleware/custom#state-updates) for more information.\\n</Note>\\n\\n\"},{\"ref\":\"n21\",\"start\":51025,\"end\":51192,\"text\":\"In the most basic case, when a tool executes, it receives the LLM's request parameters and returns a tool message back. The tool does its work and produces a result.\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":65466,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:3",
+      "role": "researcher",
+      "duration_ms": 4016,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1941,
+      "output_tokens": 106
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:4",
+      "role": "researcher",
+      "estimated_input_tokens": 2480
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:4",
+      "role": "researcher",
+      "duration_ms": 3610,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1990,
+      "output_tokens": 108
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-7b54f7d34c3077c6949c46501548ea1f5257c252b1210c76778407c6603ba7a5",
+      "version": 1,
+      "content_hash": "sha256:31ebe09a2320e5224b7cdd36ad701a70f9429e04b3b52e0041d0f00ac27cc1ed",
+      "start": 3660,
+      "end": 3985,
+      "passage_id": "p-aa1baa9caf1e1e56e66b448ca72a037a",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 2073,
+      "end": 2438,
+      "passage_id": "p-02c6064f656e5d1019c42eddd51a8810",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 2438,
+      "end": 2595,
+      "passage_id": "p-df1bc22bd1f9605d996d29c1c30d87ab",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 287,
+      "end": 443,
+      "passage_id": "p-e5a94907440cd712efe05eadb3711537",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-7b54f7d34c3077c6949c46501548ea1f5257c252b1210c76778407c6603ba7a5",
+      "version": 1,
+      "content_hash": "sha256:31ebe09a2320e5224b7cdd36ad701a70f9429e04b3b52e0041d0f00ac27cc1ed",
+      "start": 3996,
+      "end": 4050,
+      "passage_id": "p-544cd51a717ae5be4ddab2089e217cbe",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 8271,
+      "end": 8368,
+      "passage_id": "p-6cd358784b6717e2e4c85a2fef68d2fa",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 1211,
+      "end": 1425,
+      "passage_id": "p-b0a4a1cd3435b098ae66e75ea56bbb08",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-7b54f7d34c3077c6949c46501548ea1f5257c252b1210c76778407c6603ba7a5",
+      "version": 1,
+      "content_hash": "sha256:31ebe09a2320e5224b7cdd36ad701a70f9429e04b3b52e0041d0f00ac27cc1ed",
+      "start": 10019,
+      "end": 10223,
+      "passage_id": "p-2b71e5544a47ad5c407e461305d0453a",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 10029,
+      "end": 10126,
+      "passage_id": "p-bd1e11073cdf9da890af0bf6579506a1",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 5174,
+      "end": 5265,
+      "passage_id": "p-6b9138fd7263ca35575932eaea1b4db7",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-7b54f7d34c3077c6949c46501548ea1f5257c252b1210c76778407c6603ba7a5",
+      "version": 1,
+      "content_hash": "sha256:31ebe09a2320e5224b7cdd36ad701a70f9429e04b3b52e0041d0f00ac27cc1ed",
+      "start": 11387,
+      "end": 11588,
+      "passage_id": "p-381100f793199d6df401a20051679610",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 11048,
+      "end": 11432,
+      "passage_id": "p-edd3149b973978cd288638684756ec19",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 21192,
+      "end": 21621,
+      "passage_id": "p-d648e2dd0cce583aebfaeaa3e12029ea",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 21621,
+      "end": 22081,
+      "passage_id": "p-765812d7268cb237831784c7b84827a9",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 22081,
+      "end": 22265,
+      "passage_id": "p-f0a772c778e47ffe9750c9bcd96ac144",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-7b54f7d34c3077c6949c46501548ea1f5257c252b1210c76778407c6603ba7a5",
+      "version": 1,
+      "content_hash": "sha256:31ebe09a2320e5224b7cdd36ad701a70f9429e04b3b52e0041d0f00ac27cc1ed",
+      "start": 22165,
+      "end": 22184,
+      "passage_id": "p-0118c87b3a40c3d49d81ec421a1aecde",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 11844,
+      "end": 12055,
+      "passage_id": "p-a428e54cafe81cbb46c716a3734b9c80",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 51025,
+      "end": 51192,
+      "passage_id": "p-d7b3bac81eb22b9bbd53ba1fda72f47c",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-7b54f7d34c3077c6949c46501548ea1f5257c252b1210c76778407c6603ba7a5",
+      "version": 1,
+      "content_hash": "sha256:31ebe09a2320e5224b7cdd36ad701a70f9429e04b3b52e0041d0f00ac27cc1ed",
+      "start": 22574,
+      "end": 22598,
+      "passage_id": "p-57123d725ef3e3afce4181934c1c99ca",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 12721,
+      "end": 13097,
+      "passage_id": "p-a6ea6cc3fd02d652a6eed34e042006f7",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-7b54f7d34c3077c6949c46501548ea1f5257c252b1210c76778407c6603ba7a5",
+      "version": 1,
+      "content_hash": "sha256:31ebe09a2320e5224b7cdd36ad701a70f9429e04b3b52e0041d0f00ac27cc1ed",
+      "start": 23065,
+      "end": 23258,
+      "passage_id": "p-96bce67c450250a19f3da567bde555ae",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:5",
+      "role": "evaluator",
+      "estimated_input_tokens": 5925
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:5",
+      "role": "evaluator",
+      "duration_ms": 15985,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 4630,
+      "output_tokens": 814
+    }
+  },
+  {
+    "event_type": "response.excerpts",
+    "payload": {
+      "algorithm": "query-windows-v1",
+      "response_mode": "answer",
+      "attempt": 1,
+      "per_source_chars": 6000,
+      "sources": [
+        {
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "segment": "source_1",
+          "strategy": "support-first-v2",
+          "body_chars": 36526,
+          "excerpt_chars": 5779,
+          "pre_token_ranges": [
+            {
+              "start": 7539,
+              "end": 12314,
+              "start_line": 198,
+              "end_line": 340
+            },
+            {
+              "start": 12344,
+              "end": 13217,
+              "start_line": 343,
+              "end_line": 371
+            }
+          ],
+          "omitted_ranges": [],
+          "token_status": "full"
+        }
+      ]
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 7539,
+      "end": 12314,
+      "passage_id": "p-1313f160c476d5f7541901d6e033a382",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 12344,
+      "end": 13217,
+      "passage_id": "p-d3adc46c7e0b1ee9096287151d7df41b",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:6",
+      "role": "responder",
+      "estimated_input_tokens": 4026
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:6",
+      "role": "responder",
+      "duration_ms": 12500,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 3033,
+      "output_tokens": 469
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:7",
+      "role": "responder",
+      "estimated_input_tokens": 4514
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "8871d922f013486b8a5dc79454ca983d",
+      "call_id": "8871d922f013486b8a5dc79454ca983d:7",
+      "role": "responder",
+      "duration_ms": 8203,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 3220,
+      "output_tokens": 479
+    }
+  },
+  {
+    "event_type": "response.fact_review.completed",
+    "payload": {
+      "issues_count": 0,
+      "unanswered_points": [],
+      "consistency_checks": [],
+      "budgets": []
+    }
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-15T14:41:19.104072+00:00",
+  "model": "deepseek-v4.1-flash",
+  "max_model_calls": 20,
+  "max_input_tokens": 100000,
+  "available": false,
+  "error_code": "model_quota_exhausted",
+  "status_code": 429
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "candidate": "A",
+    "claim_index": 0,
+    "original_judge_quote": "trimming 是调用 LLM 前临时裁剪发送给模型的消息（transient，不改已保存状态）[1][2]",
+    "exact_answer_quote": "**trimming** 是调用 LLM 前临时裁剪发送给模型的消息（transient，不改已保存状态）[1][2]",
+    "reason": "Reinsert only existing Markdown asterisks; no semantic content changed."
+  },
+  {
+    "candidate": "A",
+    "claim_index": 1,
+    "original_judge_quote": "deleting 是从 LangGraph 状态中永久移除消息，适合删除特定消息或清空整个历史 [1]",
+    "exact_answer_quote": "**deleting** 是从 LangGraph 状态中永久移除消息，适合删除特定消息或清空整个历史 [1]",
+    "reason": "Reinsert only existing Markdown asterisks; no semantic content changed."
+  },
+  {
+    "candidate": "A",
+    "claim_index": 2,
+    "original_judge_quote": "summarizing 是把较早消息总结成摘要并**永久**替换进状态，供后续所有轮次使用，同时保留最近消息 [2]",
+    "exact_answer_quote": "**summarizing** 是把较早消息总结成摘要并**永久**替换进状态，供后续所有轮次使用，同时保留最近消息 [2]",
+    "reason": "Reinsert only existing Markdown asterisks; no semantic content changed."
+  }
+]

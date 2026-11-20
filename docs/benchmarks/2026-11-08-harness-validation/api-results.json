@@ -1,0 +1,156 @@
+{
+  "transport": "FastAPI TestClient / ASGI HTTP",
+  "providers": "deterministic local fixtures",
+  "checks": [
+    {
+      "id": "cd9d578d2390",
+      "mode": "workflow",
+      "status": "completed",
+      "finish_reason": "completed",
+      "termination_reason": "workflow_completed",
+      "research_sufficiency": "sufficient",
+      "sources": [
+        "https://example.com/alpha"
+      ],
+      "unresolved_gaps": [],
+      "sse_done": true,
+      "budget": 240,
+      "review_gap": false,
+      "restart_restored": true
+    },
+    {
+      "id": "6afe0dde2476",
+      "mode": "plan_execute",
+      "status": "completed",
+      "finish_reason": "completed",
+      "termination_reason": "completed",
+      "research_sufficiency": "sufficient",
+      "sources": [
+        "https://example.com/alpha"
+      ],
+      "unresolved_gaps": [],
+      "sse_done": true,
+      "budget": 240,
+      "review_gap": false,
+      "restart_restored": true
+    },
+    {
+      "id": "755f281704ad",
+      "mode": "multi_agent",
+      "status": "completed",
+      "finish_reason": "completed",
+      "termination_reason": "completed",
+      "research_sufficiency": "sufficient",
+      "sources": [
+        "https://example.com/alpha"
+      ],
+      "unresolved_gaps": [],
+      "sse_done": true,
+      "budget": 240,
+      "review_gap": false,
+      "restart_restored": true
+    },
+    {
+      "id": "d3483d24d497",
+      "mode": "workflow",
+      "status": "partial",
+      "finish_reason": "budget_exhausted",
+      "termination_reason": "budget_exhausted",
+      "research_sufficiency": "insufficient",
+      "sources": [],
+      "unresolved_gaps": [
+        "r1:missing:no_evidence_collected",
+        "no_evidence_collected",
+        "agent_exit:budget_exhausted"
+      ],
+      "sse_done": true,
+      "budget": 0,
+      "review_gap": false,
+      "restart_restored": true
+    },
+    {
+      "id": "973dd0e532bd",
+      "mode": "plan_execute",
+      "status": "partial",
+      "finish_reason": "budget_exhausted",
+      "termination_reason": "budget_exhausted",
+      "research_sufficiency": "insufficient",
+      "sources": [],
+      "unresolved_gaps": [
+        "r1:missing:no_evidence_collected",
+        "no_evidence_collected",
+        "agent_exit:budget_exhausted"
+      ],
+      "sse_done": true,
+      "budget": 0,
+      "review_gap": false,
+      "restart_restored": true
+    },
+    {
+      "id": "f9037709a16d",
+      "mode": "multi_agent",
+      "status": "partial",
+      "finish_reason": "budget_exhausted",
+      "termination_reason": "budget_exhausted",
+      "research_sufficiency": "insufficient",
+      "sources": [],
+      "unresolved_gaps": [
+        "r1:missing:no_evidence_collected",
+        "no_evidence_collected",
+        "agent_exit:budget_exhausted"
+      ],
+      "sse_done": true,
+      "budget": 0,
+      "review_gap": false,
+      "restart_restored": true
+    },
+    {
+      "id": "68429de12b6c",
+      "mode": "workflow",
+      "status": "partial",
+      "finish_reason": "response_error",
+      "termination_reason": "answer_review_incomplete",
+      "research_sufficiency": "sufficient",
+      "sources": [
+        "https://example.com/alpha"
+      ],
+      "unresolved_gaps": [],
+      "sse_done": true,
+      "budget": 240,
+      "review_gap": true,
+      "restart_restored": true
+    },
+    {
+      "id": "0768dfa578d0",
+      "mode": "plan_execute",
+      "status": "partial",
+      "finish_reason": "response_error",
+      "termination_reason": "answer_review_incomplete",
+      "research_sufficiency": "sufficient",
+      "sources": [
+        "https://example.com/alpha"
+      ],
+      "unresolved_gaps": [],
+      "sse_done": true,
+      "budget": 240,
+      "review_gap": true,
+      "restart_restored": true
+    },
+    {
+      "id": "fc9c2e3edc3e",
+      "mode": "multi_agent",
+      "status": "partial",
+      "finish_reason": "response_error",
+      "termination_reason": "answer_review_incomplete",
+      "research_sufficiency": "sufficient",
+      "sources": [
+        "https://example.com/alpha"
+      ],
+      "unresolved_gaps": [],
+      "sse_done": true,
+      "budget": 240,
+      "review_gap": true,
+      "restart_restored": true
+    }
+  ]
+}

@@ -1,0 +1,685 @@
+{
+  "run_id": "monitoring-live-d2bb9ec47b1e",
+  "thread_id": "monitoring-live-d2bb9ec47b1e",
+  "status": "partial",
+  "response_outcome": {
+    "response_mode": "answer",
+    "content": "**结论：主线选开源自托管 Uptime Kuma，部署在现有闲置 Linux 服务器上。** 20 个 HTTPS 站点、故障通知、历史累积均可在自托管内实现；软件许可 0 元，服务器为既有资源，新增现金支出主要是域名（若已有则为 0），按年价折算后远低于 300 元/月。通知渠道的免费额度与速率限制本次材料未给出，标为未核实。\n\n## 一、选定方案与依据\n\n- **监控能力**：HTTP(s) 监控器会请求目标 URL、测响应时间、读状态码，并默认读取 SSL 证书、记录到期日期与证书链，适合 HTTPS 站点及证书到期检查 [1]。\n- **检查频率**：间隔、超时、重试可按监控项配置；官方指南给的实用起点是 **60 秒间隔、30 秒超时、2 次重试**，再按误报率调整 [1]。仓库功能列表写有“20-second intervals” [2]，但**最小允许间隔的具体数值原文未明确**，本方案按 60 秒设计，不依赖 20 秒下限。\n- **历史保留**：监控项、通知设置和正常运行历史保存在 `/app/data` 的 SQLite 数据库；自托管必须把该路径挂载到持久卷或本地目录，否则重部署会丢历史 [3][2]。**原文未给出“保留 30 天”的专门配置项或自动清理机制**，历史能否覆盖 30 天取决于持久化存储与实例持续运行，需上线后实际观察。\n- **通知渠道**：支持 90+ 提供商，包括 Telegram、SMTP 邮件、Slack、Discord、Webhook 等，在 Settings → Notifications 配置，可绑定单个监控项或设为默认 [3][2]。\n- **部署方式**：Docker 单容器（映射 3001 端口、挂载 `/app/data`），或 Node.js（>=20.4）+ Git + PM2 源码运行；官方明确**不支持 NFS 类文件系统**，需映射本地目录或卷 [2]。\n\n## 二、检查频率与通知设计\n\n- 20 个站点各 1 个 HTTP(s) 监控，60 秒间隔、30 秒超时、2 次重试 [1]。\n- 通知主线选 **SMTP 邮件**（团队已有邮箱即可，配置门槛低），备用可加 Telegram 或 Webhook [3][2]。\n- **未核实项**：Telegram Bot 与 SMTP 服务的具体免费额度、速率限制，本次材料未披露；因此“20 个站点故障通知量是否被免费额度覆盖”无法从材料确认，需在选定服务商后查其官方限额。按 20 站点、偶发故障估算，通知量通常很小，但这只是推断，不是已核实事实。\n- **5 人查看**：通过同一面板查看告警与历史；原文未说明多用户权限或 SLA，本方案不假设多租户能力。\n\n## 三、费用分项（人民币，按月）\n\n| 项目 | 金额 | 说明 |\n|---|---|---|\n| Uptime Kuma 软件许可 | 0 元 | 开源自托管 [2] |\n| 服务器 | 0 元新增 | 使用既有闲置 Linux 服务器；电费/带宽未计入，属既有资源假设 |\n| HTTPS 证书 | 0 元 | Let's Encrypt 免费颁发，有效期 90 天、建议每 60 天续期，续期几乎不触发速率限制 [4][5] |\n| 域名 | 约 3.5–18 元/月（年价 42–215 元/年折算） | 阿里云部分后缀续费约 42–215 元/年 [6]；Cloudflare Registrar 按成本价、不加价但未给具体价 [7]。若已有域名则为 0；实价未核实 |\n| 通知渠道 | 未核实（假设 0 元） | 材料未给出 SMTP/Telegram 免费额度与费率 |\n| **合计** | **约 0–18 元/月** | 远低于 300 元/月上限；域名年价折算，非商户实际报价 |\n\n余量用途：预算上限 300 元，实际新增支出接近 0，余量可用于未来购买独立域名、或迁移到付费通知/托管服务，但**不应假设任何付费功能当前免费**。\n\n## 四、部署步骤\n\n1. 在闲置 Linux 服务器安装 Docker 与 Docker Compose（Debian/Ubuntu 等主流发行版受支持 [2]）。\n2. 创建本地目录并启动容器，挂载持久化路径：\n\n```bash\nmkdir -p /opt/uptime-kuma-data\ndocker run -d --restart=always -p 3001:3001 \\\n  -v /opt/uptime-kuma-data:/app/data \\\n  --name uptime-kuma louislam/uptime-kuma:2\n```\n\n   注意：不要用 NFS 挂载 `/app/data` [2]；先挂卷再建管理员账号，否则数据目录为空需重来 [3]。\n3. 浏览器访问 `http://服务器IP:3001`，立即创建管理员账号（未建账号前任何访问者都可抢占实例 [3]）。\n4. 逐个添加 20 个 HTTP(s) 监控：填 URL、间隔 60 秒、超时 30 秒、重试 2 次，接受 2xx 状态码 [1][3]。\n5. 进入 Settings → Notifications 添加 SMTP 邮件（及可选 Telegram/Webhook），设为默认或绑定到各监控项 [3][2]。\n6. 如需外网访问面板，配置反向代理与 HTTPS 证书（Let's Encrypt 免费 [5]）；仅内网使用可限制监听 `127.0.0.1:3001` [2]。\n7. 验证：手动停一个测试站点，确认告警到达；观察数日后检查历史曲线是否持续累积。\n\n## 五、一致性与缺口检查\n\n- **步骤与依赖一致**：Docker 路径只需 Docker，不依赖 Node.js/PM2；端口 3001、持久化 `/app/data`、通知配置位置均有原文支持 [3][2]。\n- **费用与步骤一致**：软件 0 元、证书 0 元、服务器既有；域名是唯一可能的新增现金项，按年价折算合计 ≤18 元/月，未超 300 元。\n- **仍存在的缺口**：① 最小检查间隔具体数值未核实，方案用 60 秒规避；② 30 天历史无专门保留配置项，依赖持久化与持续运行，需实测；③ SMTP/Telegram 免费额度与速率限制未核实，无法确认 20 站点通知容量；④ 域名实价为页面挂牌价，随后缀与促销波动，以购买时为准。\n- **假设**：服务器可装 Docker 且网络可达 20 个目标站点；5 人仅需查看告警与历史，不需多租户/SLA；预算按人民币计，电费带宽视为既有资源。",
+    "citations": [
+      {
+        "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+        "marker": "[1]"
+      },
+      {
+        "evidence_id": "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+        "marker": "[2]"
+      },
+      {
+        "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+        "marker": "[3]"
+      },
+      {
+        "evidence_id": "evidence-a36470b8b72eb9ce82f9f282f2f00fa200e63ce959e15019bde3c29fd5ff6c8e",
+        "marker": "[4]"
+      },
+      {
+        "evidence_id": "evidence-a9f71ce0479dc6ebf94deeba243e93e5d818be18c77d2be65e3574fa33849c4e",
+        "marker": "[5]"
+      },
+      {
+        "evidence_id": "evidence-0dddb3526a5b8745fb77e93e5015ba807a5ccaa96d6a6d460a38187d6dbdd547",
+        "marker": "[6]"
+      },
+      {
+        "evidence_id": "evidence-978cd2bb128667d1590eb230eb4af3f588285bee26a55088cd96450e6f73b688",
+        "marker": "[7]"
+      }
+    ],
+    "cited_evidence_ids": [
+      "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+      "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+      "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+      "evidence-a36470b8b72eb9ce82f9f282f2f00fa200e63ce959e15019bde3c29fd5ff6c8e",
+      "evidence-a9f71ce0479dc6ebf94deeba243e93e5d818be18c77d2be65e3574fa33849c4e",
+      "evidence-0dddb3526a5b8745fb77e93e5015ba807a5ccaa96d6a6d460a38187d6dbdd547",
+      "evidence-978cd2bb128667d1590eb230eb4af3f588285bee26a55088cd96450e6f73b688"
+    ],
+    "partial_reason": "insufficient_evidence"
+  },
+  "research_outcome": {
+    "delivery_plan": {
+      "approach": "主线选开源自托管 Uptime Kuma 部署在现有闲置 Linux 服务器上：20 个 HTTPS 监控、故障通知、30 天历史均可在自托管内实现，边际现金成本接近 0，仅需核实通知渠道（如邮件 SMTP、Telegram 等）的免费额度与运行条件，以及服务器/域名的既有成本是否计入。",
+      "assumptions": [
+        "闲置 Linux 服务器可安装 Docker 或 Node.js 运行环境，且已有公网或内网可达性满足监控需求",
+        "5 人团队仅需查看告警与历史，不要求多租户、SLA 或高级报表",
+        "每月 300 元预算按人民币计，服务器电费/带宽视为已有资源不计入新增现金支出",
+        "通知渠道优先选免费额度可覆盖 20 个站点故障通知的渠道，如 SMTP 邮件或 Telegram Bot"
+      ],
+      "outline": [
+        "确认 Uptime Kuma 版本、HTTPS 监控能力、检查间隔下限与 30 天历史保留机制",
+        "核实通知渠道（SMTP/Telegram/Webhook 等）的免费额度、速率限制与运行条件",
+        "核算费用分项：软件 0 元、服务器既有成本、域名/证书、通知渠道费用，确认合计 ≤300 元/月",
+        "编写部署步骤：环境准备、Docker 部署、添加 20 个 HTTPS 监控、配置通知、设置历史保留",
+        "做一致性检查：步骤依赖、20 个监控与 5 人使用、30 天历史与检查频率是否匹配预算"
+      ],
+      "evidence_needs": [
+        {
+          "requirement_id": "r1",
+          "query": "Uptime Kuma HTTPS monitor interval history retention documentation"
+        },
+        {
+          "requirement_id": "r2",
+          "query": "Uptime Kuma notification SMTP Telegram setup free limits"
+        },
+        {
+          "requirement_id": "r3",
+          "query": "Uptime Kuma Docker install steps Linux self-hosted"
+        },
+        {
+          "requirement_id": "r4",
+          "query": "Telegram Bot API free rate limits notifications"
+        },
+        {
+          "requirement_id": "r5",
+          "query": "SMTP email free tier transaction limits 2026"
+        }
+      ],
+      "consistency_checks": [
+        "费用分项合计是否 ≤300 元/月，且未把付费功能当作免费",
+        "20 个 HTTPS 监控与 5 人查看需求是否都被方案覆盖",
+        "30 天历史保留与检查频率是否在自托管资源下可行",
+        "部署步骤的环境依赖（Docker/Node.js、端口、域名/证书）是否齐全",
+        "通知渠道的免费额度与速率限制是否覆盖 20 个站点的故障通知量"
+      ]
+    },
+    "source_eligibility": {
+      "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c": "eligible",
+      "evidence-0dddb3526a5b8745fb77e93e5015ba807a5ccaa96d6a6d460a38187d6dbdd547": "eligible",
+      "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2": "eligible",
+      "evidence-978cd2bb128667d1590eb230eb4af3f588285bee26a55088cd96450e6f73b688": "eligible",
+      "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90": "eligible",
+      "evidence-f6c86cacf2bf940403cc39a68ccca903a6201ad1868651d6c3b4f95c81d2f203": "ineligible",
+      "evidence-a36470b8b72eb9ce82f9f282f2f00fa200e63ce959e15019bde3c29fd5ff6c8e": "eligible",
+      "evidence-a9f71ce0479dc6ebf94deeba243e93e5d818be18c77d2be65e3574fa33849c4e": "eligible",
+      "evidence-e55d4b3db5627022a17cff1a67fd9b47308e4fc1f917aafac9c22d6a12d8801d": "uncertain",
+      "evidence-f942ba051b33afbcfdeb470832e6aa58719157ff92b949a1523e1761a7ae7e0a": "uncertain",
+      "evidence-22a0258e6715cea72ae81518ba9b362c05d86452275fbcb4f43ad55077dbb12a": "uncertain",
+      "evidence-36f2caab06ae241fc36ff6241fc73ba7845aaff8949f378699da84e61f32db12": "uncertain",
+      "evidence-8f978111581202aa14a52b811999c4e52df73fd7f09a91bd78d845963ff2bc83": "uncertain"
+    },
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "Uptime Kuma 对 HTTPS 网站的监控能力、最小检查间隔与 30 天历史保留的配置方式及运行条件。"
+      },
+      {
+        "id": "r2",
+        "description": "Uptime Kuma 支持的通知渠道（如 SMTP 邮件、Telegram、Webhook）及其配置方式与免费额度/速率限制。"
+      },
+      {
+        "id": "r3",
+        "description": "Uptime Kuma 在 Linux 上自托管部署的依赖与步骤（Docker 或 Node.js、端口、数据持久化）。"
+      },
+      {
+        "id": "r4",
+        "description": "所选通知渠道（Telegram Bot 或 SMTP 邮件）的免费额度、速率限制与运行条件，能否覆盖 20 个站点故障通知。"
+      },
+      {
+        "id": "r5",
+        "description": "费用分项：软件许可、服务器既有成本、域名/证书、通知渠道费用，合计是否 ≤300 元/月。"
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "missing",
+          "reason": "HTTPS 监控能力、间隔/重试配置与历史持久化均有原文支持；最小间隔具体数值与 30 天保留的专门设置原文未给出，已注明。",
+          "finding_ids": [
+            "finding-1",
+            "finding-2",
+            "finding-3"
+          ],
+          "unanswered_parts": [
+            "最小允许检查间隔的具体数值",
+            "30 天历史保留的专门配置项（原文仅说明历史存于持久化数据库）"
+          ]
+        },
+        {
+          "requirement_id": "r2",
+          "status": "missing",
+          "reason": "通知渠道及配置方式有原文支持；各渠道免费额度/速率限制原文未披露，已标未核实。",
+          "finding_ids": [
+            "finding-4",
+            "finding-8"
+          ],
+          "unanswered_parts": [
+            "Telegram/SMTP 等渠道的免费额度与速率限制"
+          ]
+        },
+        {
+          "requirement_id": "r3",
+          "status": "covered",
+          "reason": "Docker 与 Node.js+PM2 两种部署方式、端口、数据持久化路径及 NFS 限制均有原文支持。",
+          "finding_ids": [
+            "finding-5",
+            "finding-3"
+          ],
+          "unanswered_parts": []
+        },
+        {
+          "requirement_id": "r4",
+          "status": "missing",
+          "reason": "原文仅确认支持 Telegram/SMTP 通知，未给出其免费额度、速率限制与运行条件，无法确认能否覆盖 20 站点故障通知。",
+          "finding_ids": [
+            "finding-8"
+          ],
+          "unanswered_parts": [
+            "Telegram Bot 免费额度与速率限制",
+            "SMTP 邮件服务免费额度与速率限制",
+            "20 个站点故障通知的容量是否满足"
+          ]
+        },
+        {
+          "requirement_id": "r5",
+          "status": "missing",
+          "reason": "软件许可 0、服务器既有成本 0、Let's Encrypt 证书 0、域名约 3.5–18 元/月，合计远低于 300 元/月；通知渠道费用未核实但通常为 0，已注明假设。",
+          "finding_ids": [
+            "finding-6",
+            "finding-7",
+            "finding-8"
+          ],
+          "unanswered_parts": [
+            "Telegram/SMTP 通知渠道的实际费用（未核实）"
+          ]
+        }
+      ]
+    },
+    "decomposition_degraded": false,
+    "mode": "workflow",
+    "evidence_ids": [
+      "evidence-36f2caab06ae241fc36ff6241fc73ba7845aaff8949f378699da84e61f32db12",
+      "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+      "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+      "evidence-22a0258e6715cea72ae81518ba9b362c05d86452275fbcb4f43ad55077dbb12a",
+      "evidence-f942ba051b33afbcfdeb470832e6aa58719157ff92b949a1523e1761a7ae7e0a",
+      "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+      "evidence-8f978111581202aa14a52b811999c4e52df73fd7f09a91bd78d845963ff2bc83",
+      "evidence-0dddb3526a5b8745fb77e93e5015ba807a5ccaa96d6a6d460a38187d6dbdd547",
+      "evidence-978cd2bb128667d1590eb230eb4af3f588285bee26a55088cd96450e6f73b688",
+      "evidence-f6c86cacf2bf940403cc39a68ccca903a6201ad1868651d6c3b4f95c81d2f203",
+      "evidence-a36470b8b72eb9ce82f9f282f2f00fa200e63ce959e15019bde3c29fd5ff6c8e",
+      "evidence-a9f71ce0479dc6ebf94deeba243e93e5d818be18c77d2be65e3574fa33849c4e",
+      "evidence-e55d4b3db5627022a17cff1a67fd9b47308e4fc1f917aafac9c22d6a12d8801d"
+    ],
+    "findings": [
+      {
+        "id": "finding-1",
+        "claim": "Uptime Kuma 的 HTTP(s) 监控器会向目标 URL 发起请求、测量响应时间、读取状态码，并默认读取 SSL 证书、记录证书到期日期与证书链，因此可用于监控 HTTPS 网站及证书到期。",
+        "evidence_ids": [
+          "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c"
+        ],
+        "confidence": 0.9,
+        "supports": [
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 0,
+            "end": 39,
+            "quote": "Published (HTML metadata): 2026-03-17\n\n"
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 39,
+            "end": 280,
+            "quote": "If Uptime Kuma had only one monitor type, it would be the HTTP(s) monitor. It is the workhorse of the product — the check you set up first and the one that covers the vast majority of day-to-day needs for any UK website, API or admin panel. "
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 280,
+            "end": 716,
+            "quote": "This guide walks through every practical aspect of HTTP(s) monitoring in Uptime Kuma: the status codes that matter, the configuration options worth using, SSL certificate checking, authentication patterns, POST requests and the real-world conventions UK teams adopt in production. If you are new to Uptime Kuma itself, start with our plain-English introduction and come back here afterwards.\n\n## Why HTTP(s) monitoring is the baseline\n\n"
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 716,
+            "end": 1100,
+            "quote": "Every public-facing website — whether it is a marketing brochure site, a WooCommerce shop, a SaaS dashboard or a headless API — speaks HTTP or its encrypted cousin HTTPS. An HTTP(s) monitor does roughly what a human does when they type a URL into a browser: it makes a request, measures how long the response takes, reads the status code and checks that nothing obviously went wrong. "
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 1100,
+            "end": 1228,
+            "quote": "It is the closest automated approximation to \"is my site working for customers right now?\" that a monitoring tool can produce.\n\n"
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 6006,
+            "end": 6419,
+            "quote": "**Proxy.** Route the monitor through an HTTP proxy. Useful for monitoring services that are only reachable from a specific network.\n\n## Certificate expiry — the hidden part of HTTP(s) monitoring\n\nAn HTTP(s) monitor does not just check whether the site responds — it also, by default, reads the SSL certificate on the way in. Uptime Kuma records the certificate's expiry date and the chain of authority behind it. "
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 6419,
+            "end": 6587,
+            "quote": "This matters because expired-certificate outages are among the most common self-inflicted downtime events for UK businesses, and they are almost entirely preventable.\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-2",
+        "claim": "Uptime Kuma 的检查间隔与重试次数可在监控项中配置；官方指南给出的实用起点是 60 秒间隔、30 秒超时、2 次重试，并可按误报率调整。原文未给出最小允许间隔的具体数值。",
+        "evidence_ids": [
+          "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+          "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2"
+        ],
+        "confidence": 0.75,
+        "supports": [
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 11993,
+            "end": 12299,
+            "quote": "**Retries** are how many consecutive failures to tolerate before flipping state. 0 retries means the first failure trips the alert — fine for critical services where you want to know immediately, noisy if your network is flaky. 1-2 retries filters out transient blips without losing much detection speed.\n\n"
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 12299,
+            "end": 12493,
+            "quote": "There is no universally correct combination. A sensible starting point: 60-second interval, 30-second timeout, 2 retries. Tune from there based on the false-positive rate you actually observe.\n\n"
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 12493,
+            "end": 12882,
+            "quote": "## Common patterns for UK sites\n\nHaving covered the individual fields, here are the composite patterns we see working well in production for UK businesses.\n\n**Pattern 1: The homepage check.** One HTTP(s) monitor per public domain, hitting the homepage, 60-second interval, 2 retries, 30-second timeout, 2xx accepted range, redirect following on. This is the bare minimum for any UK site.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 3046,
+            "end": 3497,
+            "quote": "## Add your first monitor\n\n1. Click **Add New Monitor** .\n2. Choose a monitor type. **HTTP(s)** is the most common: it requests a URL on an interval and alerts when the response fails or is too slow.\n3. Enter the URL, check interval, and retry settings.\n4. Click **Save** .\n\nThe dashboard charts response time and uptime percentage per monitor, and that history accumulates in the volume-backed database.\n\n## Monitor other Railway services privately\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-3",
+        "claim": "Uptime Kuma 将监控项、通知设置和正常运行历史保存在 /app/data 的 SQLite 数据库中；自托管时必须把该路径挂载到持久卷/本地目录，否则重新部署会丢失历史。原文未给出 30 天历史保留的专门配置项，历史保留取决于持久化存储。",
+        "evidence_ids": [
+          "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+          "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90"
+        ],
+        "confidence": 0.8,
+        "supports": [
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 1584,
+            "end": 1939,
+            "quote": "Pinning the major version tag (`1`) is safer than `latest`. For images hosted on Docker Hub or GitHub Container Registry, Railway can also check for new versions and redeploy the service during a maintenance window you choose; enable this under **Settings → Source → Configure Auto Updates**. See image auto updates.\n\n## Attach a volume before first use\n\n"
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 1939,
+            "end": 2306,
+            "quote": "Uptime Kuma stores everything in `/app/data`: the SQLite database, your monitors, notification settings, and uptime history. Without a volume, all of it is lost on every deployment.\n\n1. Right-click the project canvas and select **Volume** , or use the Command Palette (`⌘K` ).\n2. Connect the volume to the Uptime Kuma service.\n3. Set the mount path to `/app/data` .\n\n"
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 2306,
+            "end": 2496,
+            "quote": "Attach the volume before you create your admin account. If you configure Uptime Kuma first and add the volume later, the container restarts with an empty data directory and you start over.\n\n"
+          },
+          {
+            "evidence_id": "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+            "version": 1,
+            "content_hash": "sha256:633d4b530ffcdf10073fd41eef369decd3ea40d7c572142062a72c4d709db61c",
+            "start": 1209,
+            "end": 1594,
+            "quote": "File Systems like **NFS** (Network File System) are **NOT** supported. Please map to a local directory or volume.\n\n`docker run -d --restart=always -p 3001:3001 -v uptime-kuma:/app/data --name uptime-kuma louislam/uptime-kuma:2`\nUptime Kuma is now running on all network interfaces (e.g. http://localhost:3001 or http://your-ip:3001).\n\nIf you want to limit exposure to localhost only:\n\n"
+          },
+          {
+            "evidence_id": "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+            "version": 1,
+            "content_hash": "sha256:633d4b530ffcdf10073fd41eef369decd3ea40d7c572142062a72c4d709db61c",
+            "start": 1594,
+            "end": 2087,
+            "quote": "`docker run ... -p 127.0.0.1:3001:3001 ...`\nRequirements:\n\n- Platform\n  - ✅ Major Linux distros such as Debian, Ubuntu, Fedora and ArchLinux etc.\n  - ✅ Windows 10 (x64), Windows Server 2012 R2 (x64) or higher\n  - ❌ FreeBSD / OpenBSD / NetBSD\n  - ❌ Replit / Heroku\n- Node.js >= 20.4\n- Git\n- pm2 - For running Uptime Kuma in the background\n\n```\ngit clone https://github.com/louislam/uptime-kuma.git\ncd uptime-kuma\nnpm run setup\n# Option 1. Try it\nnode server/server.js\n# (Recommended) Option 2. "
+          },
+          {
+            "evidence_id": "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+            "version": 1,
+            "content_hash": "sha256:633d4b530ffcdf10073fd41eef369decd3ea40d7c572142062a72c4d709db61c",
+            "start": 2087,
+            "end": 2375,
+            "quote": "Run in the background using PM2\n# Install PM2 if you don't have it:\nnpm install pm2 -g && pm2 install pm2-logrotate\n# Start Server\npm2 start server/server.js --name uptime-kuma\n```\nUptime Kuma is now running on all network interfaces (e.g. http://localhost:3001 or http://your-ip:3001).\n\n"
+          },
+          {
+            "evidence_id": "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+            "version": 1,
+            "content_hash": "sha256:633d4b530ffcdf10073fd41eef369decd3ea40d7c572142062a72c4d709db61c",
+            "start": 2375,
+            "end": 2678,
+            "quote": "More useful PM2 Commands\n\n```\n# If you want to see the current console output\npm2 monit\n# If you want to add it to startup\npm2 startup && pm2 save\n```\nIf you need more options or need to browse via a reverse proxy, please read:\n\nhttps://github.com/louislam/uptime-kuma/wiki/%F0%9F%94%A7-How-to-Install\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-4",
+        "claim": "Uptime Kuma 支持 90+ 通知提供商，包括 Slack、Discord、Telegram、SMTP 邮件、PagerDuty 和 Webhook，在 Settings → Notifications 中配置，并可绑定到单个监控项或设为默认。",
+        "evidence_ids": [
+          "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2"
+        ],
+        "confidence": 0.85,
+        "supports": [
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 0,
+            "end": 77,
+            "quote": "Source type (HTML metadata): Article\n\nPublished (HTML metadata): 2026-07-29\n\n"
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 77,
+            "end": 516,
+            "quote": "# Self-Host Uptime Kuma for Uptime Monitoring\n\nDeploy Uptime Kuma on Railway with a volume for persistent monitor history. Monitor public sites and internal services, and publish status pages.\n\nUptime Kuma is an open-source uptime monitoring tool. It checks your sites and services on an interval (HTTP, TCP, ping, DNS, and more), records response times, sends alerts through 90+ notification providers, and publishes public status pages. "
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 516,
+            "end": 847,
+            "quote": "It is a lightweight alternative to hosted monitoring services, and the monitoring data stays in your own database.\n\nUptime Kuma runs as a single container with a SQLite database, so deploying it on Railway takes only one service, built from the official Docker image, plus a volume so your monitors and history survive redeploys.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 847,
+            "end": 1105,
+            "quote": "## What you will set up\n\n- An Uptime Kuma instance running from the official Docker image\n- Persistent storage via a Railway Volume\n- A public domain for the dashboard and status pages\n- Optional monitoring of other Railway services over private networking\n\n"
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 3687,
+            "end": 4052,
+            "quote": "1. In Uptime Kuma, add an **HTTP(s)** or**TCP** monitor.\n2. Point it at the internal hostname and the port your service listens on, for example `http://api.railway.internal:8080/health` .\n\nPrivate networking is scoped per environment. An Uptime Kuma instance in your `production` environment can only reach other services in `production`.\n\n## Set up notifications\n\n"
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 4052,
+            "end": 4356,
+            "quote": "Uptime Kuma configures notifications in the UI, not through environment variables. Go to **Settings → Notifications** and add a provider: Slack, Discord, Telegram, email (SMTP), PagerDuty, webhooks, and dozens more. Attach the notification to individual monitors or set it as a default for all of them.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 4356,
+            "end": 4668,
+            "quote": "## Publish a status page\n\nUptime Kuma serves public status pages from the same domain. Go to **Status Pages**, create a page, and pick which monitors it shows. The page is available at `https://<your-domain>/status/<slug>` and is safe to share: it exposes only the monitors you select, not the admin dashboard.\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-5",
+        "claim": "Uptime Kuma 在 Linux 上可用 Docker 单容器部署（映射 3001 端口、挂载 /app/data 卷），也可用 Node.js（>=20.4）+ Git + PM2 从源码运行；官方说明不支持 NFS 类文件系统，需映射本地目录或卷。",
+        "evidence_ids": [
+          "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90"
+        ],
+        "confidence": 0.85,
+        "supports": [
+          {
+            "evidence_id": "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+            "version": 1,
+            "content_hash": "sha256:633d4b530ffcdf10073fd41eef369decd3ea40d7c572142062a72c4d709db61c",
+            "start": 1209,
+            "end": 1594,
+            "quote": "File Systems like **NFS** (Network File System) are **NOT** supported. Please map to a local directory or volume.\n\n`docker run -d --restart=always -p 3001:3001 -v uptime-kuma:/app/data --name uptime-kuma louislam/uptime-kuma:2`\nUptime Kuma is now running on all network interfaces (e.g. http://localhost:3001 or http://your-ip:3001).\n\nIf you want to limit exposure to localhost only:\n\n"
+          },
+          {
+            "evidence_id": "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+            "version": 1,
+            "content_hash": "sha256:633d4b530ffcdf10073fd41eef369decd3ea40d7c572142062a72c4d709db61c",
+            "start": 1594,
+            "end": 2087,
+            "quote": "`docker run ... -p 127.0.0.1:3001:3001 ...`\nRequirements:\n\n- Platform\n  - ✅ Major Linux distros such as Debian, Ubuntu, Fedora and ArchLinux etc.\n  - ✅ Windows 10 (x64), Windows Server 2012 R2 (x64) or higher\n  - ❌ FreeBSD / OpenBSD / NetBSD\n  - ❌ Replit / Heroku\n- Node.js >= 20.4\n- Git\n- pm2 - For running Uptime Kuma in the background\n\n```\ngit clone https://github.com/louislam/uptime-kuma.git\ncd uptime-kuma\nnpm run setup\n# Option 1. Try it\nnode server/server.js\n# (Recommended) Option 2. "
+          },
+          {
+            "evidence_id": "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+            "version": 1,
+            "content_hash": "sha256:633d4b530ffcdf10073fd41eef369decd3ea40d7c572142062a72c4d709db61c",
+            "start": 2087,
+            "end": 2375,
+            "quote": "Run in the background using PM2\n# Install PM2 if you don't have it:\nnpm install pm2 -g && pm2 install pm2-logrotate\n# Start Server\npm2 start server/server.js --name uptime-kuma\n```\nUptime Kuma is now running on all network interfaces (e.g. http://localhost:3001 or http://your-ip:3001).\n\n"
+          },
+          {
+            "evidence_id": "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+            "version": 1,
+            "content_hash": "sha256:633d4b530ffcdf10073fd41eef369decd3ea40d7c572142062a72c4d709db61c",
+            "start": 2375,
+            "end": 2678,
+            "quote": "More useful PM2 Commands\n\n```\n# If you want to see the current console output\npm2 monit\n# If you want to add it to startup\npm2 startup && pm2 save\n```\nIf you need more options or need to browse via a reverse proxy, please read:\n\nhttps://github.com/louislam/uptime-kuma/wiki/%F0%9F%94%A7-How-to-Install\n\n"
+          },
+          {
+            "evidence_id": "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+            "version": 1,
+            "content_hash": "sha256:633d4b530ffcdf10073fd41eef369decd3ea40d7c572142062a72c4d709db61c",
+            "start": 935,
+            "end": 1200,
+            "quote": "```\nmkdir uptime-kuma\ncd uptime-kuma\ncurl -o compose.yaml https://raw.githubusercontent.com/louislam/uptime-kuma/master/compose.yaml\ndocker compose up -d\n```\nUptime Kuma is now running on all network interfaces (e.g. http://localhost:3001 or http://your-ip:3001).\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-6",
+        "claim": "Let's Encrypt 证书免费颁发，可用于启用 HTTPS；证书默认有效期 90 天，建议每 60 天续期，且续期几乎不会触发速率限制。这支持自托管方案中 HTTPS 证书成本为 0 的假设。",
+        "evidence_ids": [
+          "evidence-a9f71ce0479dc6ebf94deeba243e93e5d818be18c77d2be65e3574fa33849c4e",
+          "evidence-a36470b8b72eb9ce82f9f282f2f00fa200e63ce959e15019bde3c29fd5ff6c8e"
+        ],
+        "confidence": 0.8,
+        "supports": [
+          {
+            "evidence_id": "evidence-a9f71ce0479dc6ebf94deeba243e93e5d818be18c77d2be65e3574fa33849c4e",
+            "version": 1,
+            "content_hash": "sha256:76bdd51229045284d48b7ce9a3315f840e0875a743da6c76e3085734e92d3769",
+            "start": 0,
+            "end": 457,
+            "quote": "此常见问题列表分为以下几个部分：\n\n## Let’s Encrypt 提供哪些服务？\n\nLet’s Encrypt 是一家全球性的证书颁发机构 (CA)，为世界各地的个人和团体提供获取、续期、管理 SSL/TLS 证书的服务。网站可以使用我们的证书来启用安全的 HTTPS 连接。\n\nLet’s Encrypt 仅提供域名验证 (DV) 证书，不提供组织验证 (OV) 和扩展验证 (EV) 证书，主要原因是我们无法自动颁发这两类证书。\n\n前往我们的快速入门页面即可开始使用 Let’s Encrypt。\n\n## 使用 Let’s Encrypt 的费用是多少？真的免费吗？\n\n我们颁发证书不收取任何费用。 Let’s Encrypt 属于非营利组织，旨在推广 HTTPS 技术的应用，从而构建更加安全且尊重隐私的互联网环境。我们致力于提供免费便捷的服务，以此帮助所有网站部署 HTTPS。\n\n同时，我们也需要个人与赞助商的慷慨援助，才能持续向全球提供免费的服务。如果您有兴趣支持我们，请考虑捐款或成为赞助商。\n\n"
+          },
+          {
+            "evidence_id": "evidence-a9f71ce0479dc6ebf94deeba243e93e5d818be18c77d2be65e3574fa33849c4e",
+            "version": 1,
+            "content_hash": "sha256:76bdd51229045284d48b7ce9a3315f840e0875a743da6c76e3085734e92d3769",
+            "start": 457,
+            "end": 936,
+            "quote": "部分服务商（如网站托管服务）可能会收取小额费用，以弥补其提供 Let’s Encrypt 证书所产生的管理费用。\n\n## 你们能提供怎样的客户服务？\n\nLet’s Encrypt 的运营团队规模较小，依靠自动化来降低成本，因此无法直接为用户提供客服支持。不过我们确实有一些很棒的支持服务：\n\n1. 我们有非常实用的文档。\n2. 我们有非常积极且乐于提供帮助的社区支持论坛。我们社区的成员在回答问题方面做得很好，许多最常见的问题已经得到了解答。\n\n这段影片充分展现了社群支持的力量，与我们的观念不谋而合。\n\n## 某个使用 Let’s Encrypt 的网站涉嫌欺诈/钓鱼攻击/传播恶意软件……我该怎么办？\n\n我们建议向 Google Safe Browsing 与 Microsoft SmartScreen 项目举报此类网站，以便更为有效地保护用户。举报网址如下：\n\n如果您想深入了解我们的相关政策及其背后的原因，可以阅读此文：\n\nhttps://letsencrypt.org/2015/10/29/phishing-and-malware.html\n\n"
+          },
+          {
+            "evidence_id": "evidence-a9f71ce0479dc6ebf94deeba243e93e5d818be18c77d2be65e3574fa33849c4e",
+            "version": 1,
+            "content_hash": "sha256:76bdd51229045284d48b7ce9a3315f840e0875a743da6c76e3085734e92d3769",
+            "start": 936,
+            "end": 1415,
+            "quote": "## 我的浏览器是否信任 Let’s Encrypt 的证书？\n\n对于大多数浏览器和操作系统，是的。 详见兼容性列表。\n\n## 除网站 SSL/TLS 证书外，Let’s Encrypt 能否颁发其他证书？\n\nLet’s Encrypt 颁发的是标准的域名验证型证书，凡是有域名的服务器都能使用，包括网页服务器、邮件服务器、FTP 服务器等等。\n\n电子邮件加密与代码签名采用的是另一种证书，Let’s Encrypt 不能颁发。\n\n## Let’s Encrypt 是否会在其服务器上生成或存储我的证书私钥？\n\n不会。永远不会。\n\n私钥只能由您自己的服务器生成并管理，与 Let’s Encrypt 无关。\n\n## Let’s Encrypt 证书的有效期有多长？能够使用多久？\n\n我们的证书有效期默认为 90 天，其背后的原因可以从这里了解。\n\n用户也可以选择有效期为 6 天的短期证书，详见此处。\n\n除上述情形外证书有效期不能随意调整，任何用户都不例外。我们建议有效期为 90 天的证书每 60 天续期一次，有效期为 6 天的证书每 3 天续期一次。\n\n"
+          },
+          {
+            "evidence_id": "evidence-a9f71ce0479dc6ebf94deeba243e93e5d818be18c77d2be65e3574fa33849c4e",
+            "version": 1,
+            "content_hash": "sha256:76bdd51229045284d48b7ce9a3315f840e0875a743da6c76e3085734e92d3769",
+            "start": 1415,
+            "end": 1880,
+            "quote": "## Let’s Encrypt 能颁发组织验证 (OV) 或扩展验证 (EV) 证书吗？\n\n我们没有计划颁发 OV 或 EV 证书。\n\n## 我可以获得针对多个域名的证书（SAN 证书或 UCC 证书）吗？\n\n是的，同一份证书可以通过主体备用名称 (SAN) 机制包含多个不同的名称。\n\n## Let’s Encrypt 颁发通配符证书吗？\n\n是的。申请通配符证书必须通过 DNS-01 验证。有关更多技术信息，请参阅该网页。\n\n## 我的操作系统有可以使用的 Let’s Encrypt (ACME) 客户端吗？\n\n您有大量的 ACME 客户端可以选择。其中很可能就有支持您操作系统的客户端。我们建议您在入门时使用 Certbot。\n\n## 我可以使用已有的私钥或证书签名请求 (CSR) 吗？\n\n是的，但并非所有客户端都支持此功能。 Certbot 是支持的。\n\n## 申请证书后我的域名流量剧增！为什么会这样？\n\n这是意料之中的正常情况。在证书颁发流程中，Let’s Encrypt 会从多个网络位置核验您对域名的控制权。"
+          },
+          {
+            "evidence_id": "evidence-a9f71ce0479dc6ebf94deeba243e93e5d818be18c77d2be65e3574fa33849c4e",
+            "version": 1,
+            "content_hash": "sha256:76bdd51229045284d48b7ce9a3315f840e0875a743da6c76e3085734e92d3769",
+            "start": 1880,
+            "end": 2369,
+            "quote": "验证通过后，您的证书还将录入各类证书透明化 (CT) 日志系统，您可以在此处了解这种做法的必要性。证书录入系统后，系统便会开始自动检测您的域名并尝试访问，在您的服务器日志中产生更多的记录。\n\n## Let’s Encrypt 使用什么 IP 地址来验证我的网站服务器？\n\n我们不会发布用于验证的 IP 地址列表，因为它们随时都可能改变。请注意，我们目前有多个用于验证的 IP 地址。\n\n## 我的证书成功续期，但这次却不需要验证，为什么？\n\n域名验证通过后，结果会保留一段时间，根据所选的证书配置，最长可以保留 30 天。如果您申请证书时所有验证结果都还未过期，就无需重复验证。\n\n## 为什么我的 Let’s Encrypt (ACME) 客户端启动时间应当随机？\n\n我们要求 ACME 客户端在随机的时间点执行证书续期，防止每天的特定时刻（例如协调世界时的午夜零点、每小时或每分钟的第一秒）出现流量高峰。服务器繁忙时我们还会要求客户端等待一段时间再重试，因此将续期时间随机化也能避免不必要的反复请求。\n\n## 在哪里可以深入了解 TLS/SSL 与 PKI 的相关知识？\n\n"
+          },
+          {
+            "evidence_id": "evidence-a9f71ce0479dc6ebf94deeba243e93e5d818be18c77d2be65e3574fa33849c4e",
+            "version": 1,
+            "content_hash": "sha256:76bdd51229045284d48b7ce9a3315f840e0875a743da6c76e3085734e92d3769",
+            "start": 2369,
+            "end": 2488,
+            "quote": "资深网络安全学者 Ivan Ristić 曾发表过一篇配置指南，列举了设置 TLS 应注意的事项，参考价值很高。\n\n如果要更广泛、更深入地学习相关背景知识，推荐 Ristić 的另一部著作 Bulletproof TLS and PKI。"
+          },
+          {
+            "evidence_id": "evidence-a36470b8b72eb9ce82f9f282f2f00fa200e63ce959e15019bde3c29fd5ff6c8e",
+            "version": 1,
+            "content_hash": "sha256:97307558929a17c21e3e33628e2e0f803424140784a101c7aa1b3cd036b5bcf9",
+            "start": 67,
+            "end": 306,
+            "quote": "为保证尽可能多的人可以公平使用我们的服务，Let’s Encrypt 采取了速率限制措施。我们相信这一限制足以满足大多数人的正常需求。此外，我们的设计使得证书续期几乎不可能触发速率限制，即使是大型机构也可以逐步增加证书数量，无需 Let’s Encrypt 干预。\n\n如果您正在开发或测试一款 Let’s Encrypt 客户端，请使用我们的测试环境，而不要使用生产环境的接口。如果您准备将 Let’s Encrypt 作为证书提供商或用于大型网站中，请查阅我们的集成指南。\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-7",
+        "claim": "域名注册需付费：阿里云页面显示部分后缀续费价约 42–215 元/年（如 .cn 42 元/年、.com 86 元/年等），折合每月约 3.5–18 元；Cloudflare Registrar 以成本价销售域名、不加价。若已有域名则此项为 0。",
+        "evidence_ids": [
+          "evidence-0dddb3526a5b8745fb77e93e5015ba807a5ccaa96d6a6d460a38187d6dbdd547",
+          "evidence-978cd2bb128667d1590eb230eb4af3f588285bee26a55088cd96450e6f73b688"
+        ],
+        "confidence": 0.6,
+        "supports": [
+          {
+            "evidence_id": "evidence-0dddb3526a5b8745fb77e93e5015ba807a5ccaa96d6a6d460a38187d6dbdd547",
+            "version": 1,
+            "content_hash": "sha256:e20cec586fa92c0088e8caa744de142bdf5badb1267f3569544157cfe1178ed1",
+            "start": 0,
+            "end": 489,
+            "quote": "### 一口价域名\n\n海量一口价域名在售资源，\n\n无需其他交涉可立即下单，\n\n方便快捷，省时省心！\n\n一键点击，可访问你想要的内容\n\n¥86/年\n\n续费价格\n\n¥86/年\n\n转入价格\n\n¥*11*/首年\n\n日常价:¥79/年\n\n全球广泛流行，注册量最高的域名\n\n¥95/年\n续费价格\n\n\n¥85/年\n转入价格\n\n\n¥*85*/首年\n\n日常价:¥90/年\n\n中国国家顶级域名，互联网上的中国标识\n\n¥42/年\n续费价格\n\n\n¥38/年\n转入价格\n\n\n¥*38*/首年\n\n日常价:¥39/年\n\n全球广受欢迎的顶级域名，极具互联网特色\n\n¥105/年\n续费价格\n\n\n¥95/年\n转入价格\n\n\n¥*95*/首年\n\n日常价:¥99/年\n\n是含义为“亚洲” 的顶级域名\n\n¥99/年\n续费价格\n\n\n¥99/年\n转入价格\n\n\n¥*8*/首年\n\n适用于各类娱乐场所，趣闻趣事和兴趣团体网站\n\n¥215/年\n续费价格\n\n\n¥213/年\n转入价格\n\n\n日常价:¥69/年\n\n极具商业潜力的国别顶级域名\n\n¥80/年\n续费价格\n\n\n¥78/年\n转入价格\n\n\n¥*32*/首年\n\n日常价:¥75/年\n\n"
+          },
+          {
+            "evidence_id": "evidence-0dddb3526a5b8745fb77e93e5015ba807a5ccaa96d6a6d460a38187d6dbdd547",
+            "version": 1,
+            "content_hash": "sha256:e20cec586fa92c0088e8caa744de142bdf5badb1267f3569544157cfe1178ed1",
+            "start": 489,
+            "end": 738,
+            "quote": "天生自带尊贵感，象征着高贵、特权、与众不同\n\n¥45/年\n续费价格\n\n\n¥45/年\n转入价格\n\n\n¥*34*/首年\n\n我们的优势\n\n连续多年市场NO.1  _\n\n超过4000万域名在阿里云注册；每日400万+域名在阿里云查询\n\n丰富与高性价比 _\n\n提供超过100+后缀域名服务；免费云解析，极速实时生效\n\n更智能，更稳定，更安全 _\n\n提供智能分词、语义联想等智能化服务；免费提供域名注册商安全锁服务\n\n便捷与易用性 _\n\n在线快速注册，续费多次提醒，自主平台便捷管理；批量注册/续费，操作更方便"
+          },
+          {
+            "evidence_id": "evidence-978cd2bb128667d1590eb230eb4af3f588285bee26a55088cd96450e6f73b688",
+            "version": 1,
+            "content_hash": "sha256:ccef67c8d6b4f70ef51d7bc35bce44d31243f1881a9feb60d8d1b598d3e0440e",
+            "start": 0,
+            "end": 493,
+            "quote": "语言\n\n用户案例\n\n现代化应用\n\n现代化安全\n\n现代化网络\n\nCXO 主题\n\n行业\n\n资源\n\n互动\n\n产品\n\nSASE (Cloudflare One)\n\n应用安全\n\n应用性能\n\n网络\n\n计划与价格\n\n资源\n\n文档\n\n产品\n\n人工智能\n\n计算\n\n媒体\n\n存储和数据库\n\n计划与价格\n\n合作关系类型\n\n互动\n\n构建\n\n探索\n\n支持\n\n公司信息\n\n信任，隐私与安全\n\n公众利益\n\n域名\n\n域名\n\n优势\n\n常见问题解答\n\n低成本域名注册，从这里开始。Cloudflare Registrar 是一个低成本的域名注册提供商，提供自动续费，域名无额外费用，续费不加价。立即购买或转移域名，开启省钱之旅。\n\nCloudflare 以域名注册管理机构收取的相同价格销售域名，无额外费用。转移域名以降低续费成本，或轻松购买新域名。\n\n域名自动续费，Cloudflare 不收取额外费用。\n\nCloudflare Registrar 是可靠的域名服务，采用最新 DNS 安全协议保障域名安全。\n\nCloudflare Registrar 无多余附加服务、无额外加价、无意外费用。直接以成本价购买域名。\n\n"
+          },
+          {
+            "evidence_id": "evidence-978cd2bb128667d1590eb230eb4af3f588285bee26a55088cd96450e6f73b688",
+            "version": 1,
+            "content_hash": "sha256:ccef67c8d6b4f70ef51d7bc35bce44d31243f1881a9feb60d8d1b598d3e0440e",
+            "start": 493,
+            "end": 983,
+            "quote": "从现有域名注册商迁移至 Cloudflare，开始节省成本。设置简单轻松。\n\n支持最常见的顶级域名（TLD），例如 .com、.org.ai,.dev，.uk和 .io 等 400 多个域名。\n\nCloudflare Registrar 防范域名劫持，支持 DNSSEC 等最新安全协议。\n\n域名价格因供需关系而存在差异。域名注册管理机构会对受欢迎或流行的顶级域名（TLD）和二级域名（2LD）收取更高费用。此外，域名注册商可能会对已知的热门域名进行加价。\n\n最后，互联网上存在域名抢注行为：即抢先注册已知他人需要的域名，并人为抬高价格。\n\n相比之下，不太知名的二级域名和 .com 等常见顶级域名可以相当便宜，有些域名价格低至 0.99 美元。\n\n域名由非营利的互联网名称与数字地址分配机构（ICANN）和域名注册管理机构共同颁发和管理。ICANN 为某些类型的域名设定价格，注册管理机构按照该价格进行销售。其他类型的域名，如某些顶级域名，可以按照注册管理机构偏好的任何价格进行销售。\n\n域名注册局是批发商，向域名注册商出售域名。域名注册商是直接面向网站所有者销售域名的零售商。"
+          },
+          {
+            "evidence_id": "evidence-978cd2bb128667d1590eb230eb4af3f588285bee26a55088cd96450e6f73b688",
+            "version": 1,
+            "content_hash": "sha256:ccef67c8d6b4f70ef51d7bc35bce44d31243f1881a9feb60d8d1b598d3e0440e",
+            "start": 983,
+            "end": 1433,
+            "quote": "域名注册商通常在向注册管理机构支付的原价基础上加价，以获取利润。Cloudflare Registrar 并不这样做，而是以成本价销售域名。\n\n如果使用 Cloudflare Registrar 这样的低成本注册商，您就可以低成本进行域名续费，因为此类注册商不会在域名注册管理机构收取的费用之上增加任何额外续费费用。\n\nCloudflare Registrar 是低成本域名的最佳提供商。Cloudflare Registrar 以成本价销售和续费域名，不额外加价或收取附加费用。Cloudflare 并不通过销售这些域名来谋利。\n\n是的，Cloude flar通过 Cloudflare Registrar 服务销售域名。Cloudflare Registrar 以无加价、无额外费用的方式销售域名。Cloudflare 并不通过域名注册服务获取利润。\n\nCloudflare 的域名以成本价销售，与注册管理机构提供的价格完全相同。Cloudflare 允许用户以无加价、无隐藏费用的方式购买域名。"
+          }
+        ]
+      },
+      {
+        "id": "finding-8",
+        "claim": "Uptime Kuma 本身为开源软件，自托管在已有闲置 Linux 服务器上时软件许可费为 0；原文未给出 Telegram Bot 或 SMTP 邮件服务的具体免费额度与速率限制，因此通知渠道费用只能标为未核实（通常假设为 0）。",
+        "evidence_ids": [
+          "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90"
+        ],
+        "confidence": 0.5,
+        "supports": [
+          {
+            "evidence_id": "evidence-27898a237a9e35cf39df724abc1f9e5e3009727af13714a3a1babbcf44a3da90",
+            "version": 1,
+            "content_hash": "sha256:633d4b530ffcdf10073fd41eef369decd3ea40d7c572142062a72c4d709db61c",
+            "start": 0,
+            "end": 60,
+            "quote": "Uptime Kuma is an easy-to-use self-hosted monitoring tool.\n\n"
+          }
+        ]
+      }
+    ],
+    "unresolved_gaps": [
+      "r1:missing:HTTPS 监控能力、间隔/重试配置与历史持久化均有原文支持；最小间隔具体数值与 30 天保留的专门设置原文未给出，已注明。",
+      "r2:missing:通知渠道及配置方式有原文支持；各渠道免费额度/速率限制原文未披露，已标未核实。",
+      "r4:missing:原文仅确认支持 Telegram/SMTP 通知，未给出其免费额度、速率限制与运行条件，无法确认能否覆盖 20 站点故障通知。",
+      "r5:missing:软件许可 0、服务器既有成本 0、Let's Encrypt 证书 0、域名约 3.5–18 元/月，合计远低于 300 元/月；通知渠道费用未核实但通常为 0，已注明假设。",
+      "diagnostic:unread_evidence:evidence-e55d4b3db5627022a17cff1a67fd9b47308e4fc1f917aafac9c22d6a12d8801d",
+      "diagnostic:unread_evidence:evidence-f942ba051b33afbcfdeb470832e6aa58719157ff92b949a1523e1761a7ae7e0a",
+      "diagnostic:unread_evidence:evidence-22a0258e6715cea72ae81518ba9b362c05d86452275fbcb4f43ad55077dbb12a",
+      "diagnostic:unread_evidence:evidence-36f2caab06ae241fc36ff6241fc73ba7845aaff8949f378699da84e61f32db12",
+      "diagnostic:unread_evidence:evidence-8f978111581202aa14a52b811999c4e52df73fd7f09a91bd78d845963ff2bc83",
+      "diagnostic:read_anchor_omitted:evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c"
+    ],
+    "executed_steps": 42,
+    "termination_reason": "insufficient_evidence"
+  },
+  "termination_reason": "insufficient_evidence",
+  "executed_steps": 42,
+  "unresolved_gaps": [
+    "r1:missing:HTTPS 监控能力、间隔/重试配置与历史持久化均有原文支持；最小间隔具体数值与 30 天保留的专门设置原文未给出，已注明。",
+    "r2:missing:通知渠道及配置方式有原文支持；各渠道免费额度/速率限制原文未披露，已标未核实。",
+    "r4:missing:原文仅确认支持 Telegram/SMTP 通知，未给出其免费额度、速率限制与运行条件，无法确认能否覆盖 20 站点故障通知。",
+    "r5:missing:软件许可 0、服务器既有成本 0、Let's Encrypt 证书 0、域名约 3.5–18 元/月，合计远低于 300 元/月；通知渠道费用未核实但通常为 0，已注明假设。",
+    "diagnostic:unread_evidence:evidence-e55d4b3db5627022a17cff1a67fd9b47308e4fc1f917aafac9c22d6a12d8801d",
+    "diagnostic:unread_evidence:evidence-f942ba051b33afbcfdeb470832e6aa58719157ff92b949a1523e1761a7ae7e0a",
+    "diagnostic:unread_evidence:evidence-22a0258e6715cea72ae81518ba9b362c05d86452275fbcb4f43ad55077dbb12a",
+    "diagnostic:unread_evidence:evidence-36f2caab06ae241fc36ff6241fc73ba7845aaff8949f378699da84e61f32db12",
+    "diagnostic:unread_evidence:evidence-8f978111581202aa14a52b811999c4e52df73fd7f09a91bd78d845963ff2bc83",
+    "diagnostic:read_anchor_omitted:evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c"
+  ],
+  "sources": [
+    "https://uptimekuma.io/http-https-monitoring-uptime-kuma",
+    "https://github.com/louislam/uptime-kuma",
+    "https://railway.com/guides/uptime-kuma",
+    "https://letsencrypt.org/zh-cn/docs/rate-limits",
+    "https://letsencrypt.org/zh-cn/docs/faq",
+    "https://wanwang.aliyun.com/domain",
+    "https://www.cloudflare.com/zh-cn/application-services/solutions/low-cost-domain-names"
+  ],
+  "research_sufficiency": "insufficient"
+}

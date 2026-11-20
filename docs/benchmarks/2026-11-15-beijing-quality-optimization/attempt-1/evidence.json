@@ -1,0 +1,122 @@
+[
+  {
+    "id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+    "canonical_url": "https://ticket.dpm.org.cn/",
+    "title": "在线订票 - 故宫博物院",
+    "media_type": "text/html",
+    "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+    "fetched_at": "2026-11-15T09:58:30.300265Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://ticket.dpm.org.cn/",
+      "final_url": "https://ticket.dpm.org.cn/",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-97b0a5473b75e1f739dc4dbd3ed8edb978213524dbb4c1e011e6fc5745246e62",
+    "canonical_url": "https://ticket.dpm.org.cn/subject_booking/index.html",
+    "title": "在线订票",
+    "media_type": "text/html",
+    "content_hash": "sha256:71e691abce560034f60255ab459dbc680ebd1cf771e452f800d0d24a84b6fd36",
+    "fetched_at": "2026-11-15T09:58:30.010206Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://ticket.dpm.org.cn/subject_booking/index.html",
+      "final_url": "https://ticket.dpm.org.cn/subject_booking/index.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-58e7a48dd4ae7e5e198008952ec2d409d75a3af27427e5b5ee55cf39d8dae819",
+    "canonical_url": "https://s.visitbeijing.com.cn/attraction/101409",
+    "title": "天坛公园",
+    "media_type": "text/html",
+    "content_hash": "sha256:439db460518a076782252daeaa944a534743d11634b189a8e838b25293d8007c",
+    "fetched_at": "2026-11-15T09:58:28.333672Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://s.visitbeijing.com.cn/attraction/101409",
+      "final_url": "https://s.visitbeijing.com.cn/attraction/101409",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-57bffefc0d5686d56d9106995c5079f7450ec3d9ace8266001a9343478acd17a",
+    "canonical_url": "https://all.accor.com/a/zh/destination/city/hotels-beijing-v5004/budget-friendly.html",
+    "title": "北京经济型酒店：舒适省心更省钱 | Accor",
+    "media_type": "text/html",
+    "content_hash": "sha256:ef45f383a2ced8df95e4fd2826cdba57d1c1935b19757973412de863e80a2b7b",
+    "fetched_at": "2026-11-15T09:58:31.113977Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://all.accor.com/a/zh/destination/city/hotels-beijing-v5004/budget-friendly.html",
+      "final_url": "https://all.accor.com/a/zh/destination/city/hotels-beijing-v5004/budget-friendly.html",
+      "publisher_canonical_url": "https://all.accor.com/a/zh/destination/city/hotels-beijing-v5004/budget-friendly.html",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-9e3ada23012b97916c8461c5a810034db36a82fc95a42fc76ff4bf730c821e54",
+    "canonical_url": "https://k.sina.com.cn/article_7879923678_1d5ae17de06802hcu4.html?from=tech",
+    "title": "附近经济型酒店推荐怎么选？2026年100-300元闭眼入指南+FAQ|商圈|车位|品牌|预算|如家_新浪新闻",
+    "media_type": "text/html",
+    "content_hash": "sha256:c9209c570e5d53981438b56ec65044efd25cd855cac205666627baf71acdb3a3",
+    "fetched_at": "2026-11-15T09:58:29.248122Z",
+    "published_at": "2026-11-04T16:05:36Z",
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://k.sina.com.cn/article_7879923678_1d5ae17de06802hcu4.html?from=tech",
+      "final_url": "https://k.sina.com.cn/article_7879923678_1d5ae17de06802hcu4.html?from=tech",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": "新浪网"
+    }
+  },
+  {
+    "id": "evidence-a5d0aead5de336f256e895b06e6a004853079c9d05a41138e26a4bb9d0c5bcb3",
+    "canonical_url": "https://www.sohu.com/a/1039606075_121117078",
+    "title": "北京酒店怎么订最便宜？这份2026最新省钱订房全攻略（实测有效）_同程_程序_工作日",
+    "media_type": "text/html",
+    "content_hash": "sha256:daf6f17316c6e3cdd2b5c7f42a315df60e19c5d43dddd881ed0bf603e24d6575",
+    "fetched_at": "2026-11-15T09:58:29.299381Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.sohu.com/a/1039606075_121117078",
+      "final_url": "https://www.sohu.com/a/1039606075_121117078",
+      "publisher_canonical_url": "https://www.sohu.com/a/1039606075_121117078",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  }
+]

@@ -1,0 +1,288 @@
+{
+  "A": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "A explains that HITL middleware checks tool calls against policy, pauses execution via interrupt, persists state with a checkpointer, and waits for human decisions (approve/edit/reject/respond), matching the policy-pause requirement."
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "A states that if tools are specified, the model must support simultaneous use of tools and structured output, and applies this to the HITL scenario where tools necessarily exist."
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "A explicitly concludes HITL does not remove the model-capability requirement, notes the docs provide no exemption, and directs to ToolStrategy as the alternative rather than using HITL to bypass."
+      }
+    ],
+    "claims": [
+      {
+        "quote": "在可见的冻结文档中，加入 HITL 人工审核工具调用，并不免除 provider-native structured output 对模型能力的要求；两者是独立机制，文档未给出任何 HITL 相关的豁免条款。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P3"],
+        "reason": "P1 describes HITL as oversight of tool calls only; P3 states the model-capability requirement for native structured output with no mention of HITL exemption. The combined inference that HITL does not waive the requirement is supported by the absence of any such linkage in the visible passages.",
+        "citations": [
+          {
+            "marker": "P1",
+            "status": "supported",
+            "reason": "P1 shows HITL adds human oversight to agent tool calls, with no relation to structured output capability."
+          },
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 states the model must support simultaneous tools and structured output; no HITL exemption is mentioned."
+          }
+        ]
+      },
+      {
+        "quote": "当模型提出可能需要审查的操作时，middleware 暂停执行、等待人工决定（approve/edit/reject/respond），通过 interrupt 中断并借助 checkpointer 持久化状态以便恢复 [1]。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P2"],
+        "reason": "P1 supports pause via interrupt and state saved via persistence layer; P2 supports the checkpointer requirement and the allowed decisions list including approve/edit/reject/respond.",
+        "citations": [
+          {
+            "marker": "P1",
+            "status": "supported",
+            "reason": "P1: middleware can pause execution and wait for a decision; issues an interrupt; graph state saved using persistence layer."
+          },
+          {
+            "marker": "P2",
+            "status": "supported",
+            "reason": "P2: checkpointer required to persist state across interrupts; allowed_decisions include 'approve', 'edit', 'reject', 'respond'."
+          }
+        ]
+      },
+      {
+        "quote": "文档描述的是对 tool call 的审批流程，不涉及结构化输出的生成策略。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P2"],
+        "reason": "P1 and P2 describe HITL solely as checking tool calls against policy and approval configuration; neither mentions structured output generation.",
+        "citations": [
+          {
+            "marker": "P1",
+            "status": "supported",
+            "reason": "P1 describes checking each tool call against a configurable policy; no structured output content."
+          },
+          {
+            "marker": "P2",
+            "status": "supported",
+            "reason": "P2 covers interrupt_on tool approval configs only."
+          }
+        ]
+      },
+      {
+        "quote": "Provider-native structured output 有明确的模型能力门槛：是否支持从模型的 profile 数据动态读取；若同时指定了 tools，模型必须支持 tools 与 structured output 的同时使用 [2]。",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 states support for native structured output is read dynamically from the model's profile data and that if tools are specified, the model must support simultaneous use of tools and structured output.",
+        "citations": [
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 contains both the profile-data dynamic reading and the simultaneous tools+structured output requirement."
+          }
+        ]
+      },
+      {
+        "quote": "默认情况下 agent 使用 tool calling 策略生成结构化输出，只有特定模型支持 native 策略 [2]。",
+        "status": "supported",
+        "evidence_refs": ["P4"],
+        "reason": "P4 states that by default the agent uses a tool calling strategy and that certain models support native structured output, in which case that strategy is used instead.",
+        "citations": [
+          {
+            "marker": "P4",
+            "status": "supported",
+            "reason": "P4: 'By default, the agent uses a tool calling strategy... Certain models support native structured output, in which case the agent will use that strategy instead.'"
+          }
+        ]
+      },
+      {
+        "quote": "两者可以叠加在同一 agent 上：HITL 审核工具调用，structured output 控制最终响应格式。但若选择 `ProviderStrategy`：1. 模型 profile 必须声明支持 native structured output；2. 由于 HITL 场景必然存在 tools，模型还须支持 tools 与 structured output 并用 [2]。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P3"],
+        "reason": "P1 supports HITL reviewing tool calls; P3 supports the profile support requirement and the simultaneous tools+structured output requirement when tools exist. The claim that HITL scenarios necessarily involve tools is a reasonable inference since HITL only acts on tool calls.",
+        "citations": [
+          {
+            "marker": "P1",
+            "status": "supported",
+            "reason": "P1: HITL adds human oversight to agent tool calls."
+          },
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3: profile-based support and simultaneous tools+structured output requirement."
+          }
+        ]
+      },
+      {
+        "quote": "若模型不满足条件，文档提供的路径是改用 `ToolStrategy`（默认策略，无 native 能力要求），而不是用 HITL 绕过 [2]。",
+        "status": "supported",
+        "evidence_refs": ["P4"],
+        "reason": "P4 supports ToolStrategy as the default tool-calling strategy and providerStrategy usable 'if supported by the model', implying ToolStrategy is the path when native support is absent. The 'no native capability requirement' characterization follows from ToolStrategy using tool calling rather than native output.",
+        "citations": [
+          {
+            "marker": "P4",
+            "status": "supported",
+            "reason": "P4: default tool calling strategy; providerStrategy 'if supported by the model'; toolStrategy can be enforced."
+          }
+        ]
+      },
+      {
+        "quote": "以上结论基于当前可见材料；冻结文档中没有任何段落声明 HITL 会移除该能力要求，但这仅表示本次可见资料未提供此类豁免，不能推出全部文档均无相关说明。",
+        "status": "nonfactual",
+        "evidence_refs": [],
+        "reason": "This is a scope-limitation statement about the visible material, not a factual claim about the world; it appropriately avoids asserting nonexistence beyond the visible passages.",
+        "citations": []
+      }
+    ]
+  },
+  "B": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "B explains HITL checks tool calls in the model response against per-tool policy in interrupt_on, issues an interrupt to pause, persists state via LangGraph persistence, and resumes after human decisions (approve/edit/reject, plus respond in Python)."
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "B states that if tools are specified, the model must support simultaneous use of tools and structured output, and repeats this in the combination steps."
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "B explicitly concludes HITL does not remove the model-capability requirement, frames HITL as a post-generation review layer that is not a substitute, and notes fallback to ToolStrategy rather than HITL filling the gap."
+      }
+    ],
+    "claims": [
+      {
+        "quote": "加入 HITL 不会移除模型能力要求。Provider-native structured output 的能力门槛在模型层，HITL 是生成后的编排层审查，两者作用于不同阶段，互不替代。",
+        "status": "supported",
+        "evidence_refs": ["P2", "P3"],
+        "reason": "P2 shows HITL runs in an after_model hook after the model generates a response, reviewing tool calls; P3 shows the capability requirement is read from the model profile. Together they support the conclusion that HITL does not remove the model-level requirement.",
+        "citations": [
+          {
+            "marker": "P2",
+            "status": "supported",
+            "reason": "P2: after_model hook runs after model generates a response, before tool calls execute; inspects response for tool calls."
+          },
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3: native structured output support read from model profile data; simultaneous tools+structured output requirement."
+          }
+        ]
+      },
+      {
+        "quote": "Provider-native structured output 的支持是**从模型 profile 数据动态读取**的；若同时指定 tools，模型必须支持 tools 与 structured output 的同时使用 [1]。",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 explicitly states support is read dynamically from the model's profile data and that if tools are specified the model must support simultaneous use of tools and structured output.",
+        "citations": [
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 contains both statements verbatim in substance."
+          }
+        ]
+      },
+      {
+        "quote": "当直接传入 schema 类型时，LangChain 自动选择策略：模型与 provider 支持原生结构化输出（如 OpenAI、Anthropic、xAI）时用 `ProviderStrategy`，其余模型用 `ToolStrategy` [1]。即能力不满足时框架回退到 ToolStrategy，而非由 HITL 补足。",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 states that when a schema type is provided directly, LangChain chooses ProviderStrategy if the model and provider support native structured output (e.g. OpenAI, Anthropic, xAI) and ToolStrategy for all other models. The 'not filled by HITL' part is supported by the absence of any HITL role in structured output selection.",
+        "citations": [
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3: automatic selection of ProviderStrategy for supporting models/providers and ToolStrategy for all other models."
+          }
+        ]
+      },
+      {
+        "quote": "HITL middleware 通过 `after_model` hook 工作：模型生成响应**之后**、工具调用执行之前，检查响应中的 tool calls，对需要人工介入的调用构建 `HITLRequest` 并发出 `interrupt` 暂停执行，状态由 LangGraph 持久层保存 [2]。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P2"],
+        "reason": "P2 describes the after_model hook running after model response and before tool execution, inspecting tool calls, building HITLRequest and calling interrupt; P1 supports state saved via LangGraph persistence layer.",
+        "citations": [
+          {
+            "marker": "P2",
+            "status": "supported",
+            "reason": "P2: after_model hook, inspects response for tool calls, builds HITLRequest with action_requests and review_configs, calls interrupt."
+          },
+          {
+            "marker": "P1",
+            "status": "supported",
+            "reason": "P1: graph state saved using LangGraph's persistence layer so execution can pause and resume."
+          }
+        ]
+      },
+      {
+        "quote": "它是对已生成 tool calls 的审查/放行机制，不参与结构化输出的生成方式。",
+        "status": "supported",
+        "evidence_refs": ["P2"],
+        "reason": "P2 shows the middleware only inspects tool calls in the generated response and executes/synthesizes based on decisions; nothing indicates involvement in structured output generation.",
+        "citations": [
+          {
+            "marker": "P2",
+            "status": "supported",
+            "reason": "P2's described flow is limited to inspecting and gating tool calls."
+          }
+        ]
+      },
+      {
+        "quote": "用 `create_agent` 并设置 `response_format`：直接传 schema 类型让框架按模型能力自动选 `ProviderStrategy`/`ToolStrategy`；若要用 provider-native，需模型 profile 支持且（有 tools 时）支持 tools+structured output 并用 [1]。",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 documents create_agent's response_format parameter, the automatic strategy selection for schema types, profile-based support, and the simultaneous tools+structured output requirement.",
+        "citations": [
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3 covers response_format options, automatic selection, and the capability requirements."
+          }
+        ]
+      },
+      {
+        "quote": "加 HITL middleware，在 `interrupt_on` 中配置每个工具的策略；middleware 在模型响应后按策略检查 tool calls，需要时 `interrupt` 暂停，人工以 `approve`/`edit`/`reject`（Python 另有 `respond`）决策后恢复执行 [2]。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P2"],
+        "reason": "P1 supports interrupt_on policy configuration and the decision types (approve/edit/reject/respond for Python, three for JS); P2 supports the post-model checking, interrupt, and resumption after decisions.",
+        "citations": [
+          {
+            "marker": "P1",
+            "status": "supported",
+            "reason": "P1: decision types per tool depend on policy configured in interrupt_on; Python has four decisions including respond, JS has three."
+          },
+          {
+            "marker": "P2",
+            "status": "supported",
+            "reason": "P2: middleware inspects response, calls interrupt, waits for decisions, resumes execution."
+          }
+        ]
+      },
+      {
+        "quote": "若模型不支持原生结构化输出，文档路径是回退到 `ToolStrategy`（用 tool calling 实现结构化输出）[1]；这与 HITL 审查 tool calls 可共存，但不等于“用 HITL 替代原生能力”。",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 supports ToolStrategy as the tool-calling-based strategy used for models without native support. The coexistence and non-substitution framing follows from HITL and structured output being independent mechanisms in the passages.",
+        "citations": [
+          {
+            "marker": "P3",
+            "status": "supported",
+            "reason": "P3: ToolStrategy uses tool calling for structured output and is selected for models without native support."
+          }
+        ]
+      },
+      {
+        "quote": "可见材料未说明 HITL 与 `ProviderStrategy` 同时启用时的额外限制或冲突细节；以上组合仅依据两者各自文档所述机制，实际联调行为需以运行验证为准。",
+        "status": "nonfactual",
+        "evidence_refs": [],
+        "reason": "This is a scope caveat and a recommendation to verify behavior at runtime, not a verifiable factual assertion about the documentation's content beyond noting absence in visible material.",
+        "citations": []
+      }
+    ]
+  }
+}

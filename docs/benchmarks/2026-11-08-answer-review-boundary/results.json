@@ -1,0 +1,120 @@
+{
+  "candidate_continuation_checks": {
+    "replay-request-bound-repair": {
+      "all_goal_and_f1_scores_available": true,
+      "all_twelve_outputs_and_score_records": true,
+      "f1_improvement_at_least_005": false,
+      "goal_not_lower": true,
+      "no_loss_of_available_quality_scores": true,
+      "no_quality_mean_drop_over_002": true,
+      "no_task_f1_drop_over_020": false
+    },
+    "replay-source-first-numeric": {
+      "all_goal_and_f1_scores_available": true,
+      "all_twelve_outputs_and_score_records": true,
+      "f1_improvement_at_least_005": false,
+      "goal_not_lower": true,
+      "no_loss_of_available_quality_scores": true,
+      "no_quality_mean_drop_over_002": false,
+      "no_task_f1_drop_over_020": false
+    }
+  },
+  "controlled_new_usage": {
+    "controlled_component_generations": 60,
+    "cost": null,
+    "excluded_usage": "An earlier mixed pytest run also executed two real smoke tests; their complete Provider usage was not captured and is excluded from this controlled subtotal.",
+    "input_tokens": 2248425,
+    "live_corrective_calls": 1,
+    "newly_generated_full_agent_cohorts": 0,
+    "output_tokens": 97678,
+    "provider_attempts": 389
+  },
+  "executions": {
+    "replay": {
+      "input_tokens": 54723,
+      "mean_answer_chars": 897.0833333333334,
+      "output_tokens": 7824,
+      "provider_attempts": 12,
+      "runs": 12,
+      "status_counts": {
+        "completed": 7,
+        "partial": 5
+      }
+    },
+    "replay-request-bound": {
+      "input_tokens": 48025,
+      "mean_answer_chars": 435.0833333333333,
+      "output_tokens": 3403,
+      "provider_attempts": 12,
+      "runs": 12,
+      "status_counts": {
+        "completed": 9,
+        "failed": 1,
+        "partial": 2
+      }
+    },
+    "replay-request-bound-repair": {
+      "input_tokens": 48208,
+      "mean_answer_chars": 410.3333333333333,
+      "output_tokens": 3009,
+      "provider_attempts": 12,
+      "runs": 12,
+      "status_counts": {
+        "completed": 10,
+        "partial": 2
+      }
+    },
+    "replay-source-first": {
+      "input_tokens": 48955,
+      "mean_answer_chars": 288.75,
+      "output_tokens": 4423,
+      "provider_attempts": 12,
+      "runs": 12,
+      "status_counts": {
+        "completed": 5,
+        "failed": 7
+      }
+    },
+    "replay-source-first-numeric": {
+      "input_tokens": 49843,
+      "mean_answer_chars": 708.5,
+      "output_tokens": 5203,
+      "provider_attempts": 12,
+      "runs": 12,
+      "status_counts": {
+        "completed": 9,
+        "partial": 3
+      }
+    }
+  },
+  "full_agent_candidate_run": false,
+  "kind": "component experiments plus a narrow protocol fix; no semantic promotion",
+  "production_change": "one budgeted citation-protocol repair; original first prompts and valid results preserved",
+  "recovery_verified": {
+    "historical_valid_replays": 12,
+    "new_live_corrective_calls": 1
+  },
+  "semantic_candidate_promoted": false,
+  "verified_source_snapshots": {
+    "replay": {
+      "identity_sha256": "ab421ed7818cd3541069eb2df3f406b0d65aa3f66f0e6e2091a78b224ed29233",
+      "verified_source_files": 231
+    },
+    "replay-request-bound": {
+      "identity_sha256": "054f4a82c81b764c98a1bc9d7cea7dbc288cf8631a486d70ea01c9b64facc91e",
+      "verified_source_files": 231
+    },
+    "replay-request-bound-repair": {
+      "identity_sha256": "43e0b5156591a82060be4716d6b62588bae2045ad7550f5b6fdaaddfd8f78008",
+      "verified_source_files": 231
+    },
+    "replay-source-first": {
+      "identity_sha256": "cfc38adf268658e3c9aea80872b7917830d01634599e4449b984c3d700e2a2e3",
+      "verified_source_files": 231
+    },
+    "replay-source-first-numeric": {
+      "identity_sha256": "e41729d84b2c5b9054e8e550e78e0dc3a968e1f9e0bfb268b4b873a3cda1e57e",
+      "verified_source_files": 231
+    }
+  }
+}

@@ -1,0 +1,1 @@
+AsterSDK的strict参数从2.4版本起提供；该SDK要求Python 3.11及以上。[1]

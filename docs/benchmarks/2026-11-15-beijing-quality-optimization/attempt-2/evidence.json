@@ -1,0 +1,62 @@
+[
+  {
+    "id": "evidence-18e6e50eeb4d1a2af1da181fc52c57fd20dfa1366b1a4efe4dea94212853b75d",
+    "canonical_url": "https://www.mtr.bj.cn/page/instructions.html",
+    "title": "购票指南 - 北京京港地铁有限公司",
+    "media_type": "text/html",
+    "content_hash": "sha256:1876ca5b5de1f57ad75bd7373e8f782d1a0cb149a96001cd8bf5f3c532af1f1e",
+    "fetched_at": "2026-11-15T10:09:15.143271Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.mtr.bj.cn/page/instructions.html",
+      "final_url": "https://www.mtr.bj.cn/page/instructions.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-67fa2f27190806206cec4459f77ccbc723cedd98fe9cc51fb50d48f6167803bc",
+    "canonical_url": "http://www.xinhuanet.com/politics/subwayup",
+    "title": "地铁调价后 你必须知道的那些事",
+    "media_type": "text/html",
+    "content_hash": "sha256:7ec8f9e4ae0ac559be16d44917ea09f61191e73facdb4cd5b3623a8612ac30b1",
+    "fetched_at": "2026-11-15T10:09:17.071054Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "http://www.xinhuanet.com/politics/subwayup",
+      "final_url": "http://www.xinhuanet.com/politics/subwayup",
+      "publisher_canonical_url": null,
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-fe65b7094351697a0bf14f7af47ddbf08bd54c345dc415962237d1c544016ccb",
+    "canonical_url": "https://tournews.tw/beijing-deep-travel-guide",
+    "title": "北京深度自由行攻略2026｜故宮長城天壇頤和園門票預約×5天行程 - 旅新聞 | Tournews",
+    "media_type": "text/html",
+    "content_hash": "sha256:14c41c6e7f339257f334de640ec546f667ce960a97e43a1d38b24d51d4b21be0",
+    "fetched_at": "2026-11-15T10:09:20.114550Z",
+    "published_at": "2026-08-08T22:45:22Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://tournews.tw/beijing-deep-travel-guide",
+      "final_url": "https://tournews.tw/beijing-deep-travel-guide",
+      "publisher_canonical_url": "https://tournews.tw/beijing-deep-travel-guide",
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  }
+]

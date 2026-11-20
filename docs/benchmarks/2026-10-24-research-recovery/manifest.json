@@ -1,0 +1,179 @@
+{
+  "date": "2026-10-24",
+  "original_benchmark_verified_files": 28,
+  "original_manifest_sha256": "00dc731cff22f716f7af73772784989344cbd479d0452615143565230cb80cfb",
+  "files": {
+    "comparison-after.md": {
+      "bytes": 3680,
+      "sha256": "ad5bd23e4c398150eb9ff82221a48b4977f6301970a2ba3fd758e6fcc2066de6"
+    },
+    "intermediate/candidate-a-comparison.md": {
+      "bytes": 4442,
+      "sha256": "29b19442b226846ee01f8b9dcca2ee32a7869e490e08a010dad652fa7174e79b"
+    },
+    "intermediate/candidate-b-comparison.md": {
+      "bytes": 5057,
+      "sha256": "fa80b8fdd7d1ebb39870b3780d63845a9ff975c2838487324244fae77a835766"
+    },
+    "intermediate/candidate-b-sqlite.md": {
+      "bytes": 3550,
+      "sha256": "05c0baa0ac4c3ddf6fec1895ee3f52c7a52d0064be4f995b60ec89f22cb5aebf"
+    },
+    "results.md": {
+      "bytes": 9021,
+      "sha256": "1635f04219003167c2d0d7915f3d4f19ee0e959b588a5d6f2aa4194f5d5cb5e6"
+    },
+    "runs.json": {
+      "bytes": 52206,
+      "sha256": "cb48211681589148cdf93a5068cc186213f5ee5b9588cb67738f592eed09d817"
+    },
+    "sqlite-after.md": {
+      "bytes": 3805,
+      "sha256": "a340bc497e45ba1eb3a382e4ff58d8c920a2c9dfada05c5bbc8c5fc031a54044"
+    },
+    "sqlite-before.md": {
+      "bytes": 3668,
+      "sha256": "3abcf078cd8d44a64d997e00e174496ba043bb25f2ce8d32c878ea4518097eb6"
+    }
+  },
+  "changes": {
+    "docs/README.md": {
+      "before_sha256": "add944accbe34b67ba779789ce92e9c5b146d25056ba40462c98d66729ddf3c5",
+      "after_sha256": "3d6666e67427f116dab2a73aa5cfa0b0bef3d2a0d59b553515b7cf99e5a92ac7",
+      "changed": true
+    },
+    "backend/src/deeptrace/harness/batch_collection.py": {
+      "before_sha256": "c94cba8b4c93a89587ec158e8c8d4f58b3cb836af9aa4dddc1003b318bcf855c",
+      "after_sha256": "23a0fa892fecffa007f23597af9336315ac1b27ecd3090d6befc8315adf2f19a",
+      "changed": true
+    },
+    "backend/src/deeptrace/harness/batch_research.py": {
+      "before_sha256": "d77ff368d871d98805679efb9d2a414302e0b204978800c55f66fbbcddaa11cb",
+      "after_sha256": "19c2354094065f7932879942ebded0a951aeb62bc74511307de9513b14b7e009",
+      "changed": true
+    },
+    "backend/src/deeptrace/harness/source_selection.py": {
+      "before_sha256": "2c06ef2cbfb1ee33fea4a210e1a7389573a04484759fcaf0e06b77164a1ca53b",
+      "after_sha256": "4e9569be195fa59ddb8f69b0631469bf6df936baa9f4ad537e40c0d30a669e8d",
+      "changed": true
+    },
+    "backend/src/deeptrace/models/document.py": {
+      "before_sha256": "5b0638fff24e9d6f802925a296b55c52d3a85f64d3e98457cdd1c3ad7d8f6359",
+      "after_sha256": "620597026f6c16aeecfa5513cb7b85490ef062426011ce5809b22aafff6359f7",
+      "changed": true
+    },
+    "backend/src/deeptrace/responses/fact_review.py": {
+      "before_sha256": "f8c8839c75569b03c40d31b789c241e8a01762399ee682e74a8df218a04723ea",
+      "after_sha256": "e25f0b888992a9604bc46cdeb3c45b9fbe73ec76f7b63796914759f39589ba0f",
+      "changed": true
+    },
+    "backend/src/deeptrace/responses/writing.py": {
+      "before_sha256": "daa449396a1c1955f7b3d22cbf6f9c42f795fa51e7a0d91c900e11cf81bd8e4f",
+      "after_sha256": "f0ce56f6fa7f0e24e3d11f8c4bac01d54ac09699ed29f0589e4dcf831bd0dff6",
+      "changed": true
+    },
+    "backend/src/deeptrace/strategies/evidence_evaluation.py": {
+      "before_sha256": "189c46333cff8404b6b85fe000491caeed3fa38231e3171cb488921827d705f0",
+      "after_sha256": "632d40c522c978ce714c62776656d62721f184dfacba0d146966a7147b5f2528",
+      "changed": true
+    },
+    "backend/src/deeptrace/strategies/planning.py": {
+      "before_sha256": "811949c4b28bad709878ee417695d365abef21e4107b6fb511002066182d4466",
+      "after_sha256": "3ba47683bcbde13862b1a4524c574ab762439a081b7cdd009209f50bf15e48c3",
+      "changed": true
+    },
+    "backend/src/deeptrace/tools/adapters.py": {
+      "before_sha256": "1e33f7019aadf75b67c550f99a4e91019b3dbbd9a68a25ad6e9ffd7652fb1a96",
+      "after_sha256": "b8514bd0fc90f3086a41e01f555d5306f333a2c474de19164048e39a5ed933aa",
+      "changed": true
+    },
+    "backend/src/deeptrace/strategies/workflow/graph.py": {
+      "before_sha256": "ef2efd978fe13f1cb7ebe5aff2b92ca98c161b33c990b722cfb41f935fdf6387",
+      "after_sha256": "6791318eb1af632664afaa5151a2ab41c2d600b16f9a390df50dc276db4bea12",
+      "changed": true
+    },
+    "backend/src/deeptrace/strategies/workflow/nodes.py": {
+      "before_sha256": "af69d76ca3e08c99b3f866ffb37c16437ada5d2815f33cdeca81b79b985b2b6a",
+      "after_sha256": "b5074f64524837347ee2d9ee24c49b195a21419006a20e4515bb5db519debaeb",
+      "changed": true
+    },
+    "backend/src/deeptrace/strategies/workflow/state.py": {
+      "before_sha256": "0114dd35099eca22508530f0bdf81ff69dcf64b6969873e7beced4d817629bfc",
+      "after_sha256": "543777211ae257e37a0a156cea9fc0c696abf74f6f3dfd0139cd89dddacf45df",
+      "changed": true
+    },
+    "backend/src/deeptrace/tools/scraper/fetcher.py": {
+      "before_sha256": "569c8e05cf0399044d80cc6840cb3abdf0cd9afd94a1072676f4e74f98822437",
+      "after_sha256": "ce03525550396c15bbd70503e16e0786730e04ce7933fb5b32418255ee26ecae",
+      "changed": true
+    },
+    "backend/tests/application/test_batch_assembly.py": {
+      "before_sha256": "e2a158ec01ded65243a0dff8d1029d3e654d05d130a9ad49f9f157f148cad253",
+      "after_sha256": "4780bf0c660007eb7a06f24a90417a590541115700bdf532f73f50a766f0ab8a",
+      "changed": true
+    },
+    "backend/tests/harness/test_batch_research.py": {
+      "before_sha256": "609b6fcd568cf03fe868f6cfbce3cd98ac4b91226f5b068b9225a2e1398d28d5",
+      "after_sha256": "c672a42add5aed81ed144fd98602ff8e3a51988e89fcefe636fb3367aaa364fb",
+      "changed": true
+    },
+    "backend/tests/harness/test_focused_acquisition.py": {
+      "before_sha256": "13aa7c5372c9a5c2d7b82bb9a1232f189ad3649a9ea6057d3fda9c39ab9faf75",
+      "after_sha256": "41a8d9ec17a8b485f421bb9ce6a7935800480ee46ae986be48c59c1997b255f7",
+      "changed": true
+    },
+    "backend/tests/integration/test_branch_research_constraints.py": {
+      "before_sha256": "4878e7d54ab553bea834ff5809ba08c2076bd39240bcf38ca1a840a66e580848",
+      "after_sha256": "0580468d33d2fb2106bf9b6f18fb88d385c2d7b9afb6585377edb6d21156af51",
+      "changed": true
+    },
+    "backend/tests/strategies/fixtures.py": {
+      "before_sha256": "477d0ac855cd0dab5fbce2d6c79c4a96b5c6028beb4c952454de5048e37b860d",
+      "after_sha256": "e18c2f1c8fb5d567c6ab946f4f968662dd1d33a51fb7d6908e05cc45e4fefe6f",
+      "changed": true
+    },
+    "backend/tests/strategies/test_research_brief.py": {
+      "before_sha256": "6e6dad5b000380b3f7c2c99ff40dad2ca7ec81fc265fcf72f875cb51e6590f8f",
+      "after_sha256": "d88674e31f6db3b89671f27f500615403c7572352a26b66c7f8157a1b0151bfe",
+      "changed": true
+    },
+    "backend/tests/strategies/plan_execute/test_batch_graph.py": {
+      "before_sha256": "692e490969fa2a5cf8c847df04b835307d683c5c448a1c0f771ac394d034becf",
+      "after_sha256": "6504d509f65ae8a1a22fb519dc415da3ce902efe29a3f443dc7e21edd9da3468",
+      "changed": true
+    },
+    "backend/src/deeptrace/strategies/workflow/recovery.py": {
+      "before_sha256": null,
+      "after_sha256": "03a2ded1869d3bc563c2ee1761c5ca9bed08578938bf88dcdee57b5dfeb14137",
+      "changed": true
+    },
+    "backend/tests/harness/test_discovery_recovery.py": {
+      "before_sha256": null,
+      "after_sha256": "4edca072865e050163ee196ee62c65e3b2bb67b64d4cdd6b6473571a95b13af4",
+      "changed": true
+    },
+    "backend/tests/strategies/workflow/test_recovery.py": {
+      "before_sha256": null,
+      "after_sha256": "d1c7cbb6835e0c3b51afe05c7848efa4f2f556d1c562d08e06dff1159928920f",
+      "changed": true
+    },
+    "backend/tests/tools/scraper/test_full_source_body.py": {
+      "before_sha256": null,
+      "after_sha256": "8f8f6907cf75a7d58a22018ba31346a4dcecfb957e8e407b3c3369072cd5aabb",
+      "changed": true
+    },
+    "backend/tests/strategies/test_source_admission_repair.py": {
+      "before_sha256": null,
+      "after_sha256": "83f4ad5d80267d20631bbf9480ee583d8da8e74d5ae4d57be55a8695b37194b4",
+      "changed": true
+    }
+  },
+  "local_logs": {
+    "final-offline-verified.log": "c48008647258be81dd94007e99701d6144959862713d337d55b422a79616111d",
+    "final-isolated-evaluation.log": "d15c8999e19d3446a2e62326ce02e2ba03fd6e7caea4f811e36d935fd9b23fca",
+    "final-targeted.log": "4998197112884677d000f2d61ec1e6051c18e3ed64211f0a28559fb469e9ad61",
+    "red.log": "5071a94bff4d3639580e20601a6827579c63ef8e67d8b760fc566359718161b5",
+    "material-repair-red.log": "bf8a5d488aa5ab5fe58bfd5dc9b69ae35623537312f5a3ce600e0b0da26634b2",
+    "source-selection-red.log": "c1a707d5d5009eb7ab80cb5d05764dac2fc897ae3a52a8e0e12d7c18846e5cfd"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "response_mode": "answer",
+  "content": "> 预算尚未完整计价：所选主线的每人预算未计价：域名/证书（仅公网面板时）、服务器电费与带宽（若计入）。不能据此承诺整体预算。\n\n**结论：选 Uptime Kuma 开源自托管主线，部署在现有闲置 Linux 服务器上，用 Docker 运行，20 个 HTTPS 站点按 60 秒心跳检查，SMTP 邮件通知，历史保留目标为 30 天。已知增量费用小计为 0 元，但域名/证书、服务器电费与带宽等必要项尚未计价，因此尚不能确认整个方案低于 300 元/月；需部署后核实全局保留期设置与服务器容量。**\n\n## 一、主线与核实情况\n\n- **产品**：Uptime Kuma，开源、单容器 + SQLite，监控数据存自有数据库[1]。\n- **HTTPS 监控**：Monitor Type 选 HTTP(s)，填含 `https://` 的完整 URL；默认 2xx 为成功，默认跟随最多 10 次重定向并评估最终状态码[2]。\n- **检查频率**：心跳间隔默认 60 秒，可低至 20 秒；更短间隔增加被监控服务负载和数据库行数，60 秒对多数站点是合理默认[2][3]。20 项×60 秒约每分钟 20 次请求，单机容量属方向性判断，未量化核实[2][3]。\n- **通知**：支持 90+ 通知渠道[1][4]；SMTP 在 Settings → Notifications → Add New Notification 配置，需主机名、端口（465/587）、加密方式、用户名密码、发件地址[5]。Gmail 需开两步验证并生成 16 位应用密码，个人 Gmail 每日约 500 封上限，Workspace 约 2000 封且部分域可能禁用应用密码[5]。\n- **30 天历史**：数据全部存于 `/app/data`（SQLite），必须挂载持久卷，否则重部署即丢失[1][6]。清理任务按全局保留期删除旧数据；按监控项自定义保留时长是未实现特性，已关闭为“不计划”[7]。v2 只存聚合结果以提升性能[7]。**全局保留期的默认值及设置路径未在证据中确认，需部署后在设置中核实并设为 30 天。**\n- **运行条件**：需支持 POSIX 文件锁的文件系统，避免 NFS，否则 SQLite 可能损坏[6]；支持主流 Linux 发行版[6]。\n\n**明确假设**：①闲置服务器可装 Docker 并能出网访问 20 个目标站点；②团队已有可用 SMTP 邮箱（如 Gmail 应用密码）；③服务器电费与带宽视为已有成本，不计增量；④对外访问面板需域名与 80/443，若仅内网使用可省。\n\n## 二、费用分项（月，5 人团队）\n\n**所选主线的每人预算**\n\n| 项目 | 金额（元/人） | 性质 | 说明 |\n|---|---:|---|---|\n| 服务器增量费用 | 0 | 估算 | 已有闲置Linux服务器，电费/带宽按沉没成本假设不计增量；非商户实价 |\n| Uptime Kuma 软件 | 0 | 已核实 | 开源自托管，无按监控项收费[1][3] |\n| SMTP 邮件通知 | 0 | 估算 | 用现有邮箱；Gmail个人约500封/日、Workspace约2000封/日[5]，未确认团队邮箱类型 |\n| 域名/证书（仅公网面板时） | 待核实 | 待核实 | 仅当需公网HTTPS面板时发生；Caddy可自动签证书[8]，实价未核实 |\n| 服务器电费与带宽（若计入） | 待核实 | 待核实 | 当前按已有沉没成本不计增量，未核实实际金额 |\n| **已列金额小计（不含待核实项）** | **0** | — | 按上表已列金额加总 |\n\n未计价项目仍需核实，不能据此承诺整体预算。\n\n## 三、部署步骤（Docker 主线）\n\n1. **验证环境**：`docker --version`、`docker compose version`；确认 `/opt` 为本地存储、非 NFS[8][6]。\n2. **建目录**：`sudo install -d -o \"$USER\" -g \"$USER\" /opt/uptime-kuma && cd /opt/uptime-kuma && mkdir -p data backups`[8]。\n3. **写 compose.yaml**：镜像固定 `louislam/uptime-kuma:2.5.8`（当前稳定 v2 版本，含管理员 RCE 修复）[8]；端口仅绑 `127.0.0.1:3001`，卷映射 `./data:/app/data`[8][6]。\n4. **启动**：`docker compose pull && docker compose up -d`，`docker compose logs --tail=100` 确认无数据库/文件锁报错[8]。\n5. **本地验证**：`curl -I http://127.0.0.1:3001` 返回 200/302 即正常[8]。\n6. **建管理员账号**：浏览器打开面板立即创建，未建账号前任何人可抢占实例[1]。\n7. **加 20 个监控**：逐个选 HTTP(s)、填 https URL、心跳 60 秒、重试 1–2 次、超时 15–30 秒、接受状态码 200–299[2][3]。\n8. **配 SMTP 通知**：填主机/端口/加密/账号/发件地址，点 Test 收信后 Save；勾选“应用到所有现有监控”使 20 项全覆盖[4][5]。\n9. **设 30 天保留**：在设置中确认全局历史保留期并设为 30 天；该默认值与路径未核实，需以实际界面为准[7]。\n10. **验证**：手动停一个站点看是否收到邮件；确认数据目录有 SQLite 文件增长，30 天清理按全局保留期生效[7][1]。\n\n## 四、一致性与缺口\n\n- 20 项 × 60 秒 ≈ 每分钟 20 次请求，单机轻量可承受属方向性判断，具体容量未量化[2][3]。\n- 30 天历史由全局清理实现，**不能按监控项单独设 30 天**；若需更长保留会影响性能[7]。全局保留期默认值与设置路径未核实。\n- 公网面板的域名/证书实价**未核实**；若只用内网访问则无此项。\n- 邮件日发送量取决于故障频率，正常远低于 Gmail 500 封/日上限[5]；若站点频繁抖动需调高重试次数。\n- 服务器电费与带宽未计价，按已有沉没成本假设不计增量；若需计入，则总费用需另行核算。",
+  "citations": [
+    {
+      "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+      "marker": "[1]"
+    },
+    {
+      "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+      "marker": "[2]"
+    },
+    {
+      "evidence_id": "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a",
+      "marker": "[3]"
+    },
+    {
+      "evidence_id": "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+      "marker": "[4]"
+    },
+    {
+      "evidence_id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+      "marker": "[5]"
+    },
+    {
+      "evidence_id": "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+      "marker": "[6]"
+    },
+    {
+      "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+      "marker": "[7]"
+    },
+    {
+      "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+      "marker": "[8]"
+    }
+  ],
+  "cited_evidence_ids": [
+    "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+    "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+    "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a",
+    "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+    "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+    "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+    "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+    "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a"
+  ],
+  "partial_reason": "insufficient_evidence"
+}

@@ -1,0 +1,52 @@
+{
+  "run_id": "monitoring-live-6e141ee6e506",
+  "thread_id": "monitoring-live-6e141ee6e506",
+  "status": "partial",
+  "response_outcome": {
+    "response_mode": "answer",
+    "content": "本次研究未能生成有引用支持的完整内容。以下是可追溯的资料来源：",
+    "citations": [],
+    "cited_evidence_ids": [],
+    "partial_reason": "no_evidence"
+  },
+  "research_outcome": {
+    "delivery_plan": null,
+    "source_eligibility": {},
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "完整回答原始问题及全部用户约束"
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "missing",
+          "reason": "no_evidence_collected",
+          "finding_ids": [],
+          "unanswered_parts": []
+        }
+      ]
+    },
+    "decomposition_degraded": true,
+    "mode": "workflow",
+    "evidence_ids": [],
+    "findings": [],
+    "unresolved_gaps": [
+      "r1:missing:no_evidence_collected",
+      "no_evidence_collected"
+    ],
+    "executed_steps": 3,
+    "termination_reason": "model_error"
+  },
+  "termination_reason": "model_error",
+  "executed_steps": 3,
+  "unresolved_gaps": [
+    "r1:missing:no_evidence_collected",
+    "no_evidence_collected"
+  ],
+  "sources": [],
+  "research_sufficiency": "insufficient"
+}

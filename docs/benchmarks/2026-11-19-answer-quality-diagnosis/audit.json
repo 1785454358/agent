@@ -1,0 +1,898 @@
+{
+  "scope": "Retrospective audit of saved real-model runs; no fresh inference; visibility union across rounds, not proof of model attention. Offsets zero-based half-open Unicode characters.",
+  "source_chars": 447606,
+  "source_hash": "sha256:2b77f22578fc5a444eab76777ad94f05ac86b5d504200331af9d3afbef18338c",
+  "clauses": {
+    "idempotent_definition": {
+      "start": 159966,
+      "end": 160009
+    },
+    "automatic_retry_permission": {
+      "start": 160528,
+      "end": 160572
+    },
+    "503_definition": {
+      "start": 338834,
+      "end": 338875
+    },
+    "413_temporary_should": {
+      "start": 331572,
+      "end": 331620
+    }
+  },
+  "modes": {
+    "workflow": {
+      "seconds": 42.586,
+      "usage": {
+        "provider_attempts": 7,
+        "measured_usage_attempts": 7,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 34521,
+        "output_tokens": 8266,
+        "total_tokens": 42787,
+        "observed_usage": {
+          "input_tokens": 34521,
+          "output_tokens": 8266,
+          "total_tokens": 42787
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 1096,
+            "output_tokens": 524,
+            "total_tokens": 1620
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "evaluator": {
+            "input_tokens": 17150,
+            "output_tokens": 4376,
+            "total_tokens": 21526
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 16275,
+            "output_tokens": 3366,
+            "total_tokens": 19641
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 1096,
+            "output_tokens": 524,
+            "total_tokens": 1620
+          },
+          "evaluator": {
+            "input_tokens": 17150,
+            "output_tokens": 4376,
+            "total_tokens": 21526
+          },
+          "writer": {
+            "input_tokens": 16275,
+            "output_tokens": 3366,
+            "total_tokens": 19641
+          }
+        },
+        "stage_seconds": {
+          "planner": 2.8119999999762513,
+          "evaluator": 20.48399999999674,
+          "writer": 17.57799999997951
+        },
+        "budget_state_available": true
+      },
+      "status": "partial",
+      "termination_reason": "insufficient_evidence",
+      "clause_visibility": {
+        "idempotent_definition": {
+          "evaluation": false,
+          "response": false,
+          "writer_pre_token": false
+        },
+        "automatic_retry_permission": {
+          "evaluation": false,
+          "response": true,
+          "writer_pre_token": true
+        },
+        "503_definition": {
+          "evaluation": false,
+          "response": false,
+          "writer_pre_token": false
+        },
+        "413_temporary_should": {
+          "evaluation": true,
+          "response": true,
+          "writer_pre_token": true
+        }
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "RFC 9110 中关于幂等方法、幂等性及自动重试的规则（含 GET 与 POST 的幂等性差异、连接断开未收到响应时的重试风险）",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        },
+        {
+          "id": "r2",
+          "description": "RFC 9110 中 Retry-After 响应头字段的定义：整数秒与 HTTP-date 两种格式、语义、缺失或无效时的处理规则",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        },
+        {
+          "id": "r3",
+          "description": "RFC 9110 中 503 Service Unavailable 状态码的语义及与 Retry-After 的关系",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        },
+        {
+          "id": "r4",
+          "description": "RFC 6585 中 429 Too Many Requests 状态码的定义及与 Retry-After 的关系",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        },
+        {
+          "id": "r5",
+          "description": "RFC 9110 中关于请求已发出后连接断开、未收到响应时客户端无法确定服务端是否已处理请求的规则或说明",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        }
+      ],
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "covered",
+            "reason": "可见片段支持 GET 幂等、POST 非幂等意图、自动重试 POST 的条件与风险、代理不得自动重试非幂等请求、不得自动重试已失败的自动重试。",
+            "finding_ids": [
+              "finding-1",
+              "finding-2",
+              "finding-3",
+              "finding-4"
+            ],
+            "unanswered_parts": [],
+            "resolution": "answered",
+            "limitations": [
+              "RFC 9110 第 9.2.2 节幂等性定义的完整原文未在本次可见片段中直接展示。"
+            ]
+          },
+          {
+            "requirement_id": "r2",
+            "status": "missing",
+            "reason": "可见片段给出 Retry-After 的两种格式（HTTP-date 或秒数）及语义；缺失或无效时的处理规则未在可见片段中明确给出，但 RFC 未规定缺失时必须如何处理，客户端可自行决定。",
+            "finding_ids": [
+              "finding-5"
+            ],
+            "unanswered_parts": [
+              "缺失 Retry-After 时的规范处理规则",
+              "无效 Retry-After 值时的规范处理规则"
+            ],
+            "resolution": "answered",
+            "limitations": [
+              "RFC 9110 未在可见片段中规定缺失或无效 Retry-After 时的强制处理方式。"
+            ]
+          },
+          {
+            "requirement_id": "r3",
+            "status": "covered",
+            "reason": "可见片段给出 503 语义及与 Retry-After 的关系：临时条件下服务器 SHOULD 生成 Retry-After 指示何时可重试。",
+            "finding_ids": [
+              "finding-5",
+              "finding-6"
+            ],
+            "unanswered_parts": [],
+            "resolution": "answered",
+            "limitations": []
+          },
+          {
+            "requirement_id": "r4",
+            "status": "covered",
+            "reason": "可见片段给出 429 定义、与 Retry-After 的关系（MAY 包含）以及服务器不要求使用 429。",
+            "finding_ids": [
+              "finding-7",
+              "finding-8"
+            ],
+            "unanswered_parts": [],
+            "resolution": "answered",
+            "limitations": []
+          },
+          {
+            "requirement_id": "r5",
+            "status": "missing",
+            "reason": "unknown_resolution_not_authorized_or_unchecked",
+            "finding_ids": [
+              "finding-9"
+            ],
+            "unanswered_parts": [
+              "连接断开未收到响应时客户端无法确定服务端是否已处理请求的规范说明"
+            ],
+            "resolution": "not_found",
+            "limitations": [
+              "仅检查了本次可见片段，未覆盖 RFC 9110 全文。"
+            ]
+          }
+        ]
+      },
+      "unresolved_gaps": [
+        "r2:missing:可见片段给出 Retry-After 的两种格式（HTTP-date 或秒数）及语义；缺失或无效时的处理规则未在可见片段中明确给出，但 RFC 未规定缺失时必须如何处理，客户端可自行决定。",
+        "r5:missing:unknown_resolution_not_authorized_or_unchecked",
+        "diagnostic:read_anchor_omitted:evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+        "diagnostic:read_anchor_omitted:evidence-f2857ca5db8fba0ab70ac7553f9ea089cbda0590f67e68a1f692a1d6ceabd403"
+      ],
+      "review": [
+        {
+          "drafting_mode": "draft_then_review",
+          "issues_count": 8,
+          "unanswered_points": [],
+          "consistency_checks": [],
+          "budgets": []
+        }
+      ],
+      "writer_ranges": {
+        "evidence_id": "evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+        "segment": "source_1",
+        "strategy": "support-first-v2",
+        "body_chars": 447606,
+        "excerpt_chars": 6343,
+        "pre_token_ranges": [
+          {
+            "start": 160526,
+            "end": 163844,
+            "start_line": 3364,
+            "end_line": 3415
+          },
+          {
+            "start": 167923,
+            "end": 168693,
+            "start_line": 3477,
+            "end_line": 3502
+          },
+          {
+            "start": 175393,
+            "end": 176044,
+            "start_line": 3618,
+            "end_line": 3622
+          },
+          {
+            "start": 203786,
+            "end": 204671,
+            "start_line": 4232,
+            "end_line": 4252
+          },
+          {
+            "start": 331570,
+            "end": 331946,
+            "start_line": 7326,
+            "end_line": 7338
+          }
+        ],
+        "omitted_ranges": [],
+        "token_status": "full"
+      }
+    },
+    "plan_execute": {
+      "seconds": 43.812,
+      "usage": {
+        "provider_attempts": 6,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 29343,
+        "output_tokens": 8971,
+        "total_tokens": 38314,
+        "observed_usage": {
+          "input_tokens": 29343,
+          "output_tokens": 8971,
+          "total_tokens": 38314
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 1095,
+            "output_tokens": 1002,
+            "total_tokens": 2097
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "evaluator": {
+            "input_tokens": 10334,
+            "output_tokens": 2561,
+            "total_tokens": 12895
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 17914,
+            "output_tokens": 5408,
+            "total_tokens": 23322
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 1095,
+            "output_tokens": 1002,
+            "total_tokens": 2097
+          },
+          "evaluator": {
+            "input_tokens": 10334,
+            "output_tokens": 2561,
+            "total_tokens": 12895
+          },
+          "writer": {
+            "input_tokens": 17914,
+            "output_tokens": 5408,
+            "total_tokens": 23322
+          }
+        },
+        "stage_seconds": {
+          "planner": 5.0,
+          "evaluator": 11.531000000075437,
+          "writer": 25.594000000040978
+        },
+        "budget_state_available": true
+      },
+      "status": "partial",
+      "termination_reason": "no_research_progress",
+      "clause_visibility": {
+        "idempotent_definition": {
+          "evaluation": false,
+          "response": false,
+          "writer_pre_token": false
+        },
+        "automatic_retry_permission": {
+          "evaluation": false,
+          "response": false,
+          "writer_pre_token": false
+        },
+        "503_definition": {
+          "evaluation": false,
+          "response": false,
+          "writer_pre_token": false
+        },
+        "413_temporary_should": {
+          "evaluation": false,
+          "response": false,
+          "writer_pre_token": false
+        }
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "RFC 9110 中关于幂等方法（GET、POST）与自动重试的规则，以及连接在请求已发出后断开、未收到响应时的处理与风险表述",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        },
+        {
+          "id": "r2",
+          "description": "RFC 9110 中 503 状态码的含义、可重试性及 Retry-After 头字段的适用规则",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        },
+        {
+          "id": "r3",
+          "description": "RFC 6585 中 429 状态码的定义、Retry-After 的使用要求及客户端处理规则",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        },
+        {
+          "id": "r4",
+          "description": "RFC 9110 中 Retry-After 头字段的语法：整数秒（delay-seconds）与 HTTP-date 两种格式，以及缺失或无效值的处理规则",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        }
+      ],
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "missing",
+            "reason": "unknown_resolution_not_authorized_or_unchecked",
+            "finding_ids": [
+              "finding-1",
+              "delta-e832f6b0df438f801286836f"
+            ],
+            "unanswered_parts": [
+              "RFC 9110 中 GET 的幂等方法定义",
+              "请求已发出后连接断开、未收到响应时的处理规则与风险表述",
+              "RFC 9110 关于自动重试的明确规则"
+            ],
+            "resolution": "not_found",
+            "limitations": [
+              "仅检查本次可见的 RFC 9110 片段"
+            ]
+          },
+          {
+            "requirement_id": "r2",
+            "status": "missing",
+            "reason": "unknown_resolution_not_authorized_or_unchecked",
+            "finding_ids": [
+              "delta-fd2f57dfb4aa6f7143a1c7aa"
+            ],
+            "unanswered_parts": [
+              "RFC 9110 中 503 状态码的含义定义",
+              "503 的可重试性规则"
+            ],
+            "resolution": "not_found",
+            "limitations": [
+              "仅检查本次可见的 RFC 9110 片段"
+            ]
+          },
+          {
+            "requirement_id": "r3",
+            "status": "covered",
+            "reason": "RFC 6585 片段给出 429 定义、Retry-After 为 MAY、缓存禁止及服务器可不使用 429 的说明。",
+            "finding_ids": [
+              "finding-2",
+              "finding-3"
+            ],
+            "unanswered_parts": [],
+            "resolution": "answered",
+            "limitations": []
+          },
+          {
+            "requirement_id": "r4",
+            "status": "missing",
+            "reason": "unknown_resolution_not_authorized_or_unchecked",
+            "finding_ids": [
+              "finding-4"
+            ],
+            "unanswered_parts": [
+              "Retry-After 缺失时的处理规则",
+              "Retry-After 无效值时的处理规则"
+            ],
+            "resolution": "not_found",
+            "limitations": [
+              "仅检查本次可见的 RFC 9110 片段"
+            ]
+          }
+        ]
+      },
+      "unresolved_gaps": [
+        "r1:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r2:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r4:missing:unknown_resolution_not_authorized_or_unchecked",
+        "diagnostic:read_anchor_omitted:evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+        "diagnostic:read_anchor_omitted:evidence-f2857ca5db8fba0ab70ac7553f9ea089cbda0590f67e68a1f692a1d6ceabd403",
+        "diagnostic:evaluation_snapshot_reused",
+        "no_research_progress"
+      ],
+      "review": [
+        {
+          "drafting_mode": "draft_then_review",
+          "issues_count": 8,
+          "unanswered_points": [
+            "RFC 9110 是否直接规定 GET 幂等及断连后自动重试？可见摘录未给出直接条文，需标注为推断而非原文规定。",
+            "POST 服务端未承诺去重时，客户端如何“证明请求未被执行”？可见材料未给出具体机制，只能作为条件性建议。",
+            "Retry-After 为 HTTP-date 时，本地时钟偏差如何处理？RFC 未规定，需标注为自行建议。",
+            "429/503 响应后 POST 是否可能已执行？RFC 未说明，需明确不能仅凭状态码证明未执行。"
+          ],
+          "consistency_checks": [
+            {
+              "check_id": "c1",
+              "status": "passed",
+              "reason": "伪代码 deadline=now()+30s，attempt<3，含首次最多3次，总时限30秒一致。"
+            },
+            {
+              "check_id": "c2",
+              "status": "passed",
+              "reason": "429/503 分支在 wait>=remaining 时停止；每次 send 前检查 remaining<=0；最后一次尝试失败直接退出，不无效等待。"
+            },
+            {
+              "check_id": "c3",
+              "status": "passed",
+              "reason": "POST 仅在服务端承诺去重或能证明未执行时可重试；明确 429/503 不能证明未执行，禁止 acceptDuplicateRisk 绕过，不承诺必成功。"
+            },
+            {
+              "check_id": "c4",
+              "status": "passed",
+              "reason": "正文区分 RFC 规则与自行建议，并引用 [1][2]；GET 断连可重试等标注为自行建议。"
+            }
+          ],
+          "budgets": []
+        }
+      ],
+      "writer_ranges": {
+        "evidence_id": "evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+        "segment": "source_1",
+        "strategy": "support-first-v2",
+        "body_chars": 447606,
+        "excerpt_chars": 5912,
+        "pre_token_ranges": [
+          {
+            "start": 167164,
+            "end": 169343,
+            "start_line": 3468,
+            "end_line": 3516
+          },
+          {
+            "start": 174504,
+            "end": 176164,
+            "start_line": 3605,
+            "end_line": 3622
+          },
+          {
+            "start": 203666,
+            "end": 205534,
+            "start_line": 4231,
+            "end_line": 4276
+          }
+        ],
+        "omitted_ranges": [],
+        "token_status": "full"
+      }
+    },
+    "multi_agent": {
+      "seconds": 27.379,
+      "usage": {
+        "provider_attempts": 4,
+        "measured_usage_attempts": 4,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 18380,
+        "output_tokens": 5428,
+        "total_tokens": 23808,
+        "observed_usage": {
+          "input_tokens": 18380,
+          "output_tokens": 5428,
+          "total_tokens": 23808
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 1094,
+            "output_tokens": 605,
+            "total_tokens": 1699
+          },
+          "researcher": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "evaluator": {
+            "input_tokens": 6843,
+            "output_tokens": 1282,
+            "total_tokens": 8125
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 10443,
+            "output_tokens": 3541,
+            "total_tokens": 13984
+          }
+        },
+        "observed_role_usage": {
+          "supervisor": {
+            "input_tokens": 1094,
+            "output_tokens": 605,
+            "total_tokens": 1699
+          },
+          "evaluator": {
+            "input_tokens": 6843,
+            "output_tokens": 1282,
+            "total_tokens": 8125
+          },
+          "writer": {
+            "input_tokens": 10443,
+            "output_tokens": 3541,
+            "total_tokens": 13984
+          }
+        },
+        "stage_seconds": {
+          "supervisor": 2.9369999999762513,
+          "evaluator": 6.155999999959022,
+          "writer": 17.0
+        },
+        "budget_state_available": true
+      },
+      "status": "partial",
+      "termination_reason": "no_research_progress",
+      "clause_visibility": {
+        "idempotent_definition": {
+          "evaluation": false,
+          "response": false,
+          "writer_pre_token": false
+        },
+        "automatic_retry_permission": {
+          "evaluation": false,
+          "response": false,
+          "writer_pre_token": false
+        },
+        "503_definition": {
+          "evaluation": false,
+          "response": false,
+          "writer_pre_token": false
+        },
+        "413_temporary_should": {
+          "evaluation": true,
+          "response": true,
+          "writer_pre_token": true
+        }
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "RFC 9110 中 GET 与 POST 的幂等性定义，以及自动重试的规范依据与限制",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        },
+        {
+          "id": "r2",
+          "description": "RFC 9110 中连接断开/未收到响应时客户端无法确定请求是否已被处理的规则表述",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        },
+        {
+          "id": "r3",
+          "description": "RFC 6585 中 429 状态码定义、Retry-After 使用要求及客户端处理规则",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        },
+        {
+          "id": "r4",
+          "description": "RFC 9110 中 503 状态码定义与 Retry-After 语义",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        },
+        {
+          "id": "r5",
+          "description": "RFC 9110 中 Retry-After 字段的整数秒与 HTTP-date 两种格式、缺失或无效时的处理规则",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        },
+        {
+          "id": "r6",
+          "description": "RFC 9110 与 RFC 6585 中关于 POST 去重/幂等键保障的规范表述（是否存在承诺）",
+          "required": true,
+          "allow_unknown": false,
+          "user_quote": null
+        }
+      ],
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "missing",
+            "reason": "unknown_resolution_not_authorized_or_unchecked",
+            "finding_ids": [
+              "finding-1"
+            ],
+            "unanswered_parts": [
+              "GET 的幂等性定义",
+              "POST 的幂等性定义",
+              "自动重试的规范依据与限制"
+            ],
+            "resolution": "not_found",
+            "limitations": []
+          },
+          {
+            "requirement_id": "r2",
+            "status": "missing",
+            "reason": "unknown_resolution_not_authorized_or_unchecked",
+            "finding_ids": [],
+            "unanswered_parts": [
+              "连接断开/未收到响应时请求是否已被处理的规则表述"
+            ],
+            "resolution": "not_found",
+            "limitations": []
+          },
+          {
+            "requirement_id": "r3",
+            "status": "covered",
+            "reason": "RFC 6585 给出 429 定义、Retry-After 的 MAY 使用及缓存限制；客户端处理规则仅能确认未强制等待或重试。",
+            "finding_ids": [
+              "finding-2",
+              "finding-5"
+            ],
+            "unanswered_parts": [],
+            "resolution": "answered",
+            "limitations": []
+          },
+          {
+            "requirement_id": "r4",
+            "status": "missing",
+            "reason": "unknown_resolution_not_authorized_or_unchecked",
+            "finding_ids": [
+              "finding-3"
+            ],
+            "unanswered_parts": [
+              "503 状态码定义"
+            ],
+            "resolution": "not_found",
+            "limitations": []
+          },
+          {
+            "requirement_id": "r5",
+            "status": "missing",
+            "reason": "unknown_resolution_not_authorized_or_unchecked",
+            "finding_ids": [
+              "finding-3",
+              "finding-4"
+            ],
+            "unanswered_parts": [
+              "Retry-After 缺失时的处理规则",
+              "Retry-After 无效时的处理规则"
+            ],
+            "resolution": "not_found",
+            "limitations": []
+          },
+          {
+            "requirement_id": "r6",
+            "status": "missing",
+            "reason": "unknown_resolution_not_authorized_or_unchecked",
+            "finding_ids": [
+              "finding-5"
+            ],
+            "unanswered_parts": [
+              "RFC 9110 中 POST 去重/幂等键保障的规范表述",
+              "RFC 6585 中 POST 去重/幂等键保障的规范表述"
+            ],
+            "resolution": "not_found",
+            "limitations": []
+          }
+        ]
+      },
+      "unresolved_gaps": [
+        "r1:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r2:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r4:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r5:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r6:missing:unknown_resolution_not_authorized_or_unchecked",
+        "diagnostic:read_anchor_omitted:evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+        "diagnostic:evaluation_snapshot_reused",
+        "no_research_progress"
+      ],
+      "review": [
+        {
+          "drafting_mode": "draft_then_review",
+          "issues_count": 8,
+          "unanswered_points": [
+            "RFC 9110 中 GET 与 POST 的幂等性完整定义及自动重试的通用规范依据，可见原文未提供。",
+            "RFC 9110 中连接断开/未收到响应时客户端无法确定请求是否已被处理的规则表述，可见原文未提供。",
+            "RFC 9110 中 503 状态码的完整定义，可见原文未提供。",
+            "RFC 9110 与 RFC 6585 中 Retry-After 缺失或无效时的客户端处理规则，可见原文未提供。",
+            "RFC 9110 与 RFC 6585 中 POST 去重/幂等键保障的规范承诺，可见原文未提供。"
+          ],
+          "consistency_checks": [],
+          "budgets": []
+        }
+      ],
+      "writer_ranges": {
+        "evidence_id": "evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+        "segment": "source_1",
+        "strategy": "support-first-v2",
+        "body_chars": 447606,
+        "excerpt_chars": 6274,
+        "pre_token_ranges": [
+          {
+            "start": 167164,
+            "end": 169343,
+            "start_line": 3468,
+            "end_line": 3516
+          },
+          {
+            "start": 175327,
+            "end": 176772,
+            "start_line": 3618,
+            "end_line": 3630
+          },
+          {
+            "start": 203786,
+            "end": 205414,
+            "start_line": 4232,
+            "end_line": 4272
+          },
+          {
+            "start": 331570,
+            "end": 332318,
+            "start_line": 7326,
+            "end_line": 7338
+          }
+        ],
+        "omitted_ranges": [],
+        "token_status": "full"
+      }
+    }
+  }
+}

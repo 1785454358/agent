@@ -1,0 +1,92 @@
+[
+  {
+    "case_id": "latency_metric_scope",
+    "injected_error": "p95被错写为120ms，正确值300ms。",
+    "correct_control": "p50为120ms，且为单机实验。",
+    "known_error_corrected": true,
+    "correct_control_retained": true,
+    "whole_answer_deleted": false,
+    "reason": "p95改为300ms，保留p50=120ms及单机非SLA限定。",
+    "reviewed_content": "服务A单机实验的p50为120ms，p95为300ms；测量范围是合成测试记录中的单机实验，不是生产环境SLA。[1]",
+    "unanswered_points": []
+  },
+  {
+    "case_id": "strict_capability_scope",
+    "injected_error": "服务B支持strict错误，strict仅A支持。",
+    "correct_control": "A、B均支持JSON。",
+    "known_error_corrected": true,
+    "correct_control_retained": true,
+    "whole_answer_deleted": false,
+    "reason": "strict限定为仅A，明确B不支持；保留A/B都支持JSON。",
+    "reviewed_content": "服务A和服务B均支持JSON输出；strict约束仅服务A支持，服务B不支持。[1]",
+    "unanswered_points": []
+  },
+  {
+    "case_id": "minimum_version",
+    "injected_error": "参数最低版本2.1错误，应2.4。",
+    "correct_control": "Python最低3.11。",
+    "known_error_corrected": true,
+    "correct_control_retained": true,
+    "whole_answer_deleted": false,
+    "reason": "strict最低版本改为2.4，保留Python 3.11及以上。",
+    "reviewed_content": "AsterSDK的strict参数从2.4版本起提供；该SDK要求Python 3.11及以上。[1]",
+    "unanswered_points": []
+  },
+  {
+    "case_id": "opening_exception",
+    "injected_error": "周一开放错误，应周一闭馆。",
+    "correct_control": "提前7天预约。",
+    "known_error_corrected": true,
+    "correct_control_retained": true,
+    "whole_answer_deleted": false,
+    "reason": "周一改为闭馆；保留提前7天预约。",
+    "reviewed_content": "合成展馆周一闭馆；开放时间为周二至周日09:00-17:00。预约窗口为提前7天。[1]",
+    "unanswered_points": []
+  },
+  {
+    "case_id": "object_field_scope",
+    "injected_error": "messages归属错误，应run_state。",
+    "correct_control": "tenant_id属于runtime_context。",
+    "known_error_corrected": true,
+    "correct_control_retained": true,
+    "whole_answer_deleted": false,
+    "reason": "messages改归run_state；tenant_id仍归runtime_context。",
+    "reviewed_content": "messages属于run_state对象，tenant_id属于runtime_context对象。[1]",
+    "unanswered_points": []
+  },
+  {
+    "case_id": "invented_improvement",
+    "injected_error": "20%收益无证据，应说明无法得出具体改善比例。",
+    "correct_control": "支持批处理，一次可提交多条任务。",
+    "known_error_corrected": true,
+    "correct_control_retained": true,
+    "whole_answer_deleted": false,
+    "reason": "撤回已证明20%收益，说明不能得出具体比例；保留支持批处理。否定引述20%不是继续主张该收益。",
+    "reviewed_content": "该合成指南支持批处理：资料说明其提供单条调用和批处理两种模式，批处理可一次提交多条任务。[1]\n\n但不能从中得出具体延迟改善比例；原文明确说明本文没有基准测量、耗时数值或延迟改善比例，因此类似“降低20%”的说法没有依据。[1]",
+    "unanswered_points": [
+      "具体延迟改善比例：原文明确没有基准测量、耗时数值或延迟改善比例，无法从给定资料得出。"
+    ]
+  },
+  {
+    "case_id": "wrong_citation",
+    "injected_error": "探针额度误引[2]，应引[1]。",
+    "correct_control": "10个探针事实正确，SSO付费且引[2]。",
+    "known_error_corrected": true,
+    "correct_control_retained": true,
+    "whole_answer_deleted": false,
+    "reason": "10探针额度改引[1]；SSO付费继续引[2]，两条事实保留。",
+    "reviewed_content": "免费方案最多支持10个探针。[1] SSO需要付费，因为SSO仅在付费方案提供。[2]",
+    "unanswered_points": []
+  },
+  {
+    "case_id": "free_paid_boundary",
+    "injected_error": "免费30天错误，应7天。",
+    "correct_control": "付费可延长至30天。",
+    "known_error_corrected": true,
+    "correct_control_retained": true,
+    "whole_answer_deleted": false,
+    "reason": "免费历史改为7天；保留付费可延长至30天。",
+    "reviewed_content": "免费方案保留历史7天；付费方案可将历史保留延长至30天。[1]",
+    "unanswered_points": []
+  }
+]

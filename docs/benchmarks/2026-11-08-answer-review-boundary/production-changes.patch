@@ -1,0 +1,57 @@
+--- before/backend/src/deeptrace/responses/fact_review.py
++++ after/backend/src/deeptrace/responses/fact_review.py
+@@ -1,6 +1,7 @@
+ """One bounded review of the answer against the exact writer-visible passages."""
+ 
+ import json
++import re
+ from typing import Annotated
+ 
+ from pydantic import BaseModel, ConfigDict, Field
+@@ -8,6 +9,7 @@
+ from deeptrace.harness.model_io import payload_text
+ from deeptrace.harness.policies.agent_context import message_tokens
+ from deeptrace.harness.prompts import task_messages
++from deeptrace.responses.citations import extract_citation_markers
+ 
+ 
+ class ReviewedAnswer(BaseModel):
+@@ -69,10 +71,31 @@
+         question=question, constraints=constraints, content=content, sources=sources,
+         max_content_chars=max_content_chars, requirements=requirements,
+     )
+-    if message_tokens(messages) > input_budget:
+-        raise ValueError("answer_review_context_limit")
+-    response = await context.model_gateway.invoke(role="responder", messages=messages)
+-    reviewed = ReviewedAnswer.model_validate_json(payload_text(response))
+-    if len(reviewed.content) > max_content_chars:
+-        raise ValueError("reviewed answer exceeds requested cap")
+-    return reviewed
++    allowed = {
++        match[0] for source in sources
++        if (match := re.match(r"\[\d+\](?=\s|$)", source))
++    }
++    for attempt in range(2):
++        if message_tokens(messages) > input_budget:
++            raise ValueError("answer_review_context_limit")
++        # A repair is another admission through the shared, metered gateway.
++        # Transport, schema, length and budget failures are never retried here.
++        response = await context.model_gateway.invoke(role="responder", messages=messages)
++        reviewed = ReviewedAnswer.model_validate_json(payload_text(response))
++        if len(reviewed.content) > max_content_chars:
++            raise ValueError("reviewed answer exceeds requested cap")
++        markers = set(extract_citation_markers(reviewed.content))
++        if allowed and (not markers or not markers <= allowed):
++            if attempt:
++                raise ValueError("invalid_reviewed_citation")
++            correction = (
++                "\n上一轮引用编号校验失败。依据同一批原文重新核对答案，不能新增来源或要求。"
++                "事实必须引用，引用仅能使用这些原文编号："
++                + "、".join(sorted(allowed, key=lambda marker: int(marker[1:-1])))
++                + "。不能使用不存在的编号或字面占位符[n]。"
++            )
++            messages = [messages[0].model_copy(update={
++                "content": messages[0].content + correction}), *messages[1:]]
++            continue
++        return reviewed
++    raise AssertionError("unreachable answer review state")

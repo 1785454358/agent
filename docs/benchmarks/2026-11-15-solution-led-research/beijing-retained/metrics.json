@@ -1,0 +1,9 @@
+{
+  "elapsed_seconds": 89.6149146000098,
+  "tool_started": 37,
+  "tool_completed": 37,
+  "tool_failed": 1,
+  "tool_cached": 0,
+  "tool_duration_ms_total": 33986,
+  "event_count": 358
+}

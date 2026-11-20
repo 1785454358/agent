@@ -1,0 +1,18 @@
+{
+  "cases": 8,
+  "injected_known_faults": 8,
+  "known_faults_corrected": 8,
+  "correct_control_points": 8,
+  "correct_control_points_retained": 8,
+  "whole_answer_deletions": 0,
+  "provider_attempts": 8,
+  "input_tokens": 9015,
+  "output_tokens": 737,
+  "method": "Live production review_answer on synthetic evidence and deliberately corrupted drafts; root-assistant assessment against predeclared facts, not independent human annotation.",
+  "limitations": [
+    "Not naturally generated hallucination rate.",
+    "Not end-to-end retrieval success rate.",
+    "Small, intentionally simple controlled cases; not universal 100% error correction.",
+    "No independent human annotation or significance claim."
+  ]
+}

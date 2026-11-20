@@ -1,0 +1,135 @@
+{
+  "research-batch": {
+    "runs": 48,
+    "questions": 12,
+    "model": {
+      "context_tokens": 256000,
+      "endpoint_sha256": "008155303f71f5227c2ba640b8dd5c08e523949ee41870e614d62015f554dabb",
+      "kind": "real",
+      "max_output_tokens": 3072,
+      "name": "deepseek-v4.1-flash",
+      "provider": "https://ark.cn-beijing.volces.com",
+      "request_timeout_seconds": 60.0,
+      "temperature": 0.0,
+      "thinking": "disabled",
+      "transport_attempts": 1
+    },
+    "modes": {
+      "baseline": {
+        "runs": 12,
+        "status_counts": {
+          "completed": 10,
+          "partial": 2
+        },
+        "answered": 10,
+        "p50_seconds": 11.69521200004965,
+        "model_calls": 24,
+        "tools": 48,
+        "usage": {
+          "input_tokens": 143409,
+          "output_tokens": 11373,
+          "provider_attempts": 24
+        },
+        "partial_reasons": {
+          "answer_review_incomplete": 2
+        }
+      },
+      "multi_agent": {
+        "runs": 12,
+        "status_counts": {
+          "completed": 10,
+          "partial": 2
+        },
+        "answered": 10,
+        "p50_seconds": 32.89476840000134,
+        "model_calls": 84,
+        "tools": 174,
+        "usage": {
+          "input_tokens": 309918,
+          "output_tokens": 39549,
+          "provider_attempts": 84
+        },
+        "partial_reasons": {
+          "no_evidence": 1,
+          "no_research_progress": 1
+        }
+      },
+      "plan_execute": {
+        "runs": 12,
+        "status_counts": {
+          "completed": 9,
+          "partial": 3
+        },
+        "answered": 9,
+        "p50_seconds": 33.82322155009024,
+        "model_calls": 82,
+        "tools": 173,
+        "usage": {
+          "input_tokens": 272967,
+          "output_tokens": 36414,
+          "provider_attempts": 82
+        },
+        "partial_reasons": {
+          "answer_review_incomplete": 1,
+          "max_replans_reached": 1,
+          "no_research_progress": 1
+        }
+      },
+      "workflow": {
+        "runs": 12,
+        "status_counts": {
+          "completed": 11,
+          "partial": 1
+        },
+        "answered": 9,
+        "p50_seconds": 30.21965435007587,
+        "model_calls": 78,
+        "tools": 201,
+        "usage": {
+          "input_tokens": 278084,
+          "output_tokens": 33359,
+          "provider_attempts": 78
+        },
+        "partial_reasons": {
+          "answer_review_incomplete": 1,
+          "no_evidence": 1,
+          "insufficient_evidence": 1
+        }
+      }
+    }
+  },
+  "live": {
+    "runs": 2,
+    "questions": 2,
+    "model": {
+      "context_tokens": 256000,
+      "endpoint_sha256": "008155303f71f5227c2ba640b8dd5c08e523949ee41870e614d62015f554dabb",
+      "kind": "real",
+      "max_output_tokens": 4096,
+      "name": "deepseek-v4.1-flash",
+      "provider": "https://ark.cn-beijing.volces.com",
+      "request_timeout_seconds": 60.0,
+      "temperature": 0.0,
+      "thinking": "disabled",
+      "transport_attempts": 1
+    },
+    "modes": {
+      "workflow": {
+        "runs": 2,
+        "status_counts": {
+          "completed": 2
+        },
+        "answered": 2,
+        "p50_seconds": 74.44156180007849,
+        "model_calls": 18,
+        "tools": 44,
+        "usage": {
+          "input_tokens": 93177,
+          "output_tokens": 12131,
+          "provider_attempts": 18
+        },
+        "partial_reasons": {}
+      }
+    }
+  }
+}

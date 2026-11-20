@@ -1,0 +1,506 @@
+[
+  {
+    "file": "strategies/test_evidence_progress.py",
+    "test": "test_real_mode_graph_targets_store_and_closes_old_gap",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/test_evidence_progress.py",
+    "test": "test_cached_source_with_no_new_support_stops_after_a_whole_supplement_batch",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/test_evidence_progress.py",
+    "test": "test_empty_initial_search_without_open_todos_can_try_an_alternative",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/test_research_brief.py",
+    "test": "test_full_strategy_checkpoint_and_evaluator_keep_the_research_scope",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_adaptive_completion.py",
+    "test": "test_third_round_can_resolve_gap_without_repeating_failed_queries",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_adaptive_completion.py",
+    "test": "test_unresolved_duplicate_recovery_stops_without_redispatching",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_adaptive_completion.py",
+    "test": "test_revised_solution_reaches_next_branch_and_final_delivery",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_solution_delivery.py",
+    "test": "test_controller_dispatches_actual_queries_for_each_selected_fact_need",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_solution_delivery.py",
+    "test": "test_new_run_clears_old_solution_on_the_same_checkpoint_thread",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_runtime.py",
+    "test": "test_controller_executes_to_verified_results_for_each_public_mode",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_runtime.py",
+    "test": "test_recovery_versions_plan_and_only_dispatches_missing_targets",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_runtime.py",
+    "test": "test_progress_observer_failure_does_not_change_verified_research",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_runtime.py",
+    "test": "test_ordinary_branch_failure_preserves_sibling_evidence_without_false_completion",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_runtime.py",
+    "test": "test_sqlite_resume_reuses_completed_sibling_on_new_graph",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_runtime.py",
+    "test": "test_later_evaluator_failure_preserves_only_still_valid_claims",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_runtime.py",
+    "test": "test_exhausted_budget_does_not_dispatch_recovery",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_runtime.py",
+    "test": "test_planner_failure_on_long_question_still_produces_partial_results",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "research/test_runtime.py",
+    "test": "test_new_run_on_same_checkpoint_thread_does_not_reuse_old_task_or_evidence",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_graph.py",
+    "test": "test_workflow_routes_plan_topics_evaluate_finalize",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_graph.py",
+    "test": "test_workflow_uses_queries_from_a_real_chat_message",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_graph.py",
+    "test": "test_planner_failure_falls_back_to_the_user_question",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_graph.py",
+    "test": "test_over_limit_plan_with_unassigned_mapping_keys_degrades_safely",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_graph.py",
+    "test": "test_one_topic_failure_is_a_gap_while_sibling_evidence_survives",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_graph.py",
+    "test": "test_zero_usable_evidence_yields_partial_no_sources",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_graph.py",
+    "test": "test_evaluation_cannot_cite_unknown_evidence",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_graph.py",
+    "test": "test_evaluation_parse_failure_yields_deterministic_partial",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_graph.py",
+    "test": "test_topic_execution_failure_is_a_gap_and_siblings_survive",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_graph.py",
+    "test": "test_workflow_state_keeps_references_and_topic_privacy",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_graph.py",
+    "test": "test_unfinished_executor_plan_downgrades_completed_to_incomplete",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_graph.py",
+    "test": "test_nested_executor_can_use_the_increased_iteration_allowance",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_graph.py",
+    "test": "test_plan_select_execute_evaluate_completes",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_graph.py",
+    "test": "test_planner_failure_falls_back_to_the_question",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_graph.py",
+    "test": "test_task_failure_becomes_gap_but_sibling_evidence_survives",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_graph.py",
+    "test": "test_zero_evidence_terminates_as_no_sources_without_evaluation",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_graph.py",
+    "test": "test_replanning_is_bounded_and_terminates_deterministically",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_graph.py",
+    "test": "test_replan_produces_new_tasks_and_completes",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_graph.py",
+    "test": "test_evaluation_logs_real_stop_instead_of_a_proposed_replan",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_graph.py",
+    "test": "test_evaluator_parse_failure_yields_deterministic_partial",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_graph.py",
+    "test": "test_decision_cannot_cite_unknown_evidence",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_graph.py",
+    "test": "test_loop_state_is_checkpointed_without_handwritten_loops",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_graph.py",
+    "test": "test_unfinished_executor_plan_downgrades_completed_to_incomplete",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/multi_agent/test_graph.py",
+    "test": "test_supervisor_plans_and_researchers_fan_out_concurrently",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/multi_agent/test_graph.py",
+    "test": "test_researcher_failure_is_task_local_and_siblings_survive",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/multi_agent/test_graph.py",
+    "test": "test_supervisor_never_touches_the_tool_gateway",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/multi_agent/test_graph.py",
+    "test": "test_researcher_branches_are_isolated_per_assignment",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/multi_agent/test_graph.py",
+    "test": "test_follow_up_rounds_are_bounded",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/multi_agent/test_graph.py",
+    "test": "test_follow_up_assignments_skip_already_dispatched_queries",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/multi_agent/test_graph.py",
+    "test": "test_supervisor_plan_failure_falls_back_to_the_question",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/multi_agent/test_graph.py",
+    "test": "test_loop_state_is_checkpointed_without_handwritten_loops",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/multi_agent/test_graph.py",
+    "test": "test_unfinished_researcher_plan_downgrades_completed_to_incomplete",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_recovery.py",
+    "test": "test_workflow_missing_requirement_gets_fresh_originals_and_reevaluation",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_recovery.py",
+    "test": "test_unresolved_recovery_stops_after_one_round_without_faking_coverage",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_recovery.py",
+    "test": "test_complete_first_pass_has_no_recovery_or_extra_model_call",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_recovery.py",
+    "test": "test_invalid_duplicate_or_covered_recovery_tasks_cannot_dispatch",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_recovery.py",
+    "test": "test_exhausted_research_budget_leaves_finishing_calls_for_response",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_recovery.py",
+    "test": "test_new_plan_resets_checkpointed_recovery_state_from_previous_research",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_recovery.py",
+    "test": "test_recovery_fanout_joins_two_fresh_queries_and_ignores_a_third",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_reread.py",
+    "test": "test_real_range_read_then_evaluation_cancels_deferred_search",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_reread.py",
+    "test": "test_unresolved_reread_dispatches_one_search_phase_and_stops",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_reread.py",
+    "test": "test_new_turn_resets_reread_private_state",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_reread.py",
+    "test": "test_checkpoint_resumes_planned_reread_without_replanning_or_search",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_reread.py",
+    "test": "test_controller_reread_charges_requested_mode",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_reread.py",
+    "test": "test_invalid_or_exhausted_reread_cannot_dispatch_tools",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_reread.py",
+    "test": "test_identical_host_reread_replays_ledger_without_double_charge",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_reread.py",
+    "test": "test_deferred_search_removes_targets_resolved_by_reread",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_reread.py",
+    "test": "test_new_accepted_support_is_available_to_final_writer",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_reread.py",
+    "test": "test_whole_reread_is_proven_by_contiguous_short_tool_references",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_reread.py",
+    "test": "test_read_phase_cancellation_propagates_without_evaluation",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_reread.py",
+    "test": "test_source_revalidation_outage_is_a_recoverable_read_gap",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/workflow/test_reread.py",
+    "test": "test_missing_reference_fragment_never_proves_whole_requested_range",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/test_strategy_reread.py",
+    "test": "test_unknown_requirement_targets_cannot_silently_drop_an_independent_track",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/test_strategy_reread.py",
+    "test": "test_malformed_requirement_container_uses_full_task_fallback",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/test_strategy_reread.py",
+    "test": "test_inconsistent_rich_plan_repairs_once_before_dispatch",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/test_strategy_reread.py",
+    "test": "test_invalid_optional_branch_metadata_preserves_independent_queries",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/test_strategy_reread.py",
+    "test": "test_reread_rechecks_before_deferred_search_even_in_last_round",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/test_strategy_reread.py",
+    "test": "test_rejected_source_spends_recovery_on_new_evidence_not_second_opinion",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/test_strategy_reread.py",
+    "test": "test_failed_reassessment_keeps_unchanged_verified_facts_without_completing_task",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/test_strategy_reread.py",
+    "test": "test_complex_evaluation_reserves_room_for_follow_up_and_final_answer",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_batch_graph.py",
+    "test": "test_empty_initial_batch_can_replan_and_collect_missing_evidence",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_batch_graph.py",
+    "test": "test_research_with_no_new_evidence_stops_after_one_unproductive_supplement",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_batch_graph.py",
+    "test": "test_evaluation_budget_denial_preserves_acquired_evidence_and_finishes",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_batch_graph.py",
+    "test": "test_evaluation_transport_failure_preserves_evidence_without_false_coverage",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_batch_graph.py",
+    "test": "test_evaluator_repairs_too_many_supports_once_without_repeating_acquisition",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  },
+  {
+    "file": "strategies/plan_execute/test_batch_graph.py",
+    "test": "test_supplement_sources_reach_evaluator_when_the_old_pool_has_eight_sources",
+    "reason": "Removed production coverage/recovery or separate strategy orchestration contract",
+    "replacement": "research/test_delivery_first_runtime.py + responses/test_delivery_first.py + integration/test_controller_runtime.py"
+  }
+]

@@ -1,0 +1,1217 @@
+{
+  "baseline_mode": "workflow",
+  "candidate_mode": "workflow",
+  "checks": [
+    {
+      "baseline": 0.9166666666666666,
+      "candidate": 1.0,
+      "data_kind": "real_source",
+      "dataset": "research-v1",
+      "delta": 0.08333333333333337,
+      "max_drop": 0.0,
+      "name": "completion_rate",
+      "reason": "operational rate only; not semantic task success",
+      "split": "dev",
+      "status": "pass"
+    },
+    {
+      "baseline": 0.75,
+      "candidate": 0.9166666666666666,
+      "data_kind": "real_source",
+      "dataset": "research-v1",
+      "delta": 0.16666666666666663,
+      "max_drop": 0.0,
+      "name": "answered_rate",
+      "reason": "operational rate only; not semantic task success",
+      "split": "dev",
+      "status": "pass"
+    },
+    {
+      "baseline": 33854.25319999922,
+      "candidate": 29740.19199993927,
+      "data_kind": "real_source",
+      "dataset": "research-v1",
+      "max_ratio": 1.25,
+      "name": "latency_p50_ratio",
+      "ratio": 0.8784772720947203,
+      "reason": "observed latency ratio; no significance claim",
+      "split": "dev",
+      "status": "pass"
+    },
+    {
+      "coverage": {
+        "baseline": 1.0,
+        "candidate": 1.0
+      },
+      "data_kind": "real_source",
+      "dataset": "research-v1",
+      "delta": 0.0,
+      "excluded_tasks": [],
+      "improved_tasks": [
+        "conflicting_evidence-dev-02",
+        "multi_hop-dev-02"
+      ],
+      "interval_95": [
+        -0.3333333333333333,
+        0.3333333333333333
+      ],
+      "max_drop": 0.02,
+      "max_task_drop": 0.25,
+      "name": "agent_goal_accuracy",
+      "paired_tasks": 12,
+      "protected_regressions": [
+        "insufficient_evidence-dev-01",
+        "single_hop-dev-02"
+      ],
+      "reason": "observed quality drop exceeds policy tolerance",
+      "regressed_tasks": [
+        "insufficient_evidence-dev-01",
+        "single_hop-dev-02"
+      ],
+      "split": "dev",
+      "status": "fail",
+      "task_differences": {
+        "comparison-dev-01": 0.0,
+        "comparison-dev-02": 0.0,
+        "conflicting_evidence-dev-01": 0.0,
+        "conflicting_evidence-dev-02": 1.0,
+        "insufficient_evidence-dev-01": -1.0,
+        "insufficient_evidence-dev-02": 0.0,
+        "multi_hop-dev-01": 0.0,
+        "multi_hop-dev-02": 1.0,
+        "single_hop-dev-01": 0.0,
+        "single_hop-dev-02": -1.0,
+        "version_boundary-dev-01": 0.0,
+        "version_boundary-dev-02": 0.0
+      }
+    },
+    {
+      "coverage": {
+        "baseline": 1.0,
+        "candidate": 1.0
+      },
+      "data_kind": "real_source",
+      "dataset": "research-v1",
+      "delta": -0.10250000000000002,
+      "excluded_tasks": [],
+      "improved_tasks": [
+        "comparison-dev-02",
+        "conflicting_evidence-dev-02",
+        "insufficient_evidence-dev-01"
+      ],
+      "interval_95": [
+        -0.18416666666666667,
+        -0.020812500000000133
+      ],
+      "max_drop": 0.02,
+      "max_task_drop": 0.25,
+      "name": "factual_correctness",
+      "paired_tasks": 12,
+      "protected_regressions": [
+        "multi_hop-dev-01",
+        "version_boundary-dev-02"
+      ],
+      "reason": "observed quality drop exceeds policy tolerance",
+      "regressed_tasks": [
+        "comparison-dev-01",
+        "conflicting_evidence-dev-01",
+        "multi_hop-dev-01",
+        "multi_hop-dev-02",
+        "single_hop-dev-01",
+        "single_hop-dev-02",
+        "version_boundary-dev-01",
+        "version_boundary-dev-02"
+      ],
+      "split": "dev",
+      "status": "fail",
+      "task_differences": {
+        "comparison-dev-01": -0.16999999999999993,
+        "comparison-dev-02": 0.15000000000000002,
+        "conflicting_evidence-dev-01": -0.050000000000000044,
+        "conflicting_evidence-dev-02": 0.019999999999999907,
+        "insufficient_evidence-dev-01": 0.05999999999999994,
+        "insufficient_evidence-dev-02": 0.0,
+        "multi_hop-dev-01": -0.33999999999999997,
+        "multi_hop-dev-02": -0.25000000000000006,
+        "single_hop-dev-01": -0.03999999999999998,
+        "single_hop-dev-02": -0.21999999999999997,
+        "version_boundary-dev-01": -0.10000000000000009,
+        "version_boundary-dev-02": -0.29000000000000004
+      }
+    },
+    {
+      "coverage": {
+        "baseline": 0.6666666666666666,
+        "candidate": 0.5833333333333334
+      },
+      "data_kind": "real_source",
+      "dataset": "research-v1",
+      "delta": 0.030045423102926603,
+      "excluded_tasks": [
+        "comparison-dev-02",
+        "conflicting_evidence-dev-01",
+        "conflicting_evidence-dev-02",
+        "multi_hop-dev-02",
+        "single_hop-dev-02"
+      ],
+      "improved_tasks": [
+        "comparison-dev-01",
+        "insufficient_evidence-dev-01",
+        "insufficient_evidence-dev-02"
+      ],
+      "interval_95": [
+        -0.0410955936902641,
+        0.11441395312363054
+      ],
+      "max_drop": 0.02,
+      "max_task_drop": 0.25,
+      "name": "faithfulness",
+      "paired_tasks": 7,
+      "protected_regressions": [],
+      "reason": "insufficient paired tasks or score coverage",
+      "regressed_tasks": [
+        "multi_hop-dev-01",
+        "version_boundary-dev-02"
+      ],
+      "split": "dev",
+      "status": "inconclusive",
+      "task_differences": {
+        "comparison-dev-01": 0.06015693112467302,
+        "insufficient_evidence-dev-01": 0.07407407407407407,
+        "insufficient_evidence-dev-02": 0.25,
+        "multi_hop-dev-01": -0.08333333333333337,
+        "single_hop-dev-01": 0.0,
+        "version_boundary-dev-01": 0.0,
+        "version_boundary-dev-02": -0.0905797101449275
+      }
+    },
+    {
+      "coverage": {
+        "baseline": 1.0,
+        "candidate": 1.0
+      },
+      "data_kind": "real_source",
+      "dataset": "research-v1",
+      "delta": -0.018386243386243395,
+      "excluded_tasks": [],
+      "improved_tasks": [
+        "comparison-dev-01",
+        "version_boundary-dev-01"
+      ],
+      "interval_95": [
+        -0.07473544973544974,
+        0.04090195105820089
+      ],
+      "max_drop": 0.02,
+      "max_task_drop": 0.25,
+      "name": "citation_accuracy",
+      "paired_tasks": 12,
+      "protected_regressions": [],
+      "reason": "observed quality drop is within policy tolerance",
+      "regressed_tasks": [
+        "comparison-dev-02",
+        "insufficient_evidence-dev-02",
+        "multi_hop-dev-02",
+        "single_hop-dev-01"
+      ],
+      "split": "dev",
+      "status": "pass",
+      "task_differences": {
+        "comparison-dev-01": 0.19999999999999996,
+        "comparison-dev-02": -0.1428571428571429,
+        "conflicting_evidence-dev-01": 0.0,
+        "conflicting_evidence-dev-02": 0.0,
+        "insufficient_evidence-dev-01": 0.0,
+        "insufficient_evidence-dev-02": -0.16666666666666663,
+        "multi_hop-dev-01": 0.0,
+        "multi_hop-dev-02": -0.125,
+        "single_hop-dev-01": -0.11111111111111116,
+        "single_hop-dev-02": 0.0,
+        "version_boundary-dev-01": 0.125,
+        "version_boundary-dev-02": 0.0
+      }
+    }
+  ],
+  "comparison": {
+    "confidence_level": 0.95,
+    "difference_direction": "candidate_minus_baseline",
+    "groups": [
+      {
+        "comparisons": {
+          "candidate": {
+            "agent_goal_accuracy": {
+              "all_output": {
+                "difference": 0.0,
+                "excluded_tasks": [],
+                "interval_95": [
+                  -0.3333333333333333,
+                  0.3333333333333333
+                ],
+                "paired_tasks": 12,
+                "task_differences": {
+                  "comparison-dev-01": 0.0,
+                  "comparison-dev-02": 0.0,
+                  "conflicting_evidence-dev-01": 0.0,
+                  "conflicting_evidence-dev-02": 1.0,
+                  "insufficient_evidence-dev-01": -1.0,
+                  "insufficient_evidence-dev-02": 0.0,
+                  "multi_hop-dev-01": 0.0,
+                  "multi_hop-dev-02": 1.0,
+                  "single_hop-dev-01": 0.0,
+                  "single_hop-dev-02": -1.0,
+                  "version_boundary-dev-01": 0.0,
+                  "version_boundary-dev-02": 0.0
+                }
+              },
+              "completed_only": {
+                "difference": 0.0,
+                "excluded_tasks": [
+                  "comparison-dev-01"
+                ],
+                "interval_95": [
+                  -0.36363636363636365,
+                  0.36363636363636365
+                ],
+                "paired_tasks": 11,
+                "task_differences": {
+                  "comparison-dev-02": 0.0,
+                  "conflicting_evidence-dev-01": 0.0,
+                  "conflicting_evidence-dev-02": 1.0,
+                  "insufficient_evidence-dev-01": -1.0,
+                  "insufficient_evidence-dev-02": 0.0,
+                  "multi_hop-dev-01": 0.0,
+                  "multi_hop-dev-02": 1.0,
+                  "single_hop-dev-01": 0.0,
+                  "single_hop-dev-02": -1.0,
+                  "version_boundary-dev-01": 0.0,
+                  "version_boundary-dev-02": 0.0
+                }
+              }
+            },
+            "citation_accuracy": {
+              "all_output": {
+                "difference": -0.018386243386243395,
+                "excluded_tasks": [],
+                "interval_95": [
+                  -0.07473544973544974,
+                  0.04090195105820089
+                ],
+                "paired_tasks": 12,
+                "task_differences": {
+                  "comparison-dev-01": 0.19999999999999996,
+                  "comparison-dev-02": -0.1428571428571429,
+                  "conflicting_evidence-dev-01": 0.0,
+                  "conflicting_evidence-dev-02": 0.0,
+                  "insufficient_evidence-dev-01": 0.0,
+                  "insufficient_evidence-dev-02": -0.16666666666666663,
+                  "multi_hop-dev-01": 0.0,
+                  "multi_hop-dev-02": -0.125,
+                  "single_hop-dev-01": -0.11111111111111116,
+                  "single_hop-dev-02": 0.0,
+                  "version_boundary-dev-01": 0.125,
+                  "version_boundary-dev-02": 0.0
+                }
+              },
+              "completed_only": {
+                "difference": -0.03823953823953825,
+                "excluded_tasks": [
+                  "comparison-dev-01"
+                ],
+                "interval_95": [
+                  -0.08784271284271285,
+                  0.011363636363636364
+                ],
+                "paired_tasks": 11,
+                "task_differences": {
+                  "comparison-dev-02": -0.1428571428571429,
+                  "conflicting_evidence-dev-01": 0.0,
+                  "conflicting_evidence-dev-02": 0.0,
+                  "insufficient_evidence-dev-01": 0.0,
+                  "insufficient_evidence-dev-02": -0.16666666666666663,
+                  "multi_hop-dev-01": 0.0,
+                  "multi_hop-dev-02": -0.125,
+                  "single_hop-dev-01": -0.11111111111111116,
+                  "single_hop-dev-02": 0.0,
+                  "version_boundary-dev-01": 0.125,
+                  "version_boundary-dev-02": 0.0
+                }
+              }
+            },
+            "claim_groundedness": {
+              "all_output": {
+                "difference": -0.029236694677871138,
+                "excluded_tasks": [
+                  "comparison-dev-02",
+                  "conflicting_evidence-dev-01",
+                  "conflicting_evidence-dev-02",
+                  "multi_hop-dev-02",
+                  "single_hop-dev-02"
+                ],
+                "interval_95": [
+                  -0.10476190476190474,
+                  0.05357142857142857
+                ],
+                "paired_tasks": 7,
+                "task_differences": {
+                  "comparison-dev-01": -0.19999999999999996,
+                  "insufficient_evidence-dev-01": -0.1333333333333333,
+                  "insufficient_evidence-dev-02": 0.1875,
+                  "multi_hop-dev-01": 0.0,
+                  "single_hop-dev-01": -0.05882352941176472,
+                  "version_boundary-dev-01": 0.0,
+                  "version_boundary-dev-02": 0.0
+                }
+              },
+              "completed_only": {
+                "difference": -0.0007761437908496704,
+                "excluded_tasks": [
+                  "comparison-dev-01",
+                  "comparison-dev-02",
+                  "conflicting_evidence-dev-01",
+                  "conflicting_evidence-dev-02",
+                  "multi_hop-dev-02",
+                  "single_hop-dev-02"
+                ],
+                "interval_95": [
+                  -0.0738562091503268,
+                  0.08394607843137254
+                ],
+                "paired_tasks": 6,
+                "task_differences": {
+                  "insufficient_evidence-dev-01": -0.1333333333333333,
+                  "insufficient_evidence-dev-02": 0.1875,
+                  "multi_hop-dev-01": 0.0,
+                  "single_hop-dev-01": -0.05882352941176472,
+                  "version_boundary-dev-01": 0.0,
+                  "version_boundary-dev-02": 0.0
+                }
+              }
+            },
+            "factual_correctness": {
+              "all_output": {
+                "difference": -0.10250000000000002,
+                "excluded_tasks": [],
+                "interval_95": [
+                  -0.18416666666666667,
+                  -0.020812500000000133
+                ],
+                "paired_tasks": 12,
+                "task_differences": {
+                  "comparison-dev-01": -0.16999999999999993,
+                  "comparison-dev-02": 0.15000000000000002,
+                  "conflicting_evidence-dev-01": -0.050000000000000044,
+                  "conflicting_evidence-dev-02": 0.019999999999999907,
+                  "insufficient_evidence-dev-01": 0.05999999999999994,
+                  "insufficient_evidence-dev-02": 0.0,
+                  "multi_hop-dev-01": -0.33999999999999997,
+                  "multi_hop-dev-02": -0.25000000000000006,
+                  "single_hop-dev-01": -0.03999999999999998,
+                  "single_hop-dev-02": -0.21999999999999997,
+                  "version_boundary-dev-01": -0.10000000000000009,
+                  "version_boundary-dev-02": -0.29000000000000004
+                }
+              },
+              "completed_only": {
+                "difference": -0.09636363636363639,
+                "excluded_tasks": [
+                  "comparison-dev-01"
+                ],
+                "interval_95": [
+                  -0.18545454545454546,
+                  -0.012704545454545592
+                ],
+                "paired_tasks": 11,
+                "task_differences": {
+                  "comparison-dev-02": 0.15000000000000002,
+                  "conflicting_evidence-dev-01": -0.050000000000000044,
+                  "conflicting_evidence-dev-02": 0.019999999999999907,
+                  "insufficient_evidence-dev-01": 0.05999999999999994,
+                  "insufficient_evidence-dev-02": 0.0,
+                  "multi_hop-dev-01": -0.33999999999999997,
+                  "multi_hop-dev-02": -0.25000000000000006,
+                  "single_hop-dev-01": -0.03999999999999998,
+                  "single_hop-dev-02": -0.21999999999999997,
+                  "version_boundary-dev-01": -0.10000000000000009,
+                  "version_boundary-dev-02": -0.29000000000000004
+                }
+              }
+            },
+            "faithfulness": {
+              "all_output": {
+                "difference": 0.030045423102926603,
+                "excluded_tasks": [
+                  "comparison-dev-02",
+                  "conflicting_evidence-dev-01",
+                  "conflicting_evidence-dev-02",
+                  "multi_hop-dev-02",
+                  "single_hop-dev-02"
+                ],
+                "interval_95": [
+                  -0.0410955936902641,
+                  0.11441395312363054
+                ],
+                "paired_tasks": 7,
+                "task_differences": {
+                  "comparison-dev-01": 0.06015693112467302,
+                  "insufficient_evidence-dev-01": 0.07407407407407407,
+                  "insufficient_evidence-dev-02": 0.25,
+                  "multi_hop-dev-01": -0.08333333333333337,
+                  "single_hop-dev-01": 0.0,
+                  "version_boundary-dev-01": 0.0,
+                  "version_boundary-dev-02": -0.0905797101449275
+                }
+              },
+              "completed_only": {
+                "difference": 0.025026838432635534,
+                "excluded_tasks": [
+                  "comparison-dev-01",
+                  "comparison-dev-02",
+                  "conflicting_evidence-dev-01",
+                  "conflicting_evidence-dev-02",
+                  "multi_hop-dev-02",
+                  "single_hop-dev-02"
+                ],
+                "interval_95": [
+                  -0.057971014492753624,
+                  0.12224906065485776
+                ],
+                "paired_tasks": 6,
+                "task_differences": {
+                  "insufficient_evidence-dev-01": 0.07407407407407407,
+                  "insufficient_evidence-dev-02": 0.25,
+                  "multi_hop-dev-01": -0.08333333333333337,
+                  "single_hop-dev-01": 0.0,
+                  "version_boundary-dev-01": 0.0,
+                  "version_boundary-dev-02": -0.0905797101449275
+                }
+              }
+            }
+          }
+        },
+        "data_kind": "real_source",
+        "dataset": "research-v1",
+        "split": "dev",
+        "systems": {
+          "baseline": {
+            "answered_runs": 9,
+            "attempted_runs": 12,
+            "attempted_tasks": 12,
+            "completed_runs": 11,
+            "latency_ms": {
+              "p50": 33854.25319999922,
+              "p95": 40052.70992508158
+            },
+            "quality": {
+              "agent_goal_accuracy": {
+                "available_question_mean": 0.8333333333333334,
+                "category_means": {
+                  "comparison": 1.0,
+                  "conflicting_evidence": 0.5,
+                  "insufficient_evidence": 1.0,
+                  "multi_hop": 0.5,
+                  "single_hop": 1.0,
+                  "version_boundary": 1.0
+                },
+                "coverage": 1.0,
+                "error_runs": 0,
+                "missing_runs": 0,
+                "not_applicable_runs": 0,
+                "question_means": {
+                  "comparison-dev-01": 1.0,
+                  "comparison-dev-02": 1.0,
+                  "conflicting_evidence-dev-01": 1.0,
+                  "conflicting_evidence-dev-02": 0.0,
+                  "insufficient_evidence-dev-01": 1.0,
+                  "insufficient_evidence-dev-02": 1.0,
+                  "multi_hop-dev-01": 1.0,
+                  "multi_hop-dev-02": 0.0,
+                  "single_hop-dev-01": 1.0,
+                  "single_hop-dev-02": 1.0,
+                  "version_boundary-dev-01": 1.0,
+                  "version_boundary-dev-02": 1.0
+                },
+                "scored_runs": 12
+              },
+              "citation_accuracy": {
+                "available_question_mean": 0.9451388888888889,
+                "category_means": {
+                  "comparison": 0.9,
+                  "conflicting_evidence": 1.0,
+                  "insufficient_evidence": 0.8333333333333333,
+                  "multi_hop": 1.0,
+                  "single_hop": 1.0,
+                  "version_boundary": 0.9375
+                },
+                "coverage": 1.0,
+                "error_runs": 0,
+                "missing_runs": 0,
+                "not_applicable_runs": 0,
+                "question_means": {
+                  "comparison-dev-01": 0.8,
+                  "comparison-dev-02": 1.0,
+                  "conflicting_evidence-dev-01": 1.0,
+                  "conflicting_evidence-dev-02": 1.0,
+                  "insufficient_evidence-dev-01": 1.0,
+                  "insufficient_evidence-dev-02": 0.6666666666666666,
+                  "multi_hop-dev-01": 1.0,
+                  "multi_hop-dev-02": 1.0,
+                  "single_hop-dev-01": 1.0,
+                  "single_hop-dev-02": 1.0,
+                  "version_boundary-dev-01": 0.875,
+                  "version_boundary-dev-02": 1.0
+                },
+                "scored_runs": 12
+              },
+              "claim_groundedness": {
+                "available_question_mean": 0.96875,
+                "category_means": {
+                  "comparison": 1.0,
+                  "conflicting_evidence": 1.0,
+                  "insufficient_evidence": 0.875,
+                  "multi_hop": 1.0,
+                  "single_hop": 1.0,
+                  "version_boundary": 1.0
+                },
+                "coverage": 0.6666666666666666,
+                "error_runs": 0,
+                "missing_runs": 0,
+                "not_applicable_runs": 4,
+                "question_means": {
+                  "comparison-dev-01": 1.0,
+                  "conflicting_evidence-dev-02": 1.0,
+                  "insufficient_evidence-dev-01": 1.0,
+                  "insufficient_evidence-dev-02": 0.75,
+                  "multi_hop-dev-01": 1.0,
+                  "single_hop-dev-01": 1.0,
+                  "version_boundary-dev-01": 1.0,
+                  "version_boundary-dev-02": 1.0
+                },
+                "scored_runs": 8
+              },
+              "factual_correctness": {
+                "available_question_mean": 0.6416666666666667,
+                "category_means": {
+                  "comparison": 0.81,
+                  "conflicting_evidence": 0.67,
+                  "insufficient_evidence": 0.525,
+                  "multi_hop": 0.5800000000000001,
+                  "single_hop": 0.5,
+                  "version_boundary": 0.765
+                },
+                "coverage": 1.0,
+                "error_runs": 0,
+                "missing_runs": 0,
+                "not_applicable_runs": 0,
+                "question_means": {
+                  "comparison-dev-01": 0.97,
+                  "comparison-dev-02": 0.65,
+                  "conflicting_evidence-dev-01": 0.78,
+                  "conflicting_evidence-dev-02": 0.56,
+                  "insufficient_evidence-dev-01": 0.55,
+                  "insufficient_evidence-dev-02": 0.5,
+                  "multi_hop-dev-01": 0.61,
+                  "multi_hop-dev-02": 0.55,
+                  "single_hop-dev-01": 0.5,
+                  "single_hop-dev-02": 0.5,
+                  "version_boundary-dev-01": 0.67,
+                  "version_boundary-dev-02": 0.86
+                },
+                "scored_runs": 12
+              },
+              "faithfulness": {
+                "available_question_mean": 0.9254254254254254,
+                "category_means": {
+                  "comparison": 0.8108108108108109,
+                  "conflicting_evidence": 1.0,
+                  "insufficient_evidence": 0.837962962962963,
+                  "multi_hop": 1.0,
+                  "single_hop": 1.0,
+                  "version_boundary": 0.9583333333333333
+                },
+                "coverage": 0.6666666666666666,
+                "error_runs": 0,
+                "missing_runs": 0,
+                "not_applicable_runs": 4,
+                "question_means": {
+                  "comparison-dev-01": 0.8108108108108109,
+                  "conflicting_evidence-dev-02": 1.0,
+                  "insufficient_evidence-dev-01": 0.9259259259259259,
+                  "insufficient_evidence-dev-02": 0.75,
+                  "multi_hop-dev-01": 1.0,
+                  "single_hop-dev-01": 1.0,
+                  "version_boundary-dev-01": 1.0,
+                  "version_boundary-dev-02": 0.9166666666666666
+                },
+                "scored_runs": 8
+              }
+            },
+            "status_counts": {
+              "completed": 11,
+              "partial": 1
+            },
+            "termination_counts": {
+              "answer_review_incomplete": 1,
+              "workflow_completed": 11
+            },
+            "usage": {
+              "input_tokens": {
+                "missing_runs": 0,
+                "observed_subtotal": 290232,
+                "total": 290232
+              },
+              "output_tokens": {
+                "missing_runs": 0,
+                "observed_subtotal": 34191,
+                "total": 34191
+              },
+              "provider_attempts": {
+                "missing_runs": 0,
+                "observed_subtotal": 82,
+                "total": 82
+              }
+            }
+          },
+          "candidate": {
+            "answered_runs": 11,
+            "attempted_runs": 12,
+            "attempted_tasks": 12,
+            "completed_runs": 12,
+            "latency_ms": {
+              "p50": 29740.19199993927,
+              "p95": 33036.85627501691
+            },
+            "quality": {
+              "agent_goal_accuracy": {
+                "available_question_mean": 0.8333333333333334,
+                "category_means": {
+                  "comparison": 1.0,
+                  "conflicting_evidence": 1.0,
+                  "insufficient_evidence": 0.5,
+                  "multi_hop": 1.0,
+                  "single_hop": 0.5,
+                  "version_boundary": 1.0
+                },
+                "coverage": 1.0,
+                "error_runs": 0,
+                "missing_runs": 0,
+                "not_applicable_runs": 0,
+                "question_means": {
+                  "comparison-dev-01": 1.0,
+                  "comparison-dev-02": 1.0,
+                  "conflicting_evidence-dev-01": 1.0,
+                  "conflicting_evidence-dev-02": 1.0,
+                  "insufficient_evidence-dev-01": 0.0,
+                  "insufficient_evidence-dev-02": 1.0,
+                  "multi_hop-dev-01": 1.0,
+                  "multi_hop-dev-02": 1.0,
+                  "single_hop-dev-01": 1.0,
+                  "single_hop-dev-02": 0.0,
+                  "version_boundary-dev-01": 1.0,
+                  "version_boundary-dev-02": 1.0
+                },
+                "scored_runs": 12
+              },
+              "citation_accuracy": {
+                "available_question_mean": 0.9267526455026455,
+                "category_means": {
+                  "comparison": 0.9285714285714286,
+                  "conflicting_evidence": 1.0,
+                  "insufficient_evidence": 0.75,
+                  "multi_hop": 0.9375,
+                  "single_hop": 0.9444444444444444,
+                  "version_boundary": 1.0
+                },
+                "coverage": 1.0,
+                "error_runs": 0,
+                "missing_runs": 0,
+                "not_applicable_runs": 0,
+                "question_means": {
+                  "comparison-dev-01": 1.0,
+                  "comparison-dev-02": 0.8571428571428571,
+                  "conflicting_evidence-dev-01": 1.0,
+                  "conflicting_evidence-dev-02": 1.0,
+                  "insufficient_evidence-dev-01": 1.0,
+                  "insufficient_evidence-dev-02": 0.5,
+                  "multi_hop-dev-01": 1.0,
+                  "multi_hop-dev-02": 0.875,
+                  "single_hop-dev-01": 0.8888888888888888,
+                  "single_hop-dev-02": 1.0,
+                  "version_boundary-dev-01": 1.0,
+                  "version_boundary-dev-02": 1.0
+                },
+                "scored_runs": 12
+              },
+              "claim_groundedness": {
+                "available_question_mean": 0.9350490196078431,
+                "category_means": {
+                  "comparison": 0.8,
+                  "insufficient_evidence": 0.9020833333333333,
+                  "multi_hop": 1.0,
+                  "single_hop": 0.9411764705882353,
+                  "version_boundary": 1.0
+                },
+                "coverage": 0.5833333333333334,
+                "error_runs": 0,
+                "missing_runs": 0,
+                "not_applicable_runs": 5,
+                "question_means": {
+                  "comparison-dev-01": 0.8,
+                  "insufficient_evidence-dev-01": 0.8666666666666667,
+                  "insufficient_evidence-dev-02": 0.9375,
+                  "multi_hop-dev-01": 1.0,
+                  "single_hop-dev-01": 0.9411764705882353,
+                  "version_boundary-dev-01": 1.0,
+                  "version_boundary-dev-02": 1.0
+                },
+                "scored_runs": 7
+              },
+              "factual_correctness": {
+                "available_question_mean": 0.5391666666666667,
+                "category_means": {
+                  "comparison": 0.8,
+                  "conflicting_evidence": 0.655,
+                  "insufficient_evidence": 0.5549999999999999,
+                  "multi_hop": 0.28500000000000003,
+                  "single_hop": 0.37,
+                  "version_boundary": 0.57
+                },
+                "coverage": 1.0,
+                "error_runs": 0,
+                "missing_runs": 0,
+                "not_applicable_runs": 0,
+                "question_means": {
+                  "comparison-dev-01": 0.8,
+                  "comparison-dev-02": 0.8,
+                  "conflicting_evidence-dev-01": 0.73,
+                  "conflicting_evidence-dev-02": 0.58,
+                  "insufficient_evidence-dev-01": 0.61,
+                  "insufficient_evidence-dev-02": 0.5,
+                  "multi_hop-dev-01": 0.27,
+                  "multi_hop-dev-02": 0.3,
+                  "single_hop-dev-01": 0.46,
+                  "single_hop-dev-02": 0.28,
+                  "version_boundary-dev-01": 0.57,
+                  "version_boundary-dev-02": 0.57
+                },
+                "scored_runs": 12
+              },
+              "faithfulness": {
+                "available_question_mean": 0.9448173378748413,
+                "category_means": {
+                  "comparison": 0.8709677419354839,
+                  "insufficient_evidence": 1.0,
+                  "multi_hop": 0.9166666666666666,
+                  "single_hop": 1.0,
+                  "version_boundary": 0.9130434782608696
+                },
+                "coverage": 0.5833333333333334,
+                "error_runs": 0,
+                "missing_runs": 0,
+                "not_applicable_runs": 5,
+                "question_means": {
+                  "comparison-dev-01": 0.8709677419354839,
+                  "insufficient_evidence-dev-01": 1.0,
+                  "insufficient_evidence-dev-02": 1.0,
+                  "multi_hop-dev-01": 0.9166666666666666,
+                  "single_hop-dev-01": 1.0,
+                  "version_boundary-dev-01": 1.0,
+                  "version_boundary-dev-02": 0.8260869565217391
+                },
+                "scored_runs": 7
+              }
+            },
+            "status_counts": {
+              "completed": 12
+            },
+            "termination_counts": {
+              "workflow_completed": 12
+            },
+            "usage": {
+              "input_tokens": {
+                "missing_runs": 0,
+                "observed_subtotal": 251244,
+                "total": 251244
+              },
+              "output_tokens": {
+                "missing_runs": 0,
+                "observed_subtotal": 29074,
+                "total": 29074
+              },
+              "provider_attempts": {
+                "missing_runs": 0,
+                "observed_subtotal": 77,
+                "total": 77
+              }
+            }
+          }
+        }
+      }
+    ],
+    "method": "question_paired_percentile_bootstrap",
+    "resamples": 2000,
+    "schema_version": 1,
+    "seed": 7
+  },
+  "decision_method": "observed_question_mean_tolerance",
+  "limitations": [
+    "Completion and answered rates are operational, not semantic task success.",
+    "Point-estimate tolerances are policy checks, not statistical non-inferiority proof.",
+    "CI95 bootstraps questions; repeats are averaged within each question.",
+    "A pass establishes no absolute quality floor or general population improvement.",
+    "Hashes verify artifact consistency, not independent authenticity or judge accuracy."
+  ],
+  "policy": {
+    "max_answered_rate_drop": 0.0,
+    "max_completion_rate_drop": 0.0,
+    "max_latency_ratio": 1.25,
+    "metrics": {
+      "agent_goal_accuracy": {
+        "max_drop": 0.02,
+        "max_task_drop": 0.25
+      },
+      "citation_accuracy": {
+        "max_drop": 0.02,
+        "max_task_drop": 0.25
+      },
+      "factual_correctness": {
+        "max_drop": 0.02,
+        "max_task_drop": 0.25
+      },
+      "faithfulness": {
+        "max_drop": 0.02,
+        "max_task_drop": 0.25
+      }
+    },
+    "min_paired_tasks": 12,
+    "min_score_coverage": 1.0,
+    "name": "example-uncalibrated-research-v1",
+    "schema_version": 1
+  },
+  "policy_sha256": "3024bb663cbb93476a77ca9d7d87c50ae664bf5b68445c8a73da0eca7bb1ac1e",
+  "provenance": {
+    "baseline": {
+      "experiment_identity": "e8db11811ff35d819da0e6bab6f359fafd908671661c15961b1833136d1378a5",
+      "human_review": null,
+      "input_sha256": "91eb996fb57ea24299206238ce137b9d05e275614d8dcf0d1ca092fe05a3295f",
+      "metadata_sha256": "ec22e14a71142bd39479c7a991104d5040b799428054459b3573ecd2daf474ed",
+      "scores": [
+        {
+          "configuration": {},
+          "judge": {
+            "adapter": "quality-v2-metric-specific-input-limits",
+            "common_sha256": "f364b7533d35326c936255dad1bfd8719d06be54c39f80b1de7733a0e3df3e2e",
+            "endpoint_sha256": "008155303f71f5227c2ba640b8dd5c08e523949ee41870e614d62015f554dabb",
+            "instructor": "1.17.0",
+            "instructor_attempts": 1,
+            "max_tokens": 6144,
+            "model": "deepseek-v4.1-flash",
+            "openai": "3.3.0",
+            "provider": "https://ark.cn-beijing.volces.com",
+            "ragas": "0.4.3",
+            "request_options": {
+              "extra_body": {
+                "thinking": {
+                  "type": "disabled"
+                }
+              },
+              "response_format": {
+                "type": "json_object"
+              }
+            },
+            "same_model_as_agent": true,
+            "scorer_sha256": "d77f1ed60e4d479cc68565c01f4c5c7401ac465c1566366a63cacb32f252dc62",
+            "sdk_retries": 0,
+            "temperature": 0
+          },
+          "judged_input_sha256": "91eb996fb57ea24299206238ce137b9d05e275614d8dcf0d1ca092fe05a3295f",
+          "scores_sha256": "5f129036c0126057b78749b1e487ec42a34a18a138b655ef2663ccd2427ef35a"
+        },
+        {
+          "configuration": {
+            "max_citations": 12,
+            "max_claims": 40
+          },
+          "judge": {
+            "adapter": "claims-v3-prose-sentence-boundaries",
+            "common_sha256": "f364b7533d35326c936255dad1bfd8719d06be54c39f80b1de7733a0e3df3e2e",
+            "endpoint_sha256": "008155303f71f5227c2ba640b8dd5c08e523949ee41870e614d62015f554dabb",
+            "max_tokens": 2048,
+            "model": "deepseek-v4.1-flash",
+            "openai": "3.3.0",
+            "parse_retries": 1,
+            "provider": "https://ark.cn-beijing.volces.com",
+            "request_options": {
+              "extra_body": {
+                "thinking": {
+                  "type": "disabled"
+                }
+              },
+              "response_format": {
+                "type": "json_object"
+              }
+            },
+            "same_model_as_agent": true,
+            "scorer_sha256": "f1979bd483699cc1d259b0abc81bea3d319bfbdc88f168cf7c727a38316c1758",
+            "sdk_retries": 0,
+            "temperature": 0
+          },
+          "judged_input_sha256": "91eb996fb57ea24299206238ce137b9d05e275614d8dcf0d1ca092fe05a3295f",
+          "scores_sha256": "474e16730552a167995537173404a82cfe07a5bbdc18b5934895145d1fd5f94e"
+        }
+      ]
+    },
+    "candidate": {
+      "experiment_identity": "24090285101157cd01f55ff4a6ee51aaecb718ad286ba4b64bbe1e4d0b64e1ce",
+      "human_review": null,
+      "input_sha256": "142c7e2601099a5c55c1876d2f118df5eb0d294abab7f98d111342c197abdb2e",
+      "metadata_sha256": "ec22e14a71142bd39479c7a991104d5040b799428054459b3573ecd2daf474ed",
+      "scores": [
+        {
+          "configuration": {},
+          "judge": {
+            "adapter": "quality-v2-metric-specific-input-limits",
+            "common_sha256": "f364b7533d35326c936255dad1bfd8719d06be54c39f80b1de7733a0e3df3e2e",
+            "endpoint_sha256": "008155303f71f5227c2ba640b8dd5c08e523949ee41870e614d62015f554dabb",
+            "instructor": "1.17.0",
+            "instructor_attempts": 1,
+            "max_tokens": 6144,
+            "model": "deepseek-v4.1-flash",
+            "openai": "3.3.0",
+            "provider": "https://ark.cn-beijing.volces.com",
+            "ragas": "0.4.3",
+            "request_options": {
+              "extra_body": {
+                "thinking": {
+                  "type": "disabled"
+                }
+              },
+              "response_format": {
+                "type": "json_object"
+              }
+            },
+            "same_model_as_agent": true,
+            "scorer_sha256": "d77f1ed60e4d479cc68565c01f4c5c7401ac465c1566366a63cacb32f252dc62",
+            "sdk_retries": 0,
+            "temperature": 0
+          },
+          "judged_input_sha256": "142c7e2601099a5c55c1876d2f118df5eb0d294abab7f98d111342c197abdb2e",
+          "scores_sha256": "35b7ae9e45c771234e9a7f3ac8130d203fd24fd9456fb902d0d7e2a65abd2e2e"
+        },
+        {
+          "configuration": {
+            "max_citations": 12,
+            "max_claims": 40
+          },
+          "judge": {
+            "adapter": "claims-v3-prose-sentence-boundaries",
+            "common_sha256": "f364b7533d35326c936255dad1bfd8719d06be54c39f80b1de7733a0e3df3e2e",
+            "endpoint_sha256": "008155303f71f5227c2ba640b8dd5c08e523949ee41870e614d62015f554dabb",
+            "max_tokens": 2048,
+            "model": "deepseek-v4.1-flash",
+            "openai": "3.3.0",
+            "parse_retries": 1,
+            "provider": "https://ark.cn-beijing.volces.com",
+            "request_options": {
+              "extra_body": {
+                "thinking": {
+                  "type": "disabled"
+                }
+              },
+              "response_format": {
+                "type": "json_object"
+              }
+            },
+            "same_model_as_agent": true,
+            "scorer_sha256": "f1979bd483699cc1d259b0abc81bea3d319bfbdc88f168cf7c727a38316c1758",
+            "sdk_retries": 0,
+            "temperature": 0
+          },
+          "judged_input_sha256": "142c7e2601099a5c55c1876d2f118df5eb0d294abab7f98d111342c197abdb2e",
+          "scores_sha256": "945237e1141d433204f931054087b4b3de2c7a077fe23fcf6083a816ced6dbb1"
+        }
+      ]
+    },
+    "files": {
+      "baseline": "D:\\Dev\\Projects\\agent_new\\tmp\\harness-contract-20261107\\baseline\\quality_eval.json",
+      "candidate": "D:\\Dev\\Projects\\agent_new\\tmp\\harness-contract-20261107\\candidate\\quality_eval.json",
+      "metadata": "D:\\Dev\\Projects\\agent_new\\tmp\\harness-contract-20261107\\baseline\\analysis-dev.json",
+      "policy": "D:\\Dev\\Projects\\agent_new\\backend\\src\\deeptrace\\eval\\data\\policies\\regression-v1.json"
+    }
+  },
+  "schema_version": 1,
+  "trials": {
+    "baseline": [
+      {
+        "mode": "workflow",
+        "question_id": "single_hop-dev-01",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-single_hop-dev-01-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "single_hop-dev-02",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-single_hop-dev-02-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "multi_hop-dev-01",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-multi_hop-dev-01-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "multi_hop-dev-02",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-multi_hop-dev-02-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "comparison-dev-01",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-comparison-dev-01-workflow",
+        "status": "partial"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "comparison-dev-02",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-comparison-dev-02-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "version_boundary-dev-01",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-version_boundary-dev-01-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "version_boundary-dev-02",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-version_boundary-dev-02-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "conflicting_evidence-dev-01",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-conflicting_evidence-dev-01-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "conflicting_evidence-dev-02",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-conflicting_evidence-dev-02-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "insufficient_evidence-dev-01",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-insufficient_evidence-dev-01-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "insufficient_evidence-dev-02",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-insufficient_evidence-dev-02-workflow",
+        "status": "completed"
+      }
+    ],
+    "candidate": [
+      {
+        "mode": "workflow",
+        "question_id": "single_hop-dev-01",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-single_hop-dev-01-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "single_hop-dev-02",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-single_hop-dev-02-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "multi_hop-dev-01",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-multi_hop-dev-01-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "multi_hop-dev-02",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-multi_hop-dev-02-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "comparison-dev-01",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-comparison-dev-01-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "comparison-dev-02",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-comparison-dev-02-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "version_boundary-dev-01",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-version_boundary-dev-01-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "version_boundary-dev-02",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-version_boundary-dev-02-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "conflicting_evidence-dev-01",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-conflicting_evidence-dev-01-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "conflicting_evidence-dev-02",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-conflicting_evidence-dev-02-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "insufficient_evidence-dev-01",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-insufficient_evidence-dev-01-workflow",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "insufficient_evidence-dev-02",
+        "repeat_index": 0,
+        "run_id": "harness-contract-20261107-insufficient_evidence-dev-02-workflow",
+        "status": "completed"
+      }
+    ]
+  },
+  "verdict": "fail"
+}

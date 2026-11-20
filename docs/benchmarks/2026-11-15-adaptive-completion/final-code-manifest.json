@@ -1,0 +1,17 @@
+{
+  "note": "Real trials were blocked before quota-handling fix; this manifest identifies final code, not successful live acceptance.",
+  "files": {
+    "backend/src/deeptrace/config/settings.py": "069cebd7a50f47395d1b860bab227a2996cd6258e8ec98d239873e421cbb4760",
+    "backend/src/deeptrace/research/runtime.py": "f28e0fa66df632d42e07d95dca5df4f160442baf1d0f3d08dd3f7f9558da89a2",
+    "backend/src/deeptrace/research/execution.py": "6344f380cd155e52591d2c0001065852e2d56f068716d84e84b5a126d894c8ba",
+    "backend/src/deeptrace/strategies/delivery_planning.py": "ac3580030eb41cf96269664578bd6051926062b2b57486bd1c91240ff9eaf78d",
+    "backend/src/deeptrace/strategies/evidence_evaluation.py": "6ed2ddfd19600faf50116f076e90e038e61173f42ffb47e4e373f002c0699bcb",
+    "backend/src/deeptrace/harness/source_navigation.py": "aee541d2554b506d0b2d79a78fb6bd8e37d7557735ad1b587917ee23244e57f0",
+    "backend/src/deeptrace/harness/batch_collection.py": "434d47007df30a08366aa14f57c22ce520de53539c889920212ada6a68f2fe01",
+    "backend/src/deeptrace/harness/model_gateway.py": "16d278df2d45f6045ca95ce21fbf32e8eaa64441743d30db74af800ddf614b90",
+    "backend/src/deeptrace/harness/model_budget.py": "c3742949aad4b9e0ae4817f79ac8bb228415e7ca42b4bf9f1748273544e98822",
+    "backend/src/deeptrace/responses/budgets.py": "568fae0364f0113e869c56fbbf5310d6f666fdf6df35d80f91b9b5e574b06122",
+    "backend/src/deeptrace/responses/consistency.py": "2fdf22233e9eeb1276ee19acc1bcd3ec15991d26b1d91c8f3df75458167b17c3",
+    "backend/src/deeptrace/responses/graph.py": "c5cd700960a43bf3e24fdcf09383313ebdd725e56666ef611c0c3e32fa326c9e"
+  }
+}

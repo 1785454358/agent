@@ -1,0 +1,7 @@
+{
+  "elapsed_seconds": 29.92918449998251,
+  "partial_reason": "insufficient_evidence",
+  "cited_sources": 7,
+  "combined_input_tokens": 86370,
+  "combined_model_calls": 11
+}

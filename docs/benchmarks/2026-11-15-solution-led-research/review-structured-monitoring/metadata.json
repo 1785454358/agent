@@ -1,0 +1,13 @@
+{
+  "run_id": "monitoring-response-replay-21d71d68f81f",
+  "source_run": "monitoring-live-a96eedb9ee31",
+  "question": "请为5人小团队制定每月300元以内的网站可用性监控方案，监控20个HTTPS网站，需要故障通知和30天历史。给出选定产品或部署方式、检查频率、通知渠道、费用分项与部署步骤。允许开源自托管或托管服务，已有一台闲置Linux服务器，但不要假设额外付费功能免费。先选一条可执行主线，核实对应功能、免费或收费额度及运行条件，注明假设和来源；无法确认的实价或功能明确标为未核实，检查方案步骤、依赖和总费用是否一致。",
+  "type": "Frozen research; live writer and reviewer only, no new search",
+  "model": "deepseek-v4.1-flash",
+  "research_calls": 9,
+  "research_input_tokens": 56074,
+  "remaining_calls": 11,
+  "remaining_input_tokens": 43926,
+  "original_max_calls": 20,
+  "original_max_input_tokens": 100000
+}

@@ -1,0 +1,364 @@
+{
+  "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+  "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+  "status": "completed",
+  "response_outcome": {
+    "response_mode": "answer",
+    "content": "## 结论\n\n按冻结文档，三者都是应对长对话超出上下文窗口的常见方案 [1]，但机制与持久性不同：**trimming** 是调用 LLM 前临时裁剪发送给模型的消息（transient，不改已保存状态）[1][2]；**deleting** 是从 LangGraph 状态中永久移除消息，适合删除特定消息或清空整个历史 [1]；**summarizing** 是把较早消息总结成摘要并**永久**替换进状态，供后续所有轮次使用，同时保留最近消息 [2]。文档没有给出三者之间的显式排序或组合使用指引，只明确对比了 transient trimming 与 persistent summarization [2]。\n\n## 逐项对比\n\n| 维度 | Trimming | Deleting | Summarizing |\n|---|---|---|---|\n| 机制 | 调用 LLM 前移除前/后 N 条消息；可按 token 计数在接近上限时截断，用 trim messages 工具指定保留 token 数与 strategy（如保留最后 max_tokens）[1] | 用 `RemoveMessage` 从图状态删除；要求状态键使用 `add_messages` reducer（默认 `AgentState` 已提供）[1] | `SummarizationMiddleware` 在超过 token 上限时自动：用一次独立 LLM 调用总结旧消息、在状态中永久替换为摘要、保留最近消息 [2] |\n| 实现位置 | 中间件：Python 用 `@before_model` 装饰器，JS 用 `createMiddleware` 的 `beforeModel` 钩子 [1] | 图状态层面（reducer 机制）[1] | 内置中间件，可配置 `trigger`（如 tokens: 4000）与 `keep`（如保留 20 条）[2] |\n| 持久性 | Transient：只改单次调用发给模型的内容，不改已保存状态 [2] | 永久：从状态中删除 [1] | 永久：状态被持久更新，未来轮次看到摘要而非原始消息 [2] |\n| 适用场景 | 长对话超出上下文窗口时的常见方案 [1] | 想移除特定消息或清空整个消息历史时 [1] | 对话过长时自动压缩历史 [2] |\n\n## 共同动机与取舍\n\n文档指出，长对话可能放不进上下文窗口，导致上下文丢失或报错；即使模型支持完整上下文长度，多数 LLM 在长上下文上表现仍差——被陈旧/离题内容分散注意力，响应更慢、成本更高 [1]。这是三者共同要解决的问题。\n\n有据可依的取舍：\n\n- **信息保留**：summarizing 以摘要形式保留旧信息的要点，而 trimming/deleting 直接丢弃被移除的内容（文档只描述摘要\"替换旧消息\"，未承诺信息无损）[2]。\n- **额外开销**：summarizing 需要一次独立的 LLM 调用 [2]；trimming/deleting 的文档描述中没有此类额外调用。\n- **可逆性**：trimming 不动已保存状态，被裁掉的消息仍在状态中 [2]；deleting 与 summarizing 都是永久修改状态 [1][2]。\n\n## 文档未覆盖之处\n\n可见材料未给出：三者之间的显式选择排序、组合使用指引、摘要质量/信息损失的量化说明，以及 trimming 与 deleting 在效果上的直接对比。这些缺口仅说明本次可见材料不足，不能推断完整文档没有相关内容。",
+    "citations": [
+      {
+        "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+        "marker": "[1]"
+      },
+      {
+        "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+        "marker": "[2]"
+      }
+    ],
+    "cited_evidence_ids": [
+      "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f"
+    ],
+    "partial_reason": null
+  },
+  "research_outcome": {
+    "delivery_plan": null,
+    "source_eligibility": {
+      "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518": "eligible",
+      "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f": "eligible"
+    },
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "What the frozen documentation says about trimming messages: definition/mechanism, when to use it, and stated trade-offs or limits for long conversations."
+      },
+      {
+        "id": "r2",
+        "description": "What the frozen documentation says about deleting messages: definition/mechanism, when to use it, and stated trade-offs or limits for long conversations."
+      },
+      {
+        "id": "r3",
+        "description": "What the frozen documentation says about summarizing messages: definition/mechanism, when to use it, and stated trade-offs or limits for long conversations."
+      },
+      {
+        "id": "r4",
+        "description": "Any explicit comparison, recommendation, or guidance in the frozen documentation on choosing among trimming, deleting, and summarizing (e.g., ordering, compatibility, combined use)."
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "covered",
+          "reason": "Definition/mechanism (remove first/last N messages before LLM call; before_model middleware) and when to use (long conversations exceeding context window) are supported. Trade-offs are partially covered by the transient-vs-persistent contrast in s2 and the general long-context costs in s1.",
+          "finding_ids": [
+            "finding-1",
+            "finding-2",
+            "finding-6",
+            "finding-8"
+          ],
+          "unanswered_parts": []
+        },
+        {
+          "requirement_id": "r2",
+          "status": "covered",
+          "reason": "Definition/mechanism (permanent removal from graph state via RemoveMessage with add_messages reducer) and when to use (remove specific messages or clear entire history) are supported by visible passages.",
+          "finding_ids": [
+            "finding-3",
+            "finding-4",
+            "finding-8"
+          ],
+          "unanswered_parts": []
+        },
+        {
+          "requirement_id": "r3",
+          "status": "covered",
+          "reason": "Definition/mechanism (summarize earlier messages, replace with summary; SummarizationMiddleware steps including separate LLM call), when to use (when conversation exceeds token limit), and trade-off/behavior (persistent state update, keeps recent messages intact) are supported.",
+          "finding_ids": [
+            "finding-5",
+            "finding-6",
+            "finding-7",
+            "finding-8"
+          ],
+          "unanswered_parts": []
+        },
+        {
+          "requirement_id": "r4",
+          "status": "covered",
+          "reason": "The docs present the three as common solutions side by side and explicitly contrast transient trimming with persistent summarization; no explicit ordering or combined-use guidance beyond this is visible.",
+          "finding_ids": [
+            "finding-6",
+            "finding-9"
+          ],
+          "unanswered_parts": []
+        }
+      ]
+    },
+    "decomposition_degraded": false,
+    "mode": "workflow",
+    "evidence_ids": [
+      "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f"
+    ],
+    "findings": [
+      {
+        "id": "finding-1",
+        "claim": "Trimming messages is defined as removing the first or last N messages before calling the LLM, and is presented as a common solution for long conversations that can exceed the LLM's context window.",
+        "evidence_ids": [
+          "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 6584,
+            "end": 7023,
+            "quote": "With [short-term memory](#usage) enabled, long conversations can exceed the LLM's context window. Common solutions are:\n\n<CardGroup cols={2}>\n    <Card title=\"Trim messages\" icon=\"scissors\" href=\"#trim-messages\" arrow>\n        Remove first or last N messages (before calling LLM)\n    </Card>\n    <Card title=\"Delete messages\" icon=\"trash\" href=\"#delete-messages\" arrow>\n        Delete messages from LangGraph state permanently\n    </Card>\n"
+          },
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 7023,
+            "end": 7463,
+            "quote": "    <Card title=\"Summarize messages\" icon=\"stack-2\" href=\"#summarize-messages\" arrow>\n        Summarize earlier messages in the history and replace them with a summary\n    </Card>\n    <Card title=\"Custom strategies\" icon=\"adjustments\">\n        Custom strategies (e.g., message filtering, etc.)\n    </Card>\n</CardGroup>\n\nThis allows the agent to keep track of the conversation without exceeding the LLM's context window.\n\n### Trim messages\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-2",
+        "claim": "Trimming is implemented via middleware: in Python with the @before_model decorator, and in JS with createMiddleware using a beforeModel hook.",
+        "evidence_ids": [
+          "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+        ],
+        "confidence": 0.9,
+        "supports": [
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 8271,
+            "end": 8368,
+            "quote": ":::python\nTo trim message history in an agent, use the @[`@before_model`] middleware decorator:\n\n"
+          },
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 10029,
+            "end": 10126,
+            "quote": ":::js\nTo trim message history in an agent, use @[`createMiddleware`] with a `beforeModel` hook:\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-3",
+        "claim": "Deleting messages is defined as permanently deleting messages from LangGraph state, useful when you want to remove specific messages or clear the entire message history.",
+        "evidence_ids": [
+          "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 6584,
+            "end": 7023,
+            "quote": "With [short-term memory](#usage) enabled, long conversations can exceed the LLM's context window. Common solutions are:\n\n<CardGroup cols={2}>\n    <Card title=\"Trim messages\" icon=\"scissors\" href=\"#trim-messages\" arrow>\n        Remove first or last N messages (before calling LLM)\n    </Card>\n    <Card title=\"Delete messages\" icon=\"trash\" href=\"#delete-messages\" arrow>\n        Delete messages from LangGraph state permanently\n    </Card>\n"
+          },
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 7023,
+            "end": 7463,
+            "quote": "    <Card title=\"Summarize messages\" icon=\"stack-2\" href=\"#summarize-messages\" arrow>\n        Summarize earlier messages in the history and replace them with a summary\n    </Card>\n    <Card title=\"Custom strategies\" icon=\"adjustments\">\n        Custom strategies (e.g., message filtering, etc.)\n    </Card>\n</CardGroup>\n\nThis allows the agent to keep track of the conversation without exceeding the LLM's context window.\n\n### Trim messages\n\n"
+          },
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 11027,
+            "end": 11432,
+            "quote": "### Delete messages\n\nYou can delete messages from the graph state to manage the message history.\n\nThis is useful when you want to remove specific messages or clear the entire message history.\n\n:::python\nTo delete messages from the graph state, you can use the `RemoveMessage`.\n\nFor `RemoveMessage` to work, you need to use a state key with @[`add_messages`] [reducer](/oss/langgraph/graph-api#reducers).\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-4",
+        "claim": "Deletion is implemented with RemoveMessage, which requires a state key using the add_messages reducer.",
+        "evidence_ids": [
+          "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+        ],
+        "confidence": 0.9,
+        "supports": [
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 11027,
+            "end": 11432,
+            "quote": "### Delete messages\n\nYou can delete messages from the graph state to manage the message history.\n\nThis is useful when you want to remove specific messages or clear the entire message history.\n\n:::python\nTo delete messages from the graph state, you can use the `RemoveMessage`.\n\nFor `RemoveMessage` to work, you need to use a state key with @[`add_messages`] [reducer](/oss/langgraph/graph-api#reducers).\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-5",
+        "claim": "Summarizing messages is defined as summarizing earlier messages in the history and replacing them with a summary, presented as a common solution for long conversations that exceed the context window.",
+        "evidence_ids": [
+          "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 6584,
+            "end": 7023,
+            "quote": "With [short-term memory](#usage) enabled, long conversations can exceed the LLM's context window. Common solutions are:\n\n<CardGroup cols={2}>\n    <Card title=\"Trim messages\" icon=\"scissors\" href=\"#trim-messages\" arrow>\n        Remove first or last N messages (before calling LLM)\n    </Card>\n    <Card title=\"Delete messages\" icon=\"trash\" href=\"#delete-messages\" arrow>\n        Delete messages from LangGraph state permanently\n    </Card>\n"
+          },
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 7023,
+            "end": 7463,
+            "quote": "    <Card title=\"Summarize messages\" icon=\"stack-2\" href=\"#summarize-messages\" arrow>\n        Summarize earlier messages in the history and replace them with a summary\n    </Card>\n    <Card title=\"Custom strategies\" icon=\"adjustments\">\n        Custom strategies (e.g., message filtering, etc.)\n    </Card>\n</CardGroup>\n\nThis allows the agent to keep track of the conversation without exceeding the LLM's context window.\n\n### Trim messages\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-6",
+        "claim": "Summarization persistently updates state—permanently replacing old messages with a summary saved for all future turns—unlike transient message trimming, which only modifies what is sent to the model for a single call without changing saved state.",
+        "evidence_ids": [
+          "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+            "version": 1,
+            "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+            "start": 62774,
+            "end": 63097,
+            "quote": "One of the most common life-cycle patterns is automatically condensing conversation history when it gets too long. Unlike the transient message trimming shown in [Model Context](#messages), summarization **persistently updates state** - permanently replacing old messages with a summary that's saved for all future turns.\n\n"
+          },
+          {
+            "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+            "version": 1,
+            "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+            "start": 21192,
+            "end": 21621,
+            "quote": "<Note>\n**Transient vs Persistent Message Updates:**\n\nThe examples above use `wrap_model_call` to make **transient** updates - modifying what messages are sent to the model for a single call without changing what's saved in state.\n\nFor **persistent** updates that modify state, you can:\n\n:::python\n- Return a @[`ExtendedModelResponse`] with a @[`Command`] from `wrap_model_call` to inject state updates from the model call layer.\n"
+          },
+          {
+            "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+            "version": 1,
+            "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+            "start": 21621,
+            "end": 22081,
+            "quote": "- Use life-cycle hooks like `before_model`, `after_model`, or `wrap_tool_call` (for tool returns) to update the conversation history. See the [middleware documentation](/oss/langchain/middleware) for more details.\n:::\n\n:::js\n- Return a @[`Command`] directly from `wrapModelCall` to inject state updates from the model call layer.\n- Use life-cycle hooks like `beforeModel`, `afterModel`, or `wrapToolCall` (for tool returns) to update the conversation history. "
+          },
+          {
+            "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+            "version": 1,
+            "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+            "start": 22081,
+            "end": 22265,
+            "quote": "See the [middleware documentation](/oss/langchain/middleware) for more details.\n:::\n\nSee [State updates](/oss/langchain/middleware/custom#state-updates) for more information.\n</Note>\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-7",
+        "claim": "When the conversation exceeds the token limit, SummarizationMiddleware automatically summarizes older messages using a separate LLM call, replaces them with a summary message in State permanently, and keeps recent messages intact for context.",
+        "evidence_ids": [
+          "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+            "version": 1,
+            "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+            "start": 63833,
+            "end": 64084,
+            "quote": "When the conversation exceeds the token limit, `SummarizationMiddleware` automatically:\n1. Summarizes older messages using a separate LLM call\n2. Replaces them with a summary message in State (permanently)\n3. Keeps recent messages intact for context\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-8",
+        "claim": "The documentation motivates all three approaches by noting that long conversations may not fit the context window, causing context loss or errors, and that even models with full context length perform poorly over long contexts—getting distracted by stale content with slower response times and higher costs.",
+        "evidence_ids": [
+          "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+        ],
+        "confidence": 0.9,
+        "supports": [
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 592,
+            "end": 1065,
+            "quote": "Short term memory lets your application remember previous interactions within a single thread or conversation.\n\n<Note>\n    A thread organizes multiple interactions in a session, similar to the way email groups messages in a single conversation.\n</Note>\n\nConversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\n\n"
+          },
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 1065,
+            "end": 1288,
+            "quote": "Even if your model supports the full context length, most LLMs still perform poorly over long contexts. They get \"distracted\" by stale or off-topic content, all while suffering from slower response times and higher costs.\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-9",
+        "claim": "The documentation presents trimming, deleting, and summarizing side by side as common solutions (alongside custom strategies like message filtering) that allow the agent to keep track of the conversation without exceeding the LLM's context window.",
+        "evidence_ids": [
+          "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+        ],
+        "confidence": 0.9,
+        "supports": [
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 6584,
+            "end": 7023,
+            "quote": "With [short-term memory](#usage) enabled, long conversations can exceed the LLM's context window. Common solutions are:\n\n<CardGroup cols={2}>\n    <Card title=\"Trim messages\" icon=\"scissors\" href=\"#trim-messages\" arrow>\n        Remove first or last N messages (before calling LLM)\n    </Card>\n    <Card title=\"Delete messages\" icon=\"trash\" href=\"#delete-messages\" arrow>\n        Delete messages from LangGraph state permanently\n    </Card>\n"
+          },
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 7023,
+            "end": 7463,
+            "quote": "    <Card title=\"Summarize messages\" icon=\"stack-2\" href=\"#summarize-messages\" arrow>\n        Summarize earlier messages in the history and replace them with a summary\n    </Card>\n    <Card title=\"Custom strategies\" icon=\"adjustments\">\n        Custom strategies (e.g., message filtering, etc.)\n    </Card>\n</CardGroup>\n\nThis allows the agent to keep track of the conversation without exceeding the LLM's context window.\n\n### Trim messages\n\n"
+          }
+        ]
+      }
+    ],
+    "unresolved_gaps": [
+      "diagnostic:read_anchor_omitted:evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f"
+    ],
+    "executed_steps": 10,
+    "termination_reason": "completed"
+  },
+  "termination_reason": "workflow_completed",
+  "executed_steps": 10,
+  "unresolved_gaps": [
+    "diagnostic:read_anchor_omitted:evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f"
+  ],
+  "sources": [
+    "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+    "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/context-engineering.mdx"
+  ],
+  "research_sufficiency": "sufficient"
+}

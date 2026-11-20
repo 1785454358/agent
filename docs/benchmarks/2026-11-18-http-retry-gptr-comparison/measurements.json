@@ -1,0 +1,108 @@
+{
+  "question": "仅依据 RFC 9110 与 RFC 6585，为订单客户端设计 HTTP 重试策略：GET /orders/{id} 查询订单与 POST /orders 创建订单分别遇到①请求已发出后连接断开、未收到响应；②429；③503。先诊断风险，再决定何时可自动重试；解释 Retry-After 整数秒和 HTTP-date 两种格式，以及缺失或无效时的处理；给出总时限30秒、最多3次尝试（含首次）的伪代码，等待时间超出剩余预算就停止。区分 RFC 规则与自行建议；POST 服务端未承诺去重时不得假定有幂等键保障，也不承诺重试必成功。引用原始规范对应章节。",
+  "model": "deepseek-v4.1-flash",
+  "thinking": "disabled",
+  "temperature": {
+    "agent_new_actual": 0,
+    "gptr_global_config": 0,
+    "gptr_native_calls_from_source": [
+      {
+        "stage": "agent_choice",
+        "temperature": 0.15
+      },
+      {
+        "stage": "query_generation",
+        "temperature": 0.4
+      },
+      {
+        "stage": "report_writing",
+        "temperature": 0.35
+      }
+    ],
+    "note": "Corrected from source inspection; the prior observer captured usage but not per-request temperature."
+  },
+  "gptr_configuration": {
+    "embedding": "huggingface:sentence-transformers/all-MiniLM-L6-v2",
+    "scraper": "bs",
+    "retrievers": [
+      "tavily"
+    ],
+    "max_iterations": 3,
+    "max_search_results_per_query": 5,
+    "total_words": 1200,
+    "fast_token_limit": 6000,
+    "smart_token_limit": 12000,
+    "strategic_token_limit": 8000,
+    "language": "chinese"
+  },
+  "gptr_git_revision": "6f998577d547b1e54ec662dac63583aa11e3b84b",
+  "rows": [
+    {
+      "project": "agent_new",
+      "mode": "workflow",
+      "status": "partial",
+      "seconds": 84.75,
+      "input_tokens": 46851,
+      "output_tokens": 9368,
+      "total_tokens": 56219,
+      "model_calls": 10,
+      "usage_complete": true
+    },
+    {
+      "project": "agent_new",
+      "mode": "plan_execute",
+      "status": "partial",
+      "seconds": 85.16,
+      "input_tokens": 50064,
+      "output_tokens": 9760,
+      "total_tokens": 59824,
+      "model_calls": 11,
+      "usage_complete": true
+    },
+    {
+      "project": "agent_new",
+      "mode": "multi_agent",
+      "status": "partial",
+      "seconds": 118.86,
+      "input_tokens": 60611,
+      "output_tokens": 14916,
+      "total_tokens": 75527,
+      "model_calls": 12,
+      "usage_complete": true
+    },
+    {
+      "project": "GPT-Researcher",
+      "mode": "research_report",
+      "status": "report_generated",
+      "seconds": 68.391,
+      "process_seconds": 113.407,
+      "bootstrap_seconds": 45.016,
+      "initialization_seconds": 10.688,
+      "research_seconds": 32.625,
+      "writing_seconds": 25.078,
+      "input_tokens": 17433,
+      "output_tokens": 7030,
+      "total_tokens": 24463,
+      "model_calls": 3,
+      "usage_complete": true
+    }
+  ],
+  "gptr_acquisition": {
+    "visited_url_count": 17,
+    "fetched_source_count": 13,
+    "report_cited_url_count": 7,
+    "report_cited_urls": [
+      "https://http.dev/retry-after",
+      "https://httpwg.org/specs/rfc6585.html",
+      "https://learn.microsoft.com/zh-cn/microsoft-cloud/dev/dev-proxy/concepts/retry-after-header",
+      "https://motitory.com/blog/http-idempotent-methods",
+      "https://webcrawlerapi.com/blog/exponential-backoff-retries-http-clients",
+      "https://www.host-tracker.com/en/learn/http-status-codes/429-too-many-requests",
+      "https://www.linkedin.com/pulse/idempotency-rest-apis-ensuring-safe-operations-wagner-hernandes-nsq7f"
+    ],
+    "rfc9110_fetched_characters": 447606,
+    "official_rfc9110_url_occurrences_in_writer_context": 0
+  },
+  "comparison_limits": "Same exact question, model, endpoint, API credentials, search service, language and temperature; native research/embedding/iteration budgets differ. No changes to either repository implementation or .env.",
+  "timing_note": "GPT-Researcher seconds cover instance initialization plus research and report generation. process_seconds also includes cold Python imports. agent_new values are request-to-terminal times against already running APIs."
+}

@@ -1,0 +1,222 @@
+[
+  {
+    "id": "evidence-97b0a5473b75e1f739dc4dbd3ed8edb978213524dbb4c1e011e6fc5745246e62",
+    "canonical_url": "https://ticket.dpm.org.cn/subject_booking/index.html",
+    "title": "在线订票",
+    "media_type": "text/html",
+    "content_hash": "sha256:71e691abce560034f60255ab459dbc680ebd1cf771e452f800d0d24a84b6fd36",
+    "fetched_at": "2026-11-15T10:18:21.613429Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://ticket.dpm.org.cn/subject_booking/index.html",
+      "final_url": "https://ticket.dpm.org.cn/subject_booking/index.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-d874a8627924abfca6c4adc9acd6f435c24671fe089e5cf2aba593c7356b1a60",
+    "canonical_url": "https://xinwen.bjd.com.cn/content/s66ed14e9e4b0c25b287bb13c.html",
+    "title": "天安门广场参观最新提示！10月1日看升旗记得提前预约，重要提醒→",
+    "media_type": "text/html",
+    "content_hash": "sha256:01254acd7be26168c2d15b1894b8c0fdfbf14380e6b7cc91e228372e9b0ce641",
+    "fetched_at": "2026-11-15T10:18:21.798937Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://xinwen.bjd.com.cn/content/s66ed14e9e4b0c25b287bb13c.html",
+      "final_url": "https://xinwen.bjd.com.cn/content/s66ed14e9e4b0c25b287bb13c.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-34faf4b2b4c357b50e1f3d1d5a24a06b5d32794a3f7b2cfab312dbd61090c7a7",
+    "canonical_url": "https://www.visitbeijing.com.cn/article/47QmKoFtnnF",
+    "title": "八达岭长城启动全网实名预约售票 可提前7天网上预约购票 每日最大流量6.5万人次",
+    "media_type": "text/html",
+    "content_hash": "sha256:93faba41fe2b56dbbe46c3cb0a7c86db2847e5cff872f4648c077bc508c1c645",
+    "fetched_at": "2026-11-15T10:18:24.360009Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.visitbeijing.com.cn/article/47QmKoFtnnF",
+      "final_url": "https://www.visitbeijing.com.cn/article/47QmKoFtnnF",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-58e7a48dd4ae7e5e198008952ec2d409d75a3af27427e5b5ee55cf39d8dae819",
+    "canonical_url": "https://s.visitbeijing.com.cn/attraction/101409",
+    "title": "天坛公园",
+    "media_type": "text/html",
+    "content_hash": "sha256:439db460518a076782252daeaa944a534743d11634b189a8e838b25293d8007c",
+    "fetched_at": "2026-11-15T10:18:24.633319Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://s.visitbeijing.com.cn/attraction/101409",
+      "final_url": "https://s.visitbeijing.com.cn/attraction/101409",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-cc66f2343dcff08cf40dbc4185cdcf1f8a45a214da7f977cf1029e631d5bf69b",
+    "canonical_url": "https://www.busda.com/article-detail/Bg5xvz9W",
+    "title": "颐和园的门票用预约吗？一篇攻略带你玩转皇家园林_旅游资讯_巴士达BusDa",
+    "media_type": "text/html",
+    "content_hash": "sha256:2cc17d192505e1f0bc640eda579811b13393b0ce2e28f95ab6e6400f984d3af6",
+    "fetched_at": "2026-11-15T10:18:24.952068Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.busda.com/article-detail/Bg5xvz9W",
+      "final_url": "https://www.busda.com/article-detail/Bg5xvz9W",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-092b803fd1942e72c3515f4f706207300c577d5fa07c497ca759255144af3589",
+    "canonical_url": "https://www.booking.com/region/cn/beijing.zh-cn.html",
+    "title": "北京地区酒店推荐 | 中国北京地区及周边的住宿",
+    "media_type": "text/html",
+    "content_hash": "sha256:902d9b53a2bab4ea1891308c8eed7608118e68877acb7d2d62f5786a796d8fa6",
+    "fetched_at": "2026-11-15T10:18:31.949508Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.booking.com/region/cn/beijing.zh-cn.html",
+      "final_url": "https://www.booking.com/region/cn/beijing.zh-cn.html",
+      "publisher_canonical_url": "https://www.booking.com/region/cn/beijing.zh-cn.html",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-3c3f1a93f47f6a6031648562dcd124e87c29026a3799f0463e349ac8c74cb94b",
+    "canonical_url": "https://hk.trip.com/moments/detail/beijing-1-145857888",
+    "title": "2026北京美食全攻略｜本地人私藏！不踩雷地道吃法｜Trip.com 北京",
+    "media_type": "text/html",
+    "content_hash": "sha256:ffa8b85ee970f85613b210b4bf62d52eab49eba84741843bfb08b8b91337c605",
+    "fetched_at": "2026-11-15T10:18:23.962217Z",
+    "published_at": "2026-05-22T03:04:53Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://hk.trip.com/moments/detail/beijing-1-145857888",
+      "final_url": "https://hk.trip.com/moments/detail/beijing-1-145857888",
+      "publisher_canonical_url": "https://hk.trip.com/moments/detail/beijing-1-145857888",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": "Trip.com"
+    }
+  },
+  {
+    "id": "evidence-ab7b6fffbd5b37fb3fd6b7a200175abaab8557b504aed6d3b68470637c0ff128",
+    "canonical_url": "https://hk.trip.com/hotels/beijing-beijing-railway-station/hotels-c1r2467476",
+    "title": "404, 對不起，找不到網頁",
+    "media_type": "text/html",
+    "content_hash": "sha256:02d57044fb2970879a302b58f3da86a8292c22708a00492235b6b15372776f18",
+    "fetched_at": "2026-11-15T10:18:25.362408Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://hk.trip.com/hotels/beijing-beijing-railway-station/hotels-c1r2467476",
+      "final_url": "https://hk.trip.com/hotels/beijing-beijing-railway-station/hotels-c1r2467476",
+      "publisher_canonical_url": null,
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-4ae3d5a95e39feb04afb8fb2fb6c10e82c058f64060e12d0d487f4b9d7b062e7",
+    "canonical_url": "https://www.youtube.com/watch?v=1lXDWPLU_lk",
+    "title": "【北京自由行】北京美食天花板指南！嚴選5間必吃：人氣烤鴨店/米芝連涮羊肉/炸醬麵/炙子烤肉全實測｜4K 超高清 - YouTube",
+    "media_type": "text/html",
+    "content_hash": "sha256:0e6079ae9619a3501de5d03c8460e13ba41faadd7232b2ae7d1dbf916bb89962",
+    "fetched_at": "2026-11-15T10:19:05.408647Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.youtube.com/watch?v=1lXDWPLU_lk",
+      "final_url": "https://www.youtube.com/watch?v=1lXDWPLU_lk",
+      "publisher_canonical_url": "https://www.youtube.com/watch?v=1lXDWPLU_lk",
+      "scraper_used": "playwright_bs4",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-8249a115b7727b349bb5fd6b5fd66e2ddc15fe2141272da152f4ac28b10b5b19",
+    "canonical_url": "https://tw.trip.com/toplist/tripbest/recommend/city/best-must-visit-restaurants/100900014008",
+    "title": "北京 50 大必嚐美食 [2026] | Trip.Best by Trip.com",
+    "media_type": "text/html",
+    "content_hash": "sha256:e87e6be58c1946909d4a55bc8210a2100812abddb0be21c1e047a08e7cca6b43",
+    "fetched_at": "2026-11-15T10:19:00.554262Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://tw.trip.com/toplist/tripbest/recommend/city/best-must-visit-restaurants/100900014008",
+      "final_url": "https://tw.trip.com/toplist/tripbest/recommend/city/best-must-visit-restaurants/100900014008",
+      "publisher_canonical_url": "https://tw.trip.com/toplist/tripbest/recommend/city/best-must-visit-restaurants/100900014008",
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-c80eca8dc9b6e7d8c3367fbcb1e5daa9faef60722903cc2e9558e94348e9ae96",
+    "canonical_url": "https://www.visitbeijing.com.cn/article/4IClhFFpx2K",
+    "title": "北京美食，10家必吃老字号 北京十大必吃馆子，品味传统美食的诱惑！",
+    "media_type": "text/html",
+    "content_hash": "sha256:3577ac621be0eb22489a500dfa177b4900f09060d637f8912980e52599486215",
+    "fetched_at": "2026-11-15T10:18:57.579575Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.visitbeijing.com.cn/article/4IClhFFpx2K",
+      "final_url": "https://www.visitbeijing.com.cn/article/4IClhFFpx2K",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  }
+]

@@ -1,0 +1,96 @@
+[
+  {
+    "evidence_id": "evidence-477595d6d6e8f72470c5b5ffdd6aab14645eaa89ba7597b60a5e5c81987dd65f",
+    "url": "https://peking.bjd.com.cn/content/s692eec1ee4b034aea273b9c6.html",
+    "title": "只用一个平台，就可购买、预约北京74家景区门票了！",
+    "body_chars": 1248,
+    "accepted_findings": [
+      "finding-6"
+    ]
+  },
+  {
+    "evidence_id": "evidence-d555da8a27408bd90b4a069789d25fb79e8c6f19bd907ed4499589249e65f29c",
+    "url": "https://travelnews.qunar.com/qa_strategy/beijing-3-days-2-nights-travel-guide-15",
+    "title": "北京3天2晚旅游怎么安排？ - 去哪儿",
+    "body_chars": 1943,
+    "accepted_findings": []
+  },
+  {
+    "evidence_id": "evidence-2d18d74860a87bea758becbf99c820fdb540ee3a0da99167d7e6b8f54b750000",
+    "url": "https://big5.visitbeijing.com.cn/article/4HemYB8ihkM",
+    "title": "北京旅游景点怎么预约？北京最全景点旅游指南，第一次到北京游玩一定要收好！",
+    "body_chars": 1753,
+    "accepted_findings": [
+      "finding-5"
+    ]
+  },
+  {
+    "evidence_id": "evidence-97b0a5473b75e1f739dc4dbd3ed8edb978213524dbb4c1e011e6fc5745246e62",
+    "url": "https://ticket.dpm.org.cn/subject_booking/index.html",
+    "title": "在线订票",
+    "body_chars": 2927,
+    "accepted_findings": [
+      "finding-1",
+      "finding-2"
+    ]
+  },
+  {
+    "evidence_id": "evidence-57bffefc0d5686d56d9106995c5079f7450ec3d9ace8266001a9343478acd17a",
+    "url": "https://all.accor.com/a/zh/destination/city/hotels-beijing-v5004/budget-friendly.html",
+    "title": "北京经济型酒店：舒适省心更省钱 | Accor",
+    "body_chars": 1075,
+    "accepted_findings": [
+      "finding-8"
+    ]
+  },
+  {
+    "evidence_id": "evidence-e047d7d7088cc4b008ba6487c7561a239979b48ec1fe0fe70b9ec0477f032f8f",
+    "url": "https://hk.trip.com/blog/beijing-1-3days-itinerary-10003502741",
+    "title": "2026年北京自由行旅遊攻略：北京3日2夜詳細行程規劃，包括景點及住宿完整攻略（更新於11月）",
+    "body_chars": 5048,
+    "accepted_findings": [
+      "finding-4",
+      "finding-7"
+    ]
+  },
+  {
+    "evidence_id": "evidence-1933fc51f3c0142fa314ae03dc1b35aaa2de39cf031138a37acf57a30c722092",
+    "url": "https://www.chnmuseum.cn/cg",
+    "title": "服务_中国国家博物馆官方网站",
+    "body_chars": 1591,
+    "accepted_findings": [
+      "finding-3"
+    ]
+  },
+  {
+    "evidence_id": "evidence-18e6e50eeb4d1a2af1da181fc52c57fd20dfa1366b1a4efe4dea94212853b75d",
+    "url": "https://www.mtr.bj.cn/page/instructions.html",
+    "title": "购票指南 - 北京京港地铁有限公司",
+    "body_chars": 8058,
+    "accepted_findings": [
+      "finding-9",
+      "finding-10"
+    ]
+  },
+  {
+    "evidence_id": "evidence-772f264c36ab7ce2c0ad0279f3d7b835d4f7aeec24716985a803eff4cbd2804e",
+    "url": "https://www.csair.com/h5/cn/guonei/Beijing/1amfi81mk308n.shtml",
+    "title": "https://www.csair.com/h5/cn/guonei/Beijing/1amfi81mk308n.shtml",
+    "body_chars": 2933,
+    "accepted_findings": []
+  },
+  {
+    "evidence_id": "evidence-fe580ffb0154449abc734553327718c40eb9486488e0e08c5fab57fa5e8ea870",
+    "url": "https://hk.trip.com/hotels/beijing-hotel-detail-5237950/peking-station-hostel",
+    "title": "北平北京站青年旅舍（北京東單地鐵站店） - 2026 北京人氣酒店優惠及真實評論｜Trip.com",
+    "body_chars": 3595,
+    "accepted_findings": []
+  },
+  {
+    "evidence_id": "evidence-8b938a63ad929c5e5eb870990aa27f38ccc8b16e69994e63d1e9986c629cedb7",
+    "url": "https://www.booking.com/hostels/city/cn/beijing.zh-cn.html",
+    "title": "中国北京10大推荐青旅 | Booking.com",
+    "body_chars": 3339,
+    "accepted_findings": []
+  }
+]

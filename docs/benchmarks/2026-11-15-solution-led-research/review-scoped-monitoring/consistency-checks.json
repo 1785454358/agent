@@ -1,0 +1,82 @@
+{
+  "issues_count": 8,
+  "unanswered_points": [
+    "20项×60秒方向可行，但服务器配置未提供，单机容量未量化；材料未明确20秒为可配置下限，仅确认默认60秒[7][8]。",
+    "[1]只说明存在全局清理任务及按监控项保留未实现，未给出全局保留期默认值或配置入口，30天保留能否直接实现未核实。",
+    "已知增量0元，但电费/带宽与域名/证书为unpriced，未计价前不能确认合计不超过300元/月。",
+    "5人小团队、20个HTTPS站点、每月未计价：闲置Linux服务器增量（电费/带宽）、域名/证书（仅公网HTTPS访问时需要）",
+    "Uptime Kuma全局历史保留期的默认值与具体配置入口在可见材料中未给出，30天保留能否直接实现尚未核实，需部署后在设置中确认。",
+    "闲置Linux服务器的具体配置（CPU/内存/磁盘）与出网条件未提供，20站点×60秒的实际容量未量化。"
+  ],
+  "consistency_checks": [
+    {
+      "check_id": "c1",
+      "status": "unresolved",
+      "reason": "20项×60秒方向可行，但服务器配置未提供，单机容量未量化；材料未明确20秒为可配置下限，仅确认默认60秒[7][8]。"
+    },
+    {
+      "check_id": "c2",
+      "status": "unresolved",
+      "reason": "[1]只说明存在全局清理任务及按监控项保留未实现，未给出全局保留期默认值或配置入口，30天保留能否直接实现未核实。"
+    },
+    {
+      "check_id": "c3",
+      "status": "passed",
+      "reason": "SMTP通知可勾选Default Enabled与Apply on all existing monitors覆盖全部监控项[5]；用现有邮箱无额外付费，但需已有邮箱且Gmail需应用密码[6]。"
+    },
+    {
+      "check_id": "c4",
+      "status": "unresolved",
+      "reason": "已知增量0元，但电费/带宽与域名/证书为unpriced，未计价前不能确认合计不超过300元/月。"
+    },
+    {
+      "check_id": "c5",
+      "status": "passed",
+      "reason": "已按入口前确认Docker/Compose、建本地目录、固定2.5.8、compose校验与启动、本地验证、建管理员、加监控、配SMTP、出口验证排序；依赖Docker、本地存储、SMTP凭据齐全[3][4][5]。"
+    }
+  ],
+  "budgets": [
+    {
+      "scope": "5人小团队、20个HTTPS站点、每月",
+      "unit": "人民币/月",
+      "items": [
+        {
+          "label": "闲置Linux服务器增量（电费/带宽）",
+          "low": null,
+          "high": null,
+          "quantity": "1",
+          "divisor": "1",
+          "kind": "unpriced",
+          "note": "服务器已有，电费/带宽未提供实价，不能按0计"
+        },
+        {
+          "label": "Uptime Kuma 开源自托管",
+          "low": "0",
+          "high": "0",
+          "quantity": "1",
+          "divisor": "1",
+          "kind": "verified",
+          "note": "开源无按监控项费用[2][8]"
+        },
+        {
+          "label": "SMTP邮件通知（现有邮箱）",
+          "low": "0",
+          "high": "0",
+          "quantity": "1",
+          "divisor": "1",
+          "kind": "verified",
+          "note": "用现有邮箱SMTP；个人Gmail约500封/日[6]，前提是已有邮箱"
+        },
+        {
+          "label": "域名/证书（仅公网HTTPS访问时需要）",
+          "low": null,
+          "high": null,
+          "quantity": "1",
+          "divisor": "1",
+          "kind": "unpriced",
+          "note": "内网访问可0元；公网需域名，Caddy可自动证书，实价未核实[3]"
+        }
+      ]
+    }
+  ]
+}

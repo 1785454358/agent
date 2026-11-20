@@ -1,0 +1,112 @@
+[
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "d2cee02de21943788900942d540c7848",
+      "call_id": "d2cee02de21943788900942d540c7848:1",
+      "role": "planner",
+      "estimated_input_tokens": 2499
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "d2cee02de21943788900942d540c7848",
+      "call_id": "d2cee02de21943788900942d540c7848:1",
+      "role": "planner",
+      "duration_ms": 11672,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1538,
+      "output_tokens": 682
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "d2cee02de21943788900942d540c7848",
+      "call_id": "d2cee02de21943788900942d540c7848:2",
+      "role": "researcher",
+      "estimated_input_tokens": 2451
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "d2cee02de21943788900942d540c7848",
+      "call_id": "d2cee02de21943788900942d540c7848:3",
+      "role": "researcher",
+      "estimated_input_tokens": 2449
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "d2cee02de21943788900942d540c7848",
+      "call_id": "d2cee02de21943788900942d540c7848:2",
+      "role": "researcher",
+      "duration_ms": 2312,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1969,
+      "output_tokens": 84
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "d2cee02de21943788900942d540c7848",
+      "call_id": "d2cee02de21943788900942d540c7848:4",
+      "role": "researcher",
+      "estimated_input_tokens": 2520
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "d2cee02de21943788900942d540c7848",
+      "call_id": "d2cee02de21943788900942d540c7848:3",
+      "role": "researcher",
+      "duration_ms": 2875,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1963,
+      "output_tokens": 105
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "d2cee02de21943788900942d540c7848",
+      "call_id": "d2cee02de21943788900942d540c7848:5",
+      "role": "researcher",
+      "estimated_input_tokens": 2518
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "d2cee02de21943788900942d540c7848",
+      "call_id": "d2cee02de21943788900942d540c7848:5",
+      "role": "researcher",
+      "duration_ms": 1750,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 2012,
+      "output_tokens": 72
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "d2cee02de21943788900942d540c7848",
+      "call_id": "d2cee02de21943788900942d540c7848:4",
+      "role": "researcher",
+      "duration_ms": 2625,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 2018,
+      "output_tokens": 98
+    }
+  }
+]

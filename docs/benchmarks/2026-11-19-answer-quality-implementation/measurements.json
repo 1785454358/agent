@@ -1,0 +1,824 @@
+{
+  "date": "2026-11-19",
+  "method": "Saved real-model frozen-source runs, one final observation per case/mode; manual semantic inspection, not executed generated code or a blind independent grader. Intermediate failures retained; not a statistical A/B result.",
+  "model": {
+    "name": "deepseek-v4.1-flash",
+    "max_output_tokens": 16000
+  },
+  "runs": [
+    {
+      "case": "http",
+      "mode": "workflow",
+      "artifact": "D:\\Dev\\Projects\\agent_new\\.local-artifacts\\answer-quality-http-20261119-length-recheck\\workflow",
+      "status": "completed",
+      "termination_reason": "workflow_completed",
+      "seconds": 48.629,
+      "usage": {
+        "provider_attempts": 6,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 31105,
+        "output_tokens": 7239,
+        "total_tokens": 38344,
+        "observed_usage": {
+          "input_tokens": 31105,
+          "output_tokens": 7239,
+          "total_tokens": 38344
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 1258,
+            "output_tokens": 702,
+            "total_tokens": 1960
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "evaluator": {
+            "input_tokens": 12258,
+            "output_tokens": 2583,
+            "total_tokens": 14841
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 17589,
+            "output_tokens": 3954,
+            "total_tokens": 21543
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 1258,
+            "output_tokens": 702,
+            "total_tokens": 1960
+          },
+          "evaluator": {
+            "input_tokens": 12258,
+            "output_tokens": 2583,
+            "total_tokens": 14841
+          },
+          "writer": {
+            "input_tokens": 17589,
+            "output_tokens": 3954,
+            "total_tokens": 21543
+          }
+        },
+        "stage_seconds": {
+          "planner": 5.704000000027008,
+          "evaluator": 14.03200000000652,
+          "writer": 24.219000000040978
+        },
+        "budget_state_available": true
+      },
+      "response_partial_reason": null,
+      "unresolved_gaps": [
+        "diagnostic:read_anchor_omitted:evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+        "diagnostic:read_anchor_omitted:evidence-f2857ca5db8fba0ab70ac7553f9ea089cbda0590f67e68a1f692a1d6ceabd403"
+      ],
+      "review": [
+        {
+          "checks": [],
+          "review_diagnostics": [],
+          "witnessed_review": false,
+          "unanswered_points": []
+        }
+      ],
+      "clause_visibility_union": {
+        "idempotent_definition": {
+          "evaluation": false,
+          "response": true
+        },
+        "503_definition": {
+          "evaluation": true,
+          "response": true
+        },
+        "413_temporary_rule": {
+          "evaluation": false,
+          "response": false
+        }
+      },
+      "manual_quality_verdict": "failed",
+      "manual_notes": [
+        "Completed is not a quality pass: first paragraph permits POST retry based on business acceptance of duplicates; critical policy consistency failure."
+      ]
+    },
+    {
+      "case": "http",
+      "mode": "plan_execute",
+      "artifact": "D:\\Dev\\Projects\\agent_new\\.local-artifacts\\answer-quality-http-20261119-section-complete\\plan_execute",
+      "status": "partial",
+      "termination_reason": "no_research_progress",
+      "seconds": 43.314,
+      "usage": {
+        "provider_attempts": 5,
+        "measured_usage_attempts": 5,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 24175,
+        "output_tokens": 5333,
+        "total_tokens": 29508,
+        "observed_usage": {
+          "input_tokens": 24175,
+          "output_tokens": 5333,
+          "total_tokens": 29508
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 1257,
+            "output_tokens": 595,
+            "total_tokens": 1852
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "evaluator": {
+            "input_tokens": 11982,
+            "output_tokens": 2299,
+            "total_tokens": 14281
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 10936,
+            "output_tokens": 2439,
+            "total_tokens": 13375
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 1257,
+            "output_tokens": 595,
+            "total_tokens": 1852
+          },
+          "evaluator": {
+            "input_tokens": 11982,
+            "output_tokens": 2299,
+            "total_tokens": 14281
+          },
+          "writer": {
+            "input_tokens": 10936,
+            "output_tokens": 2439,
+            "total_tokens": 13375
+          }
+        },
+        "stage_seconds": {
+          "planner": 4.078000000095926,
+          "evaluator": 14.234000000054948,
+          "writer": 17.17200000002049
+        },
+        "budget_state_available": true
+      },
+      "response_partial_reason": "no_research_progress",
+      "unresolved_gaps": [
+        "r1:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r2:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r5:missing:第 10.2.3 节给出 Retry-After 的整数秒与 HTTP-date 两种格式及语法；但本次片段未明示缺失或无效值时的处理规定。",
+        "diagnostic:read_anchor_omitted:evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+        "diagnostic:evaluation_snapshot_reused",
+        "no_research_progress"
+      ],
+      "review": [
+        {
+          "checks": [
+            {
+              "kind": "behavior",
+              "status": "passed",
+              "answer_excerpt": "if not allowAutoRetry: return STOP_MANUAL   # POST 无去重承诺：429/503 不能证明未执行，禁止自动重发",
+              "reason": "POST 无去重承诺且收到 429/503 时，不能确认原请求未生效，保护条件在本分支生效，直接停止而非重发。",
+              "source_marker": null,
+              "source_quote": null,
+              "scenario": "POST /orders，无去重承诺，请求已发出后收到 429 或 503，预算充足→allowAutoRetry=false→STOP_MANUAL，不自动重试"
+            },
+            {
+              "kind": "behavior",
+              "status": "passed",
+              "answer_excerpt": "if now() + wait >= deadline: return STOP_BUDGET",
+              "reason": "等待时间超出剩余预算时停止，符合总时限 30 秒约束；每次网络调用前也绑定剩余预算。",
+              "source_marker": null,
+              "source_quote": null,
+              "scenario": "GET /orders/1 收到 503，Retry-After: 20，已用 15 秒→now()+wait 超过 deadline→STOP_BUDGET，不再发送"
+            },
+            {
+              "kind": "behavior",
+              "status": "passed",
+              "answer_excerpt": "if attempt == 3: return STOP_ATTEMPTS   # 最后一次失败后直接退出，不再等待",
+              "reason": "最后一次尝试失败后直接退出，避免无效等待；最多 3 次尝试含首次。",
+              "source_marker": null,
+              "source_quote": null,
+              "scenario": "GET /orders/1 第 3 次尝试仍连接断开→attempt==3→STOP_ATTEMPTS，不再 sleep 或重发"
+            }
+          ],
+          "review_diagnostics": [
+            "invalid_source_witness"
+          ],
+          "witnessed_review": true,
+          "unanswered_points": []
+        }
+      ],
+      "clause_visibility_union": {
+        "idempotent_definition": {
+          "evaluation": false,
+          "response": false
+        },
+        "503_definition": {
+          "evaluation": true,
+          "response": true
+        },
+        "413_temporary_rule": {
+          "evaluation": true,
+          "response": false
+        }
+      },
+      "manual_quality_verdict": "partial",
+      "manual_notes": [
+        "503 MAY attribution and explicit POST protection in the 429/503 code branch observed; factual coverage and scope/exception wording remain incomplete."
+      ]
+    },
+    {
+      "case": "http",
+      "mode": "multi_agent",
+      "artifact": "D:\\Dev\\Projects\\agent_new\\.local-artifacts\\answer-quality-http-20261119-section-complete\\multi_agent",
+      "status": "partial",
+      "termination_reason": "no_research_progress",
+      "seconds": 42.817,
+      "usage": {
+        "provider_attempts": 4,
+        "measured_usage_attempts": 4,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 19041,
+        "output_tokens": 5575,
+        "total_tokens": 24616,
+        "observed_usage": {
+          "input_tokens": 19041,
+          "output_tokens": 5575,
+          "total_tokens": 24616
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 1256,
+            "output_tokens": 1009,
+            "total_tokens": 2265
+          },
+          "researcher": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "evaluator": {
+            "input_tokens": 6443,
+            "output_tokens": 1012,
+            "total_tokens": 7455
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 11342,
+            "output_tokens": 3554,
+            "total_tokens": 14896
+          }
+        },
+        "observed_role_usage": {
+          "supervisor": {
+            "input_tokens": 1256,
+            "output_tokens": 1009,
+            "total_tokens": 2265
+          },
+          "evaluator": {
+            "input_tokens": 6443,
+            "output_tokens": 1012,
+            "total_tokens": 7455
+          },
+          "writer": {
+            "input_tokens": 11342,
+            "output_tokens": 3554,
+            "total_tokens": 14896
+          }
+        },
+        "stage_seconds": {
+          "supervisor": 8.546999999904074,
+          "evaluator": 6.422000000020489,
+          "writer": 22.984000000054948
+        },
+        "budget_state_available": true
+      },
+      "response_partial_reason": "no_research_progress",
+      "unresolved_gaps": [
+        "r1:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r2:missing:unknown_resolution_not_authorized_or_unchecked",
+        "diagnostic:read_anchor_omitted:evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+        "diagnostic:read_anchor_omitted:evidence-f2857ca5db8fba0ab70ac7553f9ea089cbda0590f67e68a1f692a1d6ceabd403",
+        "diagnostic:evaluation_snapshot_reused",
+        "no_research_progress"
+      ],
+      "review": [
+        {
+          "checks": [
+            {
+              "kind": "fact",
+              "status": "passed",
+              "answer_excerpt": "429 定义见 RFC 6585 §4 [2]",
+              "reason": "RFC 6585 §4 明确429表示限流，且MAY含Retry-After；草稿未再把429当作未执行证明。",
+              "source_marker": "[2]",
+              "source_quote": "The 429 status code indicates that the user has sent too many requests in a given amount of time (\"rate limiting\"). The response representations SHOULD include details explaining the condition, and MAY include a Retry-After header indicating how long to wait before making a new request.",
+              "scenario": null
+            },
+            {
+              "kind": "fact",
+              "status": "passed",
+              "answer_excerpt": "503 与 Retry-After 见 RFC 9110 §15.6.4、§10.2.3 [1]",
+              "reason": "RFC 9110 §15.6.4说明503为临时过载或维护，MAY发Retry-After；§10.2.3给出语法。",
+              "source_marker": "[1]",
+              "source_quote": "The 503 (Service Unavailable) status code indicates that the server is currently unable to handle the request due to a temporary overload or scheduled maintenance, which will likely be alleviated after some delay. The server MAY send a Retry-After header field (Section 10.2.3) to suggest an appropriate amount of time for the client to wait before retrying the request.",
+              "scenario": null
+            }
+          ],
+          "review_diagnostics": [
+            "review_check_capacity_omitted",
+            "invalid_source_witness",
+            "invalid_answer_witness"
+          ],
+          "witnessed_review": true,
+          "unanswered_points": [
+            "可见材料未含RFC 9110 §9.2.2幂等性原文，GET/POST幂等性结论只能按任务前提标注，不能作为原文引用。",
+            "RFC 9110/6585未规定Retry-After缺失或无效时的强制处理，退避策略属自行建议。",
+            "POST在429/503下如何“确认请求未被处理”缺少规范依据，只能作为自行建议并默认停止。",
+            "HTTP-date过去时刻的等待值取0属自行建议，规范只规定语法有效。",
+            "safe_to_repeat的具体判定条件未定义，需明确不得以acceptDuplicateRisk等配置绕过POST保护。",
+            "每次网络调用绑定剩余预算的具体实现未给出，需在伪代码中体现。"
+          ]
+        }
+      ],
+      "clause_visibility_union": {
+        "idempotent_definition": {
+          "evaluation": false,
+          "response": false
+        },
+        "503_definition": {
+          "evaluation": true,
+          "response": true
+        },
+        "413_temporary_rule": {
+          "evaluation": false,
+          "response": false
+        }
+      },
+      "manual_quality_verdict": "partial",
+      "manual_notes": [
+        "503 MAY attribution and explicit POST protection in the 429/503 code branch observed; factual coverage and scope/exception wording remain incomplete."
+      ]
+    },
+    {
+      "case": "python",
+      "mode": "plan_execute",
+      "artifact": "D:\\Dev\\Projects\\agent_new\\.local-artifacts\\answer-quality-python-20261119-api-sections\\plan_execute",
+      "status": "partial",
+      "termination_reason": "no_research_progress",
+      "seconds": 49.079,
+      "usage": {
+        "provider_attempts": 9,
+        "measured_usage_attempts": 9,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 24278,
+        "output_tokens": 6931,
+        "total_tokens": 31209,
+        "observed_usage": {
+          "input_tokens": 24278,
+          "output_tokens": 6931,
+          "total_tokens": 31209
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 990,
+            "output_tokens": 1037,
+            "total_tokens": 2027
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 6688,
+            "output_tokens": 257,
+            "total_tokens": 6945
+          },
+          "evaluator": {
+            "input_tokens": 5347,
+            "output_tokens": 1406,
+            "total_tokens": 6753
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 11253,
+            "output_tokens": 4231,
+            "total_tokens": 15484
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 990,
+            "output_tokens": 1037,
+            "total_tokens": 2027
+          },
+          "researcher": {
+            "input_tokens": 6688,
+            "output_tokens": 257,
+            "total_tokens": 6945
+          },
+          "evaluator": {
+            "input_tokens": 5347,
+            "output_tokens": 1406,
+            "total_tokens": 6753
+          },
+          "writer": {
+            "input_tokens": 11253,
+            "output_tokens": 4231,
+            "total_tokens": 15484
+          }
+        },
+        "stage_seconds": {
+          "planner": 8.187999999965541,
+          "researcher": 6.3600000001024455,
+          "evaluator": 7.577999999979511,
+          "writer": 26.015000000130385
+        },
+        "budget_state_available": true
+      },
+      "response_partial_reason": "no_research_progress",
+      "unresolved_gaps": [
+        "r3:missing:unknown_resolution_not_authorized_or_unchecked",
+        "diagnostic:read_anchor_omitted:evidence-76358782ef94addea60dc84314b0d704408a36f20f914ff547bb36b54aaced20",
+        "diagnostic:evaluation_snapshot_reused",
+        "no_research_progress"
+      ],
+      "review": [
+        {
+          "checks": [
+            {
+              "kind": "fact",
+              "status": "unresolved",
+              "answer_excerpt": "`asyncio.TaskGroup`（3.11 新增）可作为候选，但其失败时取消同组任务的具体语义本次材料未覆盖",
+              "reason": "可见材料仅提及 TaskGroup 为更现代方式及 3.11 新增，未包含失败取消同组与 ExceptionGroup 语义，无法支持原断言。",
+              "source_marker": "[1]",
+              "source_quote": "Note A more modern way to create and run tasks concurrently and wait for their completion is `asyncio.TaskGroup` .",
+              "scenario": null
+            },
+            {
+              "kind": "fact",
+              "status": "passed",
+              "answer_excerpt": "首个异常会立即传播给等待 `gather()` 的任务，但 `aws` 中其余 awaitable **不会被取消**，会继续运行 [1]",
+              "reason": "来源为 Python 3.11.18 文档 gather 段落，对象、版本与限定条件（return_exceptions=False 默认）匹配。",
+              "source_marker": "[1]",
+              "source_quote": "If *return_exceptions* is`False` (default), the first raised exception is immediately propagated to the task that awaits on`gather()` .  Other awaitables in the*aws* sequence**won’t be cancelled** and will continue to run.",
+              "scenario": null
+            },
+            {
+              "kind": "fact",
+              "status": "passed",
+              "answer_excerpt": "若 `aws` 中某项是协程，会被自动调度为 `Task`；`gather` 并发运行这些 awaitable [1]",
+              "reason": "来源 gather 段落明确说明协程自动调度为 Task 且并发运行，章节与版本匹配。",
+              "source_marker": "[1]",
+              "source_quote": "Run awaitable objects in the *aws* sequence*concurrently* .If any awaitable in *aws* is a coroutine, it is automatically scheduled as a Task.",
+              "scenario": null
+            }
+          ],
+          "review_diagnostics": [
+            "invalid_answer_witness"
+          ],
+          "witnessed_review": true,
+          "unanswered_points": [
+            "TaskGroup 失败取消语义与 3.11 可用性中，失败取消部分缺 TaskGroup 章节正文，已降级为备选并列入未决项。",
+            "可见材料仅提及 TaskGroup 为更现代方式及 3.11 新增，未包含失败取消同组与 ExceptionGroup 语义，无法支持原断言。",
+            "缺少 Python 3.11 TaskGroup 章节正文，无法逐字确认失败时是否取消同组任务及异常是否以 ExceptionGroup 抛出。",
+            "缺少文档对 TaskGroup 与 gather 迁移/替代关系的明确表述，无法支持“推荐替代”措辞。",
+            "缺少 TaskGroup 场景下被取消任务 cancelled() 状态与 finally 执行的文档依据。"
+          ]
+        }
+      ],
+      "manual_quality_verdict": "partial"
+    },
+    {
+      "case": "parallel",
+      "mode": "multi_agent",
+      "artifact": "D:\\Dev\\Projects\\agent_new\\.local-artifacts\\answer-quality-parallel-20261119-api-sections\\multi_agent",
+      "status": "partial",
+      "termination_reason": "max_follow_ups_reached",
+      "seconds": 46.167,
+      "usage": {
+        "provider_attempts": 10,
+        "measured_usage_attempts": 10,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 37794,
+        "output_tokens": 6672,
+        "total_tokens": 44466,
+        "observed_usage": {
+          "input_tokens": 37794,
+          "output_tokens": 6672,
+          "total_tokens": 44466
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 956,
+            "output_tokens": 761,
+            "total_tokens": 1717
+          },
+          "researcher": {
+            "input_tokens": 6778,
+            "output_tokens": 328,
+            "total_tokens": 7106
+          },
+          "evaluator": {
+            "input_tokens": 15381,
+            "output_tokens": 2521,
+            "total_tokens": 17902
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 14679,
+            "output_tokens": 3062,
+            "total_tokens": 17741
+          }
+        },
+        "observed_role_usage": {
+          "supervisor": {
+            "input_tokens": 956,
+            "output_tokens": 761,
+            "total_tokens": 1717
+          },
+          "researcher": {
+            "input_tokens": 6778,
+            "output_tokens": 328,
+            "total_tokens": 7106
+          },
+          "evaluator": {
+            "input_tokens": 15381,
+            "output_tokens": 2521,
+            "total_tokens": 17902
+          },
+          "writer": {
+            "input_tokens": 14679,
+            "output_tokens": 3062,
+            "total_tokens": 17741
+          }
+        },
+        "stage_seconds": {
+          "supervisor": 5.204000000027008,
+          "researcher": 6.43700000026729,
+          "evaluator": 16.25,
+          "writer": 20.421999999904074
+        },
+        "budget_state_available": true
+      },
+      "response_partial_reason": "max_follow_ups_reached",
+      "unresolved_gaps": [
+        "r5:missing:unknown_resolution_not_authorized_or_unchecked",
+        "diagnostic:read_anchor_omitted:evidence-574dea042698da9f380c7dd00bf8868c105032dacb638ab691ca9b08cab8029e"
+      ],
+      "review": [
+        {
+          "checks": [
+            {
+              "kind": "fact",
+              "status": "passed",
+              "answer_excerpt": "虚拟线程是由 Java 运行时而非操作系统调度的用户态线程",
+              "reason": "[1] 明确虚拟线程为用户态线程、由 Java 运行时调度，适用章节与对象匹配。",
+              "source_marker": "[1]",
+              "source_quote": "Virtual threads are typically *user-mode threads* scheduled by the Java runtime rather than the operating system.",
+              "scenario": null
+            },
+            {
+              "kind": "fact",
+              "status": "passed",
+              "answer_excerpt": "适合大部分时间阻塞（常为等待 I/O）的任务，不适合长时间 CPU 密集型操作",
+              "reason": "[1] 直接给出虚拟线程适用与不适用任务类型，限定条件一致。",
+              "source_marker": "[1]",
+              "source_quote": "Virtual threads are suitable for executing tasks that spend most of the time blocked, often waiting for I/O operations to complete. Virtual threads are not intended for long running CPU intensive operations.",
+              "scenario": null
+            },
+            {
+              "kind": "behavior",
+              "status": "passed",
+              "answer_excerpt": "任务组 `cancel()` 会对组内未完成任务及父任务调用 cancel，上下文管理器退出时不抛 `CancelledError`",
+              "reason": "[2] 明确 cancel 对组内未完成任务及父任务生效，且退出不抛 CancelledError；保护条件在本分支成立。",
+              "source_marker": null,
+              "source_quote": null,
+              "scenario": "调用 TaskGroup.cancel() → 对未完成任务与父任务调用 cancel → 上下文管理器退出且不抛 CancelledError"
+            }
+          ],
+          "review_diagnostics": [
+            "invalid_source_witness"
+          ],
+          "witnessed_review": true,
+          "unanswered_points": [
+            "Python 3.15.2 与 Go 1.26 的版本标注在可见片段中无直接出处，已列入未决项。",
+            "Java pinning/synchronized 限制原文缺失，正文已标为证据缺口但未解决。",
+            "Python asyncio 事件循环的官方定义原文缺失，无法核实“单线程事件循环”表述。",
+            "Python 3.15.2 版本号在可见片段中无出处，需核对文档版本标注。",
+            "Go goroutine 与调度器的官方定义原文缺失，无法核实运行时调度细节。",
+            "Java 虚拟线程 pinning 与 synchronized 限制的官方原文缺失。"
+          ]
+        }
+      ],
+      "manual_quality_verdict": "partial"
+    }
+  ],
+  "code_sha256": {
+    "tools/source_sections.py": "1bd7a3543b6e7887e0658d9f5caed52cedd4d79f12a541016807c506c7640dff",
+    "tools/evidence_views.py": "eee4ce170a006d42c663ff0aec1019f301deef3161b129863caa13dfd263933f",
+    "harness/batch_collection.py": "919f6e07758ce199276c8857c4a8c717dba9cf11268695f50dba0c1734088459",
+    "strategies/source_reread.py": "0de34008c4e77d8485796ffb12c4bcc9f09a57b737fda312b3e12963b6f68f61",
+    "strategies/planning.py": "f516284988fa92b40f9dc7b45fadcfefd2f6ae4a0f65e9c27ce00059861e34c3",
+    "strategies/evidence_evaluation.py": "5cd87b000f9da24dda281cda71db26bd01cb31b6e080b20527b031f74f2aca36",
+    "strategies/evaluation_materials.py": "4e31dcdb1d8c187b68dbb3b4aabf4498fdb6ed188bc26dcaa674e01dea5162dc",
+    "strategies/evaluation_snapshot.py": "789a97e4cbe33dd2e627490783bbe6e9407dc77e3eb17c26d1316b3ab6c98688",
+    "responses/review_witnesses.py": "efbef28a12c444c8a3c760e9b2a40ab5b9c3e5579657266b569e86fa3e8c11c4",
+    "responses/fact_review.py": "3875ac2b7fada9b143aec3ffd9737f3f13a45ba621b423a1cd42c338cdc89544",
+    "responses/graph.py": "daeaf5e85a6e955ac3e524545c155c47f0b5423f9bfe3a2f69f3cd67dce947f1"
+  },
+  "http_source_sha256": "sha256:2b77f22578fc5a444eab76777ad94f05ac86b5d504200331af9d3afbef18338c",
+  "http_clause_coordinates": {
+    "idempotent_definition": [
+      159966,
+      160009
+    ],
+    "503_definition": [
+      338834,
+      338875
+    ],
+    "413_temporary_rule": [
+      331572,
+      331620
+    ]
+  },
+  "debug_batches": [
+    "answer-quality-http-20261119-accepted",
+    "answer-quality-http-20261119-final",
+    "answer-quality-http-20261119-length-recheck",
+    "answer-quality-http-20261119-recheck",
+    "answer-quality-http-20261119-section-complete",
+    "answer-quality-http-20261119-v1",
+    "answer-quality-http-20261119-v2",
+    "answer-quality-parallel-20261119-accepted",
+    "answer-quality-parallel-20261119-api-sections",
+    "answer-quality-parallel-20261119-final",
+    "answer-quality-parallel-20261119-section-complete",
+    "answer-quality-python-20261119-accepted",
+    "answer-quality-python-20261119-api-sections",
+    "answer-quality-python-20261119-final",
+    "answer-quality-python-20261119-section-complete"
+  ],
+  "offline_validation": {
+    "passed": 1881,
+    "deselected_real_api_tests": 1,
+    "dependency_warnings": 33,
+    "seconds": 159.17,
+    "log": "D:\\Dev\\Projects\\agent_new\\.local-artifacts\\answer-quality-offline-final-20261119.txt",
+    "diff_check": "passed"
+  }
+}

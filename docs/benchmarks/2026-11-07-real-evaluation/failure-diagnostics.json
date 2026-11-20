@@ -1,0 +1,210 @@
+{
+  "kind": "observed runtime symptoms, not independently established root causes",
+  "formal_runs": 48,
+  "noncompleted_or_unanswered": 10,
+  "response_reason_counts": {
+    "answer_review_incomplete": 4,
+    "no_evidence": 2,
+    "max_replans_reached": 1,
+    "insufficient_evidence": 1,
+    "no_research_progress": 2
+  },
+  "research_completion_vs_answer_review_disagreement": 4,
+  "records": [
+    {
+      "run_id": "real-dev-20261107-multi_hop-dev-01-workflow",
+      "question_id": "multi_hop-dev-01",
+      "mode": "workflow",
+      "status": "partial",
+      "answered": false,
+      "termination_reason": "answer_review_incomplete",
+      "research_termination_reason": "completed",
+      "response_partial_reason": "answer_review_incomplete",
+      "unresolved_gaps": [
+        "diagnostic:read_anchor_omitted:evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+        "diagnostic:read_anchor_omitted:evidence-8003a051bf6ace037b480207dea6a4eb4453eb747a6e1c31dcf996d983ddb7e3",
+        "diagnostic:read_anchor_omitted:evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d"
+      ],
+      "artifact_errors": [],
+      "system_error": null,
+      "model_calls": 6,
+      "tool_calls": 22
+    },
+    {
+      "run_id": "real-dev-20261107-multi_hop-dev-01-plan_execute",
+      "question_id": "multi_hop-dev-01",
+      "mode": "plan_execute",
+      "status": "partial",
+      "answered": false,
+      "termination_reason": "answer_review_incomplete",
+      "research_termination_reason": "completed",
+      "response_partial_reason": "answer_review_incomplete",
+      "unresolved_gaps": [
+        "diagnostic:read_anchor_omitted:evidence-8003a051bf6ace037b480207dea6a4eb4453eb747a6e1c31dcf996d983ddb7e3",
+        "diagnostic:read_anchor_omitted:evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d"
+      ],
+      "artifact_errors": [],
+      "system_error": null,
+      "model_calls": 6,
+      "tool_calls": 22
+    },
+    {
+      "run_id": "real-dev-20261107-multi_hop-dev-01-baseline",
+      "question_id": "multi_hop-dev-01",
+      "mode": "baseline",
+      "status": "partial",
+      "answered": false,
+      "termination_reason": "answer_review_incomplete",
+      "research_termination_reason": "completed",
+      "response_partial_reason": "answer_review_incomplete",
+      "unresolved_gaps": [],
+      "artifact_errors": [],
+      "system_error": null,
+      "model_calls": 2,
+      "tool_calls": 4
+    },
+    {
+      "run_id": "real-dev-20261107-comparison-dev-01-workflow",
+      "question_id": "comparison-dev-01",
+      "mode": "workflow",
+      "status": "completed",
+      "answered": false,
+      "termination_reason": "workflow_completed",
+      "research_termination_reason": "insufficient_evidence",
+      "response_partial_reason": "no_evidence",
+      "unresolved_gaps": [
+        "r1:missing:evaluation_unavailable",
+        "r2:missing:evaluation_unavailable",
+        "r3:missing:evaluation_unavailable",
+        "r4:missing:evaluation_unavailable",
+        "r5:missing:evaluation_unavailable",
+        "r6:missing:evaluation_unavailable",
+        "evaluation_unavailable",
+        "diagnostic:evaluation_unavailable",
+        "response:no_evidence"
+      ],
+      "artifact_errors": [],
+      "system_error": null,
+      "model_calls": 7,
+      "tool_calls": 16
+    },
+    {
+      "run_id": "real-dev-20261107-comparison-dev-01-plan_execute",
+      "question_id": "comparison-dev-01",
+      "mode": "plan_execute",
+      "status": "partial",
+      "answered": false,
+      "termination_reason": "max_replans_reached",
+      "research_termination_reason": "max_replans_reached",
+      "response_partial_reason": "max_replans_reached",
+      "unresolved_gaps": [
+        "r3:missing:原文未提供从现有过程式代码迁移到 Graph API 的迁移方式、前提或注意事项。"
+      ],
+      "artifact_errors": [],
+      "system_error": null,
+      "model_calls": 12,
+      "tool_calls": 15
+    },
+    {
+      "run_id": "real-dev-20261107-comparison-dev-01-multi_agent",
+      "question_id": "comparison-dev-01",
+      "mode": "multi_agent",
+      "status": "partial",
+      "answered": false,
+      "termination_reason": "no_research_progress",
+      "research_termination_reason": "no_research_progress",
+      "response_partial_reason": "no_evidence",
+      "unresolved_gaps": [
+        "r1:missing:evaluation_unavailable",
+        "r2:missing:evaluation_unavailable",
+        "r3:missing:evaluation_unavailable",
+        "r4:missing:evaluation_unavailable",
+        "r5:missing:evaluation_unavailable",
+        "evaluation_unavailable",
+        "diagnostic:evaluation_unavailable",
+        "no_research_progress"
+      ],
+      "artifact_errors": [],
+      "system_error": null,
+      "model_calls": 9,
+      "tool_calls": 15
+    },
+    {
+      "run_id": "real-dev-20261107-insufficient_evidence-dev-02-workflow",
+      "question_id": "insufficient_evidence-dev-02",
+      "mode": "workflow",
+      "status": "completed",
+      "answered": false,
+      "termination_reason": "workflow_completed",
+      "research_termination_reason": "insufficient_evidence",
+      "response_partial_reason": "insufficient_evidence",
+      "unresolved_gaps": [
+        "r1:missing:可见原文仅比较两套 API 的范式、状态管理与可视化等，未给出 Graph API 相对 Functional API 的延迟改进百分比或任何延迟数值。",
+        "r2:missing:原文未对两套 API 的延迟差异作定量或定性表述，也未给出适用条件或测量口径。",
+        "response:insufficient_evidence"
+      ],
+      "artifact_errors": [],
+      "system_error": null,
+      "model_calls": 11,
+      "tool_calls": 15
+    },
+    {
+      "run_id": "real-dev-20261107-insufficient_evidence-dev-02-plan_execute",
+      "question_id": "insufficient_evidence-dev-02",
+      "mode": "plan_execute",
+      "status": "partial",
+      "answered": false,
+      "termination_reason": "no_research_progress",
+      "research_termination_reason": "no_research_progress",
+      "response_partial_reason": "no_research_progress",
+      "unresolved_gaps": [
+        "r1:missing:可见原文未出现任何延迟改进百分比、数值或单位。",
+        "r2:missing:原文未给出延迟改进数值，因而也没有对应的适用条件、测量口径或比较基准。",
+        "r3:missing:原文仅讨论适用场景与状态管理、并行、可视化等特性，未对两者延迟作比较，无法推算百分比。",
+        "no_research_progress"
+      ],
+      "artifact_errors": [],
+      "system_error": null,
+      "model_calls": 10,
+      "tool_calls": 13
+    },
+    {
+      "run_id": "real-dev-20261107-insufficient_evidence-dev-02-multi_agent",
+      "question_id": "insufficient_evidence-dev-02",
+      "mode": "multi_agent",
+      "status": "partial",
+      "answered": false,
+      "termination_reason": "no_research_progress",
+      "research_termination_reason": "no_research_progress",
+      "response_partial_reason": "no_research_progress",
+      "unresolved_gaps": [
+        "r1:missing:API-choice guide 的可见原文未给出 Graph API 相对 Functional API 的任何延迟改进百分比，也未给出比较基准或适用条件。",
+        "r2:missing:可见原文各章节（含 Detailed comparison、When to use the Graph API、When to use the Functional API）均无延迟对比表述，无法定位其位置或上下文条件。",
+        "no_research_progress"
+      ],
+      "artifact_errors": [],
+      "system_error": null,
+      "model_calls": 9,
+      "tool_calls": 9
+    },
+    {
+      "run_id": "real-dev-20261107-insufficient_evidence-dev-02-baseline",
+      "question_id": "insufficient_evidence-dev-02",
+      "mode": "baseline",
+      "status": "partial",
+      "answered": false,
+      "termination_reason": "answer_review_incomplete",
+      "research_termination_reason": "completed",
+      "response_partial_reason": "answer_review_incomplete",
+      "unresolved_gaps": [],
+      "artifact_errors": [],
+      "system_error": null,
+      "model_calls": 2,
+      "tool_calls": 4
+    }
+  ],
+  "limitations": [
+    "Reason codes are internal runtime labels, not semantic correctness labels.",
+    "A calibrated refusal on an insufficient-evidence task may be a successful semantic outcome."
+  ]
+}

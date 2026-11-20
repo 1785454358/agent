@@ -1,0 +1,83 @@
+{
+  "question": "Using only the frozen documentation, an agent starts a new conversation thread but must recall a user's durable preference. Is short-term message history enough, and what should be configured?",
+  "reference_answer": "No. Short-term memory is state persisted by a checkpointer with separation between threads. Long-term memory persists across threads and sessions using a Store of JSON documents organized by namespace and key. Pass a store to create_agent for cross-thread memory; a checkpointer can separately preserve each conversation.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text": "Thread separation"
+    },
+    {
+      "id": "R2",
+      "text": "Cross-thread Store"
+    },
+    {
+      "id": "R3",
+      "text": "Both can coexist"
+    }
+  ],
+  "candidates": {
+    "A": {
+      "answer": "本次研究未能生成有引用支持的完整内容。以下是可追溯的资料来源：",
+      "citation_map": {},
+      "visible_passages": []
+    },
+    "B": {
+      "answer": "**结论：不够。** 短期消息历史只在单个 thread/会话内记住先前交互，并通过 checkpointer 维持不同 thread 之间的隔离 [1]；新会话线程中无法凭它召回持久偏好。需要跨会话记忆时应使用长期记忆 [1]。\n\n**应配置的内容：**\n\n1. **长期记忆 + Store**：长期记忆可跨不同会话与线程存取信息，底层基于 LangGraph store，数据以 JSON 文档按 namespace 和 key 组织 [2]。\n2. **接入方式**：创建一个 store（如 `InMemoryStore`，生产可用 PostgreSQL，另有 Redis/MongoDB 等后端）并传给 `create_agent`；工具通过 `runtime.store` 参数读写 store [2]。\n3. **存储结构**：每条记忆放在自定义 namespace（通常包含 user/org ID）加唯一 key 之下，便于按用户组织 [2]。\n4. **读取方式**：用 `store.search(namespace)` 按用户命名空间取出记忆列表（默认 limit 10）；`InMemoryStore` 按插入顺序返回，最新在最后 [3]。\n\n**取舍说明**：Store 与 checkpointer 不同——checkpointer 保存单个 thread 的完整图状态，store 保存任意线程可访问的键值数据（含用户偏好）[3]。若使用 Agent Server，则无需手动配置 store，API 自动处理存储基础设施 [3]。`InMemoryStore` 适合开发验证，生产环境应换数据库后端 [2][1]。\n\n**依据边界**：以上仅基于所列冻结文档；具体代码片段（如 `create_agent` 调用示例）在资料中以引用占位符形式出现，未展示完整参数细节。",
+      "citation_map": {
+        "[1]": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+        "[2]": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+        "[3]": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402"
+      },
+      "visible_passages": [
+        {
+          "ref": "P1",
+          "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/stores.mdx",
+          "start": 143,
+          "end": 1386,
+          "text": "import StoreListNamespaceSearchPy from '/snippets/code-samples/store-list-namespace-search-py.mdx';\nimport StoreListNamespaceSearchJs from '/snippets/code-samples/store-list-namespace-search-js.mdx';\nimport StoreListNamespacePaginatePy from '/snippets/code-samples/store-list-namespace-paginate-py.mdx';\nimport StoreListNamespacePaginateJs from '/snippets/code-samples/store-list-namespace-paginate-js.mdx';\nimport StoreListNamespaceListPy from '/snippets/code-samples/store-list-namespace-list-py.mdx';\nimport StoreListNamespaceListJs from '/snippets/code-samples/store-list-namespace-list-js.mdx';\n\nStores let agents persist information across threads, including user preferences, accumulated knowledge, and facts that should survive beyond a single conversation. Unlike [checkpointers](/oss/langgraph/checkpointers), which save the full graph state scoped to one thread, stores hold arbitrary key-value data accessible from any thread.\n\n![Model of shared state](/oss/images/shared_state.png)\n\n<Info>\n**Agent Server handles stores automatically**\nWhen using the [Agent Server](/langsmith/agent-server), you do not need to implement or configure stores manually. The API handles all storage infrastructure for you behind the scenes.\n</Info>\n\n"
+        },
+        {
+          "ref": "P2",
+          "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/stores.mdx",
+          "start": 2938,
+          "end": 3828,
+          "text": ":::js\n```typescript\nconst memoryId = crypto.randomUUID();\nconst memory = { food_preference: \"I like pizza\" };\nawait memoryStore.put(namespaceForMemory, memoryId, memory);\n```\n:::\n\nRead out memories from your namespace using the `store.search` method, which returns memories for a given user as a list, up to the `limit` argument (default `10`). With `InMemoryStore`, items are returned in insertion order, so the most recent memory is last in the list; other backends may order memories differently (see [Listing items in a namespace](#listing-items-in-a-namespace)).\n\n:::python\n```python\nmemories = store.search(namespace_for_memory)\nmemories[-1].dict()\n{'value': {'food_preference': 'I like pizza'},\n 'key': '07e0caf4-1631-47b7-b15f-65515d4c1843',\n 'namespace': ['1', 'memories'],\n 'created_at': '2024-10-02T17:22:31.590602+00:00',\n 'updated_at': '2024-10-02T17:22:31.590605+00:00'}\n```\n\n"
+        },
+        {
+          "ref": "P3",
+          "evidence_id": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/long-term-memory.mdx",
+          "start": 959,
+          "end": 2797,
+          "text": "import LongTermMemoryStoragePostgresJs from '/snippets/code-samples/long-term-memory-storage-postgres-js.mdx';\nimport LongTermMemoryReadToolInmemoryPy from '/snippets/code-samples/long-term-memory-read-tool-inmemory-py.mdx';\nimport LongTermMemoryReadToolInmemoryJs from '/snippets/code-samples/long-term-memory-read-tool-inmemory-js.mdx';\nimport LongTermMemoryReadToolPostgresPy from '/snippets/code-samples/long-term-memory-read-tool-postgres-py.mdx';\nimport LongTermMemoryReadToolPostgresJs from '/snippets/code-samples/long-term-memory-read-tool-postgres-js.mdx';\nimport LongTermMemoryWriteToolInmemoryPy from '/snippets/code-samples/long-term-memory-write-tool-inmemory-py.mdx';\nimport LongTermMemoryWriteToolInmemoryJs from '/snippets/code-samples/long-term-memory-write-tool-inmemory-js.mdx';\nimport LongTermMemoryWriteToolPostgresPy from '/snippets/code-samples/long-term-memory-write-tool-postgres-py.mdx';\nimport LongTermMemoryWriteToolPostgresJs from '/snippets/code-samples/long-term-memory-write-tool-postgres-js.mdx';\n\nLong-term memory lets your agent store and recall information across different conversations and sessions.\nUnlike [short-term memory](/oss/langchain/short-term-memory), which is scoped to a single thread, long-term memory persists across threads and can be recalled at any time.\n\nLong-term memory is built on [LangGraph stores](/oss/langgraph/stores), which save data as JSON documents organized by namespace and key.\n\n## Usage\n\nTo add long-term memory to an agent, create a store and pass it to @[`create_agent`]:\n\n<Tabs>\n    <Tab title=\"InMemoryStore\">\n:::python\n\n<LongTermMemoryCreateAgentInmemoryPy />\n\n:::\n\n:::js\n\n<LongTermMemoryCreateAgentInmemoryJs />\n\n:::\n    </Tab>\n    <Tab title=\"PostgreSQL\">\n:::python\n<CodeGroup>\n```bash pip\npip install -U langgraph-checkpoint-postgres \"psycopg[binary]\"\n```\n\n"
+        },
+        {
+          "ref": "P4",
+          "evidence_id": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/long-term-memory.mdx",
+          "start": 3227,
+          "end": 4760,
+          "text": ":::js\n```shell\nnpm install @langchain/langgraph-checkpoint-postgres\n```\n\n<LongTermMemoryCreateAgentPostgresJs />\n\n:::\n    </Tab>\n</Tabs>\n\n<Note>\n    For other store backends, including Redis and MongoDB, see the [store integrations](/oss/integrations/long-term-memory) list. For a MongoDB walkthrough, see [long-term memory with MongoDB](/oss/integrations/memory/mongodb-long-term-memory).\n</Note>\n\nTools can then read from and write to the store using the `runtime.store` parameter. See [Read long-term memory in tools](#read-long-term-memory-in-tools) and [Write long-term memory from tools](#write-long-term-memory-from-tools) for examples.\n\n<Tip>\n    For a deeper dive into memory types (semantic, episodic, procedural) and strategies for writing memories, see the [Memory conceptual guide](/oss/concepts/memory#long-term-memory).\n</Tip>\n\n## Memory storage\n\nLangGraph stores long-term memories as JSON documents in a [store](/oss/langgraph/stores).\n\nEach memory is organized under a custom `namespace` (similar to a folder) and a distinct `key` (like a file name). Namespaces often include user or org IDs or other labels that makes it easier to organize information.\n\nThis structure enables hierarchical organization of memories. Cross-namespace searching is then supported through content filters.\n\n<Tabs>\n    <Tab title=\"InMemoryStore\">\n:::python\n\n<LongTermMemoryStorageInmemoryPy />\n\n:::\n\n:::js\n\n<LongTermMemoryStorageInmemoryJs />\n\n:::\n    </Tab>\n    <Tab title=\"PostgreSQL\">\n:::python\n\n<LongTermMemoryStoragePostgresPy />\n\n"
+        },
+        {
+          "ref": "P5",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 34,
+          "end": 1288,
+          "text": "import ShortTermMemoryUsagePy from '/snippets/code-samples/short-term-memory-usage-py.mdx';\nimport ShortTermMemoryUsageJs from '/snippets/code-samples/short-term-memory-usage-js.mdx';\n\n## Overview\n\nMemory is a system that remembers information about previous interactions. For AI agents, memory is crucial because it lets them remember previous interactions, learn from feedback, and adapt to user preferences. As agents tackle more complex tasks with numerous user interactions, this capability becomes essential for both efficiency and user satisfaction.\n\nShort term memory lets your application remember previous interactions within a single thread or conversation.\n\n<Note>\n    A thread organizes multiple interactions in a session, similar to the way email groups messages in a single conversation.\n</Note>\n\nConversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\n\nEven if your model supports the full context length, most LLMs still perform poorly over long contexts. They get \"distracted\" by stale or off-topic content, all while suffering from slower response times and higher costs.\n\n"
+        },
+        {
+          "ref": "P6",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 1708,
+          "end": 2754,
+          "text": "<Tip>\n    Need to remember information **across** conversations? Use [long-term memory](/oss/langchain/long-term-memory) to store and recall user-specific or application-level data across different threads and sessions.\n</Tip>\n\n## Usage\n\nTo add short-term memory (thread-level persistence) to an agent, you need to specify a `checkpointer` when creating an agent.\n\n<Info>\n    LangChain's agent manages short-term memory as a part of your agent's state.\n\n    By storing these in the graph's state, the agent can access the full context for a given conversation while maintaining separation between different threads.\n\n    State is persisted to a database (or memory) using a checkpointer so the thread can be resumed at any time.\n\n    Short-term memory updates when the agent is invoked or a step (like a tool call) is completed, and the state is read at the start of each step.\n</Info>\n\n:::python\n\n<ShortTermMemoryUsagePy />\n\n:::\n:::js\n\n<ShortTermMemoryUsageJs />\n\n:::\n\n### In production\n\nIn production, use a checkpointer backed by a database:\n\n"
+        }
+      ]
+    }
+  }
+}

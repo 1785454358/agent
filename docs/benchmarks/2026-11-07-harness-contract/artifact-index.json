@@ -1,0 +1,213 @@
+{
+  "kind": "Official harness research and preserved negative controlled experiments",
+  "files": {
+    "analyze_results.py": {
+      "bytes": 10040,
+      "sha256": "d4a44572bb623417699a65362841d22393c878da5c3950293b7a4c8ce46bb60a"
+    },
+    "answers/baseline/comparison-dev-01/workflow.md": {
+      "bytes": 2658,
+      "sha256": "89dec40670b3c077388405ca65c9c6cb1177471fb705f565a476dc1379fe61a4"
+    },
+    "answers/baseline/comparison-dev-02/workflow.md": {
+      "bytes": 2735,
+      "sha256": "d633fd13a9b0f4de58ffddbcf5405a8acea8fea4e372a8e28a9e8ab8b04cab8e"
+    },
+    "answers/baseline/conflicting_evidence-dev-01/workflow.md": {
+      "bytes": 2740,
+      "sha256": "37201dc6051a64551ea4ff5d2689b08436f73531c553372081b54951b8e9c3b3"
+    },
+    "answers/baseline/conflicting_evidence-dev-02/workflow.md": {
+      "bytes": 2665,
+      "sha256": "6532fd3fed30bb5d8d4d4362bd70cdc2d9740f22d9ba39fb319c1097154c0af4"
+    },
+    "answers/baseline/insufficient_evidence-dev-01/workflow.md": {
+      "bytes": 2011,
+      "sha256": "6d55b9e45b6127368395bffc1f3e9b8c017a6bc895bb1a51f17a2a90ab0ca106"
+    },
+    "answers/baseline/insufficient_evidence-dev-02/workflow.md": {
+      "bytes": 1465,
+      "sha256": "81e0c703022565e28c23616e278598947f8fc0a9fe3d0c6609a25215265282be"
+    },
+    "answers/baseline/multi_hop-dev-01/workflow.md": {
+      "bytes": 3009,
+      "sha256": "3afbe52eb156c57ee2834107426c4ac6cf169eaa85c51744973d232c5ab49e81"
+    },
+    "answers/baseline/multi_hop-dev-02/workflow.md": {
+      "bytes": 3698,
+      "sha256": "e10e343969ca7d17b49058c295e844dd90a80cddeea9aab0dd5a2ac880dfe506"
+    },
+    "answers/baseline/single_hop-dev-01/workflow.md": {
+      "bytes": 2449,
+      "sha256": "36a7a4970418fa4107c50c7ba20fb19e30b14071093b2ce0d688c5079d1ad007"
+    },
+    "answers/baseline/single_hop-dev-02/workflow.md": {
+      "bytes": 2098,
+      "sha256": "dbe5c25b59007ee870ce6bcdf36eebf6503c77d7fde32e2dba37c88485203fdd"
+    },
+    "answers/baseline/version_boundary-dev-01/workflow.md": {
+      "bytes": 1799,
+      "sha256": "e85648fd777bc730889711894139a20e20444e8b86874707c2215f0cb93ddab7"
+    },
+    "answers/baseline/version_boundary-dev-02/workflow.md": {
+      "bytes": 1860,
+      "sha256": "60464c17a278688d494eef04ff59da698ea8bd896b7c029fe533c75a69969ed6"
+    },
+    "answers/candidate/comparison-dev-01/workflow.md": {
+      "bytes": 2838,
+      "sha256": "77370d8fa83dc93299729203ed71fc1061ccc0da2221a0d216e970e6a4301ea6"
+    },
+    "answers/candidate/comparison-dev-02/workflow.md": {
+      "bytes": 2107,
+      "sha256": "22350982f521e94ac882efa09db10e4fe44099e6e320cbb669c27baeff2add45"
+    },
+    "answers/candidate/conflicting_evidence-dev-01/workflow.md": {
+      "bytes": 2154,
+      "sha256": "c00a92c39a8f65c01445f2422f77743d8ee30641722e50b93f470f2d7c2d8994"
+    },
+    "answers/candidate/conflicting_evidence-dev-02/workflow.md": {
+      "bytes": 2530,
+      "sha256": "1230ad6201acfd7b43988468e0f5bd36a6c2c08a8da707dae15a0969de0cdaf2"
+    },
+    "answers/candidate/insufficient_evidence-dev-01/workflow.md": {
+      "bytes": 1975,
+      "sha256": "6e8afeb25e3e3ea94d97e7ce361bc379d2dd03e10e41e33deeac246cb603f7fc"
+    },
+    "answers/candidate/insufficient_evidence-dev-02/workflow.md": {
+      "bytes": 1335,
+      "sha256": "7cca28b8806faaccd79751d188e36a57e2a298c3004d271efd3b84ade2d4fd4c"
+    },
+    "answers/candidate/multi_hop-dev-01/workflow.md": {
+      "bytes": 3042,
+      "sha256": "37b84fce1b1b0991c0323f421c544c97c61e046a4daffb547f91bc5be7b77763"
+    },
+    "answers/candidate/multi_hop-dev-02/workflow.md": {
+      "bytes": 2267,
+      "sha256": "ba2608872c1e2cbebfedf4f1ef4dbde11402f9c14ff2e09f9bb71167ce279d12"
+    },
+    "answers/candidate/single_hop-dev-01/workflow.md": {
+      "bytes": 2615,
+      "sha256": "82a13204b2eee536559eafe6ca9fdd65f4dde872fecd9299cae37b11b4a715c1"
+    },
+    "answers/candidate/single_hop-dev-02/workflow.md": {
+      "bytes": 2768,
+      "sha256": "62af46beca9dfc4a1e64f784829d6c06af109fa528259ffe431832ea6b27c47f"
+    },
+    "answers/candidate/version_boundary-dev-01/workflow.md": {
+      "bytes": 1684,
+      "sha256": "108c05b121e6dfd855605a37d553e496a45ef48f9f2eee246c7e91141fed6e63"
+    },
+    "answers/candidate/version_boundary-dev-02/workflow.md": {
+      "bytes": 1693,
+      "sha256": "26898e5c277422d2f7240412deee34a24d856ca31a6a2b264dd9fc735bc7d078"
+    },
+    "answers/strategy-probes/comparison-dev-01/multi_agent.md": {
+      "bytes": 2069,
+      "sha256": "bf744ca1b60d14d9a44a2571691de9f041e60b2cdac2e324061e4b8c93a6c10d"
+    },
+    "answers/strategy-probes/comparison-dev-01/plan_execute.md": {
+      "bytes": 2508,
+      "sha256": "da90ecb30853bd623ff283bb64e22c1656df6b3f5b19965d53ba5c7a1169f504"
+    },
+    "answers/strategy-probes/insufficient_evidence-dev-02/multi_agent.md": {
+      "bytes": 1164,
+      "sha256": "e6063478511449b6c56435e00c5025f725be7f66379cbaf1b0fdc2cfd012fae8"
+    },
+    "answers/strategy-probes/insufficient_evidence-dev-02/plan_execute.md": {
+      "bytes": 1356,
+      "sha256": "06f7b44b168e8633c4fc83c3ebae8783b8f3d5ede120c1785df1ffc7933a80ed"
+    },
+    "answers/strategy-probes/multi_hop-dev-01/multi_agent.md": {
+      "bytes": 2431,
+      "sha256": "d982d81f6cf440255f92132100e989c1994d94f37f553ef63d86b8f7ffcfb275"
+    },
+    "answers/strategy-probes/multi_hop-dev-01/plan_execute.md": {
+      "bytes": 2640,
+      "sha256": "169e0d5383a295e372af27e456b7ac8ae6a2c60436041a0c1daec14704a858b5"
+    },
+    "baseline-manifest.json": {
+      "bytes": 33258,
+      "sha256": "9fd27ae1761662859a0470d36dea0377b5a534435cf11b6ce0487ba7c23aa192"
+    },
+    "candidate-manifest.json": {
+      "bytes": 33261,
+      "sha256": "6680fced5b7f4e65860031327665abf03bc7a2a22600d20e4808d632ef76ece5"
+    },
+    "gate/regression.json": {
+      "bytes": 44857,
+      "sha256": "6aa0b5d9a5c57a130d65c0095caa25c6013e0dc8a0b4651b71202bb7fc64e916"
+    },
+    "gate/regression.md": {
+      "bytes": 10125,
+      "sha256": "392b50912a6405082a41ce60a0d1f552bbb84262ae1bd1e9c46e46e84da0f6ca"
+    },
+    "production-changes.patch": {
+      "bytes": 7482,
+      "sha256": "944dabddd63bf62f662ad8e76fe039b41bb8d08ecaf3a5602f750b5abed53bfd"
+    },
+    "README.md": {
+      "bytes": 3200,
+      "sha256": "d96566d7c221e102cf851b34a91801dba4ad6410bfa3250ead9a06a510be9bd1"
+    },
+    "reproduction-inputs.zip": {
+      "bytes": 4458180,
+      "sha256": "b9ca75bee390aa2af0215daea23dd4a453db3aeb3fc847fdd861a21acce249e7"
+    },
+    "research.md": {
+      "bytes": 4825,
+      "sha256": "fc8ec529eb0e0521021824377ec84e865ad2ecfe7b107720b9242904048ffc64"
+    },
+    "results.json": {
+      "bytes": 237710,
+      "sha256": "2322e075cb69bcef73570e51d9b01cc385537f1b4e4cbfe537d71a128928bfe0"
+    },
+    "run_experiment.py": {
+      "bytes": 6729,
+      "sha256": "2b9dadfd4d47d1180f74ebb8c0a5ca76ab2d91bc2da1fbc4f5a03de865c5be54"
+    },
+    "scoring/baseline/claims/claims_scores.json": {
+      "bytes": 56755,
+      "sha256": "474e16730552a167995537173404a82cfe07a5bbdc18b5934895145d1fd5f94e"
+    },
+    "scoring/baseline/claims/identity.json": {
+      "bytes": 791,
+      "sha256": "48361601a15d8c99a36f7430ff677579afec802e9149ee0690efa18582713401"
+    },
+    "scoring/baseline/ragas/identity.json": {
+      "bytes": 804,
+      "sha256": "3166a1713a82adfc26b46cd4a8945e5dbf1763e7fd040b4eb9749b991421f474"
+    },
+    "scoring/baseline/ragas/quality_scores.json": {
+      "bytes": 5911,
+      "sha256": "5f129036c0126057b78749b1e487ec42a34a18a138b655ef2663ccd2427ef35a"
+    },
+    "scoring/candidate/claims/claims_scores.json": {
+      "bytes": 48660,
+      "sha256": "945237e1141d433204f931054087b4b3de2c7a077fe23fcf6083a816ced6dbb1"
+    },
+    "scoring/candidate/claims/identity.json": {
+      "bytes": 791,
+      "sha256": "848694586a9f1a6b063272101f45ad7a19df6aa489f3c7eec27d2280b506a662"
+    },
+    "scoring/candidate/ragas/identity.json": {
+      "bytes": 804,
+      "sha256": "c0af67ba6fe674a0cce35a09dd1522b30fbd3826fe85c5be3c8cb894c0df8292"
+    },
+    "scoring/candidate/ragas/quality_scores.json": {
+      "bytes": 5946,
+      "sha256": "35b7ae9e45c771234e9a7f3ac8130d203fd24fd9456fb902d0d7e2a65abd2e2e"
+    },
+    "sources.json": {
+      "bytes": 1773,
+      "sha256": "cdcda7049d2c48ca7750b0b5e6c691fd1fcd9a0bd7212f84dc9e4e9712046400"
+    },
+    "strategy-probes-manifest.json": {
+      "bytes": 32600,
+      "sha256": "ff17abfa560158e84b2bb8c2c37c0da9cf115eaa6dbf3f8f4eee0217adc3f364"
+    },
+    "verification.json": {
+      "bytes": 3832,
+      "sha256": "d3a9cb4d39bc4d14b785752564b20a566a313a2b1807e0d23bf98052e1790616"
+    }
+  }
+}

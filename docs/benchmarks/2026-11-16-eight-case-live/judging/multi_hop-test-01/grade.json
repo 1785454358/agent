@@ -1,0 +1,209 @@
+{
+  "A": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "missing",
+        "reason": "Answer A contains no substantive content about thread separation; it only states that research failed to generate complete content with citation support."
+      },
+      {
+        "id": "R2",
+        "status": "missing",
+        "reason": "Answer A provides no information about cross-thread Store or long-term memory configuration."
+      },
+      {
+        "id": "R3",
+        "status": "missing",
+        "reason": "Answer A does not address whether short-term and long-term memory can coexist."
+      }
+    ],
+    "claims": [
+      {
+        "quote": "本次研究未能生成有引用支持的完整内容。以下是可追溯的资料来源：",
+        "status": "nonfactual",
+        "evidence_refs": [],
+        "reason": "This is a meta-statement about the research process, not a factual claim about the technical question.",
+        "citations": []
+      }
+    ]
+  },
+  "B": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "Answer B explicitly states that short-term memory maintains separation between different threads via checkpointer, and that new conversation threads cannot recall durable preferences from it."
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "Answer B clearly explains that long-term memory uses a Store based on LangGraph stores, organized by namespace and key as JSON documents, and must be passed to create_agent for cross-thread memory."
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "Answer B distinguishes between checkpointer (saves single thread state) and store (accessible from any thread), and explains both can be configured together, with checkpointer preserving each conversation separately."
+      }
+    ],
+    "claims": [
+      {
+        "quote": "短期消息历史只在单个 thread/会话内记住先前交互，并通过 checkpointer 维持不同 thread 之间的隔离",
+        "status": "supported",
+        "evidence_refs": [
+          "P5",
+          "P6"
+        ],
+        "reason": "P5 states short-term memory remembers within a single thread; P6 confirms checkpointer maintains separation between threads.",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P5 and P6 from evidence-aa656efa support that short-term memory is scoped to single thread and checkpointer maintains thread separation."
+          }
+        ]
+      },
+      {
+        "quote": "新会话线程中无法凭它召回持久偏好。需要跨会话记忆时应使用长期记忆",
+        "status": "supported",
+        "evidence_refs": [
+          "P6"
+        ],
+        "reason": "P6 explicitly states to use long-term memory when needing to remember across conversations.",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P6 from evidence-aa656efa contains the tip about using long-term memory for cross-conversation recall."
+          }
+        ]
+      },
+      {
+        "quote": "长期记忆可跨不同会话与线程存取信息，底层基于 LangGraph store，数据以 JSON 文档按 namespace 和 key 组织",
+        "status": "supported",
+        "evidence_refs": [
+          "P3"
+        ],
+        "reason": "P3 states long-term memory persists across threads, is built on LangGraph stores, and saves data as JSON documents organized by namespace and key.",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P3 from evidence-539b4a6f directly supports all aspects of this claim."
+          }
+        ]
+      },
+      {
+        "quote": "创建一个 store（如 `InMemoryStore`，生产可用 PostgreSQL，另有 Redis/MongoDB 等后端）并传给 `create_agent`",
+        "status": "supported",
+        "evidence_refs": [
+          "P3",
+          "P4"
+        ],
+        "reason": "P3 shows InMemoryStore and PostgreSQL examples passed to create_agent; P4 mentions Redis and MongoDB backends.",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P3 and P4 from evidence-539b4a6f document the store creation, create_agent integration, and available backends."
+          }
+        ]
+      },
+      {
+        "quote": "工具通过 `runtime.store` 参数读写 store",
+        "status": "supported",
+        "evidence_refs": [
+          "P4"
+        ],
+        "reason": "P4 explicitly states tools can read from and write to the store using the runtime.store parameter.",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P4 from evidence-539b4a6f directly supports this claim."
+          }
+        ]
+      },
+      {
+        "quote": "每条记忆放在自定义 namespace（通常包含 user/org ID）加唯一 key 之下，便于按用户组织",
+        "status": "supported",
+        "evidence_refs": [
+          "P4"
+        ],
+        "reason": "P4 states each memory is organized under a custom namespace and distinct key, with namespaces often including user or org IDs.",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P4 from evidence-539b4a6f supports the namespace and key organization structure."
+          }
+        ]
+      },
+      {
+        "quote": "用 `store.search(namespace)` 按用户命名空间取出记忆列表（默认 limit 10）；`InMemoryStore` 按插入顺序返回，最新在最后",
+        "status": "supported",
+        "evidence_refs": [
+          "P2"
+        ],
+        "reason": "P2 documents store.search method with default limit 10 and InMemoryStore returning items in insertion order with most recent last.",
+        "citations": [
+          {
+            "marker": "[3]",
+            "status": "supported",
+            "reason": "P2 from evidence-071ad1b6 directly supports all details of this claim."
+          }
+        ]
+      },
+      {
+        "quote": "checkpointer 保存单个 thread 的完整图状态，store 保存任意线程可访问的键值数据（含用户偏好）",
+        "status": "supported",
+        "evidence_refs": [
+          "P1"
+        ],
+        "reason": "P1 contrasts checkpointers (save full graph state scoped to one thread) with stores (hold arbitrary key-value data accessible from any thread, including user preferences).",
+        "citations": [
+          {
+            "marker": "[3]",
+            "status": "supported",
+            "reason": "P1 from evidence-071ad1b6 explicitly makes this distinction."
+          }
+        ]
+      },
+      {
+        "quote": "若使用 Agent Server，则无需手动配置 store，API 自动处理存储基础设施",
+        "status": "supported",
+        "evidence_refs": [
+          "P1"
+        ],
+        "reason": "P1 contains an info box stating Agent Server handles stores automatically without manual configuration.",
+        "citations": [
+          {
+            "marker": "[3]",
+            "status": "supported",
+            "reason": "P1 from evidence-071ad1b6 directly supports this claim."
+          }
+        ]
+      },
+      {
+        "quote": "`InMemoryStore` 适合开发验证，生产环境应换数据库后端",
+        "status": "supported",
+        "evidence_refs": [
+          "P3",
+          "P6"
+        ],
+        "reason": "P3 shows InMemoryStore as a development option and PostgreSQL for production; P6 mentions using database-backed checkpointer in production.",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P3 from evidence-539b4a6f shows both InMemoryStore and PostgreSQL options."
+          },
+          {
+            "marker": "[1]",
+            "status": "partial",
+            "reason": "P6 from evidence-aa656efa mentions production database backend for checkpointer, not specifically for store."
+          }
+        ]
+      }
+    ]
+  }
+}

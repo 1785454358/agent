@@ -1,0 +1,148 @@
+--- baseline/backend/src/deeptrace/application/assembly.py
++++ candidate/backend/src/deeptrace/application/assembly.py
+@@ -413,6 +413,7 @@
+             memory_recall_limit=settings.memory_top_k,
+             research_max_pages=settings.agent_max_pages,
+             response_fact_review=settings.response_fact_review,
++            research_completion_scope=settings.research_completion_scope,
+         )
+ 
+     def release_run(run_id: str) -> None:
+--- baseline/backend/src/deeptrace/config/settings.py
++++ candidate/backend/src/deeptrace/config/settings.py
+@@ -141,6 +141,7 @@
+     max_input_tokens: int = 100_000
+     research_max_seconds: float = 600.0
+     response_fact_review: bool = True
++    research_completion_scope: str = "decomposed"
+     input_cost_per_million: Decimal | None = None
+     output_cost_per_million: Decimal | None = None
+     openai_max_tokens: int | None = None
+@@ -293,6 +294,10 @@
+             max_input_tokens=_bounded_int("DEEPTRACE_MAX_INPUT_TOKENS", 100_000, 10_000, 2_000_000),
+             research_max_seconds=_bounded_float("DEEPTRACE_RESEARCH_MAX_SECONDS", 600, 1, 3600),
+             response_fact_review=_boolean("DEEPTRACE_RESPONSE_FACT_REVIEW", True),
++            research_completion_scope=_choice(
++                "DEEPTRACE_RESEARCH_COMPLETION_SCOPE", "decomposed",
++                {"decomposed", "original_task"},
++            ),
+             input_cost_per_million=input_cost,
+             output_cost_per_million=output_cost,
+             openai_max_tokens=_optional_int("OPENAI_MAX_TOKENS"),
+--- baseline/backend/src/deeptrace/eval/env.py
++++ candidate/backend/src/deeptrace/eval/env.py
+@@ -328,6 +328,7 @@
+     memory_enabled: bool = True,
+     response_max_content_chars: int | None = None,
+     response_fact_review: bool = False,
++    research_completion_scope: str = "decomposed",
+     research_max_pages: int = 8,
+     search=None,
+     fetcher=None,
+@@ -394,6 +395,7 @@
+         memory_store=InMemoryMemoryStore() if memory_enabled else None,
+         response_max_content_chars=response_max_content_chars,
+         response_fact_review=response_fact_review,
++        research_completion_scope=research_completion_scope,
+         research_max_pages=research_max_pages,
+     )
+     return EvalEnvironment(
+--- baseline/backend/src/deeptrace/eval/experiment.py
++++ candidate/backend/src/deeptrace/eval/experiment.py
+@@ -185,6 +185,10 @@
+         else "frozen_local_corpus",
+         **({"live_retrieval": live_retrieval} if live_retrieval is not None else {}),
+         "memory_backend": "disabled",
++        "harness_policy": {
++            "research_completion_scope": runtime_settings.research_completion_scope
++            if runtime_settings is not None else "decomposed",
++        },
+         "execution_profile": {
+             "executor": "batch", "research_source_target": runtime_settings.research_source_target,
+             "search_query_count": runtime_settings.search_query_count,
+--- baseline/backend/src/deeptrace/eval/runner.py
++++ candidate/backend/src/deeptrace/eval/runner.py
+@@ -296,6 +296,7 @@
+                     memory_enabled=False,
+                     response_max_content_chars=response_max_content_chars,
+                     **({"response_fact_review": runtime_settings.response_fact_review,
++                        "research_completion_scope": runtime_settings.research_completion_scope,
+                         "research_max_pages": runtime_settings.agent_max_pages}
+                        if runtime_settings is not None else {}),
+                 )
+--- baseline/backend/src/deeptrace/harness/context.py
++++ candidate/backend/src/deeptrace/harness/context.py
+@@ -125,4 +125,5 @@
+     memory_context_tokens: int = 768
+     response_max_content_chars: int | None = None
+     response_fact_review: bool = False
++    research_completion_scope: str = "decomposed"
+     research_max_pages: int = 8
+--- baseline/backend/src/deeptrace/strategies/evidence_evaluation.py
++++ candidate/backend/src/deeptrace/strategies/evidence_evaluation.py
+@@ -908,8 +908,11 @@
+ 
+ 
+ def seal_initial_plan(
+-    question: str, payload: dict | None, queries: list[str]
++    question: str, payload: dict | None, queries: list[str], *,
++    completion_scope: str = "decomposed",
+ ) -> tuple[list[str], dict[str, Any]]:
++    if completion_scope not in {"decomposed", "original_task"}:
++        raise ValueError("invalid_completion_scope")
+     aligned_queries = align_planning_queries(payload, queries)
+     queries_aligned = aligned_queries != queries
+     queries = aligned_queries
+@@ -935,6 +938,12 @@
+         # A failed task map removes branch directions, not independently valid
+         # global discovery hints. These confer no evidence or execution authority.
+         briefs = {"research_brief": parse_research_brief(payload), "task_briefs": {}}
++    if completion_scope == "original_task":
++        # Validate discovery directions first. They may guide acquisition, but
++        # cannot turn model-invented subquestions into acceptance conditions.
++        # The complete original task and constraints stay pinned separately.
++        requirements, _ = seal_requirements(question, None)
++        targets = {query: ["r1"] for query in queries}
+     # TopicQuery has a 1000-character discovery cap; the full original task is
+     # separately pinned and remains the aggregate completion requirement.
+     return queries, {
+--- baseline/backend/src/deeptrace/strategies/multi_agent/nodes.py
++++ candidate/backend/src/deeptrace/strategies/multi_agent/nodes.py
+@@ -104,7 +104,8 @@
+             )
+             assignments = []
+         assignments, contract = seal_initial_plan(
+-            research_input.question, payload, assignments
++            research_input.question, payload, assignments,
++            completion_scope=runtime.context.research_completion_scope,
+         )
+         return {
+             **contract,
+--- baseline/backend/src/deeptrace/strategies/plan_execute/nodes.py
++++ candidate/backend/src/deeptrace/strategies/plan_execute/nodes.py
+@@ -91,7 +91,10 @@
+                 "Research planning failed; using fallback", exc_info=True
+             )
+             queries = []
+-        queries, contract = seal_initial_plan(research_input.question, payload, queries)
++        queries, contract = seal_initial_plan(
++            research_input.question, payload, queries,
++            completion_scope=runtime.context.research_completion_scope,
++        )
+         plan = TaskPlan(queries=queries, requirements=contract["requirements"])
+         await emit_progress(
+             runtime.context, "planning.completed", round=1,
+--- baseline/backend/src/deeptrace/strategies/workflow/nodes.py
++++ candidate/backend/src/deeptrace/strategies/workflow/nodes.py
+@@ -108,7 +108,10 @@
+                 "Research planning failed; using fallback", exc_info=True
+             )
+             queries = [research_input.question]
+-        queries, contract = seal_initial_plan(research_input.question, payload, queries)
++        queries, contract = seal_initial_plan(
++            research_input.question, payload, queries,
++            completion_scope=runtime.context.research_completion_scope,
++        )
+         return {
+             **contract, "queries": queries, "executed_steps": 1,
+             "recovery_attempted": False, "recovery_queries": [],

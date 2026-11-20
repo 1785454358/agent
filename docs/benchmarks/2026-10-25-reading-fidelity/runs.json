@@ -1,0 +1,1724 @@
+{
+  "date": "2026-10-25",
+  "sampling": "All recorded development stages retained, no best-of selection; no held-out accuracy or statistically reliable latency claim.",
+  "environment": {
+    "runtime_mode": "local",
+    "mysql_dsn": "empty",
+    "redis_url": "empty",
+    "memory_retrieval": "lexical",
+    "model_thinking": "disabled"
+  },
+  "source_stages": {
+    "candidate-a": "Structured originals and bilingual read hints; before semantic ledger trial.",
+    "final": "Ledger reverted and metadata compatibility/reset fixed; comparison before causal grouping, sqlite after causal grouping but before focus ranking.",
+    "focus-final": "Causal grouping and independent focus ranking; before explicit transient retry.",
+    "verification": "Unchanged focus-final code, repeat after observed initial-planner connection failure.",
+    "release-check": "Final production code including one budgeted transient retry; no model/thinking/budget change.",
+    "capacity-check": "Final code: deduplicate identical anchor ranges and merge bounded reading intents. Only comparison repeated; SQLite not re-sampled after this change."
+  },
+  "runs": [
+    {
+      "stage": "before-2026-10-24",
+      "case": "comparison",
+      "question": "对比 LangGraph 的 checkpoint 与 Store 的用途、线程边界与恢复能力。依据当前官方文档，用中文回答：先给结论，再用表格比较；分别说明进程重启、interrupt 恢复、跨线程共享时的行为与前提，并给出适用场景和带链接的来源。明确区分事实、推断和无法确认的事项。",
+      "started_at": "2026-10-24T12:44:01.004175+00:00",
+      "config": {
+        "model": "deepseek-v4.1-flash",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "thinking": "disabled"
+      },
+      "elapsed_seconds": 35.348,
+      "model_calls": 7,
+      "roles": {
+        "planner": 1,
+        "researcher": 3,
+        "evaluator": 1,
+        "responder": 2
+      },
+      "tools": 26,
+      "tool_types": {
+        "search_web": 6,
+        "fetch_page": 5,
+        "read_evidence": 15
+      },
+      "usage_known": {
+        "input_tokens": 35074,
+        "output_tokens": 5519
+      },
+      "missing_usage_calls": 0,
+      "provider_models": [
+        "deepseek-v4-1-flash-261017"
+      ],
+      "call_errors": [],
+      "partial_reason": null,
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "covered",
+            "reason": "官方文档给出 checkpoint 定义、按 super-step 保存 StateSnapshot、thread_id 为主键、存储表结构与接口、实现库。",
+            "finding_ids": [
+              "finding-1",
+              "finding-2",
+              "finding-3"
+            ]
+          },
+          {
+            "requirement_id": "r2",
+            "status": "covered",
+            "reason": "文档说明 Store 为长期记忆、namespace/key/value 组织、需节点内通过 Runtime 显式读写，不与图状态自动关联。",
+            "finding_ids": [
+              "finding-4",
+              "finding-5",
+              "finding-6"
+            ]
+          },
+          {
+            "requirement_id": "r3",
+            "status": "covered",
+            "reason": "checkpoint 为 thread 作用域且线程隔离；Store 设计为跨线程共享，以 namespace 约定和编译时注入 store 为前提。",
+            "finding_ids": [
+              "finding-6",
+              "finding-7"
+            ]
+          },
+          {
+            "requirement_id": "r4",
+            "status": "covered",
+            "reason": "文档区分 InMemorySaver（实验/内存）与 Sqlite/Postgres/Mongo 等持久化实现，持久化后端可按 thread_id 恢复；Store 持久性取决于后端（InMemoryStore 为内存实现）。",
+            "finding_ids": [
+              "finding-3",
+              "finding-8",
+              "finding-10"
+            ]
+          },
+          {
+            "requirement_id": "r5",
+            "status": "covered",
+            "reason": "文档明确 interrupt 需 checkpointer 与同一 thread_id，Command(resume=...) 恢复；Store 未被描述为参与 interrupt 恢复，仅作节点内读写辅助。",
+            "finding_ids": [
+              "finding-8",
+              "finding-9",
+              "finding-10"
+            ]
+          },
+          {
+            "requirement_id": "r6",
+            "status": "covered",
+            "reason": "文档说明短期记忆线程隔离、长期记忆跨线程共享，需 store 与 checkpointer 同时编译并在节点内用 Runtime 访问；并发写入注意事项原文未明确。",
+            "finding_ids": [
+              "finding-6",
+              "finding-7"
+            ]
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "LangGraph checkpoint（checkpointer）的官方定义与用途是什么？它保存什么内容（图状态、channel 值、待执行节点、checkpoint_ns 子图等），在什么条件下启用（如 compile 时传入 checkpointer），与 thread_id 的关系如何？"
+        },
+        {
+          "id": "r2",
+          "description": "LangGraph Store（BaseStore 及实现）的官方定义与用途是什么？其数据组织方式（namespace、key、value）如何，与图执行状态是否自动关联，是否需要节点内显式读写？"
+        },
+        {
+          "id": "r3",
+          "description": "两者的线程边界有何不同？checkpoint 是否严格绑定单个 thread_id、跨 thread 是否隔离；Store 是否设计为跨 thread/跨会话共享，共享的前提（如 namespace 约定、store 实例注入方式）是什么？"
+        },
+        {
+          "id": "r4",
+          "description": "进程重启后的行为与前提：官方文档如何描述使用持久化 checkpointer（如 SqliteSaver/PostgresSaver/AsyncPostgresSaver）时进程重启后按 thread_id 恢复图执行；内存型 checkpointer 重启后是否丢失；Store 在进程重启后数据是否保留取决于何种后端？"
+        },
+        {
+          "id": "r5",
+          "description": "interrupt 恢复的行为与前提：官方文档如何描述 interrupt 后通过同一 thread_id 与 checkpointer 恢复（如 Command(resume=...)），checkpoint 在其中扮演什么角色；Store 是否参与 interrupt 恢复、是否仅作为节点内读取的辅助数据？"
+        },
+        {
+          "id": "r6",
+          "description": "跨线程共享的行为与前提：官方文档是否说明 checkpoint 状态不能直接跨 thread 共享、需通过 Store 或显式传值实现跨线程记忆；Store 跨线程共享需要哪些前提（共享同一 store 实例/后端、一致的 namespace 设计、并发写入注意事项）？"
+        }
+      ],
+      "unresolved_gaps": [],
+      "sources": [
+        "https://docs.langchain.com/oss/python/concepts/memory",
+        "https://docs.langchain.com/oss/python/langgraph/checkpointers",
+        "https://docs.langchain.com/oss/python/langgraph/stores",
+        "https://docs.langchain.com/oss/python/langchain/human-in-the-loop",
+        "https://docs.langchain.com/oss/python/langgraph/interrupts"
+      ],
+      "citations": [
+        {
+          "evidence_id": "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e",
+          "marker": "[1]"
+        },
+        {
+          "evidence_id": "evidence-45df0e0dfccf5059f7da0c8a1308e66503c1b6589ca4073560101112c742834e",
+          "marker": "[2]"
+        },
+        {
+          "evidence_id": "evidence-e7a6139d7daa54f0eed77ab751349057312d2cccc6136c4ac1879e36f6e6b3e8",
+          "marker": "[3]"
+        },
+        {
+          "evidence_id": "evidence-d5f8ffdbfc3e94c9f3696eecd24e540badb0ba5825d44e040f5b92f275fe0767",
+          "marker": "[4]"
+        },
+        {
+          "evidence_id": "evidence-fd28a0961a93a2a619fd7569930c7119cc284dcde6575c649b535a5838b9a003",
+          "marker": "[5]"
+        }
+      ],
+      "answer_file": "outputs/before-comparison.md",
+      "answer_sha256": "ad5bd23e4c398150eb9ff82221a48b4977f6301970a2ba3fd758e6fcc2066de6",
+      "raw_result": ".local-notes/research-recovery-2026-10-24/final/comparison/result.json",
+      "raw_result_sha256": "b3a910ffa8f743be9e3f7e3783f7f63caf334e068f754cdea5136f63f8dff926"
+    },
+    {
+      "stage": "before-2026-10-24",
+      "case": "sqlite",
+      "question": "依据 SQLite 官方文档，对比 WAL 与 rollback journal 在读写并发、SQLITE_BUSY、长读事务和 checkpoint 上的行为。用中文先给结论再用表格；说明 WAL 是否意味着不会返回 SQLITE_BUSY、长读事务如何影响 checkpoint，以及哪些场景不适合 WAL，附官方来源链接。",
+      "started_at": "2026-10-24T12:44:01.040815+00:00",
+      "config": {
+        "model": "deepseek-v4.1-flash",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "thinking": "disabled"
+      },
+      "elapsed_seconds": 40.947,
+      "model_calls": 10,
+      "roles": {
+        "planner": 1,
+        "researcher": 3,
+        "evaluator": 3,
+        "replanner": 1,
+        "responder": 2
+      },
+      "tools": 17,
+      "tool_types": {
+        "search_web": 3,
+        "fetch_page": 3,
+        "read_evidence": 11
+      },
+      "usage_known": {
+        "input_tokens": 38447,
+        "output_tokens": 7411
+      },
+      "missing_usage_calls": 0,
+      "provider_models": [
+        "deepseek-v4-1-flash-261017"
+      ],
+      "call_errors": [],
+      "partial_reason": "insufficient_evidence",
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "missing",
+            "reason": "unsupported_requirement_coverage",
+            "finding_ids": []
+          },
+          {
+            "requirement_id": "r2",
+            "status": "covered",
+            "reason": "官方文档明确 WAL 并非绝不返回 SQLITE_BUSY，并列出独占锁、关闭清理、恢复等情形；checkpoint 独占锁冲突也返回 SQLITE_BUSY。",
+            "finding_ids": [
+              "finding-3",
+              "finding-4",
+              "finding-5"
+            ]
+          },
+          {
+            "requirement_id": "r3",
+            "status": "missing",
+            "reason": "unsupported_requirement_coverage",
+            "finding_ids": []
+          },
+          {
+            "requirement_id": "r4",
+            "status": "missing",
+            "reason": "unsupported_requirement_coverage",
+            "finding_ids": []
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "SQLite 官方文档如何描述 WAL 与 rollback journal 在读写并发上的差异：WAL 下读与写可同时进行、rollback journal 下读写互斥的具体机制与条件。"
+        },
+        {
+          "id": "r2",
+          "description": "SQLite 官方文档中 WAL 与 rollback journal 在 SQLITE_BUSY 上的行为：WAL 是否意味着不会返回 SQLITE_BUSY，哪些操作或条件下仍会返回 SQLITE_BUSY（如 checkpoint、写-写冲突、恢复等）。"
+        },
+        {
+          "id": "r3",
+          "description": "SQLite 官方文档说明长读事务如何影响 WAL checkpoint：为何长读事务会阻止 checkpoint 推进、对 WAL 文件大小与性能的后果，以及相关限制条件。"
+        },
+        {
+          "id": "r4",
+          "description": "SQLite 官方文档列出的不适合使用 WAL 的场景（如网络文件系统、只读介质、需要多进程共享内存等），以及 WAL 与 rollback journal 在 checkpoint 行为上的对比。"
+        }
+      ],
+      "unresolved_gaps": [
+        "r1:missing:unsupported_requirement_coverage",
+        "r3:missing:unsupported_requirement_coverage",
+        "r4:missing:unsupported_requirement_coverage",
+        "diagnostic:read_anchor_omitted:evidence-0c01573591bd28ce417ab685a5efc0e5918a28d08c3bf98b523c001d33486e48",
+        "diagnostic:read_anchor_omitted:evidence-420404d03280f91653b2e641e771a996bd57ef3b31a4a2d19e3f467d9ddb0597",
+        "response:insufficient_evidence"
+      ],
+      "sources": [
+        "https://www.sqlite.org/wal.html",
+        "https://www.sqlite.org/c3ref/wal_checkpoint_v2.html"
+      ],
+      "citations": [
+        {
+          "evidence_id": "evidence-420404d03280f91653b2e641e771a996bd57ef3b31a4a2d19e3f467d9ddb0597",
+          "marker": "[1]"
+        },
+        {
+          "evidence_id": "evidence-10601d9a2ae9ad57472af055a259b49a7bccb63c8e4b8df37cddbb8b63b48aa9",
+          "marker": "[2]"
+        }
+      ],
+      "answer_file": "outputs/before-sqlite.md",
+      "answer_sha256": "a340bc497e45ba1eb3a382e4ff58d8c920a2c9dfada05c5bbc8c5fc031a54044",
+      "raw_result": ".local-notes/research-recovery-2026-10-24/final/sqlite/result.json",
+      "raw_result_sha256": "183cc3c261522635f91ba6131bd445d1eef8ad13b6233c12564a3ae88f5d5a3d"
+    },
+    {
+      "stage": "candidate-a",
+      "case": "comparison",
+      "question": "对比 LangGraph 的 checkpoint 与 Store 的用途、线程边界与恢复能力。依据当前官方文档，用中文回答：先给结论，再用表格比较；分别说明进程重启、interrupt 恢复、跨线程共享时的行为与前提，并给出适用场景和带链接的来源。明确区分事实、推断和无法确认的事项。",
+      "started_at": "2026-10-25T05:31:43.068392+00:00",
+      "config": {
+        "model": "deepseek-v4.1-flash",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "thinking": "disabled"
+      },
+      "elapsed_seconds": 36.148,
+      "model_calls": 8,
+      "roles": {
+        "planner": 1,
+        "researcher": 3,
+        "evaluator": 2,
+        "responder": 2
+      },
+      "tools": 18,
+      "tool_types": {
+        "search_web": 6,
+        "fetch_page": 3,
+        "read_evidence": 9
+      },
+      "usage_known": {
+        "input_tokens": 35840,
+        "output_tokens": 6678
+      },
+      "missing_usage_calls": 1,
+      "provider_models": [
+        "deepseek-v4-1-flash-261017",
+        "unavailable"
+      ],
+      "call_errors": [
+        {
+          "role": "researcher",
+          "error": "ModelCallError"
+        }
+      ],
+      "partial_reason": "model_error",
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "covered",
+            "reason": "原文说明 checkpoint 保存图状态、以 thread_id 为键、编译时传 checkpointer，并用于恢复/容错；会话记忆与 human-in-the-loop 由短期记忆与 interrupt 文档佐证。",
+            "finding_ids": [
+              "finding-1",
+              "finding-2",
+              "finding-3"
+            ]
+          },
+          {
+            "requirement_id": "r2",
+            "status": "covered",
+            "reason": "原文说明 store 存任意信息供跨线程访问、按 namespace/key 组织、经 Runtime 或 BaseStore 参数在节点访问，用于跨会话长期记忆。",
+            "finding_ids": [
+              "finding-4",
+              "finding-5",
+              "finding-6",
+              "finding-7"
+            ]
+          },
+          {
+            "requirement_id": "r3",
+            "status": "covered",
+            "reason": "原文明确 checkpoint 为 thread-scoped 且不同线程保持分离，Store 按自定义 namespace 组织并可跨线程访问。",
+            "finding_ids": [
+              "finding-1",
+              "finding-2",
+              "finding-7"
+            ]
+          },
+          {
+            "requirement_id": "r4",
+            "status": "covered",
+            "reason": "原文说明持久化 checkpointer 可将状态存数据库并恢复、需相同 thread_id；但 Store 各实现（InMemoryStore 与持久化 Store）重启后数据保留差异在可见原文中未明确说明。",
+            "finding_ids": [
+              "finding-1",
+              "finding-3",
+              "finding-2"
+            ]
+          },
+          {
+            "requirement_id": "r5",
+            "status": "covered",
+            "reason": "原文说明 interrupt 需 checkpointer 与相同 thread_id，用 Command(resume=...) 恢复；Store 在中断恢复中的角色原文未述，仅定位为跨线程额外数据。",
+            "finding_ids": [
+              "finding-8",
+              "finding-9"
+            ]
+          },
+          {
+            "requirement_id": "r6",
+            "status": "covered",
+            "reason": "原文说明 checkpoint 状态按线程隔离、Store 可跨线程共享；但并发访问与读写一致性的明确表述在可见原文中不足。",
+            "finding_ids": [
+              "finding-1",
+              "finding-7",
+              "finding-4"
+            ]
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "LangGraph 官方文档中 checkpointer/checkpoint 的用途是什么：它保存什么（图状态、channel 值、待处理任务等）、以什么为键（thread_id）、在什么条件下启用（编译图时传入 checkpointer），以及官方给出的典型用途（会话记忆、human-in-the-loop、时间旅行、容错）。"
+        },
+        {
+          "id": "r2",
+          "description": "LangGraph 官方文档中 Store（BaseStore 及实现）的用途是什么：它存储什么（命名空间下的键值数据）、与 thread 的关系、如何被节点访问（如通过 config 或 runtime 注入）、官方给出的典型用途（跨会话长期记忆、跨用户/跨线程共享数据、few-shot 示例存储等）。"
+        },
+        {
+          "id": "r3",
+          "description": "两者的线程边界差异：checkpoint 是否严格绑定单个 thread_id、不同 thread 之间是否隔离；Store 是否按 namespace/key 组织且可被任意 thread 访问；官方文档对此的明确表述与前提条件。"
+        },
+        {
+          "id": "r4",
+          "description": "进程重启后的恢复行为：使用持久化 checkpointer（如数据库后端）时，同一 thread_id 在进程重启后能否恢复图状态、需要什么前提（持久化后端、相同 thread_id、相同图结构/版本）；Store 在进程重启后数据是否保留、取决于何种 Store 实现（InMemoryStore 与持久化 Store 的差异）。"
+        },
+        {
+          "id": "r5",
+          "description": "interrupt 恢复行为：使用 interrupt() 中断后，checkpoint 如何保存中断点、如何通过 Command(resume=...) 恢复、需要什么前提（配置 checkpointer、thread_id 一致）；Store 在 interrupt 恢复中扮演什么角色（是否参与中断恢复，还是仅提供额外上下文）。"
+        },
+        {
+          "id": "r6",
+          "description": "跨线程共享行为：checkpoint 能否跨 thread 共享状态（官方是否支持、有何限制）；Store 如何实现跨线程共享（namespace 设计、并发访问、读写一致性），以及各自适用场景与官方文档给出的选择建议。"
+        }
+      ],
+      "unresolved_gaps": [
+        "agent_exit:model_error"
+      ],
+      "sources": [
+        "https://docs.langchain.com/oss/python/langgraph/interrupts",
+        "https://docs.langchain.com/oss/python/concepts/memory",
+        "https://docs.langchain.com/oss/python/langgraph/stores"
+      ],
+      "citations": [
+        {
+          "evidence_id": "evidence-1a0480e31d8a3aa004c307f8b4d3afd22cd153999ffc1e649fb65b249a9ab0b0",
+          "marker": "[1]"
+        },
+        {
+          "evidence_id": "evidence-b121d5f5aaa3ab298365eea8fed0bc5d35f95c486798ac36c5b934d543d1b54d",
+          "marker": "[2]"
+        },
+        {
+          "evidence_id": "evidence-e0e26d68eaf85bd9b4bade823dc3fc76778556ac137f200174f1ba3a05483164",
+          "marker": "[3]"
+        }
+      ],
+      "answer_file": "outputs/candidate-a-comparison.md",
+      "answer_sha256": "50040457049daa62210adec0faeea2d36adf518dc38495d9e8158a519e84a4d4",
+      "raw_result": ".local-notes/reading-fidelity-2026-10-25/candidate-a/comparison/result.json",
+      "raw_result_sha256": "e6a9686b7c57a570819934dbcc70622ccbb7ed82d5b543bf316c6c81bb4dbead"
+    },
+    {
+      "stage": "candidate-a",
+      "case": "sqlite",
+      "question": "依据 SQLite 官方文档，对比 WAL 与 rollback journal 在读写并发、SQLITE_BUSY、长读事务和 checkpoint 上的行为。用中文先给结论再用表格；说明 WAL 是否意味着不会返回 SQLITE_BUSY、长读事务如何影响 checkpoint，以及哪些场景不适合 WAL，附官方来源链接。",
+      "started_at": "2026-10-25T05:30:54.234164+00:00",
+      "config": {
+        "model": "deepseek-v4.1-flash",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "thinking": "disabled"
+      },
+      "elapsed_seconds": 26.698,
+      "model_calls": 7,
+      "roles": {
+        "planner": 1,
+        "researcher": 3,
+        "evaluator": 1,
+        "responder": 2
+      },
+      "tools": 15,
+      "tool_types": {
+        "search_web": 6,
+        "fetch_page": 4,
+        "read_evidence": 5
+      },
+      "usage_known": {
+        "input_tokens": 27467,
+        "output_tokens": 4619
+      },
+      "missing_usage_calls": 0,
+      "provider_models": [
+        "deepseek-v4-1-flash-261017"
+      ],
+      "call_errors": [],
+      "partial_reason": null,
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "covered",
+            "reason": "WAL 写者顺序写 WAL、读者读库文件可并发；rollback journal 写者需 RESERVED/EXCLUSIVE 锁，读写互斥。",
+            "finding_ids": [
+              "finding-1"
+            ]
+          },
+          {
+            "requirement_id": "r2",
+            "status": "covered",
+            "reason": "WAL 仍单写者且 checkpoint 协调可致 BUSY；rollback journal 取不到 RESERVED/SHARED 锁即返回 SQLITE_BUSY。",
+            "finding_ids": [
+              "finding-2"
+            ]
+          },
+          {
+            "requirement_id": "r3",
+            "status": "covered",
+            "reason": "长读事务阻止 checkpointer 推进，WAL 无法重置而增长，影响读性能。",
+            "finding_ids": [
+              "finding-3"
+            ]
+          },
+          {
+            "requirement_id": "r4",
+            "status": "covered",
+            "reason": "网络文件系统/NFS 锁缺陷、QNX mmap 问题、只读介质等限制均有官方说明。",
+            "finding_ids": [
+              "finding-4"
+            ]
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "依据 SQLite 官方文档，WAL 模式与 rollback journal 模式在读写并发上的行为差异是什么？WAL 下读事务与写事务能否并发、rollback journal 下读写是否互斥？"
+        },
+        {
+          "id": "r2",
+          "description": "依据 SQLite 官方文档，WAL 模式是否意味着不会返回 SQLITE_BUSY？在什么条件下 WAL 下仍可能返回 SQLITE_BUSY（如多个写者、checkpoint 与写者竞争等）？rollback journal 下 SQLITE_BUSY 的典型触发条件是什么？"
+        },
+        {
+          "id": "r3",
+          "description": "依据 SQLite 官方文档，长读事务如何影响 WAL 的 checkpoint？长读事务是否会阻止 checkpoint 推进或阻止 WAL 文件被重置/截断，官方如何描述该机制？"
+        },
+        {
+          "id": "r4",
+          "description": "依据 SQLite 官方文档，哪些场景不适合使用 WAL 模式（如网络文件系统、需要共享内存的场景、只读介质等）？官方给出的限制条件是什么？"
+        }
+      ],
+      "unresolved_gaps": [],
+      "sources": [
+        "https://www.sqlite.org/lockingv3.html",
+        "https://www.sqlite.org/wal.html",
+        "https://www.sqlite.org/howtocorrupt.html",
+        "https://www.sqlite.org/pragma.html"
+      ],
+      "citations": [
+        {
+          "evidence_id": "evidence-911047b968e0705a13081b090a990fa8ff12b70df13e9fae7b411e94024dd7d7",
+          "marker": "[1]"
+        },
+        {
+          "evidence_id": "evidence-b25a3ca9ea1df0a4a2b12d77d16211effcac24aad87018c4d774186b620f4647",
+          "marker": "[2]"
+        },
+        {
+          "evidence_id": "evidence-856769b3dcdabce02a90d32b626837ffd87423121ae94369a3d06cdd7e2d63f8",
+          "marker": "[3]"
+        },
+        {
+          "evidence_id": "evidence-e804d09fc11ff283970523199a2e067538c5723118f445ac4354c8140c4e07d4",
+          "marker": "[4]"
+        }
+      ],
+      "answer_file": "outputs/candidate-a-sqlite.md",
+      "answer_sha256": "d2cb08e87e6dd4151ea7af54ff41f22c4f7192a429f3b1dc825e468c7700e273",
+      "raw_result": ".local-notes/reading-fidelity-2026-10-25/candidate-a/sqlite/result.json",
+      "raw_result_sha256": "6441e48823b51328642520998a0eab42454f316b69d56a07e4c7e3d7f5abe395"
+    },
+    {
+      "stage": "final",
+      "case": "comparison",
+      "question": "对比 LangGraph 的 checkpoint 与 Store 的用途、线程边界与恢复能力。依据当前官方文档，用中文回答：先给结论，再用表格比较；分别说明进程重启、interrupt 恢复、跨线程共享时的行为与前提，并给出适用场景和带链接的来源。明确区分事实、推断和无法确认的事项。",
+      "started_at": "2026-10-25T05:41:15.515868+00:00",
+      "config": {
+        "model": "deepseek-v4.1-flash",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "thinking": "disabled"
+      },
+      "elapsed_seconds": 50.592,
+      "model_calls": 11,
+      "roles": {
+        "planner": 1,
+        "researcher": 5,
+        "evaluator": 2,
+        "replanner": 1,
+        "responder": 2
+      },
+      "tools": 31,
+      "tool_types": {
+        "search_web": 8,
+        "fetch_page": 8,
+        "read_evidence": 15
+      },
+      "usage_known": {
+        "input_tokens": 60202,
+        "output_tokens": 8179
+      },
+      "missing_usage_calls": 0,
+      "provider_models": [
+        "deepseek-v4-1-flash-261017"
+      ],
+      "call_errors": [],
+      "partial_reason": null,
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "covered",
+            "reason": "官方文档说明 checkpointer 保存线程图状态（含对话历史等），按 thread_id 持久化，用于对话连续性、HITL、time travel、容错。",
+            "finding_ids": [
+              "finding-1",
+              "finding-2"
+            ]
+          },
+          {
+            "requirement_id": "r2",
+            "status": "covered",
+            "reason": "官方文档说明 Store 保存跨线程任意键值数据，按 namespace 组织，用于用户偏好、事实、共享知识。",
+            "finding_ids": [
+              "finding-1",
+              "finding-3",
+              "finding-4"
+            ]
+          },
+          {
+            "requirement_id": "r3",
+            "status": "covered",
+            "reason": "checkpoint 按 thread_id 隔离并保持线程分离；Store 跨线程共享，以 namespace 组织。",
+            "finding_ids": [
+              "finding-2",
+              "finding-3",
+              "finding-4",
+              "finding-5"
+            ]
+          },
+          {
+            "requirement_id": "r4",
+            "status": "covered",
+            "reason": "官方明示内存 saver 重启丢失、Postgres/Sqlite 持久化及 setup 前提；Store 重启保留的具体实现前提官方未明示。",
+            "finding_ids": [
+              "finding-6",
+              "finding-7"
+            ]
+          },
+          {
+            "requirement_id": "r5",
+            "status": "covered",
+            "reason": "官方说明 interrupt 恢复需 checkpointer、同一 thread_id 和 Command(resume)；Store 不参与恢复，仅长期记忆。",
+            "finding_ids": [
+              "finding-8",
+              "finding-9"
+            ]
+          },
+          {
+            "requirement_id": "r6",
+            "status": "covered",
+            "reason": "Store 可跨线程共享（同一实例、namespace 约定）；checkpoint 按线程隔离，官方未提供常规跨线程读取方式，并给出各自适用场景。",
+            "finding_ids": [
+              "finding-10",
+              "finding-11"
+            ]
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "LangGraph 官方文档中 checkpointer（checkpoint 持久化）的用途是什么？包括它保存什么（图状态、channel 值、待处理任务等）、与 thread_id 的关系，以及官方给出的典型用途（如 human-in-the-loop、time travel、容错）。"
+        },
+        {
+          "id": "r2",
+          "description": "LangGraph 官方文档中 Store（BaseStore/长期记忆）的用途是什么？包括它保存什么（跨线程的键值/命名空间数据）、与 namespace 的关系，以及官方给出的典型用途（如跨会话用户偏好、共享知识）。"
+        },
+        {
+          "id": "r3",
+          "description": "checkpoint 与 Store 各自的线程边界是什么？checkpoint 是否按 thread_id 隔离、能否跨线程访问；Store 是否跨线程共享、如何通过 namespace 组织数据。官方文档对此如何表述。"
+        },
+        {
+          "id": "r4",
+          "description": "进程重启时两者的行为与前提：checkpoint 在何种持久化后端（内存 vs Sqlite/Postgres 等）下重启后可恢复、需要什么配置；Store 在何种实现下重启后数据保留、需要什么前提。官方文档明示与未明示之处分别是什么。"
+        },
+        {
+          "id": "r5",
+          "description": "interrupt 恢复时两者的行为与前提：checkpoint 如何支持 interrupt 后从断点恢复（需同一 thread_id、需 checkpointer 配置、恢复调用方式）；Store 在 interrupt 恢复中扮演什么角色（是否参与恢复、是否仅提供长期记忆）。官方文档如何说明。"
+        },
+        {
+          "id": "r6",
+          "description": "跨线程共享时两者的行为与前提：checkpoint 能否跨线程共享状态、官方是否提供跨线程读取 checkpoint 的方式及其限制；Store 如何实现跨线程共享、需要什么前提（同一 Store 实例、namespace 约定、持久化后端）。并给出两者各自的适用场景。"
+        }
+      ],
+      "unresolved_gaps": [],
+      "sources": [
+        "https://docs.langchain.com/oss/python/langgraph/persistence",
+        "https://docs.langchain.com/oss/python/langgraph/interrupts",
+        "https://reference.langchain.com/python/langgraph/checkpoints",
+        "https://docs.langchain.com/oss/python/concepts/memory",
+        "https://docs.langchain.com/oss/python/langgraph/stores",
+        "https://docs.langchain.com/oss/javascript/langgraph/interrupts",
+        "https://docs.langchain.com/oss/python/langgraph/overview"
+      ],
+      "citations": [
+        {
+          "evidence_id": "evidence-e96b591d44601bce04ed0458e2ab910306f53a0e0bcdb4e36a1cc547f21aff83",
+          "marker": "[1]"
+        },
+        {
+          "evidence_id": "evidence-1a0480e31d8a3aa004c307f8b4d3afd22cd153999ffc1e649fb65b249a9ab0b0",
+          "marker": "[2]"
+        },
+        {
+          "evidence_id": "evidence-b1824e11d03f03b201d98abdf6e4b8c780b55536fda07d34527792bfd3b62bbe",
+          "marker": "[3]"
+        },
+        {
+          "evidence_id": "evidence-b121d5f5aaa3ab298365eea8fed0bc5d35f95c486798ac36c5b934d543d1b54d",
+          "marker": "[4]"
+        },
+        {
+          "evidence_id": "evidence-e0e26d68eaf85bd9b4bade823dc3fc76778556ac137f200174f1ba3a05483164",
+          "marker": "[5]"
+        },
+        {
+          "evidence_id": "evidence-a19a05cbe8df7722fe9edf624256a7927ffae970fd8ed9daabb0a0e432cf138a",
+          "marker": "[6]"
+        },
+        {
+          "evidence_id": "evidence-83c527f1a3b82f769eff92865d60f9bf4c7e50889e7ed5c818fc30de8d426406",
+          "marker": "[7]"
+        }
+      ],
+      "answer_file": "outputs/final-comparison.md",
+      "answer_sha256": "73ed3036a773529f4d25fa0b34c127a25f369124250e041d047bf5689d4b5b17",
+      "raw_result": ".local-notes/reading-fidelity-2026-10-25/final/comparison/result.json",
+      "raw_result_sha256": "baf269acd54b38cacda1f7f4b84f974ecb15c75fbf65df1c8dbfca72b9c13142"
+    },
+    {
+      "stage": "final",
+      "case": "sqlite",
+      "question": "依据 SQLite 官方文档，对比 WAL 与 rollback journal 在读写并发、SQLITE_BUSY、长读事务和 checkpoint 上的行为。用中文先给结论再用表格；说明 WAL 是否意味着不会返回 SQLITE_BUSY、长读事务如何影响 checkpoint，以及哪些场景不适合 WAL，附官方来源链接。",
+      "started_at": "2026-10-25T05:44:11.144653+00:00",
+      "config": {
+        "model": "deepseek-v4.1-flash",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "thinking": "disabled"
+      },
+      "elapsed_seconds": 31.227,
+      "model_calls": 9,
+      "roles": {
+        "planner": 1,
+        "researcher": 3,
+        "evaluator": 2,
+        "replanner": 1,
+        "responder": 2
+      },
+      "tools": 16,
+      "tool_types": {
+        "search_web": 6,
+        "fetch_page": 2,
+        "read_evidence": 8
+      },
+      "usage_known": {
+        "input_tokens": 26859,
+        "output_tokens": 5349
+      },
+      "missing_usage_calls": 0,
+      "provider_models": [
+        "deepseek-v4-1-flash-261017"
+      ],
+      "call_errors": [],
+      "partial_reason": "insufficient_evidence",
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "covered",
+            "reason": "原文明确 WAL 读写可并发、写者唯一；rollback journal 的对比仅由 WAL 优势表述间接体现。",
+            "finding_ids": [
+              "finding-1"
+            ]
+          },
+          {
+            "requirement_id": "r2",
+            "status": "covered",
+            "reason": "原文明确 WAL 仍可能返回 SQLITE_BUSY 并列出情形；rollback journal 下 BUSY 触发条件本页未直接展开。",
+            "finding_ids": [
+              "finding-2",
+              "finding-3"
+            ]
+          },
+          {
+            "requirement_id": "r3",
+            "status": "missing",
+            "reason": "原文仅说明 WAL 增大降低读性能需定期 checkpoint，未直接说明长读事务如何阻止 checkpoint 推进。",
+            "finding_ids": []
+          },
+          {
+            "requirement_id": "r4",
+            "status": "covered",
+            "reason": "原文给出 WAL 自动/手动 checkpoint 及与读性能关系；rollback journal 的 checkpoint 对比未直接展开。",
+            "finding_ids": [
+              "finding-4",
+              "finding-5"
+            ]
+          },
+          {
+            "requirement_id": "r5",
+            "status": "covered",
+            "reason": "原文列出同主机、非网络文件系统等 WAL 限制。",
+            "finding_ids": [
+              "finding-6"
+            ]
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "依据 SQLite 官方文档，WAL 模式与 rollback journal 模式在读写并发上的行为差异是什么？例如读与写能否同时进行、写与写是否互斥。"
+        },
+        {
+          "id": "r2",
+          "description": "依据 SQLite 官方文档，WAL 模式与 rollback journal 模式下 SQLITE_BUSY 的触发条件分别是什么？WAL 是否意味着不会返回 SQLITE_BUSY？"
+        },
+        {
+          "id": "r3",
+          "description": "依据 SQLite 官方文档，长读事务如何影响 WAL 的 checkpoint？为何长读事务会阻止 checkpoint 推进或导致 WAL 文件增长？"
+        },
+        {
+          "id": "r4",
+          "description": "依据 SQLite 官方文档，WAL 模式与 rollback journal 模式在 checkpoint 机制上的行为差异是什么（自动/手动 checkpoint、checkpoint 与读写的关系）？"
+        },
+        {
+          "id": "r5",
+          "description": "依据 SQLite 官方文档，哪些场景不适合使用 WAL 模式（如网络文件系统、只读介质、需要多进程共享等官方列出的限制）？"
+        }
+      ],
+      "unresolved_gaps": [
+        "r3:missing:原文仅说明 WAL 增大降低读性能需定期 checkpoint，未直接说明长读事务如何阻止 checkpoint 推进。",
+        "diagnostic:read_anchor_omitted:evidence-b25a3ca9ea1df0a4a2b12d77d16211effcac24aad87018c4d774186b620f4647",
+        "response:insufficient_evidence"
+      ],
+      "sources": [
+        "https://www.sqlite.org/wal.html"
+      ],
+      "citations": [
+        {
+          "evidence_id": "evidence-b25a3ca9ea1df0a4a2b12d77d16211effcac24aad87018c4d774186b620f4647",
+          "marker": "[1]"
+        }
+      ],
+      "answer_file": "outputs/final-sqlite.md",
+      "answer_sha256": "427b17a9c486b3154a67a38327c7f3a65c4b6159eaf9b72176c521967a2c7668",
+      "raw_result": ".local-notes/reading-fidelity-2026-10-25/final/sqlite/result.json",
+      "raw_result_sha256": "8adb0ab9dcc3b78c74485671890fd2521962f4076e39a4aa620685b22e68c26f"
+    },
+    {
+      "stage": "focus-final",
+      "case": "comparison",
+      "question": "对比 LangGraph 的 checkpoint 与 Store 的用途、线程边界与恢复能力。依据当前官方文档，用中文回答：先给结论，再用表格比较；分别说明进程重启、interrupt 恢复、跨线程共享时的行为与前提，并给出适用场景和带链接的来源。明确区分事实、推断和无法确认的事项。",
+      "started_at": "2026-10-25T05:51:14.523248+00:00",
+      "config": {
+        "model": "deepseek-v4.1-flash",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "thinking": "disabled"
+      },
+      "elapsed_seconds": 28.818,
+      "model_calls": 7,
+      "roles": {
+        "planner": 1,
+        "researcher": 3,
+        "evaluator": 1,
+        "responder": 2
+      },
+      "tools": 19,
+      "tool_types": {
+        "search_web": 6,
+        "fetch_page": 3,
+        "read_evidence": 10
+      },
+      "usage_known": {
+        "input_tokens": 29632,
+        "output_tokens": 5443
+      },
+      "missing_usage_calls": 0,
+      "provider_models": [
+        "deepseek-v4-1-flash-261017"
+      ],
+      "call_errors": [],
+      "partial_reason": null,
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "covered",
+            "reason": "官方文档说明 checkpointer 按 thread 保存图状态、以 thread_id 为主键，并说明 checkpoint 保存 super-step 完整快照及节点级任务写入。",
+            "finding_ids": [
+              "finding-1",
+              "finding-2"
+            ]
+          },
+          {
+            "requirement_id": "r2",
+            "status": "covered",
+            "reason": "官方文档说明 Store 用于跨线程的长期记忆，按自定义 namespace 存键值，与 thread 无关。",
+            "finding_ids": [
+              "finding-4",
+              "finding-5"
+            ]
+          },
+          {
+            "requirement_id": "r3",
+            "status": "covered",
+            "reason": "checkpoint 以 thread_id 为主键、状态按线程隔离，不同 thread 保持分离；文档未提供跨 thread 直接读取对方 checkpoint 状态的机制。",
+            "finding_ids": [
+              "finding-1",
+              "finding-3"
+            ]
+          },
+          {
+            "requirement_id": "r4",
+            "status": "covered",
+            "reason": "Store 设计为跨线程共享，需 compile 时传入 store，节点通过 Runtime 注入访问，按 namespace 组织。",
+            "finding_ids": [
+              "finding-5"
+            ]
+          },
+          {
+            "requirement_id": "r5",
+            "status": "covered",
+            "reason": "checkpoint 持久化后可恢复线程状态，但内存型与持久化后端、以及 exit 模式不保存中间状态等前提已说明；Store 重启保留取决于后端，文档未逐一明示各后端。",
+            "finding_ids": [
+              "finding-6"
+            ]
+          },
+          {
+            "requirement_id": "r6",
+            "status": "covered",
+            "reason": "interrupt 恢复依赖 checkpointer 和同一 thread_id，从 checkpoint 继续；Store 不参与该恢复机制。",
+            "finding_ids": [
+              "finding-7"
+            ]
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "LangGraph checkpoint（checkpointer/persistence）的官方定义用途是什么？它保存什么（图状态、channel 值、待处理任务等），与 thread_id 的关系如何？需引用官方文档。"
+        },
+        {
+          "id": "r2",
+          "description": "LangGraph Store（BaseStore/长期记忆）的官方定义用途是什么？它存储什么（命名空间下的键值/记忆项），与线程（thread）的关系如何？需引用官方文档。"
+        },
+        {
+          "id": "r3",
+          "description": "checkpoint 的线程边界：状态是否按 thread_id 隔离？不同 thread 之间能否直接读取对方 checkpoint 状态？官方文档如何描述。"
+        },
+        {
+          "id": "r4",
+          "description": "Store 的线程边界与跨线程共享：Store 是否设计为跨 thread 共享？在图中如何访问 store（如 config/store 注入），前提条件是什么？官方文档如何描述。"
+        },
+        {
+          "id": "r5",
+          "description": "进程重启后的恢复行为：checkpoint 在配置持久化 checkpointer（如数据库后端）时能否在进程重启后恢复 thread 状态？Store 在持久化后端下能否在重启后保留记忆？各自前提条件（内存型 vs 持久化后端）是什么？官方文档明确说明与未说明之处。"
+        },
+        {
+          "id": "r6",
+          "description": "interrupt 恢复行为：LangGraph 的 interrupt 机制如何依赖 checkpoint 实现暂停与恢复（如 Command(resume=...)）？恢复需要哪些前提（同一 thread_id、checkpointer）？Store 在 interrupt 恢复中扮演什么角色（是否参与）？官方文档如何描述。"
+        }
+      ],
+      "unresolved_gaps": [],
+      "sources": [
+        "https://docs.langchain.com/oss/python/langgraph/checkpointers",
+        "https://docs.langchain.com/oss/python/concepts/memory",
+        "https://docs.langchain.com/oss/python/langgraph/stores"
+      ],
+      "citations": [
+        {
+          "evidence_id": "evidence-35574f593c5d01dbbba8aaa51c1f273dc2eb5bd6d4ebe822b7e9bbfc1e4e2479",
+          "marker": "[1]"
+        },
+        {
+          "evidence_id": "evidence-b121d5f5aaa3ab298365eea8fed0bc5d35f95c486798ac36c5b934d543d1b54d",
+          "marker": "[2]"
+        },
+        {
+          "evidence_id": "evidence-e0e26d68eaf85bd9b4bade823dc3fc76778556ac137f200174f1ba3a05483164",
+          "marker": "[3]"
+        }
+      ],
+      "answer_file": "outputs/focus-final-comparison.md",
+      "answer_sha256": "2a7647835256ea095ae7ff4a55d2e8af3928410046eb35c4c6c47e741375840f",
+      "raw_result": ".local-notes/reading-fidelity-2026-10-25/focus-final/comparison/result.json",
+      "raw_result_sha256": "df59d2b1ef04dc6fdbbb4a04d667c662a5329111535d5f9976376134706f4282"
+    },
+    {
+      "stage": "focus-final",
+      "case": "sqlite",
+      "question": "依据 SQLite 官方文档，对比 WAL 与 rollback journal 在读写并发、SQLITE_BUSY、长读事务和 checkpoint 上的行为。用中文先给结论再用表格；说明 WAL 是否意味着不会返回 SQLITE_BUSY、长读事务如何影响 checkpoint，以及哪些场景不适合 WAL，附官方来源链接。",
+      "started_at": "2026-10-25T05:50:19.978546+00:00",
+      "config": {
+        "model": "deepseek-v4.1-flash",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "thinking": "disabled"
+      },
+      "elapsed_seconds": 49.69,
+      "model_calls": 11,
+      "roles": {
+        "planner": 1,
+        "researcher": 3,
+        "evaluator": 4,
+        "replanner": 1,
+        "responder": 2
+      },
+      "tools": 11,
+      "tool_types": {
+        "search_web": 3,
+        "fetch_page": 3,
+        "read_evidence": 5
+      },
+      "usage_known": {
+        "input_tokens": 28507,
+        "output_tokens": 4212
+      },
+      "missing_usage_calls": 1,
+      "provider_models": [
+        "deepseek-v4-1-flash-261017",
+        "unavailable"
+      ],
+      "call_errors": [
+        {
+          "role": "planner",
+          "error": "ModelCallError"
+        }
+      ],
+      "partial_reason": "insufficient_evidence",
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "missing",
+            "reason": "官方 WAL 文档仅覆盖读写并发、SQLITE_BUSY 情形及版本兼容/退出 WAL；rollback journal 对比、长读事务对 checkpoint 的影响、checkpoint 饥饿、不适合 WAL 的场景均无合格官方原文支持（论坛帖 s2 不合格，镜像 s3 不合格）。",
+            "finding_ids": [
+              "finding-1",
+              "finding-2",
+              "finding-3"
+            ]
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "完整回答原始问题及全部用户约束"
+        }
+      ],
+      "unresolved_gaps": [
+        "r1:missing:官方 WAL 文档仅覆盖读写并发、SQLITE_BUSY 情形及版本兼容/退出 WAL；rollback journal 对比、长读事务对 checkpoint 的影响、checkpoint 饥饿、不适合 WAL 的场景均无合格官方原文支持（论坛帖 s2 不合格，镜像 s3 不合格）。",
+        "response:insufficient_evidence"
+      ],
+      "sources": [
+        "https://www.sqlite.org/wal.html"
+      ],
+      "citations": [
+        {
+          "evidence_id": "evidence-b25a3ca9ea1df0a4a2b12d77d16211effcac24aad87018c4d774186b620f4647",
+          "marker": "[1]"
+        }
+      ],
+      "answer_file": "outputs/focus-final-sqlite.md",
+      "answer_sha256": "cdfbad5fbb362564d01c570c4e09f1d0dee21208e3df0351c65c965c54905eea",
+      "raw_result": ".local-notes/reading-fidelity-2026-10-25/focus-final/sqlite/result.json",
+      "raw_result_sha256": "4c3d87402a2f5c291e5befafaf79c41fe2bae47b6020e80b99b1d68c9097044c"
+    },
+    {
+      "stage": "release-check",
+      "case": "comparison",
+      "question": "对比 LangGraph 的 checkpoint 与 Store 的用途、线程边界与恢复能力。依据当前官方文档，用中文回答：先给结论，再用表格比较；分别说明进程重启、interrupt 恢复、跨线程共享时的行为与前提，并给出适用场景和带链接的来源。明确区分事实、推断和无法确认的事项。",
+      "started_at": "2026-10-25T05:57:43.570283+00:00",
+      "config": {
+        "model": "deepseek-v4.1-flash",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "thinking": "disabled"
+      },
+      "elapsed_seconds": 69.318,
+      "model_calls": 10,
+      "roles": {
+        "planner": 1,
+        "researcher": 3,
+        "evaluator": 3,
+        "replanner": 1,
+        "responder": 2
+      },
+      "tools": 43,
+      "tool_types": {
+        "search_web": 3,
+        "fetch_page": 10,
+        "read_evidence": 30
+      },
+      "usage_known": {
+        "input_tokens": 60846,
+        "output_tokens": 7668
+      },
+      "missing_usage_calls": 0,
+      "provider_models": [
+        "deepseek-v4-1-flash-261017"
+      ],
+      "call_errors": [],
+      "partial_reason": "insufficient_evidence",
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "covered",
+            "reason": "官方参考明确 checkpointer 用途及 thread_id 组织与必填要求。",
+            "finding_ids": [
+              "finding-1",
+              "finding-2"
+            ]
+          },
+          {
+            "requirement_id": "r2",
+            "status": "missing",
+            "reason": "可见原文未涉及 Store/BaseStore 的 namespace 组织与跨线程共享机制。",
+            "finding_ids": []
+          },
+          {
+            "requirement_id": "r3",
+            "status": "missing",
+            "reason": "原文仅列持久化后端类型，未明确说明进程重启后 checkpoint 与 Store 的恢复行为及前提。",
+            "finding_ids": []
+          },
+          {
+            "requirement_id": "r4",
+            "status": "covered",
+            "reason": "原文说明 interrupt 需 checkpointer，恢复需同一 thread_id 与 Command(resume)。",
+            "finding_ids": [
+              "finding-4"
+            ]
+          },
+          {
+            "requirement_id": "r5",
+            "status": "missing",
+            "reason": "原文未涉及 Store 跨线程访问，无法建立 checkpoint 与 Store 的跨线程行为对比。",
+            "finding_ids": []
+          },
+          {
+            "requirement_id": "r6",
+            "status": "missing",
+            "reason": "原文有短期/长期记忆的一般表述，但未明确分别对应 checkpoint 与 Store 的适用场景。",
+            "finding_ids": []
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "LangGraph 官方文档中 checkpointer（checkpoint 持久化）的用途是什么？它按什么维度（如 thread_id）组织状态，线程边界如何界定？"
+        },
+        {
+          "id": "r2",
+          "description": "LangGraph 官方文档中 Store（BaseStore/长期记忆）的用途是什么？其 namespace 组织方式与跨线程共享的机制和前提是什么？"
+        },
+        {
+          "id": "r3",
+          "description": "进程重启后，checkpoint 与 Store 各自能否恢复状态？官方文档说明需要哪些前提（如持久化后端、thread_id、namespace 配置）？"
+        },
+        {
+          "id": "r4",
+          "description": "使用 interrupt()/Command(resume=...) 时，checkpoint 在恢复流程中起什么作用？官方文档对恢复所需条件（同一 thread_id、checkpointer 配置）如何说明？"
+        },
+        {
+          "id": "r5",
+          "description": "跨线程共享场景下，checkpoint 与 Store 的行为差异是什么？官方文档是否明确 checkpoint 按线程隔离、Store 可跨线程访问？"
+        },
+        {
+          "id": "r6",
+          "description": "官方文档给出的 checkpoint 与 Store 各自适用场景（短期记忆/会话内恢复 vs 长期记忆/跨会话共享）是什么？"
+        }
+      ],
+      "unresolved_gaps": [
+        "r2:missing:可见原文未涉及 Store/BaseStore 的 namespace 组织与跨线程共享机制。",
+        "r3:missing:原文仅列持久化后端类型，未明确说明进程重启后 checkpoint 与 Store 的恢复行为及前提。",
+        "r5:missing:原文未涉及 Store 跨线程访问，无法建立 checkpoint 与 Store 的跨线程行为对比。",
+        "r6:missing:原文有短期/长期记忆的一般表述，但未明确分别对应 checkpoint 与 Store 的适用场景。",
+        "diagnostic:read_anchor_capacity",
+        "diagnostic:unread_evidence:evidence-e15e10f49650191350559109617bff01113d7d01298d3f7711d738bc43624d72",
+        "response:insufficient_evidence"
+      ],
+      "sources": [
+        "https://reference.langchain.com/python/langgraph.checkpoint",
+        "https://reference.langchain.com/python/langgraph/checkpoints",
+        "https://docs.langchain.com/oss/python/langgraph/interrupts",
+        "https://reference.langchain.com/python/langgraph/types/interrupt",
+        "https://docs.langchain.com/oss/javascript/langgraph/interrupts",
+        "https://github.com/langchain-ai/langgraph",
+        "https://docs.langchain.com/oss/python/langgraph/overview"
+      ],
+      "citations": [
+        {
+          "evidence_id": "evidence-d66c64b49627f4a18021367679c634bdaf14f3f89dce6f5f4d473571d973aec2",
+          "marker": "[1]"
+        },
+        {
+          "evidence_id": "evidence-484ddaaadf109b741f88b2738a3b0f265924a204711bcf46ea81884b81150005",
+          "marker": "[2]"
+        },
+        {
+          "evidence_id": "evidence-1a0480e31d8a3aa004c307f8b4d3afd22cd153999ffc1e649fb65b249a9ab0b0",
+          "marker": "[3]"
+        },
+        {
+          "evidence_id": "evidence-7811193e59dc78f667962e5931c490d92573f8f3041e024a5f622276c447a4f4",
+          "marker": "[4]"
+        },
+        {
+          "evidence_id": "evidence-a19a05cbe8df7722fe9edf624256a7927ffae970fd8ed9daabb0a0e432cf138a",
+          "marker": "[5]"
+        },
+        {
+          "evidence_id": "evidence-601e3fb9e763a73a18562f01e578672a9b4b6773c82ed3e2ef507ca3c150c391",
+          "marker": "[6]"
+        },
+        {
+          "evidence_id": "evidence-83c527f1a3b82f769eff92865d60f9bf4c7e50889e7ed5c818fc30de8d426406",
+          "marker": "[7]"
+        }
+      ],
+      "answer_file": "outputs/release-check-comparison.md",
+      "answer_sha256": "d9cfb48e73f84e681d858b075cd4cc505a98d39ac6bae61abf48b5568b43531b",
+      "raw_result": ".local-notes/reading-fidelity-2026-10-25/release-check/comparison/result.json",
+      "raw_result_sha256": "ba5471ab32b0bc97390091b4496c1dce4557ee8ad0c1ac255f52cd4b030dd8e6"
+    },
+    {
+      "stage": "release-check",
+      "case": "sqlite",
+      "question": "依据 SQLite 官方文档，对比 WAL 与 rollback journal 在读写并发、SQLITE_BUSY、长读事务和 checkpoint 上的行为。用中文先给结论再用表格；说明 WAL 是否意味着不会返回 SQLITE_BUSY、长读事务如何影响 checkpoint，以及哪些场景不适合 WAL，附官方来源链接。",
+      "started_at": "2026-10-25T05:56:33.988667+00:00",
+      "config": {
+        "model": "deepseek-v4.1-flash",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "thinking": "disabled"
+      },
+      "elapsed_seconds": 34.581,
+      "model_calls": 9,
+      "roles": {
+        "planner": 1,
+        "researcher": 3,
+        "evaluator": 2,
+        "replanner": 1,
+        "responder": 2
+      },
+      "tools": 25,
+      "tool_types": {
+        "search_web": 6,
+        "fetch_page": 5,
+        "read_evidence": 14
+      },
+      "usage_known": {
+        "input_tokens": 42218,
+        "output_tokens": 6301
+      },
+      "missing_usage_calls": 0,
+      "provider_models": [
+        "deepseek-v4-1-flash-261017"
+      ],
+      "call_errors": [],
+      "partial_reason": "insufficient_evidence",
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "covered",
+            "reason": "WAL 读写互不阻塞；rollback journal 下 RESERVED 锁唯一但其他进程仍可读，写者持锁期间读者可继续读。",
+            "finding_ids": [
+              "finding-1",
+              "finding-2"
+            ]
+          },
+          {
+            "requirement_id": "r2",
+            "status": "covered",
+            "reason": "WAL 不保证无 SQLITE_BUSY，列出排他锁、关闭清理、崩溃恢复等情形；rollback journal 下 RESERVED/SHARED 锁冲突返回 SQLITE_BUSY；checkpoint 被阻塞时等价 SQLITE_BUSY。",
+            "finding_ids": [
+              "finding-3",
+              "finding-4",
+              "finding-5"
+            ]
+          },
+          {
+            "requirement_id": "r3",
+            "status": "missing",
+            "reason": "现有原文仅说明 PASSIVE checkpoint 遇并发读者/写者可能无法完成，未明确长读事务如何阻止 checkpoint 推进及对 WAL 文件大小的影响。",
+            "finding_ids": []
+          },
+          {
+            "requirement_id": "r4",
+            "status": "covered",
+            "reason": "明确 WAL 不适用于网络文件系统、需共享内存同主机、-shm 写权限、page_size 限制及多库原子性限制。",
+            "finding_ids": [
+              "finding-6",
+              "finding-7"
+            ]
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "SQLite 官方文档中 WAL 模式与 rollback journal 模式在读写并发上的行为差异：WAL 下读与写是否可同时进行、rollback journal 下读写是否互斥，以及各自允许多少读者/写者。"
+        },
+        {
+          "id": "r2",
+          "description": "SQLite 官方文档中 WAL 模式与 rollback journal 模式下 SQLITE_BUSY 的产生条件：WAL 是否意味着不会返回 SQLITE_BUSY，在何种情况下 WAL 仍会返回 SQLITE_BUSY（如多个写者、checkpoint 与写者竞争等）。"
+        },
+        {
+          "id": "r3",
+          "description": "SQLite 官方文档中长读事务对 WAL checkpoint 的影响：长读事务如何阻止 checkpoint 推进、对 WAL 文件大小与 checkpoint 模式（PASSIVE/FULL/RESTART/TRUNCATE）的影响。"
+        },
+        {
+          "id": "r4",
+          "description": "SQLite 官方文档指出的不适合使用 WAL 模式的场景（如网络文件系统、只读介质、需要多进程共享且不支持共享内存的环境等），以及 WAL 的适用条件与限制。"
+        }
+      ],
+      "unresolved_gaps": [
+        "r3:missing:现有原文仅说明 PASSIVE checkpoint 遇并发读者/写者可能无法完成，未明确长读事务如何阻止 checkpoint 推进及对 WAL 文件大小的影响。",
+        "diagnostic:read_anchor_omitted:evidence-8f7a4eb8ee0fbb81528e5bb71d5afeb40c8ed5315734f46a8057de9da9e63f30",
+        "diagnostic:read_anchor_omitted:evidence-911047b968e0705a13081b090a990fa8ff12b70df13e9fae7b411e94024dd7d7",
+        "diagnostic:read_anchor_omitted:evidence-b25a3ca9ea1df0a4a2b12d77d16211effcac24aad87018c4d774186b620f4647",
+        "response:insufficient_evidence"
+      ],
+      "sources": [
+        "https://www.sqlite.org/wal.html",
+        "https://sqlite.org/atomiccommit.html",
+        "https://www.sqlite.org/lockingv3.html",
+        "https://www.sqlite.org/pragma.html"
+      ],
+      "citations": [
+        {
+          "evidence_id": "evidence-b25a3ca9ea1df0a4a2b12d77d16211effcac24aad87018c4d774186b620f4647",
+          "marker": "[1]"
+        },
+        {
+          "evidence_id": "evidence-8f7a4eb8ee0fbb81528e5bb71d5afeb40c8ed5315734f46a8057de9da9e63f30",
+          "marker": "[2]"
+        },
+        {
+          "evidence_id": "evidence-911047b968e0705a13081b090a990fa8ff12b70df13e9fae7b411e94024dd7d7",
+          "marker": "[3]"
+        },
+        {
+          "evidence_id": "evidence-e804d09fc11ff283970523199a2e067538c5723118f445ac4354c8140c4e07d4",
+          "marker": "[4]"
+        }
+      ],
+      "answer_file": "outputs/release-check-sqlite.md",
+      "answer_sha256": "66cfc8680fbddad10d21310019df6030782b86effcc516a873d3d7bc5a2c6c82",
+      "raw_result": ".local-notes/reading-fidelity-2026-10-25/release-check/sqlite/result.json",
+      "raw_result_sha256": "ff927ef23997e732a79234ce6c79a348449f9b9e60e74190a1442d4606836714"
+    },
+    {
+      "stage": "verification",
+      "case": "sqlite",
+      "question": "依据 SQLite 官方文档，对比 WAL 与 rollback journal 在读写并发、SQLITE_BUSY、长读事务和 checkpoint 上的行为。用中文先给结论再用表格；说明 WAL 是否意味着不会返回 SQLITE_BUSY、长读事务如何影响 checkpoint，以及哪些场景不适合 WAL，附官方来源链接。",
+      "started_at": "2026-10-25T05:52:47.198804+00:00",
+      "config": {
+        "model": "deepseek-v4.1-flash",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "thinking": "disabled"
+      },
+      "elapsed_seconds": 29.158,
+      "model_calls": 11,
+      "roles": {
+        "planner": 1,
+        "researcher": 3,
+        "evaluator": 4,
+        "replanner": 1,
+        "responder": 2
+      },
+      "tools": 9,
+      "tool_types": {
+        "search_web": 3,
+        "fetch_page": 2,
+        "read_evidence": 4
+      },
+      "usage_known": {
+        "input_tokens": 26990,
+        "output_tokens": 4439
+      },
+      "missing_usage_calls": 1,
+      "provider_models": [
+        "deepseek-v4-1-flash-261017",
+        "unavailable"
+      ],
+      "call_errors": [
+        {
+          "role": "planner",
+          "error": "ModelCallError"
+        }
+      ],
+      "partial_reason": "insufficient_evidence",
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "missing",
+            "reason": "现有合格原文仅覆盖 WAL 的并发优势、SQLITE_BUSY 情形及旧版本兼容/退出 WAL；未覆盖 rollback journal 的读写并发与 SQLITE_BUSY 行为、长读事务如何影响 checkpoint、哪些场景不适合 WAL，也未给出对比表格，故整体需求未完整回答。",
+            "finding_ids": [
+              "finding-1",
+              "finding-2",
+              "finding-3"
+            ]
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "完整回答原始问题及全部用户约束"
+        }
+      ],
+      "unresolved_gaps": [
+        "r1:missing:现有合格原文仅覆盖 WAL 的并发优势、SQLITE_BUSY 情形及旧版本兼容/退出 WAL；未覆盖 rollback journal 的读写并发与 SQLITE_BUSY 行为、长读事务如何影响 checkpoint、哪些场景不适合 WAL，也未给出对比表格，故整体需求未完整回答。",
+        "response:insufficient_evidence"
+      ],
+      "sources": [
+        "https://www.sqlite.org/wal.html"
+      ],
+      "citations": [
+        {
+          "evidence_id": "evidence-b25a3ca9ea1df0a4a2b12d77d16211effcac24aad87018c4d774186b620f4647",
+          "marker": "[1]"
+        }
+      ],
+      "answer_file": "outputs/verification-sqlite.md",
+      "answer_sha256": "38c5efa34d1f58f685b24e1e2c34d11d00483d3ec235603025d5b1689fc40e84",
+      "raw_result": ".local-notes/reading-fidelity-2026-10-25/verification/sqlite/result.json",
+      "raw_result_sha256": "c3ecbd12b41a428a6530d4c4c97520fb27cd6d3a7aed2e3c49a7ca8bb54e6874"
+    },
+    {
+      "stage": "capacity-check",
+      "case": "comparison",
+      "question": "对比 LangGraph 的 checkpoint 与 Store 的用途、线程边界与恢复能力。依据当前官方文档，用中文回答：先给结论，再用表格比较；分别说明进程重启、interrupt 恢复、跨线程共享时的行为与前提，并给出适用场景和带链接的来源。明确区分事实、推断和无法确认的事项。",
+      "started_at": "2026-10-25T06:05:47.988475+00:00",
+      "config": {
+        "model": "deepseek-v4.1-flash",
+        "max_model_calls": 20,
+        "max_input_tokens": 100000,
+        "max_tool_calls": 240,
+        "thinking": "disabled"
+      },
+      "elapsed_seconds": 44.027,
+      "model_calls": 11,
+      "roles": {
+        "planner": 1,
+        "researcher": 5,
+        "evaluator": 2,
+        "replanner": 1,
+        "responder": 2
+      },
+      "tools": 30,
+      "tool_types": {
+        "search_web": 8,
+        "fetch_page": 8,
+        "read_evidence": 14
+      },
+      "usage_known": {
+        "input_tokens": 54214,
+        "output_tokens": 7655
+      },
+      "missing_usage_calls": 0,
+      "provider_models": [
+        "deepseek-v4-1-flash-261017"
+      ],
+      "call_errors": [],
+      "partial_reason": null,
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "covered",
+            "reason": "官方文档说明 checkpointer 持久化线程范围状态、保存内容、compile 配置与 thread_id 前提及用途。",
+            "finding_ids": [
+              "finding-1",
+              "finding-2"
+            ]
+          },
+          {
+            "requirement_id": "r2",
+            "status": "covered",
+            "reason": "BaseStore 定义、命名空间/键组织、与 checkpointer 的访问模式区别及典型用途均有原文。",
+            "finding_ids": [
+              "finding-3",
+              "finding-4"
+            ]
+          },
+          {
+            "requirement_id": "r3",
+            "status": "covered",
+            "reason": "checkpoint 按 thread 隔离并累积状态；Store 跨线程共享、按命名空间划分，均有明确表述。",
+            "finding_ids": [
+              "finding-1",
+              "finding-3",
+              "finding-6"
+            ]
+          },
+          {
+            "requirement_id": "r4",
+            "status": "covered",
+            "reason": "文档说明状态持久化到数据库使线程可随时恢复、复用 thread_id 恢复同一 checkpoint；但未明确逐项说明进程重启后不同后端（内存 vs 数据库）的保留差异，此点标为无法确认。",
+            "finding_ids": [
+              "finding-1",
+              "finding-6"
+            ]
+          },
+          {
+            "requirement_id": "r5",
+            "status": "covered",
+            "reason": "interrupt 必须启用 checkpointer，恢复需相同 thread_id 与 Command(resume)，恢复值成为 interrupt 返回值。",
+            "finding_ids": [
+              "finding-5"
+            ]
+          },
+          {
+            "requirement_id": "r6",
+            "status": "covered",
+            "reason": "checkpoint 默认线程隔离；Store 通过命名空间/键实现跨线程共享，用于长期记忆与跨会话数据。",
+            "finding_ids": [
+              "finding-1",
+              "finding-3",
+              "finding-4"
+            ]
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "LangGraph checkpoint（checkpointer/持久化）的官方定义与用途是什么？包括它保存什么（图状态、channel 值、待执行节点等）、需要什么配置前提（如 compile 时传入 checkpointer、调用时提供 thread_id），以及官方文档给出的典型用途。"
+        },
+        {
+          "id": "r2",
+          "description": "LangGraph Store 的官方定义与用途是什么？包括它保存什么（跨线程的键值/命名空间数据）、与 checkpointer 的定位区别、需要什么配置前提（如传入 store 实例、命名空间组织），以及官方文档给出的典型用途。"
+        },
+        {
+          "id": "r3",
+          "description": "两者的线程边界如何？checkpoint 是否按 thread_id 隔离、同一 thread 内如何累积状态；Store 是否可跨 thread_id 共享、共享的前提与命名空间机制是什么。需以官方文档表述为准。"
+        },
+        {
+          "id": "r4",
+          "description": "进程重启时的行为与前提：使用 checkpointer 后，同一 thread_id 在新进程/新实例中能否恢复图状态、需要什么条件（持久化后端、相同 thread_id、相同图配置）；Store 中的数据在进程重启后能否保留、取决于什么后端。文档未明确的部分需标注。"
+        },
+        {
+          "id": "r5",
+          "description": "interrupt 恢复时的行为与前提：LangGraph 的 interrupt/human-in-the-loop 机制如何依赖 checkpointer 保存与恢复执行、恢复时需要什么（thread_id、checkpointer、恢复输入/命令），以及官方文档对恢复语义的说明。"
+        },
+        {
+          "id": "r6",
+          "description": "跨线程共享时的行为与前提：checkpoint 是否支持跨线程共享（默认隔离），Store 如何实现跨线程共享（命名空间/键），以及官方文档给出的适用场景（如长期记忆、用户偏好、跨会话数据）。"
+        }
+      ],
+      "unresolved_gaps": [],
+      "sources": [
+        "https://docs.langchain.com/oss/python/langgraph/persistence",
+        "https://reference.langchain.com/python/langgraph.checkpoint",
+        "https://reference.langchain.com/python/langgraph.store/base/BaseStore",
+        "https://docs.langchain.com/oss/python/concepts/memory",
+        "https://docs.langchain.com/oss/python/langgraph/interrupts",
+        "https://reference.langchain.com/python/langgraph/types/interrupt",
+        "https://docs.langchain.com/oss/python/langgraph/overview"
+      ],
+      "citations": [
+        {
+          "evidence_id": "evidence-e96b591d44601bce04ed0458e2ab910306f53a0e0bcdb4e36a1cc547f21aff83",
+          "marker": "[1]"
+        },
+        {
+          "evidence_id": "evidence-d66c64b49627f4a18021367679c634bdaf14f3f89dce6f5f4d473571d973aec2",
+          "marker": "[2]"
+        },
+        {
+          "evidence_id": "evidence-36d3f7559d2aac1d4e690a351a276fcc30f7d6edeb86f793eb6511e43088249e",
+          "marker": "[3]"
+        },
+        {
+          "evidence_id": "evidence-b121d5f5aaa3ab298365eea8fed0bc5d35f95c486798ac36c5b934d543d1b54d",
+          "marker": "[4]"
+        },
+        {
+          "evidence_id": "evidence-1a0480e31d8a3aa004c307f8b4d3afd22cd153999ffc1e649fb65b249a9ab0b0",
+          "marker": "[5]"
+        },
+        {
+          "evidence_id": "evidence-7811193e59dc78f667962e5931c490d92573f8f3041e024a5f622276c447a4f4",
+          "marker": "[6]"
+        },
+        {
+          "evidence_id": "evidence-83c527f1a3b82f769eff92865d60f9bf4c7e50889e7ed5c818fc30de8d426406",
+          "marker": "[7]"
+        }
+      ],
+      "answer_file": "outputs/capacity-check-comparison.md",
+      "answer_sha256": "d5cb3f9116e54687804b278e59260de7298b76671b219134fd26fe43001b3843",
+      "raw_result": ".local-notes/reading-fidelity-2026-10-25/capacity-check/comparison/result.json",
+      "raw_result_sha256": "00a48b25bd14a01e853882bf8163eef134b2aa6c5599a34e3f4e8eca40dba9de"
+    }
+  ],
+  "frozen_visibility": {
+    "kind": "same-stored-source-and-actual-read-replay-no-model-calls",
+    "source_id": "evidence-b25a3ca9ea1df0a4a2b12d77d16211effcac24aad87018c4d774186b620f4647",
+    "limit": 5000,
+    "old_eval_has_stop": false,
+    "old_eval_has_reader": false,
+    "new_selection_has_stop": true,
+    "new_selection_has_reader": true,
+    "new_characters": 4559,
+    "diagnostics": [
+      "read_anchor_omitted"
+    ],
+    "raw_result": ".local-notes/reading-fidelity-2026-10-25/frozen-visibility.json",
+    "sha256": "771cf67315b1f115030a4425664f24aa1bff6950bfc1d1c872eb537a90634b33"
+  },
+  "rejected_review_trial": [
+    {
+      "case": "comparison",
+      "kind": "frozen-draft-and-exact-writer-visible-originals",
+      "model_calls": 1,
+      "elapsed_seconds": 5.001,
+      "content_unchanged": true,
+      "issues": [],
+      "checks": [
+        {
+          "claim_id": "c1",
+          "verdict": "supported",
+          "reason": "原文明确要求 checkpointer 与 thread ID，恢复须用同一 thread ID，Command(resume=...) 成为 interrupt 返回值，且节点从头重跑。",
+          "evidence": [
+            {
+              "source": "[5]",
+              "quote": "You must use the **same thread ID** when resuming that was used when the interrupt occurred"
+            },
+            {
+              "source": "[5]",
+              "quote": "The value passed to `Command(resume=...)` becomes the return value of the`interrupt` call"
+            },
+            {
+              "source": "[5]",
+              "quote": "The node restarts from the beginning of the node where the `interrupt` was called when resumed, so any code before the`interrupt` runs again"
+            }
+          ]
+        },
+        {
+          "claim_id": "c2",
+          "verdict": "supported",
+          "reason": "原文说明 store 与 checkpointer 配合、需同时编译，Runtime 自动注入，且示例以 user_id 作 namespace。",
+          "evidence": [
+            {
+              "source": "[4]",
+              "quote": "The store works hand-in-hand with the checkpointer: the checkpointer saves state to threads, as discussed above, and the store allows you to store arbitrary information for access\n*across*threads. Compile the graph with both the checkpointer and the store as follows."
+            },
+            {
+              "source": "[4]",
+              "quote": "`Runtime` object. The `Runtime` is automatically injected by LangGraph when you add it as a parameter to your node function."
+            },
+            {
+              "source": "[4]",
+              "quote": "`thread_id`, as before, and also with a `user_id`, which serves as the namespace for memories for this particular user as before."
+            }
+          ]
+        }
+      ],
+      "error": null,
+      "raw_result": ".local-notes/reading-fidelity-2026-10-25/frozen-review-comparison.json",
+      "sha256": "049c8a3e51eb3fc731b2b08de44658f220fb871eddebeedcdc9634325bcca05c",
+      "status": "Ineffective: incorrect supported verdicts; implementation reverted."
+    },
+    {
+      "case": "sqlite",
+      "kind": "frozen-draft-and-exact-writer-visible-originals",
+      "model_calls": 1,
+      "elapsed_seconds": 4.032,
+      "content_unchanged": true,
+      "issues": [],
+      "checks": [
+        {
+          "claim_id": "c1",
+          "verdict": "supported",
+          "reason": "原文明确说明长读事务可阻止 checkpointer 推进，且写者仅在 WAL 全部转移且无读者使用时才回卷 WAL。",
+          "evidence": [
+            {
+              "source": "[3]",
+              "quote": "Thus a long-running read transaction can prevent a checkpointer from making progress. But presumably every read transaction will eventually end and the checkpointer will be able to continue."
+            },
+            {
+              "source": "[3]",
+              "quote": "Whenever a write operation occurs, the writer checks how much progress the checkpointer has made, and if the entire WAL has been transferred into the database and synced and if no readers are making use of the WAL, then the writer will rewind the WAL back to the beginning and start putting new transactions at the beginning of the WAL."
+            }
+          ]
+        }
+      ],
+      "error": null,
+      "raw_result": ".local-notes/reading-fidelity-2026-10-25/frozen-review-sqlite.json",
+      "sha256": "912be83aced7d120bf3dd7b42e7d96ae4adbaca81dbb6a12e806f8263c75ba46",
+      "status": "Ineffective: incorrect supported verdicts; implementation reverted."
+    }
+  ],
+  "caution": "Protocol checks and quote coordinates do not establish entailment. Final paired live runs remained partial; subsequent range-capacity fix has one complete main-question sample only. No stable end-to-end or held-out accuracy claim. Known usage sums are incomplete when failed calls lack usage."
+}

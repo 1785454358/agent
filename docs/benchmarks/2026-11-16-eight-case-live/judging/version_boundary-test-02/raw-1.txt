@@ -1,0 +1,194 @@
+{
+  "A": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "明确说明 strict 参数要求 langchain>=1.2，并补充低于 1.2 不可用、文档未说明 1.2 之后是否有进一步限制。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "明确说明 strict 仅被部分提供商支持，文档以 e.g. 举例 OpenAI 和 xAI，并指出不能据此推断其他提供商支持或不支持，语义与“some providers only”一致。"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "明确说明 strict 默认值为 None（即禁用）。"
+      }
+    ],
+    "claims": [
+      {
+        "quote": "按冻结文档，`ProviderStrategy` 的 `strict` 参数要求 `langchain>=1.2`",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 中 Info 注释逐字写明 \"The `strict` param requires `langchain>=1.2`.\"。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "citation_map 中 [1] 对应 evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375，即 P1，P1 可见原文完整支持该事实。"
+          }
+        ]
+      },
+      {
+        "quote": "它仅被部分提供商支持，文档明确举例为 OpenAI 和 xAI",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 中 ParamField strict 写明 \"Supported by some providers (e.g., OpenAI and xAI)\"，支持“部分提供商”及举例 OpenAI、xAI。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应 P1，P1 可见原文完整支持该事实。"
+          }
+        ]
+      },
+      {
+        "quote": "且默认值为 `None`（即禁用）",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 中 ParamField strict 写明 \"Defaults to `None` (disabled)\"，且类定义中 strict: bool | None = None。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应 P1，P1 可见原文完整支持该事实。"
+          }
+        ]
+      },
+      {
+        "quote": "在低于 1.2 的 langchain 版本中该参数不可用；文档未说明 1.2 之后是否有进一步版本限制",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 仅声明 requires langchain>=1.2，可合理推出低于 1.2 不可用；P1 确实未提及 1.2 之后的进一步版本限制，属于对材料范围的如实说明。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应 P1，P1 可见原文支持该事实及范围限定。"
+          }
+        ]
+      },
+      {
+        "quote": "`strict` 是可选布尔参数，用于启用严格的 schema 遵循（strict schema adherence）",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 中 ParamField strict 写明 \"Optional boolean parameter to enable strict schema adherence\"。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应 P1，P1 可见原文完整支持该事实。"
+          }
+        ]
+      },
+      {
+        "quote": "文档以 e.g. 方式举例，因此 OpenAI 与 xAI 是明确列出的支持者，但文档未给出完整支持清单，也未逐一说明 Gemini、Anthropic 等其他原生结构化输出提供商是否支持 `strict`——不能据此推断它们支持或不支持",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 中 strict 的 ParamField 仅以 e.g. 列举 OpenAI 和 xAI，未给出完整清单，也未说明 Gemini、Anthropic 是否支持 strict；该断言是对材料范围的如实限定，未虚构事实。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应 P1，P1 可见原文支持该范围限定性事实。"
+          }
+        ]
+      },
+      {
+        "quote": "以上结论仅基于所给冻结文档摘录；文档未覆盖的内容（完整提供商清单、各提供商对 strict 的具体行为差异）无法从本材料确认",
+        "status": "nonfactual",
+        "evidence_refs": [],
+        "reason": "这是对回答适用范围与方法论的说明，属于范围限定声明而非可核验的事实断言。",
+        "citations": []
+      }
+    ]
+  },
+  "B": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "明确说明 strict 参数要求 langchain>=1.2。"
+      },
+      {
+        "id": "R2",
+        "status": "incorrect",
+        "reason": "B 将 provider 支持边界描述为“模型与 provider 支持原生结构化输出”，并列举 OpenAI、Anthropic (Claude)、xAI (Grok)、Gemini，这是 ProviderStrategy 整体/原生结构化输出的支持范围，而非 strict 参数本身“仅部分提供商支持（e.g. OpenAI 和 xAI）”的边界；且其可见材料 P1、P2 均未包含 strict 的 ParamField 描述，未传达 strict 仅部分提供商支持这一核心语义。"
+      },
+      {
+        "id": "R3",
+        "status": "missing",
+        "reason": "B 未提及 strict 默认值为 None（disabled）。"
+      }
+    ],
+    "claims": [
+      {
+        "quote": "`ProviderStrategy` 的 `strict` 参数要求 `langchain>=1.2`",
+        "status": "supported",
+        "evidence_refs": ["P2"],
+        "reason": "P2 中 Info 注释写明 \"The `strict` param requires `langchain>=1.2`.\"。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应 evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375，P2 属于该 evidence 的可见段落，完整支持该事实。"
+          }
+        ]
+      },
+      {
+        "quote": "其 provider 支持边界是：仅当所选模型与 provider 支持原生结构化输出时适用，文档列举 OpenAI、Anthropic (Claude)、xAI (Grok) 为例，其他模型使用 `ToolStrategy`",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 写明 \"ProviderStrategy if the model and provider chosen supports native structured output (e.g. OpenAI, Anthropic (Claude), or xAI (Grok))\" 及 \"ToolStrategy for all other models\"。但注意这描述的是 ProviderStrategy 自动选择条件，而非 strict 参数本身的支持边界。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应 P1 所属 evidence，P1 可见原文完整支持该事实本身（尽管它答非 strict 的边界）。"
+          }
+        ]
+      },
+      {
+        "quote": "当直接提供 schema 类型时，LangChain 自动选择策略——若模型和 provider 支持原生结构化输出（例如 OpenAI、Anthropic (Claude)、xAI (Grok)）则使用 `ProviderStrategy`，所有其他模型使用 `ToolStrategy`",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 写明 \"When a schema type is provided directly, LangChain automatically chooses: ProviderStrategy if the model and provider chosen supports native structured output (e.g. OpenAI, Anthropic (Claude), or xAI (Grok)). ToolStrategy for all other models.\"。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应 P1 所属 evidence，P1 可见原文完整支持该事实。"
+          }
+        ]
+      },
+      {
+        "quote": "文档另在 Provider strategy 章节提及 Gemini 也支持原生结构化输出",
+        "status": "supported",
+        "evidence_refs": ["P2"],
+        "reason": "P2 中 \"Some model providers support structured output natively through their APIs (e.g. OpenAI, xAI (Grok), Gemini, Anthropic (Claude))\" 明确提及 Gemini。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应 P2 所属 evidence，P2 可见原文完整支持该事实。"
+          }
+        ]
+      },
+      {
+        "quote": "原生结构化输出支持从模型的 profile 数据动态读取（需 `langchain>=1.1`）；若数据不可用，需手动指定 profile 或使用其他条件；若同时指定 tools，模型必须支持 tools 与结构化输出的同时使用",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 中 Note 写明 \"Support for native structured output features is read dynamically from the model's profile data if using langchain>=1.1. If data are not available, use another condition or specify manually... If tools are specified, the model must support simultaneous use of tools and structured output.\"。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应 P1 所属 evidence，P1 可见原文完整支持该事实。"
+          }
+        ]
+      }
+    ]
+  }
+}

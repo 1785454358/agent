@@ -1,0 +1,9 @@
+{
+  "issues": [
+    "草稿称服务B支持strict约束，与原文[1]矛盾：原文明确strict约束仅服务A支持，需修正归属。"
+  ],
+  "unanswered_points": [],
+  "content": "服务A和服务B均支持JSON输出；strict约束仅服务A支持，服务B不支持。[1]",
+  "consistency_checks": [],
+  "budgets": []
+}

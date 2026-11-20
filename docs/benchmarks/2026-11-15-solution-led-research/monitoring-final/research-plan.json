@@ -1,0 +1,132 @@
+{
+  "plan_id": "plan-monitoring-live-a96eedb9ee31",
+  "run_id": "monitoring-live-a96eedb9ee31",
+  "contract_revision": 1,
+  "revision": 2,
+  "parent_revision": 1,
+  "revision_reason": "Acquire evidence for verified coverage gaps",
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "discover",
+      "objective": "Gather and verify original sources for: Uptime Kuma HTTPS monitor notification history retention documentation",
+      "in_scope": "Requirements assigned to this research task",
+      "out_of_scope": "Final answer synthesis and other tasks",
+      "requirement_ids": [
+        "r1",
+        "r4"
+      ],
+      "depends_on": [],
+      "capabilities": [
+        "search_web",
+        "fetch_page",
+        "read_evidence"
+      ],
+      "query_seeds": [
+        "Uptime Kuma HTTPS monitor notification history retention documentation",
+        "Uptime Kuma data retention 30 days history configuration"
+      ],
+      "expected_output": "Findings with host-verified source spans",
+      "acceptance": [
+        "Every assigned requirement has a verified support"
+      ],
+      "budget": {
+        "max_calls": 2,
+        "max_pages": 3
+      },
+      "execution_hint": "auto"
+    },
+    {
+      "id": "t2",
+      "type": "discover",
+      "objective": "Gather and verify original sources for: Uptime Kuma Docker install docker run documentation",
+      "in_scope": "Requirements assigned to this research task",
+      "out_of_scope": "Final answer synthesis and other tasks",
+      "requirement_ids": [
+        "r2",
+        "r5"
+      ],
+      "depends_on": [],
+      "capabilities": [
+        "search_web",
+        "fetch_page",
+        "read_evidence"
+      ],
+      "query_seeds": [
+        "Uptime Kuma Docker install docker run documentation",
+        "Uptime Kuma check interval heartbeat frequency setting"
+      ],
+      "expected_output": "Findings with host-verified source spans",
+      "acceptance": [
+        "Every assigned requirement has a verified support"
+      ],
+      "budget": {
+        "max_calls": 2,
+        "max_pages": 3
+      },
+      "execution_hint": "auto"
+    },
+    {
+      "id": "t3",
+      "type": "discover",
+      "objective": "Gather and verify original sources for: Uptime Kuma SMTP email notification setup documentation",
+      "in_scope": "Requirements assigned to this research task",
+      "out_of_scope": "Final answer synthesis and other tasks",
+      "requirement_ids": [
+        "r3"
+      ],
+      "depends_on": [],
+      "capabilities": [
+        "search_web",
+        "fetch_page",
+        "read_evidence"
+      ],
+      "query_seeds": [
+        "Uptime Kuma SMTP email notification setup documentation"
+      ],
+      "expected_output": "Findings with host-verified source spans",
+      "acceptance": [
+        "Every assigned requirement has a verified support"
+      ],
+      "budget": {
+        "max_calls": 2,
+        "max_pages": 3
+      },
+      "execution_hint": "auto"
+    },
+    {
+      "id": "t4",
+      "type": "discover",
+      "objective": "Gather and verify original sources for: Uptime Kuma heartbeat interval default 60 seconds monitor settings",
+      "in_scope": "Requirements assigned to this research task",
+      "out_of_scope": "Final answer synthesis and other tasks",
+      "requirement_ids": [
+        "r5"
+      ],
+      "depends_on": [],
+      "capabilities": [
+        "search_web",
+        "fetch_page",
+        "read_evidence"
+      ],
+      "query_seeds": [
+        "Uptime Kuma heartbeat interval default 60 seconds monitor settings"
+      ],
+      "expected_output": "Findings with host-verified source spans",
+      "acceptance": [
+        "Every assigned requirement has a verified support"
+      ],
+      "budget": {
+        "max_calls": 2,
+        "max_pages": 3
+      },
+      "execution_hint": "auto"
+    }
+  ],
+  "stop_conditions": [
+    "All acceptance requirements are covered"
+  ],
+  "replan_triggers": [
+    "A requirement remains missing after this wave"
+  ]
+}

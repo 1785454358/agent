@@ -1,0 +1,422 @@
+{
+  "configuration": {
+    "model": "deepseek-v4.1-flash",
+    "thinking": "disabled",
+    "planner_timeout": 60.0,
+    "evaluator_timeout": 120.0,
+    "writer_timeout": 180.0,
+    "max_output_tokens": 16000,
+    "max_model_calls": 20,
+    "max_input_tokens": 100000,
+    "research_seconds": 600.0,
+    "orchestrator": "strategies",
+    "execution": "sequential",
+    "memory": "lexical, separate stores per mode",
+    "manual_mode_override": true,
+    "excluded_probes": [
+      "GLM thinking=disabled: HTTP400",
+      "GLM thinking=enabled: long-request timeouts/disconnections; cancelled on user model change"
+    ],
+    "model_change_authorized": "User replaced model configuration and requested retest."
+  },
+  "runs": [
+    {
+      "mode": "workflow",
+      "run_id": "d284ccd4baf1",
+      "thread_id": "d06e8c61a5bc",
+      "status": "partial",
+      "selected_mode": "workflow",
+      "termination_reason": "insufficient_evidence",
+      "seconds": 84.75,
+      "answer_chars": 2356,
+      "source_count": 1,
+      "usage": {
+        "provider_attempts": 10,
+        "measured_usage_attempts": 10,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 46851,
+        "output_tokens": 9368,
+        "total_tokens": 56219,
+        "observed_usage": {
+          "input_tokens": 46851,
+          "output_tokens": 9368,
+          "total_tokens": 56219
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 2045,
+            "output_tokens": 2195,
+            "total_tokens": 4240
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 7533,
+            "output_tokens": 154,
+            "total_tokens": 7687
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 8903,
+            "output_tokens": 320,
+            "total_tokens": 9223
+          },
+          "evaluator": {
+            "input_tokens": 19619,
+            "output_tokens": 3471,
+            "total_tokens": 23090
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 8751,
+            "output_tokens": 3228,
+            "total_tokens": 11979
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 2045,
+            "output_tokens": 2195,
+            "total_tokens": 4240
+          },
+          "researcher": {
+            "input_tokens": 8903,
+            "output_tokens": 320,
+            "total_tokens": 9223
+          },
+          "evaluator": {
+            "input_tokens": 19619,
+            "output_tokens": 3471,
+            "total_tokens": 23090
+          },
+          "replanner": {
+            "input_tokens": 7533,
+            "output_tokens": 154,
+            "total_tokens": 7687
+          },
+          "writer": {
+            "input_tokens": 8751,
+            "output_tokens": 3228,
+            "total_tokens": 11979
+          }
+        },
+        "stage_seconds": {
+          "planner": 10.563000000023749,
+          "researcher": 3.672000000020489,
+          "evaluator": 19.45299999997951,
+          "replanner": 1.4209999999729916,
+          "writer": 18.688000000081956
+        },
+        "budget_state_available": true
+      },
+      "fact_review_completed": true,
+      "unresolved_gaps": [
+        "r1:missing:unsupported_requirement_coverage",
+        "r2:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r4:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r5:missing:unsupported_requirement_coverage",
+        "diagnostic:read_anchor_omitted:evidence-fd7cacd2a0e34a8b647e31303e8af07f029573c0b497808b69b6ddaff4ca7bc7"
+      ],
+      "model_failed_events": 0,
+      "fetch_urls": [
+        "https://www.rfc-editor.org/info/rfc6585",
+        "https://www.rfc-editor.org/info/rfc9110",
+        "https://www.rfc-editor.org/info/rfc9110",
+        "https://www.rfc-editor.org/rfc/rfc9110.pdf",
+        "https://rfcinfo.com/rfc-9110/9"
+      ],
+      "sources": [
+        "https://www.rfc-editor.org/info/rfc6585"
+      ],
+      "answer_file": "output\\HTTP重试三模式回答\\workflow回答.md"
+    },
+    {
+      "mode": "plan_execute",
+      "run_id": "352569f89293",
+      "thread_id": "89dcf0465f3c",
+      "status": "partial",
+      "selected_mode": "plan_execute",
+      "termination_reason": "max_replans_reached",
+      "seconds": 85.16,
+      "answer_chars": 2547,
+      "source_count": 1,
+      "usage": {
+        "provider_attempts": 11,
+        "measured_usage_attempts": 11,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 50064,
+        "output_tokens": 9760,
+        "total_tokens": 59824,
+        "observed_usage": {
+          "input_tokens": 50064,
+          "output_tokens": 9760,
+          "total_tokens": 59824
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 5956,
+            "output_tokens": 4146,
+            "total_tokens": 10102
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 15156,
+            "output_tokens": 286,
+            "total_tokens": 15442
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 8520,
+            "output_tokens": 267,
+            "total_tokens": 8787
+          },
+          "evaluator": {
+            "input_tokens": 12576,
+            "output_tokens": 1893,
+            "total_tokens": 14469
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 7856,
+            "output_tokens": 3168,
+            "total_tokens": 11024
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 5956,
+            "output_tokens": 4146,
+            "total_tokens": 10102
+          },
+          "researcher": {
+            "input_tokens": 8520,
+            "output_tokens": 267,
+            "total_tokens": 8787
+          },
+          "evaluator": {
+            "input_tokens": 12576,
+            "output_tokens": 1893,
+            "total_tokens": 14469
+          },
+          "replanner": {
+            "input_tokens": 15156,
+            "output_tokens": 286,
+            "total_tokens": 15442
+          },
+          "writer": {
+            "input_tokens": 7856,
+            "output_tokens": 3168,
+            "total_tokens": 11024
+          }
+        },
+        "stage_seconds": {
+          "planner": 19.07800000003772,
+          "researcher": 3.1720000000786968,
+          "evaluator": 12.28100000001723,
+          "replanner": 2.625,
+          "writer": 18.81300000002375
+        },
+        "budget_state_available": true
+      },
+      "fact_review_completed": true,
+      "unresolved_gaps": [
+        "r1:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r2:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r4:missing:unknown_resolution_not_authorized_or_unchecked",
+        "no_new_tasks_to_plan",
+        "diagnostic:read_anchor_omitted:evidence-fd7cacd2a0e34a8b647e31303e8af07f029573c0b497808b69b6ddaff4ca7bc7"
+      ],
+      "model_failed_events": 0,
+      "fetch_urls": [
+        "https://www.rfc-editor.org/info/rfc6585",
+        "https://www.rfc-editor.org/info/rfc9110",
+        "https://www.rfc-editor.org/rfc/rfc9110.pdf",
+        "https://www.statproxies.com/glossary/http-status-codes/503",
+        "https://restfulapi.net/http-status-503-service-unavailable"
+      ],
+      "sources": [
+        "https://www.rfc-editor.org/info/rfc6585"
+      ],
+      "answer_file": "output\\HTTP重试三模式回答\\plan_execute回答.md"
+    },
+    {
+      "mode": "multi_agent",
+      "run_id": "45142878d41c",
+      "thread_id": "3cddd1465678",
+      "status": "partial",
+      "selected_mode": "multi_agent",
+      "termination_reason": "no_research_progress",
+      "seconds": 118.86,
+      "answer_chars": 4491,
+      "source_count": 1,
+      "usage": {
+        "provider_attempts": 12,
+        "measured_usage_attempts": 12,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 60611,
+        "output_tokens": 14916,
+        "total_tokens": 75527,
+        "observed_usage": {
+          "input_tokens": 60611,
+          "output_tokens": 14916,
+          "total_tokens": 75527
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 6590,
+            "output_tokens": 5410,
+            "total_tokens": 12000
+          },
+          "researcher": {
+            "input_tokens": 9662,
+            "output_tokens": 573,
+            "total_tokens": 10235
+          },
+          "evaluator": {
+            "input_tokens": 17727,
+            "output_tokens": 3228,
+            "total_tokens": 20955
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 15901,
+            "output_tokens": 234,
+            "total_tokens": 16135
+          },
+          "writer": {
+            "input_tokens": 10731,
+            "output_tokens": 5471,
+            "total_tokens": 16202
+          }
+        },
+        "observed_role_usage": {
+          "supervisor": {
+            "input_tokens": 6590,
+            "output_tokens": 5410,
+            "total_tokens": 12000
+          },
+          "researcher": {
+            "input_tokens": 9662,
+            "output_tokens": 573,
+            "total_tokens": 10235
+          },
+          "evaluator": {
+            "input_tokens": 17727,
+            "output_tokens": 3228,
+            "total_tokens": 20955
+          },
+          "follow_up": {
+            "input_tokens": 15901,
+            "output_tokens": 234,
+            "total_tokens": 16135
+          },
+          "writer": {
+            "input_tokens": 10731,
+            "output_tokens": 5471,
+            "total_tokens": 16202
+          }
+        },
+        "stage_seconds": {
+          "supervisor": 24.016000000061467,
+          "researcher": 4.344000000040978,
+          "evaluator": 17.79700000002049,
+          "follow_up": 2.047000000020489,
+          "writer": 29.21899999998277
+        },
+        "budget_state_available": true
+      },
+      "fact_review_completed": true,
+      "unresolved_gaps": [
+        "r1:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r2:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r4:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r5:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r6:missing:unknown_resolution_not_authorized_or_unchecked",
+        "diagnostic:read_anchor_omitted:evidence-fd7cacd2a0e34a8b647e31303e8af07f029573c0b497808b69b6ddaff4ca7bc7",
+        "no_research_progress"
+      ],
+      "model_failed_events": 0,
+      "fetch_urls": [
+        "https://www.rfc-editor.org/info/rfc6585",
+        "https://www.rfc-editor.org/info/rfc9110",
+        "https://www.rfc-editor.org/info/rfc9110",
+        "http://www.rfc-editor.org/info/rfc6585.",
+        "https://www.rfc-editor.org/info/rfc9110"
+      ],
+      "sources": [
+        "https://www.rfc-editor.org/info/rfc6585"
+      ],
+      "answer_file": "output\\HTTP重试三模式回答\\multi_agent回答.md"
+    }
+  ]
+}

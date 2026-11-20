@@ -1,0 +1,194 @@
+{
+  "backend_offline": {
+    "passed": 1612,
+    "deselected": 2,
+    "seconds": 148.87,
+    "stage": "final retained source, after prompt rollback"
+  },
+  "controlled_fields_unchanged": [
+    "schema_version",
+    "dataset_sha256",
+    "corpus_sha256",
+    "model",
+    "limits",
+    "response_mode",
+    "response_max_content_chars",
+    "context_allocator",
+    "research_context_policy",
+    "evidence_policy",
+    "repeats",
+    "tools_backend",
+    "memory_backend",
+    "python_version",
+    "installed_versions",
+    "execution_profile"
+  ],
+  "judges": {
+    "claims": {
+      "unchanged_judge_identity": true,
+      "usage": {
+        "cost": null,
+        "input_tokens": 1257359,
+        "max_provider_attempts": 200,
+        "measured_usage_attempts": 116,
+        "missing_usage_attempts": 0,
+        "observed_input_tokens": 1257359,
+        "observed_output_tokens": 3524,
+        "output_tokens": 3524,
+        "provider_attempts": 116
+      },
+      "metric_status_counts": {
+        "ok": 19,
+        "not_applicable": 5,
+        "error": 0
+      }
+    },
+    "ragas": {
+      "unchanged_judge_identity": true,
+      "usage": {
+        "cost": null,
+        "input_tokens": 190411,
+        "max_provider_attempts": 120,
+        "measured_usage_attempts": 86,
+        "missing_usage_attempts": 0,
+        "observed_input_tokens": 190411,
+        "observed_output_tokens": 40108,
+        "output_tokens": 40108,
+        "provider_attempts": 86
+      },
+      "metric_status_counts": {
+        "ok": 31,
+        "not_applicable": 5,
+        "error": 0
+      }
+    }
+  },
+  "lint": "passed for four production files and protocol tests",
+  "reproduction_archive": {
+    "sha256": "e1eb18bad52b3a446ab6e86eeb93c0696cc9d10c463a3fead3a140a8859890b0",
+    "bytes": 6451785,
+    "generated_bytecode_excluded": true
+  },
+  "source_snapshots": {
+    "strategy-probes": {
+      "files": 230,
+      "all_snapshot_hashes_match": true,
+      "post_run_changes": [
+        "backend/evaluation/claims_quality.py",
+        "backend/evaluation/tests/test_claims_quality.py",
+        "backend/src/deeptrace/responses/fact_review.py",
+        "backend/src/deeptrace/responses/writing.py",
+        "backend/src/deeptrace/strategies/planning.py"
+      ],
+      "reason": "Candidate prompt rollback and separately versioned scorer repair"
+    },
+    "workflow": {
+      "files": 230,
+      "all_snapshot_hashes_match": true,
+      "post_run_changes": [
+        "backend/evaluation/claims_quality.py",
+        "backend/evaluation/tests/test_claims_quality.py",
+        "backend/src/deeptrace/responses/fact_review.py",
+        "backend/src/deeptrace/responses/writing.py",
+        "backend/src/deeptrace/strategies/planning.py"
+      ],
+      "reason": "Candidate prompt rollback and separately versioned scorer repair"
+    },
+    "protocol-confirmation": {
+      "files": 230,
+      "all_snapshot_hashes_match": true,
+      "post_run_changes": [],
+      "reason": "Final worktree matches the recorded source"
+    }
+  },
+  "targeted_tests": {
+    "passed": 164,
+    "seconds": 8.13,
+    "stage": "final retained source"
+  },
+  "isolated_scorer": {
+    "passed": 75,
+    "seconds": 6.89,
+    "stage": "v3 sentence-boundary repair"
+  },
+  "final_decision": {
+    "kept": [
+      "exact transport echo normalization",
+      "citation prose/version sentence boundaries"
+    ],
+    "rejected": [
+      "shared planning prompt candidate",
+      "writer scope/language candidate",
+      "final-review scope/language candidate"
+    ],
+    "candidate_gate": "fail; unchanged v2 scores and policy; no promotion"
+  },
+  "protocol_confirmation": {
+    "runs": 3,
+    "model_calls": 30,
+    "provider_attempts": 30,
+    "input_tokens": 79633,
+    "output_tokens": 12692,
+    "results": [
+      {
+        "mode": "workflow",
+        "status": "completed",
+        "answered": true,
+        "response_reason": null,
+        "answer_chars": 936
+      },
+      {
+        "mode": "plan_execute",
+        "status": "partial",
+        "answered": false,
+        "response_reason": "max_replans_reached",
+        "answer_chars": 839
+      },
+      {
+        "mode": "multi_agent",
+        "status": "partial",
+        "answered": false,
+        "response_reason": "max_follow_ups_reached",
+        "answer_chars": 1090
+      }
+    ],
+    "quality_scored": false,
+    "reviewer": "Agent; all three preserve evidence and directly address core comparison; two remain partial"
+  },
+  "citation_calibration": {
+    "saved_answers": 4,
+    "replayed_answers": 24,
+    "changed_boundary_inputs": 8,
+    "usage": {
+      "cost": null,
+      "input_tokens": 406790,
+      "max_provider_attempts": 60,
+      "measured_usage_attempts": 35,
+      "missing_usage_attempts": 0,
+      "observed_input_tokens": 406790,
+      "observed_output_tokens": 175,
+      "output_tokens": 175,
+      "provider_attempts": 35
+    },
+    "main_scores_overwritten": false
+  },
+  "offline_archive_reproduction": {
+    "exit_code": 1,
+    "verdict": "fail",
+    "checks_identical": true,
+    "comparison_identical": true,
+    "provider_calls": 0
+  },
+  "credential_scan": {
+    "matched_values": 0,
+    "credential_values_printed": false
+  },
+  "total_new_usage": {
+    "provider_attempts": 394,
+    "input_tokens": 2374378,
+    "output_tokens": 107416,
+    "agent_trials": 21,
+    "targeted_citation_answers": 4,
+    "cost": null
+  }
+}

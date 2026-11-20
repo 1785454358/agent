@@ -1,0 +1,7 @@
+- https://big5.visitbeijing.com.cn/article/4HemYB8ihkM
+- https://ticket.dpm.org.cn/subject_booking/index.html
+- https://hk.trip.com/blog/beijing-1-3days-itinerary-10003502741
+- https://www.chnmuseum.cn/cg
+- https://all.accor.com/a/zh/destination/city/hotels-beijing-v5004/budget-friendly.html
+- https://www.mtr.bj.cn/page/instructions.html
+- https://peking.bjd.com.cn/content/s692eec1ee4b034aea273b9c6.html

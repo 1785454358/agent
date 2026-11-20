@@ -1,0 +1,7 @@
+- https://uptimekuma.io/http-https-monitoring-uptime-kuma
+- https://github.com/louislam/uptime-kuma
+- https://railway.com/guides/uptime-kuma
+- https://letsencrypt.org/zh-cn/docs/rate-limits
+- https://letsencrypt.org/zh-cn/docs/faq
+- https://wanwang.aliyun.com/domain
+- https://www.cloudflare.com/zh-cn/application-services/solutions/low-cost-domain-names

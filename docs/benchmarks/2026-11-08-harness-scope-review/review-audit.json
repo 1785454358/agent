@@ -1,0 +1,548 @@
+{
+  "reviewer": "Agent structural replay and selected semantic audit; no human labels",
+  "cases": [
+    {
+      "suite": "candidate",
+      "question_id": "single_hop-dev-01",
+      "mode": "workflow",
+      "review_calls": 1,
+      "status": "completed",
+      "response_reason": null,
+      "source": "actual saved model messages, not a new judge call",
+      "structurally_valid": true,
+      "excluded": [],
+      "original_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档说明 checkpointer 在什么执行边界（如每个 super-step 或节点执行后）创建完整状态快照，需给出文档原文依据及适用条件。"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档说明为什么必须提供 thread_id（如作为检查点的命名空间或会话标识），需给出文档原文依据。"
+        }
+      ],
+      "reviewed_requirements": [
+        {
+          "id": "r1",
+          "description": "仅依据冻结文档，说明 checkpointer 在什么执行边界创建完整状态快照，并给出文档原文依据及适用条件。"
+        },
+        {
+          "id": "r2",
+          "description": "仅依据冻结文档，说明为什么必须提供 thread_id，并给出文档原文依据。"
+        }
+      ],
+      "first_evaluation_matches_replay": true
+    },
+    {
+      "suite": "candidate",
+      "question_id": "single_hop-dev-02",
+      "mode": "workflow",
+      "review_calls": 1,
+      "status": "partial",
+      "response_reason": "answer_review_incomplete",
+      "source": "actual saved model messages, not a new judge call",
+      "structurally_valid": true,
+      "excluded": [],
+      "original_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档中，使用 interrupt() 暂停工作流是否要求配置 checkpointer/持久化，具体要求是什么？"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档中，使用 interrupt() 是否要求工作流以特定 thread_id 或配置运行，具体条件是什么？"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档中，interrupt() 的调用位置或使用方式有何前置要求（如在节点内调用、返回值处理等）？"
+        },
+        {
+          "id": "r4",
+          "description": "冻结文档中，interrupt() 是否有版本或依赖方面的前置要求（如最低 LangGraph 版本、相关包）？"
+        }
+      ],
+      "reviewed_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档中，使用 interrupt() 暂停工作流是否要求配置 checkpointer/持久化，具体要求是什么？"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档中，使用 interrupt() 是否要求工作流以特定 thread_id 或配置运行，具体条件是什么？"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档中，interrupt() 的调用位置或使用方式有何前置要求（如在节点内调用、返回值处理等）？"
+        },
+        {
+          "id": "r4",
+          "description": "冻结文档中，interrupt() 是否有版本或依赖方面的前置要求（如最低 LangGraph 版本、相关包）？"
+        }
+      ],
+      "first_evaluation_matches_replay": true
+    },
+    {
+      "suite": "candidate",
+      "question_id": "multi_hop-dev-01",
+      "mode": "workflow",
+      "review_calls": 1,
+      "status": "completed",
+      "response_reason": null,
+      "source": "actual saved model messages, not a new judge call",
+      "structurally_valid": true,
+      "excluded": [],
+      "original_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档中，哪些持久化机制用于在暂停后恢复活跃会话（如检查点、会话状态存储等），其作用与适用条件是什么？"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档中，恢复活跃会话需要哪些标识符（如 thread_id、checkpoint_id 等），各标识符标识什么、作用域为何？"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档中，哪些持久化机制用于使用户偏好在新线程中可用（如跨线程/用户级存储），其作用与适用条件是什么？"
+        },
+        {
+          "id": "r4",
+          "description": "冻结文档中，跨线程提供偏好需要哪些标识符或存储键（如 user_id、命名空间等），各标识符的作用域与归属位置为何？"
+        },
+        {
+          "id": "r5",
+          "description": "冻结文档如何区分会话级持久化与用户级/跨线程持久化，两类机制与标识符分别应放在何处？"
+        }
+      ],
+      "reviewed_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档中，哪些持久化机制用于在暂停后恢复活跃会话（如检查点、会话状态存储等），其作用与适用条件是什么？"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档中，恢复活跃会话需要哪些标识符（如 thread_id、checkpoint_id 等），各标识符标识什么、作用域为何？"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档中，哪些持久化机制用于使用户偏好在新线程中可用（如跨线程/用户级存储），其作用与适用条件是什么？"
+        },
+        {
+          "id": "r4",
+          "description": "冻结文档中，跨线程提供偏好需要哪些标识符或存储键（如 user_id、命名空间等），各标识符的作用域与归属位置为何？"
+        },
+        {
+          "id": "r5",
+          "description": "冻结文档如何区分会话级持久化与用户级/跨线程持久化，两类机制与标识符分别应放在何处？"
+        }
+      ],
+      "first_evaluation_matches_replay": true
+    },
+    {
+      "suite": "candidate",
+      "question_id": "multi_hop-dev-02",
+      "mode": "workflow",
+      "review_calls": 1,
+      "status": "completed",
+      "response_reason": null,
+      "source": "actual saved model messages, not a new judge call",
+      "structurally_valid": true,
+      "excluded": [],
+      "original_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档如何规定 interrupt() 之后恢复执行的起点：节点是从头重跑、从 interrupt 处继续，还是从检查点恢复？文档是否明确说明 interrupt() 之前已执行的代码在恢复时是否再次执行？"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档是否说明或建议如何处理节点在 interrupt() 之前对外部服务写入所产生的重复副作用（如幂等键、去重、事务、补偿或人工核对）？若文档未涉及，需明确其为文档未覆盖、需应用层自行保证的部分。"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档中与恢复和副作用相关的机制（检查点、状态持久化、重放语义、恢复 API）具体如何描述，其适用条件与限制是什么？"
+        }
+      ],
+      "reviewed_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档如何规定 interrupt() 之后恢复执行的起点：节点是从头重跑、从 interrupt 处继续，还是从检查点恢复？文档是否明确说明 interrupt() 之前已执行的代码在恢复时是否再次执行？"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档是否说明或建议如何处理节点在 interrupt() 之前对外部服务写入所产生的重复副作用（如幂等键、去重、事务、补偿或人工核对）？若文档未涉及，需明确其为文档未覆盖、需应用层自行保证的部分。"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档中与恢复和副作用相关的机制（检查点、状态持久化、重放语义、恢复 API）具体如何描述，其适用条件与限制是什么？"
+        }
+      ],
+      "first_evaluation_matches_replay": true
+    },
+    {
+      "suite": "candidate",
+      "question_id": "comparison-dev-01",
+      "mode": "workflow",
+      "review_calls": 1,
+      "status": "completed",
+      "response_reason": "insufficient_evidence",
+      "source": "actual saved model messages, not a new judge call",
+      "structurally_valid": true,
+      "excluded": [],
+      "original_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档如何定义 Graph API 与 Functional API 的差异（构建方式、控制流表达、状态/副作用处理等），原文依据是什么？"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档中，Graph API 对分支与并行可视化的支持方式、条件与限制是什么？"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档中，Functional API 对分支与并行可视化的支持方式、条件与限制是什么？"
+        },
+        {
+          "id": "r4",
+          "description": "冻结文档中，将现有过程式代码迁移到 Graph API 的路径、要求与限制是什么？"
+        },
+        {
+          "id": "r5",
+          "description": "冻结文档中，将现有过程式代码迁移到 Functional API 的路径、要求与限制是什么？"
+        },
+        {
+          "id": "r6",
+          "description": "冻结文档是否就两类需求给出推荐或适用场景说明；若有，其条件与出处是什么，若无则记为未说明？"
+        }
+      ],
+      "reviewed_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档如何定义 Graph API 与 Functional API 的差异（构建方式、控制流表达、状态/副作用处理等），原文依据是什么？"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档中，Graph API 对分支与并行可视化的支持方式、条件与限制是什么？"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档中，Functional API 对分支与并行可视化的支持方式、条件与限制是什么？"
+        },
+        {
+          "id": "r4",
+          "description": "冻结文档中，将现有过程式代码迁移到 Graph API 的路径、要求与限制是什么？"
+        },
+        {
+          "id": "r5",
+          "description": "冻结文档中，将现有过程式代码迁移到 Functional API 的路径、要求与限制是什么？"
+        },
+        {
+          "id": "r6",
+          "description": "冻结文档是否就两类需求给出推荐或适用场景说明；若有，其条件与出处是什么，若无则记为未说明？"
+        }
+      ],
+      "first_evaluation_matches_replay": true
+    },
+    {
+      "suite": "candidate",
+      "question_id": "comparison-dev-02",
+      "mode": "workflow",
+      "review_calls": 0,
+      "status": "completed",
+      "response_reason": null,
+      "source": "actual saved model messages, not a new judge call",
+      "note": "No review for a degraded initial plan; existing fallback retained"
+    },
+    {
+      "suite": "candidate",
+      "question_id": "version_boundary-dev-01",
+      "mode": "workflow",
+      "review_calls": 1,
+      "status": "completed",
+      "response_reason": null,
+      "source": "actual saved model messages, not a new judge call",
+      "structurally_valid": true,
+      "excluded": [],
+      "original_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档中，Python 的 per-node timeout（按节点超时）由哪个包提供、自哪个版本起可用？需给出包名与版本边界及文档原文依据。"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档中，Python 的 node-level error handler（节点级错误处理器）由哪个包提供、自哪个版本起可用？需给出包名与版本边界及文档原文依据。"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档中，JavaScript 侧对 per-node timeout 与 node-level error handler 的版本/包要求是什么？需与 Python 侧明确区分，说明二者不可混用。"
+        }
+      ],
+      "reviewed_requirements": [
+        {
+          "id": "r1",
+          "description": "仅依据冻结文档，说明 Python 的 per-node timeout 由哪个包提供、自哪个版本起可用，并给出包名与版本边界及文档依据。"
+        },
+        {
+          "id": "r2",
+          "description": "仅依据冻结文档，说明 Python 的 node-level error handler 由哪个包提供、自哪个版本起可用，并给出包名与版本边界及文档依据。"
+        },
+        {
+          "id": "r3",
+          "description": "在陈述 Python 边界时明确区分 JavaScript 侧要求，避免将 JavaScript 的包/版本要求误用于 Python。"
+        }
+      ],
+      "first_evaluation_matches_replay": true
+    },
+    {
+      "suite": "candidate",
+      "question_id": "version_boundary-dev-02",
+      "mode": "workflow",
+      "review_calls": 1,
+      "status": "partial",
+      "response_reason": "answer_review_incomplete",
+      "source": "actual saved model messages, not a new judge call",
+      "structurally_valid": false,
+      "error_type": "ValueError",
+      "original_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档中，在 Python 3.10 上异步 LLM 回调传播存在哪些限制？需说明限制内容、触发条件（如异步上下文、回调层级、事件类型）及文档给出的例外或未支持情形。"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档中，在 Python 3.10 上自定义流写入器（custom stream writer）存在哪些限制？需说明限制内容、适用条件（如接口要求、同步/异步写入、缓冲或并发行为）及文档明确不支持的情形。"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档是否说明上述两类限制与 Python 3.10 版本特性的关系（例如是否因 3.10 缺少某特性而受限，或在 3.10 上有额外约束）？需给出文档原文依据；若文档未说明，则记为未明确。"
+        }
+      ],
+      "first_evaluation_matches_replay": true
+    },
+    {
+      "suite": "candidate",
+      "question_id": "conflicting_evidence-dev-01",
+      "mode": "workflow",
+      "review_calls": 1,
+      "status": "completed",
+      "response_reason": null,
+      "source": "actual saved model messages, not a new judge call",
+      "structurally_valid": true,
+      "excluded": [],
+      "original_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档中“checkpointing keeps your place”的原文表述及其所指“位置”的粒度是什么（节点级、任务级还是指令级）？需引用原文并说明适用条件。"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档中“interrupt resumption restarts the entire node”的原文表述及其含义是什么？重启整个节点与保留位置如何在同一文档中协调，是否存在条件或范围限定？"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档是否明确说明中断恢复后精确的 Python 指令指针（字节码/帧级执行位置）被恢复？若有，引用原文；若无，明确记为文档未说明，并给出文档中关于恢复粒度的最接近表述。"
+        }
+      ],
+      "reviewed_requirements": [
+        {
+          "id": "r1",
+          "description": "仅使用冻结文档，定位并引用“checkpointing keeps your place”的原文表述，说明其所指“位置”的粒度（节点级、任务级或指令级）及适用条件。"
+        },
+        {
+          "id": "r2",
+          "description": "仅使用冻结文档，定位并引用“interrupt resumption restarts the entire node”的原文表述，说明其含义，并说明该表述与“保留位置”在同一文档中如何协调、是否存在条件或范围限定。"
+        },
+        {
+          "id": "r3",
+          "description": "仅使用冻结文档，判定文档是否明确说明中断恢复后精确的 Python 指令指针被恢复；若有则引用原文，若无则明确记为文档未说明，并给出文档中关于恢复粒度的最接近表述。"
+        }
+      ],
+      "first_evaluation_matches_replay": true
+    },
+    {
+      "suite": "candidate",
+      "question_id": "conflicting_evidence-dev-02",
+      "mode": "workflow",
+      "review_calls": 1,
+      "status": "completed",
+      "response_reason": null,
+      "source": "actual saved model messages, not a new judge call",
+      "structurally_valid": true,
+      "excluded": [],
+      "original_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档如何定义 super-step 检查点边界（何时创建检查点、边界包含哪些状态）？"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档如何描述持久化 per-task 写入（写入时机、记录内容、与检查点的关系）？"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档如何说明失败恢复时避免重跑已成功兄弟节点的机制与条件？"
+        }
+      ],
+      "reviewed_requirements": [
+        {
+          "id": "r1",
+          "description": "仅依据冻结文档，界定 super-step 检查点边界：检查点何时创建、边界涵盖哪些状态。"
+        },
+        {
+          "id": "r2",
+          "description": "仅依据冻结文档，界定持久化 per-task 写入：写入时机、记录内容，以及其与检查点边界的关系。"
+        },
+        {
+          "id": "r3",
+          "description": "仅依据冻结文档，说明在失败后避免重跑已成功兄弟节点的机制与条件。"
+        }
+      ],
+      "first_evaluation_matches_replay": true
+    },
+    {
+      "suite": "candidate",
+      "question_id": "insufficient_evidence-dev-01",
+      "mode": "workflow",
+      "review_calls": 1,
+      "status": "completed",
+      "response_reason": null,
+      "source": "actual saved model messages, not a new judge call",
+      "structurally_valid": false,
+      "error_type": "ValueError",
+      "original_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档的持久化概览是否给出生产环境检查点数据库的吞吐量数值或定性描述？若有，具体数值、单位及适用条件是什么？若未给出，需明确说明未提供。"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档的持久化概览是否给出每请求成本（per-request cost）的数值、计价方式或定性说明？若有，具体内容与适用条件是什么？若未给出，需明确说明未提供。"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档的持久化概览是否给出恢复时间SLA（recovery-time SLA）的具体时限承诺或定性描述？若有，具体数值与适用条件是什么？若未给出，需明确说明未提供。"
+        },
+        {
+          "id": "r4",
+          "description": "仅凭持久化概览章节，对上述三项指标实际能得出什么结论、不能得出什么结论？需说明该章节是否声明这些指标由其他文档或外部基准提供。"
+        }
+      ],
+      "first_evaluation_matches_replay": true
+    },
+    {
+      "suite": "candidate",
+      "question_id": "insufficient_evidence-dev-02",
+      "mode": "workflow",
+      "review_calls": 1,
+      "status": "completed",
+      "response_reason": "insufficient_evidence",
+      "source": "actual saved model messages, not a new judge call",
+      "structurally_valid": true,
+      "excluded": [],
+      "original_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档的 API-choice guide 中是否明确给出 Graph API 相对 Functional API 的延迟改进百分比；若有，具体数值、原文表述及所在位置为何。"
+        },
+        {
+          "id": "r2",
+          "description": "该百分比所依据的适用条件与基准（如工作负载、版本、测量方式）在指南中如何限定；若指南未给出该数值，需说明其是否提供可据以计算的延迟数据。"
+        }
+      ],
+      "reviewed_requirements": [
+        {
+          "id": "r1",
+          "description": "仅依据冻结文档中的 API-choice guide，查找 Graph API 相对 Functional API 的延迟改进百分比；若给出，需记录具体数值、原文表述及所在位置。"
+        },
+        {
+          "id": "r2",
+          "description": "若 API-choice guide 未直接给出该百分比，需说明指南是否提供可据以计算该延迟改进的数据或条件；不得超出该指南范围。"
+        }
+      ],
+      "first_evaluation_matches_replay": true
+    },
+    {
+      "suite": "strategy-probes",
+      "question_id": "comparison-dev-01",
+      "mode": "plan_execute",
+      "review_calls": 1,
+      "status": "partial",
+      "response_reason": "max_replans_reached",
+      "source": "actual saved model messages, not a new judge call",
+      "structurally_valid": true,
+      "excluded": [],
+      "original_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档如何描述 Graph API 对分支/并行结构的建模与可视化支持？包括是否原生表达条件分支与多路并行路径、可视化呈现方式及文档所述限制条件。"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档如何描述 Functional API 对分支/并行结构的建模与可视化支持？包括是否支持条件分支与多路并行路径、可视化呈现方式及文档所述限制条件。"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档如何描述从现有过程式（顺序式）代码迁移到 Graph API 的路径与要求？包括迁移步骤、需改写的内容及文档指出的限制或注意事项。"
+        },
+        {
+          "id": "r4",
+          "description": "冻结文档如何描述从现有过程式代码迁移到 Functional API 的路径与要求？包括迁移步骤、需改写的内容及文档指出的限制或注意事项。"
+        },
+        {
+          "id": "r5",
+          "description": "冻结文档是否就两种 API 的选用给出明确指引（如适用场景、不适用场景或互操作/混用说明），特别是涉及分支/并行可视化与过程式代码迁移两类需求时的建议。"
+        }
+      ],
+      "reviewed_requirements": [
+        {
+          "id": "r1",
+          "description": "冻结文档如何描述 Graph API 对分支/并行结构的建模与可视化支持？包括是否原生表达条件分支与多路并行路径、可视化呈现方式及文档所述限制条件。"
+        },
+        {
+          "id": "r2",
+          "description": "冻结文档如何描述 Functional API 对分支/并行结构的建模与可视化支持？包括是否支持条件分支与多路并行路径、可视化呈现方式及文档所述限制条件。"
+        },
+        {
+          "id": "r3",
+          "description": "冻结文档如何描述从现有过程式（顺序式）代码迁移到 Graph API 的路径与要求？包括迁移步骤、需改写的内容及文档指出的限制或注意事项。"
+        },
+        {
+          "id": "r4",
+          "description": "冻结文档如何描述从现有过程式代码迁移到 Functional API 的路径与要求？包括迁移步骤、需改写的内容及文档指出的限制或注意事项。"
+        },
+        {
+          "id": "r5",
+          "description": "冻结文档是否就两种 API 的选用给出明确指引（如适用场景、不适用场景或互操作/混用说明），特别是涉及分支/并行可视化与过程式代码迁移两类需求时的建议。"
+        }
+      ],
+      "first_evaluation_matches_replay": true
+    },
+    {
+      "suite": "strategy-probes",
+      "question_id": "comparison-dev-01",
+      "mode": "multi_agent",
+      "review_calls": 0,
+      "status": "completed",
+      "response_reason": null,
+      "source": "actual saved model messages, not a new judge call",
+      "note": "No review for a degraded initial plan; existing fallback retained"
+    }
+  ],
+  "semantic_findings": [
+    {
+      "question_id": "single_hop-dev-02",
+      "finding": "All three interrupt prerequisites are now stated, including JSON-serializable payload; optional minimum-version requirements still produce a final-review gap."
+    },
+    {
+      "question_id": "comparison-dev-01",
+      "finding": "The critic retains all six requirements, including migration paths and restrictions for both APIs; matching an exact request phrase does not prove the expansion is necessary."
+    },
+    {
+      "question_id": "version_boundary-dev-02",
+      "finding": "The critic invents an ellipsis inside an allegedly exact request excerpt. Host validation rejects the entire review and preserves the prior atomic plan."
+    }
+  ],
+  "limitations": [
+    "Excerpts and ID checks verify structural traceability, not semantic relevance or completeness.",
+    "The critic uses the same model as planning and can repeat its scope bias.",
+    "Scores are preserved rather than overwritten by Agent opinions."
+  ]
+}

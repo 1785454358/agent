@@ -1,0 +1,9 @@
+{
+  "issues": [
+    "草稿将strict参数最低版本误写为2.1，原文[1]明确为2.4起提供。"
+  ],
+  "unanswered_points": [],
+  "content": "AsterSDK的strict参数从2.4版本起提供；该SDK要求Python 3.11及以上。[1]",
+  "consistency_checks": [],
+  "budgets": []
+}

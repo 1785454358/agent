@@ -1,0 +1,1677 @@
+{
+  "queries": [
+    "请为第一次去北京的游客制定3天2晚自由行规划，预算每人2000元（不含往返北京的大交通），兼顾经典景点和当地美食。请给出每天的游览顺序、住宿建议、每人分项预算及需要提前预约的事项。出行日期和同行人数未定，请明确必要假设，住宿预算说明单人入住还是多人分摊；核实可获取的票价和预约规则，估算费用与已核实价格分开说明，并给出来源引用。",
+    "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票",
+    "天安门广场 国家博物馆 预约 天坛 颐和园 门票价格 联票"
+  ],
+  "diagnostic_gaps": [
+    "initial_query_targets_degraded",
+    "initial_research_brief_degraded",
+    "source_uncertain:evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f:旅游攻略类网站，非景区或政府官方来源；页面标题含2027但发布日期需核验，票价与预约规则权威性不足。",
+    "source_uncertain:evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99:个人旅游博客，非官方来源；发布日期标注2025-07-11但页面日期需核验，票价与预约信息权威性不足。",
+    "source_admission_repair",
+    "source_ineligible:evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f:旅游攻略类网站，非景区或政府官方来源；标题含2027但发布日期未确认，票价与预约规则权威性不足。",
+    "source_ineligible:evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99:个人旅游博客，非官方来源；票价与预约信息权威性不足。",
+    "topic[天安门广场 国家博物馆 预约 天坛 颐和园 门票价格 联票] fetch:https://zhuanlan.zhihu.com/p/29773059791:insufficient_content",
+    "r1:missing:unsupported_requirement_coverage",
+    "r2:missing:原文仅将天安门广场列为景点，未说明预约方式、费用或国家博物馆预约规则。",
+    "r3:missing:原文仅列为经典景点，未给出天坛、颐和园具体票价（含联票）或预约要求。",
+    "r4:missing:原文仅推荐慕田峪长城风光，未给出长城门票价格、预约方式及市区前往交通费用。",
+    "r5:missing:unsupported_requirement_coverage",
+    "r6:missing:unsupported_requirement_coverage",
+    "source_ineligible:evidence-cf50b7149a2d20db18bf36cb45c02d2f7bbafde4e650e38516dd4edf1dd17466:去哪儿旅行资讯页，非官方来源，票价与预约信息仅作参考，不能作为官方核实依据。",
+    "source_ineligible:evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f:tibetcn.com旅游攻略页，非官方来源，费用为估算参考。",
+    "source_ineligible:evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99:个人旅游博客，非官方来源，价格与心得仅作参考。",
+    "source_ineligible:evidence-cf50b7149a2d20db18bf36cb45c02d2f7bbafde4e650e38516dd4edf1dd17466:去哪儿旅行资讯页，非官方来源，票价与预约信息不能作为官方核实依据。"
+  ],
+  "research_brief": null,
+  "task_briefs": {},
+  "decomposition_degraded": true,
+  "requirements": [
+    {
+      "id": "r1",
+      "description": "故宫博物院当前门票价格、预约规则（放票时间、提前天数、实名制、闭馆日）及官方购票渠道是什么？"
+    },
+    {
+      "id": "r2",
+      "description": "天安门广场及周边（如国家博物馆）是否需要预约、如何预约、有无费用？"
+    },
+    {
+      "id": "r3",
+      "description": "天坛公园、颐和园当前门票价格（含联票）与预约要求是什么？"
+    },
+    {
+      "id": "r4",
+      "description": "八达岭或慕田峪长城当前门票价格、预约方式及从市区前往的交通方式与大致费用是什么？"
+    },
+    {
+      "id": "r5",
+      "description": "北京经济型住宿（青旅床位/经济型酒店双人间）在市区常见区域的大致价格区间是多少，单人入住与2人分摊的每人每晚费用差异如何？"
+    },
+    {
+      "id": "r6",
+      "description": "北京当地经典美食（如烤鸭、炸酱面、涮肉、小吃）的常见人均消费区间是多少？"
+    }
+  ],
+  "plan": {
+    "plan_id": "plan-beijing-live-f00c96e72edd",
+    "run_id": "beijing-live-f00c96e72edd",
+    "contract_revision": 1,
+    "revision": 2,
+    "parent_revision": 1,
+    "revision_reason": "Acquire evidence for verified coverage gaps",
+    "tasks": [
+      {
+        "id": "t1",
+        "type": "discover",
+        "objective": "Gather and verify original sources for: 请为第一次去北京的游客制定3天2晚自由行规划，预算每人2000元（不含往返北京的大交通），兼顾经典景点和当地美食。请给出每天的游览顺序、住宿建议、每人分项预算及需要提前预约的事项。出行日期和同行人数未定，请明确必要假设，住宿预算说明单人入住还是多人分摊；核实可获取的票价和预约规则，估算费用与已核实价格分开说明，并给出来源引用。",
+        "in_scope": "Requirements assigned to this research task",
+        "out_of_scope": "Final answer synthesis and other tasks",
+        "requirement_ids": [
+          "r1",
+          "r2",
+          "r3",
+          "r4",
+          "r5",
+          "r6"
+        ],
+        "depends_on": [],
+        "capabilities": [
+          "search_web",
+          "fetch_page",
+          "read_evidence"
+        ],
+        "query_seeds": [
+          "请为第一次去北京的游客制定3天2晚自由行规划，预算每人2000元（不含往返北京的大交通），兼顾经典景点和当地美食。请给出每天的游览顺序、住宿建议、每人分项预算及需要提前预约的事项。出行日期和同行人数未定，请明确必要假设，住宿预算说明单人入住还是多人分摊；核实可获取的票价和预约规则，估算费用与已核实价格分开说明，并给出来源引用。"
+        ],
+        "expected_output": "Findings with host-verified source spans",
+        "acceptance": [
+          "Every assigned requirement has a verified support"
+        ],
+        "budget": {
+          "max_calls": 2,
+          "max_pages": 2
+        },
+        "execution_hint": "auto"
+      },
+      {
+        "id": "t2",
+        "type": "discover",
+        "objective": "Gather and verify original sources for: 故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票",
+        "in_scope": "Requirements assigned to this research task",
+        "out_of_scope": "Final answer synthesis and other tasks",
+        "requirement_ids": [
+          "r1"
+        ],
+        "depends_on": [],
+        "capabilities": [
+          "search_web",
+          "fetch_page",
+          "read_evidence"
+        ],
+        "query_seeds": [
+          "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票"
+        ],
+        "expected_output": "Findings with host-verified source spans",
+        "acceptance": [
+          "Every assigned requirement has a verified support"
+        ],
+        "budget": {
+          "max_calls": 2,
+          "max_pages": 2
+        },
+        "execution_hint": "auto"
+      },
+      {
+        "id": "t3",
+        "type": "discover",
+        "objective": "Gather and verify original sources for: 天安门广场 国家博物馆 预约 天坛 颐和园 门票价格 联票",
+        "in_scope": "Requirements assigned to this research task",
+        "out_of_scope": "Final answer synthesis and other tasks",
+        "requirement_ids": [
+          "r2",
+          "r3"
+        ],
+        "depends_on": [],
+        "capabilities": [
+          "search_web",
+          "fetch_page",
+          "read_evidence"
+        ],
+        "query_seeds": [
+          "天安门广场 国家博物馆 预约 天坛 颐和园 门票价格 联票"
+        ],
+        "expected_output": "Findings with host-verified source spans",
+        "acceptance": [
+          "Every assigned requirement has a verified support"
+        ],
+        "budget": {
+          "max_calls": 2,
+          "max_pages": 2
+        },
+        "execution_hint": "auto"
+      }
+    ],
+    "stop_conditions": [
+      "All acceptance requirements are covered"
+    ],
+    "replan_triggers": [
+      "A requirement remains missing after this wave"
+    ]
+  },
+  "plan_history": [
+    {
+      "plan_id": "plan-beijing-live-f00c96e72edd",
+      "run_id": "beijing-live-f00c96e72edd",
+      "contract_revision": 1,
+      "revision": 1,
+      "parent_revision": null,
+      "revision_reason": null,
+      "tasks": [
+        {
+          "id": "t1",
+          "type": "discover",
+          "objective": "Gather and verify original sources for: 请为第一次去北京的游客制定3天2晚自由行规划，预算每人2000元（不含往返北京的大交通），兼顾经典景点和当地美食。请给出每天的游览顺序、住宿建议、每人分项预算及需要提前预约的事项。出行日期和同行人数未定，请明确必要假设，住宿预算说明单人入住还是多人分摊；核实可获取的票价和预约规则，估算费用与已核实价格分开说明，并给出来源引用。",
+          "in_scope": "Requirements assigned to this research task",
+          "out_of_scope": "Final answer synthesis and other tasks",
+          "requirement_ids": [
+            "r1",
+            "r2",
+            "r3",
+            "r4",
+            "r5",
+            "r6"
+          ],
+          "depends_on": [],
+          "capabilities": [
+            "search_web",
+            "fetch_page",
+            "read_evidence"
+          ],
+          "query_seeds": [
+            "请为第一次去北京的游客制定3天2晚自由行规划，预算每人2000元（不含往返北京的大交通），兼顾经典景点和当地美食。请给出每天的游览顺序、住宿建议、每人分项预算及需要提前预约的事项。出行日期和同行人数未定，请明确必要假设，住宿预算说明单人入住还是多人分摊；核实可获取的票价和预约规则，估算费用与已核实价格分开说明，并给出来源引用。"
+          ],
+          "expected_output": "Findings with host-verified source spans",
+          "acceptance": [
+            "Every assigned requirement has a verified support"
+          ],
+          "budget": {
+            "max_calls": 2,
+            "max_pages": 2
+          },
+          "execution_hint": "auto"
+        }
+      ],
+      "stop_conditions": [
+        "All acceptance requirements are covered"
+      ],
+      "replan_triggers": [
+        "A requirement remains missing after this wave"
+      ]
+    }
+  ],
+  "task_results": {
+    "t1": {
+      "status": "completed",
+      "outcome": {
+        "query": "请为第一次去北京的游客制定3天2晚自由行规划，预算每人2000元（不含往返北京的大交通），兼顾经典景点和当地美食。请给出每天的游览顺序、住宿建议、每人分项预算及需要提前预约的事项。出行日期和同行人数未定，请明确必要假设，住宿预算说明单人入住还是多人分摊；核实可获取的票价和预约规则，估算费用与已核实价格分开说明，并给出来源引用。",
+        "read_anchors": [
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 405,
+            "end": 548,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 1311,
+            "end": 1397,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道",
+              "天安门广场 国家博物馆 预约 费用 官方预约方式",
+              "天坛公园 颐和园 门票价格 联票 预约要求",
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 1414,
+            "end": 1534,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道",
+              "天坛公园 颐和园 门票价格 联票 预约要求"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 1551,
+            "end": 1967,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 1967,
+            "end": 2450,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道",
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 2450,
+            "end": 2504,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道",
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊",
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 2609,
+            "end": 2817,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 2841,
+            "end": 2953,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 563,
+            "end": 715,
+            "queries": [
+              "天安门广场 国家博物馆 预约 费用 官方预约方式"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 985,
+            "end": 1101,
+            "queries": [
+              "天安门广场 国家博物馆 预约 费用 官方预约方式"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 1414,
+            "end": 1805,
+            "queries": [
+              "天安门广场 国家博物馆 预约 费用 官方预约方式",
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 1805,
+            "end": 2275,
+            "queries": [
+              "天安门广场 国家博物馆 预约 费用 官方预约方式",
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 2275,
+            "end": 2486,
+            "queries": [
+              "天安门广场 国家博物馆 预约 费用 官方预约方式",
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 2916,
+            "end": 2953,
+            "queries": [
+              "天安门广场 国家博物馆 预约 费用 官方预约方式"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 3110,
+            "end": 3151,
+            "queries": [
+              "天安门广场 国家博物馆 预约 费用 官方预约方式",
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 262,
+            "end": 380,
+            "queries": [
+              "天坛公园 颐和园 门票价格 联票 预约要求",
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 418,
+            "end": 548,
+            "queries": [
+              "天坛公园 颐和园 门票价格 联票 预约要求"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 842,
+            "end": 985,
+            "queries": [
+              "天坛公园 颐和园 门票价格 联票 预约要求"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 1101,
+            "end": 1245,
+            "queries": [
+              "天坛公园 颐和园 门票价格 联票 预约要求"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 548,
+            "end": 715,
+            "queries": [
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 2623,
+            "end": 2826,
+            "queries": [
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 0,
+            "end": 38,
+            "queries": [
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊",
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 249,
+            "end": 405,
+            "queries": [
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊",
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 715,
+            "end": 842,
+            "queries": [
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊",
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 1001,
+            "end": 1101,
+            "queries": [
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊",
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 1245,
+            "end": 1414,
+            "queries": [
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 1534,
+            "end": 1967,
+            "queries": [
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 1245,
+            "end": 1664,
+            "queries": [
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 1664,
+            "end": 2141,
+            "queries": [
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "version": 1,
+            "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+            "start": 2141,
+            "end": 2275,
+            "queries": [
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 1701,
+            "end": 2015,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道",
+              "天安门广场 国家博物馆 预约 费用 官方预约方式",
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 2477,
+            "end": 2560,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 2644,
+            "end": 2803,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道",
+              "天安门广场 国家博物馆 预约 费用 官方预约方式",
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 5088,
+            "end": 5220,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 5344,
+            "end": 5692,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 5706,
+            "end": 5722,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 5838,
+            "end": 5943,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 提前天数 实名制 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 181,
+            "end": 284,
+            "queries": [
+              "天安门广场 国家博物馆 预约 费用 官方预约方式"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 3948,
+            "end": 3962,
+            "queries": [
+              "天安门广场 国家博物馆 预约 费用 官方预约方式"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 4067,
+            "end": 4153,
+            "queries": [
+              "天安门广场 国家博物馆 预约 费用 官方预约方式"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 4245,
+            "end": 4303,
+            "queries": [
+              "天安门广场 国家博物馆 预约 费用 官方预约方式",
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 4334,
+            "end": 4469,
+            "queries": [
+              "天安门广场 国家博物馆 预约 费用 官方预约方式",
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 4641,
+            "end": 4864,
+            "queries": [
+              "天安门广场 国家博物馆 预约 费用 官方预约方式"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 747,
+            "end": 805,
+            "queries": [
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 3948,
+            "end": 3972,
+            "queries": [
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 4006,
+            "end": 4153,
+            "queries": [
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 4587,
+            "end": 4875,
+            "queries": [
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 4979,
+            "end": 5088,
+            "queries": [
+              "八达岭长城 慕田峪长城 门票价格 预约方式 市区交通 费用"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 77,
+            "end": 296,
+            "queries": [
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊",
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 747,
+            "end": 1094,
+            "queries": [
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊",
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 2813,
+            "end": 2868,
+            "queries": [
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊",
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 3178,
+            "end": 3277,
+            "queries": [
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊",
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 3407,
+            "end": 3575,
+            "queries": [
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊",
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 3804,
+            "end": 3962,
+            "queries": [
+              "北京 经济型酒店 青旅床位 双人间 价格 每晚 分摊",
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          },
+          {
+            "evidence_id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+            "version": 1,
+            "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+            "start": 440,
+            "end": 620,
+            "queries": [
+              "北京烤鸭 炸酱面 涮肉 小吃 人均消费"
+            ]
+          }
+        ],
+        "read_anchor_diagnostics": [],
+        "research_findings": [],
+        "research_finding_diagnostics": [],
+        "agent_outcome": {
+          "status": "completed",
+          "stop_reason": "completed",
+          "summary": "",
+          "evidence_ids": [
+            "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+            "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99"
+          ],
+          "errors": [],
+          "iterations": 0,
+          "executed_steps": 15,
+          "budget": {
+            "max_model_calls": 2,
+            "max_tool_calls": 0,
+            "max_network_requests": 0,
+            "used_model_calls": 0,
+            "used_tool_calls": 15,
+            "used_network_requests": 0
+          },
+          "unfinished_todos": [],
+          "plan_total": 3,
+          "plan_completed": 3
+        },
+        "evidence_ids": [
+          "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+          "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99"
+        ],
+        "attempted_urls": [
+          "https://andyventure.com/china-beijing-travel-guide",
+          "https://www.tibetcn.com/wenda/283.html"
+        ],
+        "errors": [],
+        "executed_steps": 15,
+        "plan_total": 3,
+        "plan_completed": 3,
+        "unfinished_todos": []
+      }
+    },
+    "t2": {
+      "status": "completed",
+      "outcome": {
+        "query": "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票",
+        "read_anchors": [
+          {
+            "evidence_id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+            "version": 1,
+            "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+            "start": 6,
+            "end": 209,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+            "version": 1,
+            "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+            "start": 494,
+            "end": 779,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+            "version": 1,
+            "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+            "start": 925,
+            "end": 1419,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+            "version": 1,
+            "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+            "start": 1419,
+            "end": 1492,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+            "version": 1,
+            "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+            "start": 1545,
+            "end": 1702,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+            "version": 1,
+            "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+            "start": 1787,
+            "end": 2051,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+            "version": 1,
+            "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+            "start": 2302,
+            "end": 2424,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+            "version": 1,
+            "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+            "start": 0,
+            "end": 443,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+            "version": 1,
+            "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+            "start": 443,
+            "end": 868,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+            "version": 1,
+            "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+            "start": 868,
+            "end": 1346,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+            "version": 1,
+            "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+            "start": 1346,
+            "end": 1834,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+            "version": 1,
+            "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+            "start": 1834,
+            "end": 2294,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+            "version": 1,
+            "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+            "start": 2294,
+            "end": 2782,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          },
+          {
+            "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+            "version": 1,
+            "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+            "start": 2782,
+            "end": 2885,
+            "queries": [
+              "故宫博物院 门票价格 预约 放票时间 闭馆日 官方购票渠道"
+            ]
+          }
+        ],
+        "read_anchor_diagnostics": [],
+        "research_findings": [],
+        "research_finding_diagnostics": [],
+        "agent_outcome": {
+          "status": "completed",
+          "stop_reason": "completed",
+          "summary": "",
+          "evidence_ids": [
+            "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+            "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5"
+          ],
+          "errors": [],
+          "iterations": 0,
+          "executed_steps": 5,
+          "budget": {
+            "max_model_calls": 2,
+            "max_tool_calls": 0,
+            "max_network_requests": 0,
+            "used_model_calls": 0,
+            "used_tool_calls": 5,
+            "used_network_requests": 0
+          },
+          "unfinished_todos": [],
+          "plan_total": 3,
+          "plan_completed": 3
+        },
+        "evidence_ids": [
+          "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+          "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5"
+        ],
+        "attempted_urls": [
+          "https://ticket.dpm.org.cn/",
+          "https://www.dpm.org.cn/singles_detail/259831.html"
+        ],
+        "errors": [],
+        "executed_steps": 5,
+        "plan_total": 3,
+        "plan_completed": 3,
+        "unfinished_todos": []
+      }
+    },
+    "t3": {
+      "status": "completed",
+      "outcome": {
+        "query": "天安门广场 国家博物馆 预约 天坛 颐和园 门票价格 联票",
+        "read_anchors": [
+          {
+            "evidence_id": "evidence-cf50b7149a2d20db18bf36cb45c02d2f7bbafde4e650e38516dd4edf1dd17466",
+            "version": 1,
+            "content_hash": "sha256:fa1bf8671ec42ce529bb77395ca3de2639c3000bae1c8f9a2c3b322fd7536edc",
+            "start": 0,
+            "end": 495,
+            "queries": [
+              "天安门广场 预约参观 国家博物馆 预约 免费 放票时间",
+              "天坛公园 联票 门票价格 预约 颐和园 门票 联票 预约"
+            ]
+          },
+          {
+            "evidence_id": "evidence-cf50b7149a2d20db18bf36cb45c02d2f7bbafde4e650e38516dd4edf1dd17466",
+            "version": 1,
+            "content_hash": "sha256:fa1bf8671ec42ce529bb77395ca3de2639c3000bae1c8f9a2c3b322fd7536edc",
+            "start": 495,
+            "end": 964,
+            "queries": [
+              "天安门广场 预约参观 国家博物馆 预约 免费 放票时间",
+              "天坛公园 联票 门票价格 预约 颐和园 门票 联票 预约"
+            ]
+          },
+          {
+            "evidence_id": "evidence-cf50b7149a2d20db18bf36cb45c02d2f7bbafde4e650e38516dd4edf1dd17466",
+            "version": 1,
+            "content_hash": "sha256:fa1bf8671ec42ce529bb77395ca3de2639c3000bae1c8f9a2c3b322fd7536edc",
+            "start": 964,
+            "end": 1447,
+            "queries": [
+              "天安门广场 预约参观 国家博物馆 预约 免费 放票时间",
+              "天坛公园 联票 门票价格 预约 颐和园 门票 联票 预约"
+            ]
+          },
+          {
+            "evidence_id": "evidence-cf50b7149a2d20db18bf36cb45c02d2f7bbafde4e650e38516dd4edf1dd17466",
+            "version": 1,
+            "content_hash": "sha256:fa1bf8671ec42ce529bb77395ca3de2639c3000bae1c8f9a2c3b322fd7536edc",
+            "start": 1447,
+            "end": 1577,
+            "queries": [
+              "天安门广场 预约参观 国家博物馆 预约 免费 放票时间",
+              "天坛公园 联票 门票价格 预约 颐和园 门票 联票 预约"
+            ]
+          },
+          {
+            "evidence_id": "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d",
+            "version": 1,
+            "content_hash": "sha256:8e1bb6ee1b65c9ad2a74f2895a61ad24e6ac41efa4006e8bcaf0a93d1defc250",
+            "start": 0,
+            "end": 462,
+            "queries": [
+              "天安门广场 预约参观 国家博物馆 预约 免费 放票时间",
+              "天坛公园 联票 门票价格 预约 颐和园 门票 联票 预约"
+            ]
+          },
+          {
+            "evidence_id": "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d",
+            "version": 1,
+            "content_hash": "sha256:8e1bb6ee1b65c9ad2a74f2895a61ad24e6ac41efa4006e8bcaf0a93d1defc250",
+            "start": 462,
+            "end": 947,
+            "queries": [
+              "天安门广场 预约参观 国家博物馆 预约 免费 放票时间",
+              "天坛公园 联票 门票价格 预约 颐和园 门票 联票 预约"
+            ]
+          },
+          {
+            "evidence_id": "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d",
+            "version": 1,
+            "content_hash": "sha256:8e1bb6ee1b65c9ad2a74f2895a61ad24e6ac41efa4006e8bcaf0a93d1defc250",
+            "start": 947,
+            "end": 1442,
+            "queries": [
+              "天安门广场 预约参观 国家博物馆 预约 免费 放票时间",
+              "天坛公园 联票 门票价格 预约 颐和园 门票 联票 预约"
+            ]
+          },
+          {
+            "evidence_id": "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d",
+            "version": 1,
+            "content_hash": "sha256:8e1bb6ee1b65c9ad2a74f2895a61ad24e6ac41efa4006e8bcaf0a93d1defc250",
+            "start": 1442,
+            "end": 1619,
+            "queries": [
+              "天安门广场 预约参观 国家博物馆 预约 免费 放票时间",
+              "天坛公园 联票 门票价格 预约 颐和园 门票 联票 预约"
+            ]
+          }
+        ],
+        "read_anchor_diagnostics": [],
+        "research_findings": [],
+        "research_finding_diagnostics": [],
+        "agent_outcome": {
+          "status": "completed",
+          "stop_reason": "completed",
+          "summary": "",
+          "evidence_ids": [
+            "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d",
+            "evidence-cf50b7149a2d20db18bf36cb45c02d2f7bbafde4e650e38516dd4edf1dd17466"
+          ],
+          "errors": [
+            {
+              "code": "insufficient_content",
+              "category": "agent_recoverable",
+              "retryable": false,
+              "source": "tool",
+              "node": "execute_tools",
+              "attempt": 1,
+              "public_message": "insufficient_content",
+              "internal_detail": null
+            }
+          ],
+          "iterations": 0,
+          "executed_steps": 8,
+          "budget": {
+            "max_model_calls": 2,
+            "max_tool_calls": 0,
+            "max_network_requests": 0,
+            "used_model_calls": 0,
+            "used_tool_calls": 8,
+            "used_network_requests": 0
+          },
+          "unfinished_todos": [],
+          "plan_total": 3,
+          "plan_completed": 3
+        },
+        "evidence_ids": [
+          "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d",
+          "evidence-cf50b7149a2d20db18bf36cb45c02d2f7bbafde4e650e38516dd4edf1dd17466"
+        ],
+        "attempted_urls": [
+          "https://travelnews.qunar.com/qa_strategy/beijing-attraction-reservation-travel-guide-5",
+          "https://www.summerpalace.net.cn/",
+          "https://zhuanlan.zhihu.com/p/29773059791"
+        ],
+        "errors": [
+          {
+            "stage": "fetch",
+            "target": "https://zhuanlan.zhihu.com/p/29773059791",
+            "code": "insufficient_content"
+          }
+        ],
+        "executed_steps": 8,
+        "plan_total": 3,
+        "plan_completed": 3,
+        "unfinished_todos": []
+      }
+    }
+  },
+  "coverage": {
+    "items": [
+      {
+        "requirement_id": "r1",
+        "status": "covered",
+        "reason": "官方原文覆盖实名制、提前7日20:00放票、周一闭馆、官方小程序渠道及分时段检票；但故宫大门票具体价格未在合格官方原文中列出，票价部分缺失。",
+        "finding_ids": [
+          "finding-1",
+          "finding-2",
+          "finding-5"
+        ]
+      },
+      {
+        "requirement_id": "r2",
+        "status": "missing",
+        "reason": "天安门广场及国家博物馆的预约规则、费用仅有第三方攻略（s4，不合格），无合格官方原文支持。",
+        "finding_ids": []
+      },
+      {
+        "requirement_id": "r3",
+        "status": "covered",
+        "reason": "颐和园官网覆盖门票、联票、园中园票价及开放时间；天坛公园票价与预约要求无合格官方原文，该部分缺失。",
+        "finding_ids": [
+          "finding-3",
+          "finding-4"
+        ]
+      },
+      {
+        "requirement_id": "r4",
+        "status": "missing",
+        "reason": "八达岭或慕田峪长城票价、预约方式及市区交通费用仅有第三方攻略（s4、s6，不合格），无合格官方原文支持。",
+        "finding_ids": []
+      },
+      {
+        "requirement_id": "r5",
+        "status": "missing",
+        "reason": "经济型住宿价格区间及单人/分摊差异仅有第三方攻略估算（s5、s6，不合格），无合格官方原文支持。",
+        "finding_ids": []
+      },
+      {
+        "requirement_id": "r6",
+        "status": "missing",
+        "reason": "烤鸭、炸酱面、涮肉、小吃等人均消费区间仅有第三方攻略估算（s5，不合格），无合格官方原文支持。",
+        "finding_ids": []
+      }
+    ]
+  },
+  "verification": {
+    "graph": {
+      "sources": [
+        {
+          "canonical_url": "https://ticket.dpm.org.cn/",
+          "title": "在线订票 - 故宫博物院",
+          "source_quality": 0.8
+        },
+        {
+          "canonical_url": "https://www.dpm.org.cn/singles_detail/259831.html",
+          "title": "故宫博物院参观须知 - 故宫博物院",
+          "source_quality": 0.8
+        },
+        {
+          "canonical_url": "https://www.summerpalace.net.cn/",
+          "title": "颐和园官网",
+          "source_quality": 0.8
+        },
+        {
+          "canonical_url": "https://travelnews.qunar.com/qa_strategy/beijing-attraction-reservation-travel-guide-5",
+          "title": "北京旅游热门景点怎么预约？有什么攻略？ - 去哪儿",
+          "source_quality": 0.9
+        },
+        {
+          "canonical_url": "https://www.tibetcn.com/wenda/283.html",
+          "title": "[2027北京旅游攻略]第一次去北京旅游必看保姆级游玩攻略「附景点」",
+          "source_quality": 0.9
+        },
+        {
+          "canonical_url": "https://andyventure.com/china-beijing-travel-guide",
+          "title": "北京自由行攻略－行前準備、旅遊心得、推薦景點、行程安排｜自助旅遊教學 - 冒險安迪",
+          "source_quality": 0.9
+        }
+      ],
+      "evidence": [
+        {
+          "id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+          "canonical_url": "https://ticket.dpm.org.cn/",
+          "title": "在线订票 - 故宫博物院",
+          "media_type": "text/html",
+          "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+          "fetched_at": "2026-11-15T09:24:41.593298Z",
+          "published_at": null,
+          "source_quality": 0.8,
+          "status": "active",
+          "version": 1,
+          "supersedes": null,
+          "metadata": {
+            "requested_url": "https://ticket.dpm.org.cn/",
+            "final_url": "https://ticket.dpm.org.cn/",
+            "publisher_canonical_url": null,
+            "scraper_used": "httpx_trafilatura",
+            "publisher": null
+          }
+        },
+        {
+          "id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+          "canonical_url": "https://www.dpm.org.cn/singles_detail/259831.html",
+          "title": "故宫博物院参观须知 - 故宫博物院",
+          "media_type": "text/html",
+          "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+          "fetched_at": "2026-11-15T09:24:41.776625Z",
+          "published_at": null,
+          "source_quality": 0.8,
+          "status": "active",
+          "version": 1,
+          "supersedes": null,
+          "metadata": {
+            "requested_url": "https://www.dpm.org.cn/singles_detail/259831.html",
+            "final_url": "https://www.dpm.org.cn/singles_detail/259831.html",
+            "publisher_canonical_url": null,
+            "scraper_used": "httpx_trafilatura",
+            "publisher": null
+          }
+        },
+        {
+          "id": "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d",
+          "canonical_url": "https://www.summerpalace.net.cn/",
+          "title": "颐和园官网",
+          "media_type": "text/html",
+          "content_hash": "sha256:8e1bb6ee1b65c9ad2a74f2895a61ad24e6ac41efa4006e8bcaf0a93d1defc250",
+          "fetched_at": "2026-11-15T09:24:43.099429Z",
+          "published_at": null,
+          "source_quality": 0.8,
+          "status": "active",
+          "version": 1,
+          "supersedes": null,
+          "metadata": {
+            "requested_url": "https://www.summerpalace.net.cn/",
+            "final_url": "https://www.summerpalace.net.cn/",
+            "publisher_canonical_url": null,
+            "scraper_used": "httpx_trafilatura",
+            "publisher": null
+          }
+        },
+        {
+          "id": "evidence-cf50b7149a2d20db18bf36cb45c02d2f7bbafde4e650e38516dd4edf1dd17466",
+          "canonical_url": "https://travelnews.qunar.com/qa_strategy/beijing-attraction-reservation-travel-guide-5",
+          "title": "北京旅游热门景点怎么预约？有什么攻略？ - 去哪儿",
+          "media_type": "text/html",
+          "content_hash": "sha256:fa1bf8671ec42ce529bb77395ca3de2639c3000bae1c8f9a2c3b322fd7536edc",
+          "fetched_at": "2026-11-15T09:24:40.702680Z",
+          "published_at": "2026-05-13T00:00:00Z",
+          "source_quality": 0.9,
+          "status": "active",
+          "version": 1,
+          "supersedes": null,
+          "metadata": {
+            "requested_url": "https://travelnews.qunar.com/qa_strategy/beijing-attraction-reservation-travel-guide-5",
+            "final_url": "https://travelnews.qunar.com/qa_strategy/beijing-attraction-reservation-travel-guide-5",
+            "publisher_canonical_url": "https://travelnews.qunar.com/qa_strategy/beijing-attraction-reservation-travel-guide-5",
+            "scraper_used": "httpx_trafilatura",
+            "publisher": null
+          }
+        },
+        {
+          "id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+          "canonical_url": "https://www.tibetcn.com/wenda/283.html",
+          "title": "[2027北京旅游攻略]第一次去北京旅游必看保姆级游玩攻略「附景点」",
+          "media_type": "text/html",
+          "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+          "fetched_at": "2026-11-15T09:23:54.956801Z",
+          "published_at": null,
+          "source_quality": 0.9,
+          "status": "active",
+          "version": 1,
+          "supersedes": null,
+          "metadata": {
+            "requested_url": "https://www.tibetcn.com/wenda/283.html",
+            "final_url": "https://www.tibetcn.com/wenda/283.html",
+            "publisher_canonical_url": "https://www.tibetcn.com/wenda/283.html",
+            "scraper_used": "httpx_trafilatura",
+            "publisher": null
+          }
+        },
+        {
+          "id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+          "canonical_url": "https://andyventure.com/china-beijing-travel-guide",
+          "title": "北京自由行攻略－行前準備、旅遊心得、推薦景點、行程安排｜自助旅遊教學 - 冒險安迪",
+          "media_type": "text/html",
+          "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+          "fetched_at": "2026-11-15T09:24:19.073698Z",
+          "published_at": "2025-07-11T05:33:51Z",
+          "source_quality": 0.9,
+          "status": "active",
+          "version": 1,
+          "supersedes": null,
+          "metadata": {
+            "requested_url": "https://andyventure.com/china-beijing-travel-guide",
+            "final_url": "https://andyventure.com/china-beijing-travel-guide",
+            "publisher_canonical_url": "https://andyventure.com/china-beijing-travel-guide",
+            "scraper_used": "playwright_trafilatura",
+            "publisher": null
+          }
+        }
+      ],
+      "spans": [
+        {
+          "id": "span-6abf9a09509b8b95b934db8bf3d41d2b",
+          "evidence_id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+          "version": 1,
+          "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+          "start": 6,
+          "end": 209,
+          "quote": "                            1.故宫博物院实行实名制售检票，中国内地观众仅可使用身份证，非中国内地观众请使用港澳居民来往内地通行证、台湾居民来往大陆通行证、港澳台居民居住证、外国人永久居留身份证、护照订票、检票。\n\n2.故宫博物院不售当日票，故宫博物院门票及珍宝馆、钟表馆门票于参观7日前20:00开售，门票限参观当日有效。\n\n3.参观武英殿陶瓷馆及各特展、临展须提前预约。\n\n"
+        },
+        {
+          "id": "span-004ebbebfdd136de0aed5241743fb895",
+          "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+          "version": 1,
+          "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+          "start": 0,
+          "end": 443,
+          "quote": "故宫博物院参观须知\n\n            大\n\n                        中\n\n                        小\n\n                      为贯彻落实“保护第一、加强管理、挖掘价值、有效利用、让文物活起来”的新时代文物工作要求，真实完整地保护并负责任地传承弘扬故宫承载的中华优秀传统文化，共同维护良好的参观秩序，确保古建、文物和观众安全，根据国家有关法律、法规规定，结合我院实际制定本须知，敬请观众朋友知悉：\n\n\n**（一）订票、检票须知**\n\n※故宫博物院未授权任何第三方机构或个人代理门票（大门票和钟表馆、珍宝馆门票）及展览预约业务，为确保您顺利入院参观，避免经济损失，请务必通过官方渠道“故宫博物院”小程序预约门票及展览。\n\n1、故宫博物院不售当日票，门票（大门票和钟表馆、珍宝馆门票）及展览于参观前7日20:00开始预约，限参观当日使用有效。故宫博物院周一闭馆（法定节假日除外），请广大观众提前安排好参观时间。\n\n"
+        },
+        {
+          "id": "span-bf1b3c0fc72fe5e9f33682008cd96e07",
+          "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+          "version": 1,
+          "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+          "start": 443,
+          "end": 868,
+          "quote": "2、故宫博物院实行实名制预约、检票，所有观众（含享受优惠政策的观众及陪护人）均须实名预约参观，年票观众须至少提前一日登记参观。\n\n3、中国内地观众仅限使用身份证预约，非中国内地观众请使用港澳居民来往内地通行证、台湾居民来往大陆通行证、港澳台居民居住证、外国人永久居留身份证或护照预约，同一证件每个参观日仅能预约一张门票。门票仅限绑定有效证件号码所属本人使用，一经售出不可改签票种、参观日期、参观时段，不可变更参观人员。\n\n4、午门为唯一参观入口。观众务必携带预约时使用的有效证件原件检票入院。参观结束后，可由神武门或东华门离院。提示：故宫博物院采用人脸识别设备辅助快速实名核验，人脸信息仅用于实时比对，不存储。如有疑问，请联系现场工作人员处理。\n\n5、故宫博物院每日预约分为上午、下午两个时段。预约上午时段的观众最迟检票时间为当日12:00，预约下午时段的观众最早检票时间为当日11:00。请按照预约时间来院，以免无法检票入院，影响参观游览活动。\n\n"
+        },
+        {
+          "id": "span-ed88d2e79e206f3c910d1f62a56e7454",
+          "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+          "version": 1,
+          "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+          "start": 868,
+          "end": 1346,
+          "quote": "6、天安门地区旅游线路规划为南向北单向通行，如您仅预约或前往故宫参观，可经东、西筒子河路至午门入口检票入场；如您同时预约了天安门广场与故宫两处参观，可结合故宫参观预约时间，经天安门广场周边安检口排队前往；天安门城楼至故宫午门为南向北单向通行，请由广场方向前往参观的观众合理规划参观路线。\n\n7、门票一经使用，不予退票。未使用的门票(大门票和钟表馆、珍宝馆门票)可于参观前一日24:00前通过原订票渠道退票，不计爽约；逾期（含参观当日）退票计1次爽约。\n\n8、部分展览须预约，以预约页面信息为准。如需退订，请于参观前一日24:00前通过原订票渠道退订，不计爽约。逾期未退订，计1次爽约。\n\n9、每人每日最多计1次爽约，180日内累计爽约3次，从第3次爽约的次日起，60日内将无法预约故宫博物院门票及展览。\n\n10、门票退款将在退票之日起5个工作日内原路返还至付款账户，请注意查收。如未收到退款，请致电客服查询。\n\n11、如需发票，请于预约之日起一个月内通过“故宫博物院”小程序自助开具电子发票，或持预约时使用的有效证件原件到观众服务中心票务窗口现场办理。\n\n"
+        },
+        {
+          "id": "span-223a0acdbca961f5bb6dd5d07ac62130",
+          "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+          "version": 1,
+          "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+          "start": 1346,
+          "end": 1834,
+          "quote": "12、如因不可抗力临时闭馆或临时关闭相关区域，有影响观众参观活动的情况，故宫博物院不承担责任。\n\n13、观众服务中心票务服务窗口，钟表馆、珍宝馆票务服务窗口工作时间:\n\n旺季 (4月1日-10月31日) 08:30-16:00\n\n淡季 (11月1日-次年3月31日) 08:30-15:30\n\n14、客服电话: 400-950-1925\n\n工作时间: 08:00-20:00(全年无休)\n\n\n**（二）安检须知**\n\n1、为保证古建、文物和观众的安全，建立良好的参观秩序，入院前请自觉接受安全检查，禁止携带物品详见《故宫博物院禁止携带物品目录》。安检发现的管制物品，将交由公安机关处理。其他禁止携带物品，观众应按照故宫博物院管理规定自行处理，符合存包标准的可寄存。无法处理的，院方可协助办理退票手续。\n\n2、酗酒、衣容不整、奇装异服者以及无监护人陪伴的无民事行为能力者或限制民事行为能力者，谢绝入院。\n\n\n**（三）寄存须知**\n\n故宫博物院提供包裹寄存及免费托运服务，请寄存符合标准的物品，配合二次开箱查验并登记联系信息。\n\n1、存、取包时间：\n\n4月1日至10月31日\n\n"
+        },
+        {
+          "id": "span-a880c0c4ad17ae94a3d40c8297c77473",
+          "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+          "version": 1,
+          "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+          "start": 1834,
+          "end": 2294,
+          "quote": "存包时间08:30—16:00\n\n取包时间09:30—17:10\n\n11月1日至次年3月31日\n\n存包时间08:30—15:30\n\n取包时间09:30—16:40\n\n2、存、取包处位置：存包处位于端门广场西侧观众服务中心寄存处，取包处位于神武门外广场东侧、东华门外广场北侧。\n\n3、寄存标准：行李箱、20寸及以上尺寸的大型包裹。\n\n4、禁存物品：现金、手表、电脑、数码产品、金银首饰等各种贵重物品，以及各种易燃、易爆、易损、易碎及带异味物品、食品等。\n\n5、存包牌（单）为唯一取包凭证，请妥善保管。因存包牌（单）丢失造成财物损失，故宫博物院不承担责任。\n\n6、故宫博物院仅提供临时寄存服务，不提供代邮寄服务。请寄存人于当日闭馆前将寄存包裹取走，逾期未取走的，将移交有关部门处理。因逾期未领取造成财物损失的，故宫博物院不承担责任。\n\n\n**（四）院内参观须知**\n\n1、请爱护故宫世界文化遗产，故宫博物院内全范围禁止吸烟（含电子烟）；禁止攀爬古建筑、陈设文物、假山石、古树名木等；禁止触摸、刻划、涂污古建、文物和展品。\n\n"
+        },
+        {
+          "id": "span-65962332c0167e37fe985c29552a5b11",
+          "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+          "version": 1,
+          "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+          "start": 2294,
+          "end": 2782,
+          "quote": "2、请文明有序参观，爱护公共设施，禁止追逐嬉戏、大声喧哗、躺卧、乐器演奏、音响外放、翻越围挡护栏、长时间占用公共设施及公共空间。\n\n3、请爱护公共环境，请勿践踏草坪、攀折花木，禁止随地吐痰、便溺。\n\n4、请自觉维护展厅内参观秩序，禁止饮食、席地而坐、架设画架；禁止开展直播、录播活动；禁止使用闪光灯、自拍杆及支架类摄影器材拍摄。\n\n5、禁止乞讨、卖艺、拉横幅，禁止散发、悬挂、粘贴广告或印刷品、宣传品等，禁止开展违背公序良俗的活动或行为。\n\n6、未经故宫博物院允许，禁止进行各类表演、宣传、采访、社会调查、宗教活动、售卖商品或服务、商业性拍摄、直播带货等非参观游览活动。\n\n7、如有以上或其他影响古建、文物、观众安全及参观秩序的行为，故宫博物院有权劝阻和制止。情节严重者，将记录“不文明游客信息”并报文化和旅游行政主管部门，一经形成“旅游不文明行为记录”，将在相应期限内禁止入院参观；对涉嫌违法行为的将交由公安机关处理。\n\n8、请树立环保意识，自觉维护环境卫生，响应“故宫零废弃”倡议，按照垃圾分类规则投放废弃物。\n\n9、故宫博物院内多台阶、陡坡、路面不平处，请注意警示标识。"
+        },
+        {
+          "id": "span-f164f265aca1d07f77c007e0151ab0ef",
+          "evidence_id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+          "version": 1,
+          "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+          "start": 2782,
+          "end": 2885,
+          "quote": "请勿在屋檐下、树木旁、山石附近、通道狭窄处长时间逗留。\n\n10、如遇各类突发事件、意外情况或极端天气，请遵从工作人员引导或广播提示，有序疏散。\n\n11、为了您的参观安全，请勿投喂、触摸、伤害院内的各种动物。"
+        },
+        {
+          "id": "span-1c488457888d4e7fc66de6a80a317f20",
+          "evidence_id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+          "version": 1,
+          "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+          "start": 494,
+          "end": 779,
+          "quote": "                            **※故宫博物院未授权任何第三方机构或个人代理门票（大门票和钟表馆、珍宝馆门票）及展览预约业务，为确保您顺利入院参观，避免经济损失，请务必通过官方渠道“故宫博物院”小程序预约门票及展览。**\n\n1、故宫博物院不售当日票，门票（大门票和钟表馆、珍宝馆门票）及展览于参观前7日20:00开始预约，限参观当日使用有效。故宫博物院周一闭馆（法定节假日除外），请广大观众提前安排好参观时间。\n\n2、故宫博物院实行实名制预约、检票，所有观众（含享受优惠政策的观众及陪护人）均须实名预约参观，年票观众须至少提前一日登记参观。\n\n"
+        },
+        {
+          "id": "span-1c1929367e2287b4c9ec538e1b9f163c",
+          "evidence_id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+          "version": 1,
+          "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+          "start": 925,
+          "end": 1419,
+          "quote": "4、午门为唯一参观入口。观众务必携带预约时使用的有效证件原件检票入院。参观结束后，可由神武门或东华门离院。提示：故宫博物院采用人脸识别设备辅助快速实名核验，人脸信息仅用于实时比对，不存储。如有疑问，请联系现场工作人员处理。\n\n5、故宫博物院每日预约分为上午、下午两个时段。预约上午时段的观众最迟检票时间为当日12:00，预约下午时段的观众最早检票时间为当日11:00。请按照预约时间来院，以免无法检票入院，影响参观游览活动。\n\n6、天安门地区旅游线路规划为南向北单向通行，如您仅预约或前往故宫参观，可经东、西筒子河路至午门入口检票入场；如您同时预约了天安门广场与故宫两处参观，可结合故宫参观预约时间，经天安门广场周边安检口排队前往；天安门城楼至故宫午门为南向北单向通行，请由广场方向前往参观的观众合理规划参观路线。\n\n7、门票一经使用，不予退票。未使用的门票(大门票和钟表馆、珍宝馆门票)可于参观前一日24:00前通过原订票渠道退票，不计爽约；逾期（含参观当日）退票计1次爽约。\n\n8、部分展览须预约，以预约页面信息为准。如需退订，请于参观前一日24:00前通过原订票渠道退订，不计爽约。"
+        },
+        {
+          "id": "span-72ce9a3435b49dadaa7d520ade25642f",
+          "evidence_id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+          "version": 1,
+          "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+          "start": 1419,
+          "end": 1492,
+          "quote": "逾期未退订，计1次爽约。\n\n9、每人每日最多计1次爽约，180日内累计爽约3次，从第3次爽约的次日起，60日内将无法预约故宫博物院门票及展览。\n\n"
+        },
+        {
+          "id": "span-76f0c2611dfea693bf0bb05e8cf0a3d3",
+          "evidence_id": "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d",
+          "version": 1,
+          "content_hash": "sha256:8e1bb6ee1b65c9ad2a74f2895a61ad24e6ac41efa4006e8bcaf0a93d1defc250",
+          "start": 0,
+          "end": 462,
+          "quote": "导览\n\n轻沐自然风，与历史共舞\n\n开放时间\n\n旺季：4月1日-10月31日\n    \n\n    公园（19:00停止入园）\n\n            \n                06:00 — 20:00            \n\n        园中园（佛香阁、德和园、颐和园博物馆、苏州街）（周一闭园，重点节假日除外）（17:30停止进入）\n\n            \n                08:00 — 18:00            \n\n        养云轩、霁清轩、益寿堂、耕织图水操学堂、南湖岛内院落（周一闭馆，重点节假日除外）\n\n            淡季：11月1日-3月31日\n    \n\n    公园（18:00停止入园）\n\n            \n                06:30 — 19:00            \n\n        园中园（佛香阁、德和园、颐和园博物馆、苏州街）（周一闭园，重点节假日除外）（16:30停止进入）\n\n            \n"
+        },
+        {
+          "id": "span-c4165d25f2d29344d35fdbe9addc91b0",
+          "evidence_id": "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d",
+          "version": 1,
+          "content_hash": "sha256:8e1bb6ee1b65c9ad2a74f2895a61ad24e6ac41efa4006e8bcaf0a93d1defc250",
+          "start": 462,
+          "end": 947,
+          "quote": "                08:30 — 17:00            \n\n        票务信息\n\n门票：30元/张\n\n联票：60元/张\n\n园中园：德和园5元/张，佛香阁10元/张，苏州街10元/张，颐和园博物馆20元/张\n\n        门票：20元/张\n\n联票：50元/张\n\n    备注：\n\n1、联票包括门票和园中园门票。\n\n2、门票、联票和园中园均有优惠半价票。\n\n1、联票包括门票和园中园门票。\n\n2、门票、联票和园中园均有优惠半价票。\n\n游船信息\n\n    自驾电瓶船\n\n        游船信息：6客位电瓶船\n\n乘船码头：玉澜堂码头、文昌阁码头、八方亭码头。\n\n收费价格：单船200元/小时，押金600元。\n\n营业时间：08:30开始售票、16:30停止售票、17:30停止运营。\n\n            航线游览船（大船摆渡航线11条，营业时间：8:30-17:30，随行1.2米以下儿童免票。）\n\n        铜牛—石丈亭：单程票价40元/人。\n\n石舫—南湖岛北：单程票价40元/人。\n\n十七孔桥—宿云檐：单程票价40元/人。\n\n"
+        },
+        {
+          "id": "span-778a2170622eab6cccfc28f94338cbd0",
+          "evidence_id": "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d",
+          "version": 1,
+          "content_hash": "sha256:8e1bb6ee1b65c9ad2a74f2895a61ad24e6ac41efa4006e8bcaf0a93d1defc250",
+          "start": 947,
+          "end": 1442,
+          "quote": "苏州街—宿云檐：单程票价30元/人（注：该航线从苏州街西开往宿云檐，无返程航线）。\n\n排云门环湖：单程票价40元/人。\n\n景明楼—南湖岛西：单程票价30元/人。\n\n玉带桥—南湖岛西：单程票价30元/人。\n\n南如意门—南湖岛南：单程票价30元/人。\n\n南如意门—对鸥舫：单程票价40元/人。\n\n畅观堂—南湖岛南：单程票价40元/人。\n\n畅观堂—西堤南口：单程票价40元/人。\n\n            包船服务\n\n        营业时间：8:30-17:30。\n\n船型价格： 小型游览船（开放式画舫，20、30客位），3000元/小时。小型豪华游览船（封闭式画舫，10、12客位），4000元/小时。大型游览船（开放式画舫，75、80、98客位），8000元/小时。\n\n预定电话：17200391416 / 17200391418。\n\n注意事项：商务包船请至少提前24小时电话预定，法定节日期间不提供包船服务。\n\n            温馨提示\n\n        根据相关规定，遇四级以上大风、大雨等气象预警或突发恶劣天气时，游船将停止运营，请关注颐和园官方微博或门区、码头公告信息。\n\n"
+        },
+        {
+          "id": "span-de335ef31846faf0d220fde747fe74b0",
+          "evidence_id": "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d",
+          "version": 1,
+          "content_hash": "sha256:8e1bb6ee1b65c9ad2a74f2895a61ad24e6ac41efa4006e8bcaf0a93d1defc250",
+          "start": 1442,
+          "end": 1619,
+          "quote": "请根据游船营业时间，合理安排游览行程；周末、节假日等候时间可能较长，请选择错峰游玩。\n\n乘船请穿着救生衣，航行途中请扶稳坐好、勿追跑打闹，请勿让儿童驾驶小船。\n\n请文明游览，勿向水面投放垃圾，勿追扰、投喂水鸟等野生动物。\n\n开放时间：3月中旬至11月中旬        （具体时间以最新资讯为准）\n    \n\n建筑\n\n天工巧筑，山水为伴：颐和园的结构美学"
+        }
+      ],
+      "claims": [
+        {
+          "id": "finding-1",
+          "text": "故宫博物院实行实名制预约和检票，中国内地观众仅可使用身份证，非中国内地观众使用通行证、居住证、永久居留身份证或护照；不售当日票，门票及珍宝馆、钟表馆门票于参观前7日20:00开售，限参观当日有效；周一闭馆（法定节假日除外）；未授权任何第三方代理门票及展览预约，须通过官方“故宫博物院”小程序预约。",
+          "confidence": 0.97,
+          "requirement_ids": [
+            "r1"
+          ],
+          "support_span_ids": [
+            "span-6abf9a09509b8b95b934db8bf3d41d2b",
+            "span-004ebbebfdd136de0aed5241743fb895",
+            "span-bf1b3c0fc72fe5e9f33682008cd96e07",
+            "span-ed88d2e79e206f3c910d1f62a56e7454",
+            "span-223a0acdbca961f5bb6dd5d07ac62130",
+            "span-a880c0c4ad17ae94a3d40c8297c77473",
+            "span-65962332c0167e37fe985c29552a5b11",
+            "span-f164f265aca1d07f77c007e0151ab0ef",
+            "span-1c488457888d4e7fc66de6a80a317f20"
+          ],
+          "status": "accepted",
+          "issues": []
+        },
+        {
+          "id": "finding-2",
+          "text": "故宫博物院每日预约分上午、下午两个时段：上午时段最迟检票12:00，下午时段最早检票11:00；午门为唯一参观入口，须携带预约时使用的有效证件原件；未使用门票可于参观前一日24:00前原渠道退票，逾期计爽约。",
+          "confidence": 0.96,
+          "requirement_ids": [
+            "r1"
+          ],
+          "support_span_ids": [
+            "span-004ebbebfdd136de0aed5241743fb895",
+            "span-bf1b3c0fc72fe5e9f33682008cd96e07",
+            "span-ed88d2e79e206f3c910d1f62a56e7454",
+            "span-223a0acdbca961f5bb6dd5d07ac62130",
+            "span-a880c0c4ad17ae94a3d40c8297c77473",
+            "span-65962332c0167e37fe985c29552a5b11",
+            "span-f164f265aca1d07f77c007e0151ab0ef",
+            "span-1c1929367e2287b4c9ec538e1b9f163c",
+            "span-72ce9a3435b49dadaa7d520ade25642f"
+          ],
+          "status": "accepted",
+          "issues": []
+        },
+        {
+          "id": "finding-3",
+          "text": "颐和园官网列明票价：旺季（4月1日-10月31日）门票30元/张、联票60元/张，园中园德和园5元、佛香阁10元、苏州街10元、颐和园博物馆20元；淡季（11月1日-3月31日）门票20元/张、联票50元/张；联票包括门票和园中园门票，门票、联票和园中园均有优惠半价票。",
+          "confidence": 0.97,
+          "requirement_ids": [
+            "r3"
+          ],
+          "support_span_ids": [
+            "span-76f0c2611dfea693bf0bb05e8cf0a3d3",
+            "span-c4165d25f2d29344d35fdbe9addc91b0",
+            "span-778a2170622eab6cccfc28f94338cbd0",
+            "span-de335ef31846faf0d220fde747fe74b0"
+          ],
+          "status": "accepted",
+          "issues": []
+        },
+        {
+          "id": "finding-4",
+          "text": "颐和园官网列明开放时间：旺季公园06:00-20:00（19:00停止入园），园中园08:00-18:00（17:30停止进入，周一闭园，重点节假日除外）；淡季公园06:30-19:00（18:00停止入园），园中园08:30-17:00（16:30停止进入，周一闭园，重点节假日除外）。",
+          "confidence": 0.96,
+          "requirement_ids": [
+            "r3"
+          ],
+          "support_span_ids": [
+            "span-76f0c2611dfea693bf0bb05e8cf0a3d3",
+            "span-c4165d25f2d29344d35fdbe9addc91b0",
+            "span-778a2170622eab6cccfc28f94338cbd0",
+            "span-de335ef31846faf0d220fde747fe74b0"
+          ],
+          "status": "accepted",
+          "issues": []
+        },
+        {
+          "id": "finding-5",
+          "text": "故宫博物院官网参观须知未直接列出大门票具体票价，仅说明门票（大门票和钟表馆、珍宝馆门票）及展览于参观前7日20:00开始预约；因此故宫门票具体价格在本次合格官方原文中未获核实。",
+          "confidence": 0.9,
+          "requirement_ids": [
+            "r1"
+          ],
+          "support_span_ids": [
+            "span-004ebbebfdd136de0aed5241743fb895",
+            "span-bf1b3c0fc72fe5e9f33682008cd96e07",
+            "span-ed88d2e79e206f3c910d1f62a56e7454",
+            "span-223a0acdbca961f5bb6dd5d07ac62130",
+            "span-a880c0c4ad17ae94a3d40c8297c77473",
+            "span-65962332c0167e37fe985c29552a5b11",
+            "span-f164f265aca1d07f77c007e0151ab0ef",
+            "span-1c488457888d4e7fc66de6a80a317f20"
+          ],
+          "status": "accepted",
+          "issues": []
+        }
+      ]
+    },
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "covered",
+          "reason": "官方原文覆盖实名制、提前7日20:00放票、周一闭馆、官方小程序渠道及分时段检票；但故宫大门票具体价格未在合格官方原文中列出，票价部分缺失。",
+          "finding_ids": [
+            "finding-1",
+            "finding-2",
+            "finding-5"
+          ]
+        },
+        {
+          "requirement_id": "r2",
+          "status": "missing",
+          "reason": "天安门广场及国家博物馆的预约规则、费用仅有第三方攻略（s4，不合格），无合格官方原文支持。",
+          "finding_ids": []
+        },
+        {
+          "requirement_id": "r3",
+          "status": "covered",
+          "reason": "颐和园官网覆盖门票、联票、园中园票价及开放时间；天坛公园票价与预约要求无合格官方原文，该部分缺失。",
+          "finding_ids": [
+            "finding-3",
+            "finding-4"
+          ]
+        },
+        {
+          "requirement_id": "r4",
+          "status": "missing",
+          "reason": "八达岭或慕田峪长城票价、预约方式及市区交通费用仅有第三方攻略（s4、s6，不合格），无合格官方原文支持。",
+          "finding_ids": []
+        },
+        {
+          "requirement_id": "r5",
+          "status": "missing",
+          "reason": "经济型住宿价格区间及单人/分摊差异仅有第三方攻略估算（s5、s6，不合格），无合格官方原文支持。",
+          "finding_ids": []
+        },
+        {
+          "requirement_id": "r6",
+          "status": "missing",
+          "reason": "烤鸭、炸酱面、涮肉、小吃等人均消费区间仅有第三方攻略估算（s5，不合格），无合格官方原文支持。",
+          "finding_ids": []
+        }
+      ]
+    },
+    "issues": [],
+    "recommended_action": "partial",
+    "reason": "replans are exhausted; preserve verified partial results"
+  },
+  "source_eligibility": {
+    "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614": "eligible",
+    "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5": "eligible",
+    "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d": "eligible",
+    "evidence-cf50b7149a2d20db18bf36cb45c02d2f7bbafde4e650e38516dd4edf1dd17466": "ineligible",
+    "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f": "ineligible",
+    "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99": "ineligible"
+  },
+  "executed_steps": 32
+}

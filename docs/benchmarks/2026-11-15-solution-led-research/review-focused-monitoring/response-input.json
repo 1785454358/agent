@@ -1,0 +1,938 @@
+{
+  "constraints": [],
+  "question": "请为5人小团队制定每月300元以内的网站可用性监控方案，监控20个HTTPS网站，需要故障通知和30天历史。给出选定产品或部署方式、检查频率、通知渠道、费用分项与部署步骤。允许开源自托管或托管服务，已有一台闲置Linux服务器，但不要假设额外付费功能免费。先选一条可执行主线，核实对应功能、免费或收费额度及运行条件，注明假设和来源；无法确认的实价或功能明确标为未核实，检查方案步骤、依赖和总费用是否一致。",
+  "response_mode": "answer",
+  "research_outcome": {
+    "delivery_plan": {
+      "approach": "选定 Uptime Kuma 开源自托管主线：部署在现有闲置 Linux 服务器上，用 Docker 运行，监控 20 个 HTTPS 站点，配置 SMTP 邮件通知，保留 30 天历史；费用主要为服务器电费/带宽（已有硬件，按 0 元增量计）与可选邮件服务费，控制在 300 元/月内。",
+      "assumptions": [
+        "闲置 Linux 服务器可安装 Docker 并具备公网或可出网访问 20 个目标站点",
+        "团队已有可用 SMTP 邮箱或可申请免费邮箱 SMTP 作为通知渠道",
+        "服务器电费与带宽视为已有沉没成本，不计入增量月费",
+        "监控检查频率设为每 60 秒一次，20 个站点在单机可承受范围内"
+      ],
+      "outline": [
+        "确认 Uptime Kuma 的 HTTPS 监控、通知渠道与历史保留能力及版本条件",
+        "确定检查频率与 30 天历史的数据保留配置",
+        "核算费用分项：服务器增量成本、邮件通知成本、可选域名/证书成本",
+        "编写 Docker 部署步骤与初始配置步骤",
+        "配置 20 个 HTTPS 监控项与 SMTP 通知",
+        "验证故障通知与 30 天历史留存，核对总费用一致性"
+      ],
+      "evidence_needs": [
+        {
+          "requirement_id": "r1",
+          "query": "Uptime Kuma HTTPS monitor notification history retention documentation"
+        },
+        {
+          "requirement_id": "r2",
+          "query": "Uptime Kuma Docker install docker run documentation"
+        },
+        {
+          "requirement_id": "r3",
+          "query": "Uptime Kuma SMTP email notification setup documentation"
+        },
+        {
+          "requirement_id": "r4",
+          "query": "Uptime Kuma data retention 30 days history configuration"
+        },
+        {
+          "requirement_id": "r5",
+          "query": "Uptime Kuma check interval heartbeat frequency setting"
+        }
+      ],
+      "consistency_checks": [
+        "20 个监控项与每 60 秒检查频率是否在单机资源与免费额度内",
+        "30 天历史保留是否由 Uptime Kuma 自身配置实现而非假设付费功能",
+        "SMTP 通知渠道是否覆盖全部 20 个监控项且无额外付费依赖",
+        "费用分项（服务器增量、邮件、域名/证书）合计是否不超过 300 元/月",
+        "部署步骤依赖（Docker、端口、SMTP 凭据）是否齐全且顺序可行"
+      ]
+    },
+    "source_eligibility": {
+      "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2": "eligible",
+      "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e": "eligible",
+      "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a": "eligible",
+      "evidence-29652960de7739819baf471d8841c0acaf5f3c4ec111168f888d32b6d2cce112": "eligible",
+      "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c": "eligible",
+      "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a": "eligible",
+      "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d": "eligible",
+      "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3": "eligible",
+      "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459": "eligible",
+      "evidence-f942ba051b33afbcfdeb470832e6aa58719157ff92b949a1523e1761a7ae7e0a": "uncertain",
+      "evidence-c7291b9512e1cafc13b21b5cceed46765ff7cc0c5c313ec7e8541c319b8350d1": "uncertain"
+    },
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "Uptime Kuma 是否支持 HTTPS 站点监控、故障通知渠道及历史数据保留，及其版本与运行条件。"
+      },
+      {
+        "id": "r2",
+        "description": "Uptime Kuma 的 Docker 部署方式、依赖与初始配置步骤。"
+      },
+      {
+        "id": "r3",
+        "description": "Uptime Kuma 支持的 SMTP 邮件通知配置方式与免费使用条件。"
+      },
+      {
+        "id": "r4",
+        "description": "Uptime Kuma 历史数据保留时长（30 天）的配置能力与限制。"
+      },
+      {
+        "id": "r5",
+        "description": "Uptime Kuma 检查频率（心跳间隔）可设置范围及对 20 个站点单机运行的影响。"
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "covered",
+          "reason": "官方安装页与指南覆盖 HTTPS 监控、通知渠道、数据存储位置及 Linux/Docker 运行条件。",
+          "finding_ids": [
+            "finding-1",
+            "finding-2",
+            "finding-3",
+            "finding-4"
+          ],
+          "unanswered_parts": []
+        },
+        {
+          "requirement_id": "r2",
+          "status": "covered",
+          "reason": "官方 Docker 命令与第三方 Compose 教程给出依赖、目录、启动和验证步骤。",
+          "finding_ids": [
+            "finding-1",
+            "finding-7"
+          ],
+          "unanswered_parts": []
+        },
+        {
+          "requirement_id": "r3",
+          "status": "covered",
+          "reason": "SMTP 配置路径、字段、Gmail 应用密码条件与发送限额均有原文支持。",
+          "finding_ids": [
+            "finding-3"
+          ],
+          "unanswered_parts": []
+        },
+        {
+          "requirement_id": "r4",
+          "status": "missing",
+          "reason": "仅确认历史存于 /app/data 并随数据库累积，未找到 30 天保留的配置能力或限制。",
+          "finding_ids": [
+            "finding-6"
+          ],
+          "unanswered_parts": [
+            "30 天历史保留的配置项或上限",
+            "历史数据自动清理/保留策略"
+          ]
+        },
+        {
+          "requirement_id": "r5",
+          "status": "covered",
+          "reason": "给出默认 60 秒、最低 20 秒及间隔对负载和数据库的影响；20 站点单机具体容量未量化但影响方向已说明。",
+          "finding_ids": [
+            "finding-5"
+          ],
+          "unanswered_parts": []
+        }
+      ]
+    },
+    "decomposition_degraded": false,
+    "mode": "workflow",
+    "evidence_ids": [
+      "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+      "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+      "evidence-f942ba051b33afbcfdeb470832e6aa58719157ff92b949a1523e1761a7ae7e0a",
+      "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+      "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+      "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+      "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+      "evidence-c7291b9512e1cafc13b21b5cceed46765ff7cc0c5c313ec7e8541c319b8350d1",
+      "evidence-29652960de7739819baf471d8841c0acaf5f3c4ec111168f888d32b6d2cce112",
+      "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+      "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a"
+    ],
+    "findings": [
+      {
+        "id": "finding-1",
+        "claim": "Uptime Kuma 是开源自托管监控工具，按间隔检查 HTTP 等站点、记录响应时间、通过 90+ 通知提供方发送告警，数据保存在自有数据库；官方安装页给出 Docker 运行命令（镜像 louislam/uptime-kuma:2，映射 /app/data 卷，端口 3001），并说明数据目录需支持 POSIX 文件锁以避免 SQLite 损坏，支持主流 Linux 发行版。",
+        "evidence_ids": [
+          "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+          "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e"
+        ],
+        "confidence": 0.9,
+        "supports": [
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 271,
+            "end": 632,
+            "quote": "Uptime Kuma is an open-source uptime monitoring tool. It checks your sites and services on an interval (HTTP, TCP, ping, DNS, and more), records response times, sends alerts through 90+ notification providers, and publishes public status pages. It is a lightweight alternative to hosted monitoring services, and the monitoring data stays in your own database.\n\n"
+          },
+          {
+            "evidence_id": "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+            "version": 1,
+            "content_hash": "sha256:4784daa065b91e9abfcc58c49c22347b617ba6299b93d801d1b3a9bd924ea89f",
+            "start": 0,
+            "end": 26,
+            "quote": "## Repository navigation\n\n"
+          },
+          {
+            "evidence_id": "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+            "version": 1,
+            "content_hash": "sha256:4784daa065b91e9abfcc58c49c22347b617ba6299b93d801d1b3a9bd924ea89f",
+            "start": 26,
+            "end": 220,
+            "quote": "# 🔧 How to Install\n\n`docker run -d --restart=unless-stopped -p 3001:3001 -v uptime-kuma:/app/data --name uptime-kuma louislam/uptime-kuma:2`\nUptime Kuma is now running on http://localhost:3001\n\n"
+          },
+          {
+            "evidence_id": "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+            "version": 1,
+            "content_hash": "sha256:4784daa065b91e9abfcc58c49c22347b617ba6299b93d801d1b3a9bd924ea89f",
+            "start": 220,
+            "end": 229,
+            "quote": "Warning\n\n"
+          },
+          {
+            "evidence_id": "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+            "version": 1,
+            "content_hash": "sha256:4784daa065b91e9abfcc58c49c22347b617ba6299b93d801d1b3a9bd924ea89f",
+            "start": 229,
+            "end": 477,
+            "quote": "Filesystem support for POSIX file locks is required to avoid SQLite database corruption. Be aware of possible file locking problems such as those commonly encountered with NFS. **Please map the `/app/data`-folder to a local directory or volume.**\n\n"
+          },
+          {
+            "evidence_id": "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+            "version": 1,
+            "content_hash": "sha256:4784daa065b91e9abfcc58c49c22347b617ba6299b93d801d1b3a9bd924ea89f",
+            "start": 477,
+            "end": 525,
+            "quote": "Browse to http://localhost:3001 after started.\n\n"
+          },
+          {
+            "evidence_id": "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+            "version": 1,
+            "content_hash": "sha256:4784daa065b91e9abfcc58c49c22347b617ba6299b93d801d1b3a9bd924ea89f",
+            "start": 525,
+            "end": 894,
+            "quote": "`docker run -d --restart=unless-stopped -p <YOUR_PORT>:3001 -v <YOUR_DIR OR VOLUME>:/app/data --name uptime-kuma louislam/uptime-kuma:2`\nPlease go to https://github.com/louislam/uptime-kuma/wiki/Migration-From-v1-To-v2#docker-tags\n\nExample docker-compose template: https://github.com/louislam/uptime-kuma/blob/master/compose.yaml\n\n`docker compose up -d`\nRequirements:\n\n"
+          },
+          {
+            "evidence_id": "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+            "version": 1,
+            "content_hash": "sha256:4784daa065b91e9abfcc58c49c22347b617ba6299b93d801d1b3a9bd924ea89f",
+            "start": 894,
+            "end": 1149,
+            "quote": "- Platform\n  - ✅ Major Linux distros such as Debian, Ubuntu, CentOS, Fedora and ArchLinux etc.\n  - ✅ Windows 10 (x64), Windows Server 2012 R2 (x64) or higher\n  - ❌ Replit / Heroku\n- Node.js >= 20.4\n- Git\n- pm2 - For running Uptime Kuma in the background\n\n"
+          },
+          {
+            "evidence_id": "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+            "version": 1,
+            "content_hash": "sha256:4784daa065b91e9abfcc58c49c22347b617ba6299b93d801d1b3a9bd924ea89f",
+            "start": 1149,
+            "end": 1537,
+            "quote": "```\ngit clone https://github.com/louislam/uptime-kuma.git\ncd uptime-kuma\nnpm run setup\n# Option 1. Try it\nnode server/server.js\n# (Recommended) Option 2. Run in the background using PM2\n# Install PM2 if you don't have it:\nnpm install pm2 -g && pm2 install pm2-logrotate\n# Start Server\npm2 start server/server.js --name uptime-kuma\n```\nUptime Kuma is now running on http://localhost:3001\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-2",
+        "claim": "Uptime Kuma 的 HTTP(s) 监控默认将 2xx 视为成功，默认跟随最多 10 次重定向并评估最终状态码；添加监控时可选 Monitor Type HTTP(s)、填写含 https:// 的完整 URL，并设置心跳间隔、重试次数、超时和接受状态码。",
+        "evidence_ids": [
+          "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c"
+        ],
+        "confidence": 0.85,
+        "supports": [
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 2035,
+            "end": 2377,
+            "quote": "Uptime Kuma's default is to treat any 2xx response as success. That is the right default for marketing sites and most APIs. The nuances that trip up real deployments are almost always in the 3xx and 4xx ranges.\n\n**Redirects (3xx).** By default, Uptime Kuma follows HTTP redirects up to a limit of 10 hops and evaluates the final status code. "
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 2377,
+            "end": 2576,
+            "quote": "If you want to monitor the redirect itself — for example, confirming that your old domain still 301s to the new one — you can disable redirect following and explicitly accept 301 as a success code.\n\n"
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 3357,
+            "end": 3846,
+            "quote": "Once you are logged into Uptime Kuma and have created the admin account, add a new monitor from the dashboard. The form is straightforward; the fields that matter are roughly in this order.\n\n- **Monitor Type:** HTTP(s). The default.\n- **Friendly Name:** Whatever you want to call it in the dashboard. Pick descriptive names — \"Checkout\" is better than \"example-com-checkout\".\n- **URL:** The full URL you want to monitor, including the scheme (https:// for anything public-facing in 2026).\n"
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 3846,
+            "end": 4310,
+            "quote": "- **Heartbeat Interval:** How often Uptime Kuma will check. The default 60 seconds is sensible for most UK sites.\n- **Retries:** How many consecutive failures to tolerate before declaring the monitor down. The default of 0 is aggressive; 1-2 retries is usually better.\n- **Heartbeat Retry Interval:** How long to wait between retries when in a failing state. 60 seconds is sensible.\n- **Request Timeout:** How long to wait for a response before declaring failure. "
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 4310,
+            "end": 4541,
+            "quote": "The default 48 seconds is generous; for most sites 15-30 seconds is more appropriate.\n- **Accepted Status Codes:** The range you treat as success. Default is 200-299.\n- **Max. Redirects:** How many 3xx hops to follow. Default 10.\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-3",
+        "claim": "Uptime Kuma 支持 SMTP 邮件通知：在 Settings → Notifications → Add New Notification 选择 SMTP，需填写主机名、端口（465/587）、加密方式、用户名密码和发件地址；Gmail 需开启两步验证并生成 16 位应用专用密码，个人 Gmail 每日发送上限约 500 封。",
+        "evidence_ids": [
+          "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d"
+        ],
+        "confidence": 0.85,
+        "supports": [
+          {
+            "evidence_id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+            "version": 1,
+            "content_hash": "sha256:0185171c0a41c3424104d444163c483f28d3d1ef93dd736b664fcbc9c67748c7",
+            "start": 2224,
+            "end": 2453,
+            "quote": "SMTP — Simple Mail Transfer Protocol — is the language email servers speak when relaying messages. To send email from Uptime Kuma you need five pieces of information about an SMTP server that is willing to accept your messages.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+            "version": 1,
+            "content_hash": "sha256:0185171c0a41c3424104d444163c483f28d3d1ef93dd736b664fcbc9c67748c7",
+            "start": 2453,
+            "end": 2945,
+            "quote": "- **Hostname:** the SMTP server's address, for example`smtp.gmail.com` ,`smtp.office365.com` , or your own mail server.\n- **Port:** usually 465 or 587. More on this below.\n- **Encryption:** TLS (also called STARTTLS) or SSL (also called \"implicit TLS\"). The hostname and port together usually dictate which.\n- **Username and password:** credentials for an account authorised to send mail. For major providers, this is usually an app-specific password rather than the normal account password.\n"
+          },
+          {
+            "evidence_id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+            "version": 1,
+            "content_hash": "sha256:0185171c0a41c3424104d444163c483f28d3d1ef93dd736b664fcbc9c67748c7",
+            "start": 2945,
+            "end": 3081,
+            "quote": "- **From address:** the envelope sender shown on outgoing messages. This is often — but not always — the same as the account username.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+            "version": 1,
+            "content_hash": "sha256:0185171c0a41c3424104d444163c483f28d3d1ef93dd736b664fcbc9c67748c7",
+            "start": 3081,
+            "end": 3448,
+            "quote": "In Uptime Kuma, you configure all of this under Settings → Notifications → Add New Notification, selecting SMTP as the type. The form is straightforward; the difficulty is almost always in obtaining correct values for the five fields above from your email provider.\n\n## Setting up Gmail with an app password\n\nGmail is the most common first choice for small UK teams. "
+          },
+          {
+            "evidence_id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+            "version": 1,
+            "content_hash": "sha256:0185171c0a41c3424104d444163c483f28d3d1ef93dd736b664fcbc9c67748c7",
+            "start": 3448,
+            "end": 3643,
+            "quote": "Since Google disabled \"less secure app access\" several years ago, you cannot use your normal Gmail password directly — you need an app password, generated from Google Account security settings.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+            "version": 1,
+            "content_hash": "sha256:0185171c0a41c3424104d444163c483f28d3d1ef93dd736b664fcbc9c67748c7",
+            "start": 3643,
+            "end": 3658,
+            "quote": "The sequence:\n\n"
+          },
+          {
+            "evidence_id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+            "version": 1,
+            "content_hash": "sha256:0185171c0a41c3424104d444163c483f28d3d1ef93dd736b664fcbc9c67748c7",
+            "start": 3658,
+            "end": 4017,
+            "quote": "1. Enable two-factor authentication on the Google account if it is not already on. App passwords are only available for accounts with 2FA.\n2. Go to Google Account → Security → App passwords. Generate a new password, labelling it something memorable like \"Uptime Kuma SMTP\".\n3. Copy the 16-character app password immediately; Google will not show it again.\n4. "
+          },
+          {
+            "evidence_id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+            "version": 1,
+            "content_hash": "sha256:0185171c0a41c3424104d444163c483f28d3d1ef93dd736b664fcbc9c67748c7",
+            "start": 4017,
+            "end": 4308,
+            "quote": "In Uptime Kuma, add an SMTP notification with hostname `smtp.gmail.com` , port 465, encryption SSL, username your full Gmail address, password the 16-character app password, from address your Gmail address.\n5. Send a test notification. A message should arrive in your inbox within seconds.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+            "version": 1,
+            "content_hash": "sha256:0185171c0a41c3424104d444163c483f28d3d1ef93dd736b664fcbc9c67748c7",
+            "start": 4308,
+            "end": 4618,
+            "quote": "Common trip-up: Gmail's app-password page only appears if 2FA is enabled. If you cannot find it, enable 2FA first and the option reappears. For teams on Google Workspace, some domains have app passwords disabled as a policy — in that case, use OAuth 2.0 or the Google Workspace relay rather than direct SMTP.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+            "version": 1,
+            "content_hash": "sha256:0185171c0a41c3424104d444163c483f28d3d1ef93dd736b664fcbc9c67748c7",
+            "start": 4618,
+            "end": 5072,
+            "quote": "A quick reliability note on Gmail: a single Gmail account has a daily send limit of about 500 messages for personal accounts and 2,000 for Workspace. Those limits are enormous compared with what any monitoring setup should produce, but if you suddenly hit them you almost certainly have an alert-fatigue problem and a monitor that is flapping, not a Gmail problem. Raise the failure threshold on the noisy monitor and the Gmail warning resolves itself.\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-4",
+        "claim": "Uptime Kuma 也支持 Slack、Discord 等通知渠道（不同来源称 78+ 或 90+ 种），可在 Settings > Notifications > Setup Notification 配置并测试。",
+        "evidence_ids": [
+          "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a",
+          "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3"
+        ],
+        "confidence": 0.8,
+        "supports": [
+          {
+            "evidence_id": "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a",
+            "version": 1,
+            "content_hash": "sha256:18074eb9d27cbdc9ff7a0796ac03ae38cee9b4957ee046bf48df33521f379713",
+            "start": 2143,
+            "end": 2586,
+            "quote": "```\nMonitor Type: TCP Port\nFriendly Name: PostgreSQL Production\nHostname: your-db-host.example.com\nPort: 5432\nHeartbeat Interval: 60 seconds\n```\n## Set Up Notifications\n\nThis is where Uptime Kuma shines. It supports 78+ notification services. Here are the three most common setups:\n\n**Slack:** Go to your Slack workspace, create an Incoming Webhook (Apps > Incoming Webhooks > Add to Slack), pick your alert channel, and copy the webhook URL. "
+          },
+          {
+            "evidence_id": "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a",
+            "version": 1,
+            "content_hash": "sha256:18074eb9d27cbdc9ff7a0796ac03ae38cee9b4957ee046bf48df33521f379713",
+            "start": 2586,
+            "end": 2922,
+            "quote": "In Uptime Kuma, go to Settings > Notifications > Setup Notification, select \"Slack\", paste the URL, and hit Test.\n\n**Discord:** Open your Discord server settings, go to Integrations > Webhooks > Create Webhook, select the channel, and copy the URL. In Uptime Kuma, add a new notification with type \"Discord\" and paste the webhook URL.\n\n"
+          },
+          {
+            "evidence_id": "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+            "version": 1,
+            "content_hash": "sha256:9d2f3bf3cd9fddbdec6a2c185b7f36ecd7d12245b9f83a270913b188a8fe610d",
+            "start": 77,
+            "end": 518,
+            "quote": "Receive downtime alerts directly in your inbox via SMTP. Email is the most popular notification channel — universal, accessible, audit-friendly. This guide walks UK users through SMTP setup, provider-specific configurations and troubleshooting.\n\nWhy email is the best starting point • Step-by-step setup • Common SMTP configurations • Default vs per-monitor assignments • Multiple recipients • Testing notifications • Troubleshooting • FAQ\n\n"
+          },
+          {
+            "evidence_id": "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+            "version": 1,
+            "content_hash": "sha256:9d2f3bf3cd9fddbdec6a2c185b7f36ecd7d12245b9f83a270913b188a8fe610d",
+            "start": 518,
+            "end": 810,
+            "quote": "Of 90+ notification channels Uptime Kuma supports, email is the most popular. Every team member has an inbox that works across devices without installing software. Email creates a searchable audit trail, works across organisations regardless of chat platform, and is universally understood.\n\n"
+          },
+          {
+            "evidence_id": "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+            "version": 1,
+            "content_hash": "sha256:9d2f3bf3cd9fddbdec6a2c185b7f36ecd7d12245b9f83a270913b188a8fe610d",
+            "start": 810,
+            "end": 972,
+            "quote": "Whether you monitor a single WordPress site or dozens of UK services, set up email first. Layer other channels (Telegram, Slack, webhooks) later for redundancy.\n\n"
+          },
+          {
+            "evidence_id": "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+            "version": 1,
+            "content_hash": "sha256:9d2f3bf3cd9fddbdec6a2c185b7f36ecd7d12245b9f83a270913b188a8fe610d",
+            "start": 972,
+            "end": 1449,
+            "quote": "1. **Settings › Notifications** ›**Setup Notification**\n2. Notification Type: **Email (SMTP)**\n3. Friendly name: e.g. “Work Email Alerts”\n4. SMTP server details:\n    \n  - **Hostname** — e.g.`smtp.gmail.com`\n  - **Port** — 587 for STARTTLS or 465 for SSL/TLS\n  - **Security** — STARTTLS (recommended for 587), SSL/TLS (for 465)\n  - **Username** — full email address\n  - **Password** — account password or App Password\n5. **From Email** and**To Email** — sender and recipient\n6. "
+          },
+          {
+            "evidence_id": "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+            "version": 1,
+            "content_hash": "sha256:9d2f3bf3cd9fddbdec6a2c185b7f36ecd7d12245b9f83a270913b188a8fe610d",
+            "start": 1449,
+            "end": 1515,
+            "quote": "Click **Test** — check inbox (and spam folder)\n7. Click **Save**\n\n"
+          },
+          {
+            "evidence_id": "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+            "version": 1,
+            "content_hash": "sha256:9d2f3bf3cd9fddbdec6a2c185b7f36ecd7d12245b9f83a270913b188a8fe610d",
+            "start": 1515,
+            "end": 2005,
+            "quote": "| Provider | Hostname | Port | Security | Notes | \n|---|---|---|---|---|\n| Gmail | smtp.gmail.com | 587 | STARTTLS | Requires App Password | \n| Outlook / Microsoft 365 | smtp.office365.com | 587 | STARTTLS | Microsoft 365 email + password | \n| SmartXHosting Plesk | mail.yourdomain.co.uk | 587 | STARTTLS | Full email as username; see Plesk | \n| Yahoo Mail | smtp.mail.yahoo.com | 587 | STARTTLS | Requires App Password | \n| Zoho | smtp.zoho.eu | 587 | STARTTLS | Zoho email + password | \n\n"
+          },
+          {
+            "evidence_id": "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+            "version": 1,
+            "content_hash": "sha256:9d2f3bf3cd9fddbdec6a2c185b7f36ecd7d12245b9f83a270913b188a8fe610d",
+            "start": 2005,
+            "end": 2470,
+            "quote": "**Gmail users — App Password required:** Google does not allow third-party apps to sign in with your regular password. Enable 2FA on Google Account, then generate an App Password at **Google Account › Security › App Passwords**. Use that 16-character password in Uptime Kuma.\n\n**Tip:** for most reliable delivery, use your SmartXHosting Plesk email server. Both your Uptime Kuma and mail server are on UK infrastructure — excellent deliverability, minimal latency. "
+          },
+          {
+            "evidence_id": "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+            "version": 1,
+            "content_hash": "sha256:9d2f3bf3cd9fddbdec6a2c185b7f36ecd7d12245b9f83a270913b188a8fe610d",
+            "start": 2470,
+            "end": 2526,
+            "quote": "Find exact settings in Plesk › Mail › Email Addresses.\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-5",
+        "claim": "Uptime Kuma 心跳间隔默认 60 秒，可低至 20 秒；更短间隔能更快发现故障，但会增加被监控服务负载和数据库行数，60 秒对多数服务是合理默认。",
+        "evidence_ids": [
+          "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+          "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a"
+        ],
+        "confidence": 0.85,
+        "supports": [
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 3357,
+            "end": 3846,
+            "quote": "Once you are logged into Uptime Kuma and have created the admin account, add a new monitor from the dashboard. The form is straightforward; the fields that matter are roughly in this order.\n\n- **Monitor Type:** HTTP(s). The default.\n- **Friendly Name:** Whatever you want to call it in the dashboard. Pick descriptive names — \"Checkout\" is better than \"example-com-checkout\".\n- **URL:** The full URL you want to monitor, including the scheme (https:// for anything public-facing in 2026).\n"
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 3846,
+            "end": 4310,
+            "quote": "- **Heartbeat Interval:** How often Uptime Kuma will check. The default 60 seconds is sensible for most UK sites.\n- **Retries:** How many consecutive failures to tolerate before declaring the monitor down. The default of 0 is aggressive; 1-2 retries is usually better.\n- **Heartbeat Retry Interval:** How long to wait between retries when in a failing state. 60 seconds is sensible.\n- **Request Timeout:** How long to wait for a response before declaring failure. "
+          },
+          {
+            "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+            "version": 1,
+            "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+            "start": 4310,
+            "end": 4541,
+            "quote": "The default 48 seconds is generous; for most sites 15-30 seconds is more appropriate.\n- **Accepted Status Codes:** The range you treat as success. Default is 200-299.\n- **Max. Redirects:** How many 3xx hops to follow. Default 10.\n\n"
+          },
+          {
+            "evidence_id": "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a",
+            "version": 1,
+            "content_hash": "sha256:18074eb9d27cbdc9ff7a0796ac03ae38cee9b4957ee046bf48df33521f379713",
+            "start": 351,
+            "end": 689,
+            "quote": "Uptime Kuma fixes this. It's a self-hosted monitoring tool that checks your services every 20 seconds and alerts you the moment something goes down. Think UptimeRobot or Pingdom, but running on your own infrastructure with zero per-monitor fees.\n\n## What Uptime Kuma Monitors\n\nUptime Kuma isn't limited to pinging websites. It supports:\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-6",
+        "claim": "Uptime Kuma 将监控、通知设置和运行历史全部存储在 /app/data（SQLite 数据库），必须挂载持久卷/本地目录，否则重新部署会丢失数据；历史随数据库累积，但本次可见片段未给出 30 天保留的具体配置项或上限。",
+        "evidence_ids": [
+          "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2"
+        ],
+        "confidence": 0.8,
+        "supports": [
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 1378,
+            "end": 1584,
+            "quote": "1. Create a new project in Railway.\n2. Click **+ New** and select**Docker Image** .\n3. Enter `louislam/uptime-kuma:1` as the image name and press Enter.\n4. Railway pulls the image and creates the service.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 1584,
+            "end": 1939,
+            "quote": "Pinning the major version tag (`1`) is safer than `latest`. For images hosted on Docker Hub or GitHub Container Registry, Railway can also check for new versions and redeploy the service during a maintenance window you choose; enable this under **Settings → Source → Configure Auto Updates**. See image auto updates.\n\n## Attach a volume before first use\n\n"
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 1939,
+            "end": 2362,
+            "quote": "Uptime Kuma stores everything in `/app/data`: the SQLite database, your monitors, notification settings, and uptime history. Without a volume, all of it is lost on every deployment.\n\n1. Right-click the project canvas and select **Volume** , or use the Command Palette (`⌘K` ).\n2. Connect the volume to the Uptime Kuma service.\n3. Set the mount path to `/app/data` .\n\nAttach the volume before you create your admin account. "
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 2362,
+            "end": 2496,
+            "quote": "If you configure Uptime Kuma first and add the volume later, the container restarts with an empty data directory and you start over.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 2496,
+            "end": 2624,
+            "quote": "## Generate a public domain\n\n1. Open the **Settings** tab of the service.\n2. Under **Networking** , click**Generate Domain** .\n\n"
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 2624,
+            "end": 2801,
+            "quote": "Uptime Kuma listens on port 3001. Railway detects that automatically and sets it as the domain's target port, so you get a domain like `uptime-kuma-production.up.railway.app`.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+            "version": 1,
+            "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+            "start": 3046,
+            "end": 3073,
+            "quote": "## Add your first monitor\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-7",
+        "claim": "Docker Compose 部署主线：需 Ubuntu 24.04 主机、Docker Engine 与 Compose v2、指向主机的域名及 80/443 端口；将应用端口仅绑定 127.0.0.1:3001，由 Caddy 对外提供 HTTPS，数据目录放在本地存储（避免 NFS），步骤包括验证环境、创建 /opt/uptime-kuma 目录、固定镜像版本、docker compose pull/up、检查日志与本地可达性。",
+        "evidence_ids": [
+          "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a"
+        ],
+        "confidence": 0.85,
+        "supports": [
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 981,
+            "end": 1434,
+            "quote": "The official Uptime Kuma Docker documentation requires `/app/data` to live on a filesystem with working POSIX file locks and specifically warns about file-locking problems with storage such as NFS. This guide therefore keeps the data directory on local VM storage, backs it up before upgrades, and treats the backup as sensitive because it can contain monitoring configuration, users, notification credentials, and application history.\n\nPrerequisites:\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 1434,
+            "end": 1811,
+            "quote": "- An Ubuntu 24.04 VM with SSH and sudo access\n- Docker Engine and Docker Compose v2\n- A domain such as `status.example.com` pointed to the VM\n- TCP 80 and 443 available for Caddy\n- A second administrative SSH session or recovery path before firewall changes\n\n## Step 1 — Verify Ubuntu, DNS, Docker, ports, and local storage\n\nConfirm the operating system:\n\ncat /etc/os-release\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 1811,
+            "end": 2014,
+            "quote": "Verify Docker and Compose:\n\ndocker --version docker compose version\n\nIf Docker is not installed, use How to Install Docker on Ubuntu 24.04 before continuing.\n\nCheck the domain in both address families:\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 2014,
+            "end": 2273,
+            "quote": "dig +short A status.example.com dig +short AAAA status.example.com\n\nCheck whether another service already owns the public web ports:\n\nsudo ss -lntp | grep -E ':(80|443)\\b' || true\n\nCheck free disk space and filesystem type for `/opt`:\n\ndf -h /opt df -T /opt\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 2273,
+            "end": 2490,
+            "quote": "Uptime Kuma's current install documentation warns that its data directory needs a filesystem with POSIX file-lock support. Keep `/app/data` on normal local storage for this deployment rather than an NFS-style mount.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 2490,
+            "end": 2722,
+            "quote": "**Verify:** Ubuntu should report 24.04, Docker Compose should work, DNS should point to this VM, ports 80/443 should be available or intentionally owned by your reverse proxy, and `/opt` should be backed by suitable local storage.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 2722,
+            "end": 2941,
+            "quote": "## Step 2 — Create a dedicated Uptime Kuma project directory\n\nCreate the deployment directory:\n\nsudo install -d -o \"$USER\" -g \"$USER\" /opt/uptime-kuma cd /opt/uptime-kuma\n\nCreate the local data and backup directories:\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 2941,
+            "end": 3064,
+            "quote": "mkdir -p data backups chmod 700 backups\n\nThe project will use:\n\n/opt/uptime-kuma/ ├── compose.yaml ├── data/ └── backups/\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 3064,
+            "end": 3207,
+            "quote": "The `data` directory is mapped to `/app/data` in the container. Do not place it on unsupported network storage merely to make backups easier.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 4305,
+            "end": 4566,
+            "quote": "**Verify:** Compose validation should succeed, the service should be `uptime-kuma`, the image should be `2.5.8`, and host port 3001 should be bound to `127.0.0.1` rather than `0.0.0.0`.\n\n## Step 4 — Pull the image and start Uptime Kuma\n\nPull the pinned image:\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 4566,
+            "end": 4707,
+            "quote": "cd /opt/uptime-kuma docker compose pull\n\nStart the stack:\n\ndocker compose up -d\n\nCheck its state:\n\ndocker compose ps\n\nInspect startup logs:\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 4707,
+            "end": 5036,
+            "quote": "docker compose logs --tail=100 uptime-kuma\n\nCheck the image actually in use:\n\ndocker inspect uptime-kuma --format '{{.Config.Image}}'\n\n**Verify:** The container should remain running without a restart loop, logs should not show repeated database/file-lock errors, and the inspected image should be `louislam/uptime-kuma:2.5.8`.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 5036,
+            "end": 5172,
+            "quote": "## Step 5 — Verify Uptime Kuma is reachable locally but not published publicly\n\nTest the local backend:\n\ncurl -I http://127.0.0.1:3001\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 5172,
+            "end": 5294,
+            "quote": "An HTTP response such as `200`, `302`, or another valid application response confirms that the web service is listening.\n\n"
+          },
+          {
+            "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+            "version": 1,
+            "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+            "start": 39,
+            "end": 481,
+            "quote": "Uptime Kuma is a self-hosted monitoring application for checking websites, APIs, network services, certificates, and other endpoints from your own server. A safer production pattern on Ubuntu 24.04 is to run Uptime Kuma with Docker Compose, keep its application port bound only to `127.0.0.1:3001`, and let Caddy expose the dashboard over public HTTPS. This avoids publishing the Uptime Kuma web service directly to every network interface.\n\n"
+          }
+        ]
+      },
+      {
+        "id": "retained-4f72e96158bebbd171b69d15",
+        "claim": "Uptime Kuma 的清理任务当前按全局保留期删除超过 30 天的旧数据；按监控项自定义保留时长是未实现的特性请求，已被关闭为“不计划”。",
+        "evidence_ids": [
+          "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459"
+        ],
+        "confidence": 0.8,
+        "supports": [
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 161,
+            "end": 289,
+            "quote": "- I checked and didn't find similar feature request\n\n### 🏷️ Feature Request Type\n\nUI Feature, Other\n\n### 🔖 Feature description\n\n"
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 289,
+            "end": 380,
+            "quote": "The ability to configure how long the monitor history is retained on a per monitor basis.\n\n"
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 380,
+            "end": 639,
+            "quote": "### ✔️ Solution\n\nThe idea would be to have a setting on the \"Edit Monitor\" page where you could set a different retention time for this specific monitor. If that field is empty (on purpose or for all previously created monitors) the global fallback is used.\n\n"
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 1025,
+            "end": 1163,
+            "quote": "Additional info, I think I even would be able to implement that feature and raise a PR for it, if it fits into the project.\n\n## Activity\n\n"
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 1163,
+            "end": 1482,
+            "quote": "1. addedfeature-requestRequest for new features to be addedRequest for new features to be addedon Mar 28, 2023\n2. ....or this feature can be made available in Settings, like how Notifications is now, that there's a toggle for \"Apply on all existing monitors\"\n3. @iCaotix why do you think this would be a good feature? \n"
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 1482,
+            "end": 1837,
+            "quote": " Please go further into the usecase have.The added complexity of this feature (one more thing to configure, more difficult deletion) is substantial, while the downside of the current approach (one monitor being stored a bit longer => a few MB of storage) is negligible.\n4. Doing this would greatly increase the workload of the nightly clear-old-data job. "
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 1837,
+            "end": 2258,
+            "quote": "Right now it just 1 line of SQL, if you have to retrieve settings then do it per-monitor it would take much longer and might affect the performance of the actual monitors.\n5. does that 1 line of SQL just delete data that's older than 30 days? I think we are asking to delete anything older than \"X\" days, and we get to choose the \"X\" value. Yes, with the understanding that keeping more data will impact the performance. "
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 2258,
+            "end": 2705,
+            "quote": "Because I'd like to keep the historical data to up to one year, so I can observe \"seasonal trend.\"\n6. @CommanderStorm The use case is to have monitors which monitor your \"own\" services for which I would want to keep the history for a year let's say and on the other hand I have about a dozen monitors which monitor \"other people's\" services (e.g. an API, a Website for a keyword) where I'm only interested in let's say the last two or four weeks. "
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 2705,
+            "end": 3197,
+            "quote": "For example on Zabbix this is already possible on a per item basis and on prometheus it's not that much of a deal in terms of data size (because of delta encoding) as it would be here. Concrete example: I have 3 monitors (60 sec interval) I want to keep for a year and 12 monitors (also 60 sec interval) which I only need 4 weeks. Currently my setting would be to keep all for a year. Reacted by mr-flibble\n7. Doing this would greatly increase the workload of the nightly clear-old-data job. "
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 3197,
+            "end": 3634,
+            "quote": "Right now it just 1 line of SQL, if you have to retrieve settings then do it per-monitor it would take much longer and might affect the performance of the actual monitors. No this can still be performant when it's done with small transactions, e.g. One per monitor, and if it's a continuous cleanup job which runs every day at most 5760 entries (24 hours of 15 second intervals) would be removed from the db, which is really not much\n8. "
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 3634,
+            "end": 4102,
+            "quote": "addedA:monitorIssues or PRs related to monitorsIssues or PRs related to monitorsA:settingsIssues or PRs related to Settings page and application configrationIssues or PRs related to Settings page and application configrationon Dec 5, 2023\n9. In v2 (see #4500 for further detais), we have improved the performance considerably. We now only store aggregated results => configuring montiors on a per monitor level is not nessesary anymore from an performance standpoint. "
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 4102,
+            "end": 4264,
+            "quote": "Gven that heatbeat data is not PII, I cannot see a reason why this would be nessesary anyomore. => closing as not planned (because it does not make sense anymore)"
+          }
+        ]
+      },
+      {
+        "id": "finding-8",
+        "claim": "v2 改为仅存储聚合结果以提升性能，维护者据此认为无需按监控项配置保留期；保留更多数据仍会影响性能。",
+        "evidence_ids": [
+          "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459"
+        ],
+        "confidence": 0.75,
+        "supports": [
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 1025,
+            "end": 1163,
+            "quote": "Additional info, I think I even would be able to implement that feature and raise a PR for it, if it fits into the project.\n\n## Activity\n\n"
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 1163,
+            "end": 1482,
+            "quote": "1. addedfeature-requestRequest for new features to be addedRequest for new features to be addedon Mar 28, 2023\n2. ....or this feature can be made available in Settings, like how Notifications is now, that there's a toggle for \"Apply on all existing monitors\"\n3. @iCaotix why do you think this would be a good feature? \n"
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 1482,
+            "end": 1837,
+            "quote": " Please go further into the usecase have.The added complexity of this feature (one more thing to configure, more difficult deletion) is substantial, while the downside of the current approach (one monitor being stored a bit longer => a few MB of storage) is negligible.\n4. Doing this would greatly increase the workload of the nightly clear-old-data job. "
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 1837,
+            "end": 2258,
+            "quote": "Right now it just 1 line of SQL, if you have to retrieve settings then do it per-monitor it would take much longer and might affect the performance of the actual monitors.\n5. does that 1 line of SQL just delete data that's older than 30 days? I think we are asking to delete anything older than \"X\" days, and we get to choose the \"X\" value. Yes, with the understanding that keeping more data will impact the performance. "
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 2258,
+            "end": 2705,
+            "quote": "Because I'd like to keep the historical data to up to one year, so I can observe \"seasonal trend.\"\n6. @CommanderStorm The use case is to have monitors which monitor your \"own\" services for which I would want to keep the history for a year let's say and on the other hand I have about a dozen monitors which monitor \"other people's\" services (e.g. an API, a Website for a keyword) where I'm only interested in let's say the last two or four weeks. "
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 2705,
+            "end": 3197,
+            "quote": "For example on Zabbix this is already possible on a per item basis and on prometheus it's not that much of a deal in terms of data size (because of delta encoding) as it would be here. Concrete example: I have 3 monitors (60 sec interval) I want to keep for a year and 12 monitors (also 60 sec interval) which I only need 4 weeks. Currently my setting would be to keep all for a year. Reacted by mr-flibble\n7. Doing this would greatly increase the workload of the nightly clear-old-data job. "
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 3197,
+            "end": 3634,
+            "quote": "Right now it just 1 line of SQL, if you have to retrieve settings then do it per-monitor it would take much longer and might affect the performance of the actual monitors. No this can still be performant when it's done with small transactions, e.g. One per monitor, and if it's a continuous cleanup job which runs every day at most 5760 entries (24 hours of 15 second intervals) would be removed from the db, which is really not much\n8. "
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 3634,
+            "end": 4102,
+            "quote": "addedA:monitorIssues or PRs related to monitorsIssues or PRs related to monitorsA:settingsIssues or PRs related to Settings page and application configrationIssues or PRs related to Settings page and application configrationon Dec 5, 2023\n9. In v2 (see #4500 for further detais), we have improved the performance considerably. We now only store aggregated results => configuring montiors on a per monitor level is not nessesary anymore from an performance standpoint. "
+          },
+          {
+            "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+            "version": 1,
+            "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+            "start": 4102,
+            "end": 4264,
+            "quote": "Gven that heatbeat data is not PII, I cannot see a reason why this would be nessesary anyomore. => closing as not planned (because it does not make sense anymore)"
+          }
+        ]
+      }
+    ],
+    "unresolved_gaps": [
+      "r4:missing:仅确认历史存于 /app/data 并随数据库累积，未找到 30 天保留的配置能力或限制。",
+      "diagnostic:unread_evidence:evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+      "diagnostic:unread_evidence:evidence-f942ba051b33afbcfdeb470832e6aa58719157ff92b949a1523e1761a7ae7e0a",
+      "diagnostic:unread_evidence:evidence-c7291b9512e1cafc13b21b5cceed46765ff7cc0c5c313ec7e8541c319b8350d1"
+    ],
+    "executed_steps": 43,
+    "termination_reason": "insufficient_evidence"
+  },
+  "active_evidence_ids": [
+    "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+    "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+    "evidence-f942ba051b33afbcfdeb470832e6aa58719157ff92b949a1523e1761a7ae7e0a",
+    "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+    "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+    "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+    "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+    "evidence-c7291b9512e1cafc13b21b5cceed46765ff7cc0c5c313ec7e8541c319b8350d1",
+    "evidence-29652960de7739819baf471d8841c0acaf5f3c4ec111168f888d32b6d2cce112",
+    "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+    "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a"
+  ],
+  "verified_finding_ids": [
+    "finding-1",
+    "finding-2",
+    "finding-3",
+    "finding-4",
+    "finding-5",
+    "finding-6",
+    "finding-7",
+    "retained-4f72e96158bebbd171b69d15",
+    "finding-8"
+  ],
+  "context_notes": [
+    "用户：请为5人小团队制定每月300元以内的网站可用性监控方案，监控20个HTTPS网站，需要故障通知和30天历史。给出选定产品或部署方式、检查频率、通知渠道、费用分项与部署步骤。允许开源自托管或托管服务，已有一台闲置Linux服务器，但不要假设额外付费功能免费。先选一条可执行主线，核实对应功能、免费或收费额度及运行条件，注明假设和来源；无法确认的实价或功能明确标为未核实，检查方案步骤、依赖和总费用是否一致。"
+  ]
+}

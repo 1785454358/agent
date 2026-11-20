@@ -1,0 +1,91 @@
+{
+  "issues_count": 8,
+  "unanswered_points": [
+    "20项×60秒约每分钟20次请求，方向性可承受[7][8]；但服务器配置与出网条件未提供，容量未量化核实。",
+    "30天历史由全局保留期实现，按项自定义未实现[1]；但全局保留期默认值与设置路径未在证据中确认，需部署后核实。",
+    "已知小计为0元，但域名/证书与服务器电费/带宽未计价，不能确认整体低于300元/月；预算表已用unpriced标出。",
+    "所选主线的每人预算未计价：域名/证书（仅公网面板时）、服务器电费与带宽（若计入）",
+    "Uptime Kuma全局历史保留期的默认值及在设置中的具体配置路径未在证据中确认，30天保留需部署后核实。",
+    "闲置Linux服务器的具体配置（CPU/内存/磁盘）与出网条件未提供，20个站点60秒间隔的实际容量未量化。"
+  ],
+  "consistency_checks": [
+    {
+      "check_id": "c1",
+      "status": "unresolved",
+      "reason": "20项×60秒约每分钟20次请求，方向性可承受[7][8]；但服务器配置与出网条件未提供，容量未量化核实。"
+    },
+    {
+      "check_id": "c2",
+      "status": "unresolved",
+      "reason": "30天历史由全局保留期实现，按项自定义未实现[1]；但全局保留期默认值与设置路径未在证据中确认，需部署后核实。"
+    },
+    {
+      "check_id": "c3",
+      "status": "passed",
+      "reason": "SMTP为Uptime Kuma内置通知渠道[5][6]，勾选“应用到所有现有监控”可覆盖20项；无额外付费依赖，但需团队现有邮箱可用。"
+    },
+    {
+      "check_id": "c4",
+      "status": "unresolved",
+      "reason": "已知小计为0元，但域名/证书与服务器电费/带宽未计价，不能确认整体低于300元/月；预算表已用unpriced标出。"
+    },
+    {
+      "check_id": "c5",
+      "status": "passed",
+      "reason": "步骤已按Docker验证→建目录→写compose→启动→本地验证→建管理员→加监控→配SMTP→设保留→验证排序；依赖Docker、本地存储、SMTP凭据均已列明。"
+    }
+  ],
+  "budgets": [
+    {
+      "scope": "所选主线的每人预算",
+      "unit": "元/人",
+      "items": [
+        {
+          "label": "服务器增量费用",
+          "low": "0",
+          "high": "0",
+          "quantity": "1",
+          "divisor": "1",
+          "kind": "estimate",
+          "note": "已有闲置Linux服务器，电费/带宽按沉没成本假设不计增量；非商户实价"
+        },
+        {
+          "label": "Uptime Kuma 软件",
+          "low": "0",
+          "high": "0",
+          "quantity": "1",
+          "divisor": "1",
+          "kind": "verified",
+          "note": "开源自托管，无按监控项收费[2][8]"
+        },
+        {
+          "label": "SMTP 邮件通知",
+          "low": "0",
+          "high": "0",
+          "quantity": "1",
+          "divisor": "1",
+          "kind": "estimate",
+          "note": "用现有邮箱；Gmail个人约500封/日、Workspace约2000封/日[6]，未确认团队邮箱类型"
+        },
+        {
+          "label": "域名/证书（仅公网面板时）",
+          "low": null,
+          "high": null,
+          "quantity": "1",
+          "divisor": "1",
+          "kind": "unpriced",
+          "note": "仅当需公网HTTPS面板时发生；Caddy可自动签证书[3]，实价未核实"
+        },
+        {
+          "label": "服务器电费与带宽（若计入）",
+          "low": null,
+          "high": null,
+          "quantity": "1",
+          "divisor": "1",
+          "kind": "unpriced",
+          "note": "当前按已有沉没成本不计增量，未核实实际金额"
+        }
+      ]
+    }
+  ]
+}

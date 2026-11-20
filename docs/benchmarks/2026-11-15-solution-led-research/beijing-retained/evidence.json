@@ -1,0 +1,202 @@
+[
+  {
+    "id": "evidence-12c806b95df854953853e4de0949003439323279cb45ac093644d6ea6d79e667",
+    "canonical_url": "https://k.sina.com.cn/article_7879777382_1d5abdc6606801k45m.html?from=travel",
+    "title": "故宫门票多少钱一张？2026年最新价格+购票全攻略+FAQ|免费|珍宝馆|学生票|故宫博物院|旺季_新浪新闻",
+    "media_type": "text/html",
+    "content_hash": "sha256:243e92f0c175aac5b2b1afecfe5f343f668be21f133a00ee7e5cd73c6409dd52",
+    "fetched_at": "2026-11-15T11:06:23.709813Z",
+    "published_at": "2026-09-23T10:08:49Z",
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://k.sina.com.cn/article_7879777382_1d5abdc6606801k45m.html?from=travel",
+      "final_url": "https://k.sina.com.cn/article_7879777382_1d5abdc6606801k45m.html?from=travel",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": "新浪网"
+    }
+  },
+  {
+    "id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+    "canonical_url": "https://ticket.dpm.org.cn/",
+    "title": "在线订票 - 故宫博物院",
+    "media_type": "text/html",
+    "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+    "fetched_at": "2026-11-15T11:06:23.260310Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://ticket.dpm.org.cn/",
+      "final_url": "https://ticket.dpm.org.cn/",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-9e3ada23012b97916c8461c5a810034db36a82fc95a42fc76ff4bf730c821e54",
+    "canonical_url": "https://k.sina.com.cn/article_7879923678_1d5ae17de06802hcu4.html?from=tech",
+    "title": "附近经济型酒店推荐怎么选？2026年100-300元闭眼入指南+FAQ|商圈|车位|品牌|预算|如家_新浪新闻",
+    "media_type": "text/html",
+    "content_hash": "sha256:c9209c570e5d53981438b56ec65044efd25cd855cac205666627baf71acdb3a3",
+    "fetched_at": "2026-11-15T11:06:22.489592Z",
+    "published_at": "2026-11-04T16:05:36Z",
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://k.sina.com.cn/article_7879923678_1d5ae17de06802hcu4.html?from=tech",
+      "final_url": "https://k.sina.com.cn/article_7879923678_1d5ae17de06802hcu4.html?from=tech",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": "新浪网"
+    }
+  },
+  {
+    "id": "evidence-1933fc51f3c0142fa314ae03dc1b35aaa2de39cf031138a37acf57a30c722092",
+    "canonical_url": "https://www.chnmuseum.cn/cg",
+    "title": "服务_中国国家博物馆官方网站",
+    "media_type": "text/html",
+    "content_hash": "sha256:1c34190e6e068c61c0634a160dbee591d9ffd94adf0ba8a7f1585b5454ec4fb1",
+    "fetched_at": "2026-11-15T11:06:29.827892Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.chnmuseum.cn/cg",
+      "final_url": "https://www.chnmuseum.cn/cg",
+      "publisher_canonical_url": null,
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-7aaa34d6fb1c32c484d9f7c32dcc99b610126baa9e8d4ba2b17080c7ed00768a",
+    "canonical_url": "https://xinwen.bjd.com.cn/content/s68836dbee4b0bd64e2e16bc8.html",
+    "title": "下月起，国博将施行新预约办法，细化预约流程及参观规则",
+    "media_type": "text/html",
+    "content_hash": "sha256:ff3b17dfff590da2144ab35ffe45dea4f25058c5de85cfca03c3cad04f1227aa",
+    "fetched_at": "2026-11-15T11:06:24.960454Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://xinwen.bjd.com.cn/content/s68836dbee4b0bd64e2e16bc8.html",
+      "final_url": "https://xinwen.bjd.com.cn/content/s68836dbee4b0bd64e2e16bc8.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-f81b9ab6723cf9c57ad55cbe84b2feec4b706342c63ea8196b8ceac612e0fbf4",
+    "canonical_url": "https://tamgw.beijing.gov.cn/zhengwugongkai/tzgg/202111/t20211119_2541156.html",
+    "title": "天安门广场预约参观办法（试行）_公示通告_北京市人民政府天安门地区管理委员会门户网站",
+    "media_type": "text/html",
+    "content_hash": "sha256:175bdad735502b4c32d64e924b127635628da699fd7b053c29623e81269278cc",
+    "fetched_at": "2026-11-15T11:06:25.221226Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://tamgw.beijing.gov.cn/zhengwugongkai/tzgg/202111/t20211119_2541156.html",
+      "final_url": "https://tamgw.beijing.gov.cn/zhengwugongkai/tzgg/202111/t20211119_2541156.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-4630ca3a7ec65f79b4a44d67bfd4384d23db644448b85ea3c887952dab142b47",
+    "canonical_url": "https://gygl.beijing.gov.cn/xxgk/xxgk_tzgg/202512/t20251215_4343152.html",
+    "title": "北京市公园管理中心-2026年北京市公园游览年票发售公告",
+    "media_type": "text/html",
+    "content_hash": "sha256:16ff182d4e77335b8c3654dd55a82504cbd0f55c5240f684cc5045932f5c54ce",
+    "fetched_at": "2026-11-15T11:06:21.751073Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://gygl.beijing.gov.cn/xxgk/xxgk_tzgg/202512/t20251215_4343152.html",
+      "final_url": "https://gygl.beijing.gov.cn/xxgk/xxgk_tzgg/202512/t20251215_4343152.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-58e7a48dd4ae7e5e198008952ec2d409d75a3af27427e5b5ee55cf39d8dae819",
+    "canonical_url": "https://s.visitbeijing.com.cn/attraction/101409",
+    "title": "天坛公园",
+    "media_type": "text/html",
+    "content_hash": "sha256:439db460518a076782252daeaa944a534743d11634b189a8e838b25293d8007c",
+    "fetched_at": "2026-11-15T11:06:21.585856Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://s.visitbeijing.com.cn/attraction/101409",
+      "final_url": "https://s.visitbeijing.com.cn/attraction/101409",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d",
+    "canonical_url": "https://www.summerpalace.net.cn/",
+    "title": "颐和园官网",
+    "media_type": "text/html",
+    "content_hash": "sha256:8e1bb6ee1b65c9ad2a74f2895a61ad24e6ac41efa4006e8bcaf0a93d1defc250",
+    "fetched_at": "2026-11-15T11:07:11.450376Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.summerpalace.net.cn/",
+      "final_url": "https://www.summerpalace.net.cn/",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-55f92a282891fef69ebcab9f8041a8eae369fe7fb42f29d999b2889160cdc12f",
+    "canonical_url": "https://travelnews.qunar.com/ugc/beijing-solo-food-guide",
+    "title": "北京一人食20元，卤煮和炸酱面哪个更划算？ - 去哪儿",
+    "media_type": "text/html",
+    "content_hash": "sha256:3c05fdea3c1a16492626cb90ee5a00dd3a75eac2d0bbd6e265057cf83944c3c5",
+    "fetched_at": "2026-11-15T11:07:07.114704Z",
+    "published_at": "2025-08-31T00:00:00Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://travelnews.qunar.com/ugc/beijing-solo-food-guide",
+      "final_url": "https://travelnews.qunar.com/ugc/beijing-solo-food-guide",
+      "publisher_canonical_url": "https://travelnews.qunar.com/ugc/beijing-solo-food-guide",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  }
+]

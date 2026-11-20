@@ -1,0 +1,9 @@
+{
+  "issues": [
+    "草稿将p95误写为120ms，原文[1]明确p95为300ms。"
+  ],
+  "unanswered_points": [],
+  "content": "服务A单机实验的p50为120ms，p95为300ms；测量范围是合成测试记录中的单机实验，不是生产环境SLA。[1]",
+  "consistency_checks": [],
+  "budgets": []
+}

@@ -1,0 +1,60 @@
+{
+  "question": "Using only the frozen documentation, reconcile automatic strategy choice for a schema type with the warning that JSON Schema dictionaries are not automatically detected.",
+  "reference_answer": "The general rule concerns passing a schema type: native ProviderStrategy when supported, otherwise ToolStrategy. A plain JSON Schema dictionary is a documented exception and must be wrapped in an explicit ProviderStrategy or ToolStrategy. These inputs are different; the warning limits the general statement rather than contradicting it.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text": "Schema type general case"
+    },
+    {
+      "id": "R2",
+      "text": "Dictionary explicit wrapper"
+    },
+    {
+      "id": "R3",
+      "text": "No unsupported automatic inference"
+    }
+  ],
+  "candidates": {
+    "A": {
+      "answer": "结论：两者不矛盾——自动选择策略只适用于“直接传入 schema 类型（`type[StructuredResponseT]`）”的情形；JSON Schema 字典是显式例外，必须用 `ProviderStrategy` 或 `ToolStrategy` 包装，否则不会被自动识别 [1]。\n\n依据与条件：\n\n- 文档把 `response_format` 的取值分为四类：`ToolStrategy[...]`、`ProviderStrategy[...]`、`type[StructuredResponseT]`、`None`；其中只有 `type[StructuredResponseT]` 被描述为“根据模型能力自动选择最佳策略” [1]。\n- 自动选择的具体规则是：模型/提供商支持原生结构化输出时用 `ProviderStrategy`（如 OpenAI、Anthropic、xAI），其余模型用 `ToolStrategy` [1]。\n- 同一文档的 Warning 明确：JSON Schema 字典直接传给 `response_format` 时不会被自动检测，必须包进显式策略（`ProviderStrategy` 或 `ToolStrategy`）[1]。\n\n调和方式：这是一条“通用规则 + 显式例外”的关系，而非冲突。自动机制针对的是可识别的 schema 类型（如 Pydantic 类这类 `type[...]`）；JSON Schema 字典只是普通 `dict`，类型签名上虽可传入，但不在自动检测范围内，因此文档要求用户手动指定策略，把“选哪种策略”的决定权交还给调用方 [1]。\n\n这与默认行为的描述一致：agent 默认采用 tool calling 策略，仅对支持原生结构化输出的特定模型切换策略——即“自动”始终发生在已识别 schema 的前提下，而非对任意输入都生效 [1]。\n\n实践取舍（基于上述文档规则的推论，非原文新增事实）：若你的 schema 是 Pydantic 类，可直接传类型享受自动选择；若只有 JSON Schema 字典，需自行判断模型是否支持原生结构化输出，再选 `ProviderStrategy`（支持时）或 `ToolStrategy`（兜底）。文档另注：`langchain>=1.1` 时原生支持能力从模型 profile 动态读取，缺失时可手动提供 profile [1]。",
+      "citation_map": {
+        "[1]": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+      },
+      "visible_passages": [
+        {
+          "ref": "P1",
+          "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+          "start": 867,
+          "end": 2869,
+          "text": "```python\ndef create_agent(\n    ...\n    response_format: Union[\n        ToolStrategy[StructuredResponseT],\n        ProviderStrategy[StructuredResponseT],\n        type[StructuredResponseT],\n        None,\n    ]\n)\n```\n\n## Response format\n\nUse `response_format` to control how the agent returns structured data:\n\n- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n- `ProviderStrategy` if the model and provider chosen supports native structured output (e.g. [OpenAI](/oss/integrations/providers/openai), [Anthropic (Claude)](/oss/integrations/providers/anthropic), or [xAI (Grok)](/oss/integrations/providers/xai)).\n- `ToolStrategy` for all other models.\n\n<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>\n\n<Note>\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```python\n    custom_profile = {\n        \"structured_output\": True,\n        # ...\n    }\n    model = init_chat_model(\"...\", profile=custom_profile)\n    ```\n    If tools are specified, the model must support simultaneous use of tools and structured output.\n</Note>\n\nThe structured response is returned in the `structured_response` key of the agent's final state.\n:::\n:::js\nStructured output allows agents to return data in a specific, predictable format. Instead of parsing natural language responses, you get typed structured data.\n\n"
+        },
+        {
+          "ref": "P2",
+          "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+          "start": 3378,
+          "end": 4513,
+          "text": "```ts\ntype ResponseFormat = (\n    | ZodSchema<StructuredResponseT> // a Zod schema\n    | StandardSchema<StructuredResponseT> // any Standard Schema library\n    | Record<string, unknown> // a JSON Schema\n)\n\nconst agent = createAgent({\n    // ...\n    responseFormat: ResponseFormat | ResponseFormat[]\n})\n```\n\n## Response format\n\nControls how the agent returns structured data. You can provide a Zod schema, any [Standard Schema](https://standardschema.dev/)-compatible schema, or a JSON Schema object. By default, the agent uses a tool calling strategy, in which the output is created by an additional tool call. Certain models support native structured output, in which case the agent will use that strategy instead.\n\nYou can control the behavior by wrapping `ResponseFormat` in a `toolStrategy` or `providerStrategy` function call:\n\n```ts\nimport { toolStrategy, providerStrategy } from \"langchain\";\n\nconst agent = createAgent({\n    // use a provider strategy if supported by the model\n    responseFormat: providerStrategy(z.object({ ... }))\n    // or enforce a tool strategy\n    responseFormat: toolStrategy(z.object({ ... }))\n})\n```\n\n"
+        }
+      ]
+    },
+    "B": {
+      "answer": "结论：两者并不矛盾——自动选择只适用于直接传入的 schema 类型对象（type[StructuredResponseT]），而 JSON Schema 字典是另一种表示形式，不在自动检测范围内，必须手动包一层策略。\n\n**自动选择的条件** [1]\n\n当把 schema 类型直接传给 `response_format` 时，LangChain 会基于模型能力自动选策略：\n\n- 模型/提供商支持原生结构化输出（如 OpenAI、Anthropic、xAI）→ 选 `ProviderStrategy`\n- 其他所有模型 → 选 `ToolStrategy`\n\n**字典的例外** [1]\n\n文档明确警告：JSON Schema 字典直接传给 `response_format` 时不会被自动检测，必须显式包装：\n\n```python\nfrom langchain.agents.structured_output import ProviderStrategy  # 或 ToolStrategy\n\nagent = create_agent(\n    model,\n    response_format=ProviderStrategy({\"type\": \"object\", \"properties\": {...}})\n)\n```\n\n**调和逻辑**\n\n`response_format` 的联合类型只接受 `ToolStrategy`、`ProviderStrategy`、`type[StructuredResponseT]` 或 `None` [1]。自动分派的触发条件是“schema 类型对象”这一表示形式；裸字典不属于该类型，无法触发自动检测，因此需要用户显式声明用哪种策略来包装它。可见文档未进一步说明为何字典不做自动检测，只给出了这一区分和手动包装的要求。\n\n**附带条件** [1]\n\n- 自动选择依赖模型 profile 数据（`langchain>=1.1` 动态读取）；数据缺失时需手动指定 profile 或改用显式策略。\n- 若同时使用工具，模型须支持工具与结构化输出并行。",
+      "citation_map": {
+        "[1]": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+      },
+      "visible_passages": [
+        {
+          "ref": "P1",
+          "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+          "start": 867,
+          "end": 2869,
+          "text": "```python\ndef create_agent(\n    ...\n    response_format: Union[\n        ToolStrategy[StructuredResponseT],\n        ProviderStrategy[StructuredResponseT],\n        type[StructuredResponseT],\n        None,\n    ]\n)\n```\n\n## Response format\n\nUse `response_format` to control how the agent returns structured data:\n\n- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n- `ProviderStrategy` if the model and provider chosen supports native structured output (e.g. [OpenAI](/oss/integrations/providers/openai), [Anthropic (Claude)](/oss/integrations/providers/anthropic), or [xAI (Grok)](/oss/integrations/providers/xai)).\n- `ToolStrategy` for all other models.\n\n<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>\n\n<Note>\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```python\n    custom_profile = {\n        \"structured_output\": True,\n        # ...\n    }\n    model = init_chat_model(\"...\", profile=custom_profile)\n    ```\n    If tools are specified, the model must support simultaneous use of tools and structured output.\n</Note>\n\nThe structured response is returned in the `structured_response` key of the agent's final state.\n:::\n:::js\nStructured output allows agents to return data in a specific, predictable format. Instead of parsing natural language responses, you get typed structured data.\n\n"
+        }
+      ]
+    }
+  }
+}

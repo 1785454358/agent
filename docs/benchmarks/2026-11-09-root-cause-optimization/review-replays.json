@@ -1,0 +1,212 @@
+{
+  "baseline": [
+    {
+      "case": "single_hop-test-03",
+      "run_id": "01a1c0b9-4785-77b2-a73f-58d832931830",
+      "review": {
+        "content": "**结论：** 冻结文档规定 Runtime context 包含五项：Context、Store、Stream writer、Execution info、Server info [1]；建议用它替代硬编码全局依赖，是因为它提供依赖注入，使工具更可测试、可复用、更灵活，并让数据贯穿代理而不落入全局状态 [1]。\n\n**包含内容**\n\n| 组成 | 定义 |\n|---|---|\n| Context | 静态信息，如用户 id、数据库连接或代理调用的其他依赖 [1] |\n| Store | 用于长期记忆的 BaseStore 实例 [1] |\n| Stream writer | 通过 `\"custom\"` 流模式流式传输信息的对象 [1] |\n| Execution info | 当前执行的身份与重试信息：线程 ID、运行 ID、尝试次数 [1] |\n| Server info | 在 LangGraph Server 上运行时的服务器元数据：assistant ID、graph ID、已认证用户 [1] |\n\n**为何不用硬编码全局依赖**\n\n- 文档称 Runtime context 为工具和中间件提供**依赖注入**：可在调用代理时注入数据库连接、用户 ID 或配置，而非硬编码值或全局状态，从而更可测试、可复用、更灵活 [1]。\n- JS 版表述为：把数据库连接、用户会话或配置附加到 context 并在工具和中间件内访问，保持无状态、可测试、可复用 [1]。\n\n**适用方式与边界**\n\n创建代理时用 `context_schema`（JS 为 `contextSchema`）定义 context 结构，调用时传 `context` 参数，并在工具和中间件内访问运行时信息 [1]。文档未给出性能或安全方面的量化收益，上述理由仅为文档陈述的设计动机 [1]。",
+        "issues": [],
+        "unanswered_points": []
+      },
+      "feedback": {
+        "results": [
+          {
+            "key": "answer_correctness",
+            "score": 1.0,
+            "comment": "The candidate answer fully satisfies the question and reference requirements. It correctly lists the five Runtime context components (Context, Store, Stream writer, Execution info, Server info) matching the frozen documentation, correctly defines Context as invocation-scoped static information (user id, db connections, dependencies), and correctly explains the dependency-injection rationale (avoiding hardcoded values/global state, making tools testable, reusable, flexible). It also properly distinguishes Store (long-term memory BaseStore) from Context, satisfying the 'do not confuse Store with Context' requirement. The JS variant and context_schema/contextSchema usage details are accurate per the evidence. The bounded note that no quantitative performance/security benefits are given is appropriate and not an invented claim. Groundedness is high: every substantive claim (the five components, their definitions, the dependency-injection rationale, the JS phrasing, the context_schema/context argument usage) is directly entailed by the cited evidence excerpt [1], which contains the exact list and both the Python and JS tips. Source attribution to [1] is correct. No unsupported specifics or contradictions."
+          },
+          {
+            "key": "answer_groundedness",
+            "score": 1.0,
+            "comment": "The candidate answer fully satisfies the question and reference requirements. It correctly lists the five Runtime context components (Context, Store, Stream writer, Execution info, Server info) matching the frozen documentation, correctly defines Context as invocation-scoped static information (user id, db connections, dependencies), and correctly explains the dependency-injection rationale (avoiding hardcoded values/global state, making tools testable, reusable, flexible). It also properly distinguishes Store (long-term memory BaseStore) from Context, satisfying the 'do not confuse Store with Context' requirement. The JS variant and context_schema/contextSchema usage details are accurate per the evidence. The bounded note that no quantitative performance/security benefits are given is appropriate and not an invented claim. Groundedness is high: every substantive claim (the five components, their definitions, the dependency-injection rationale, the JS phrasing, the context_schema/context argument usage) is directly entailed by the cited evidence excerpt [1], which contains the exact list and both the Python and JS tips. Source attribution to [1] is correct. No unsupported specifics or contradictions."
+          },
+          {
+            "key": "task_accepted",
+            "score": true,
+            "comment": "The candidate answer fully satisfies the question and reference requirements. It correctly lists the five Runtime context components (Context, Store, Stream writer, Execution info, Server info) matching the frozen documentation, correctly defines Context as invocation-scoped static information (user id, db connections, dependencies), and correctly explains the dependency-injection rationale (avoiding hardcoded values/global state, making tools testable, reusable, flexible). It also properly distinguishes Store (long-term memory BaseStore) from Context, satisfying the 'do not confuse Store with Context' requirement. The JS variant and context_schema/contextSchema usage details are accurate per the evidence. The bounded note that no quantitative performance/security benefits are given is appropriate and not an invented claim. Groundedness is high: every substantive claim (the five components, their definitions, the dependency-injection rationale, the JS phrasing, the context_schema/context argument usage) is directly entailed by the cited evidence excerpt [1], which contains the exact list and both the Python and JS tips. Source attribution to [1] is correct. No unsupported specifics or contradictions."
+          }
+        ]
+      },
+      "calls": 1
+    },
+    {
+      "case": "single_hop-dev-02",
+      "run_id": "01a1c0b9-488b-7b80-87df-ac45b00c0075",
+      "review": {
+        "content": "结论：按冻结文档，用 `interrupt()` 暂停工作流的前置条件是：编译图时配置 **checkpointer** 以持久化图状态，并在调用时于 config 的 `configurable` 中提供 **`thread_id`**；`interrupt()` 本身应在**图节点内**调用 [2][3]。\n\n**1. 持久化与 thread_id**\n\n- 文档明确列出使用 `interrupt()` 需要“A **checkpointer** to persist the graph state”，并建议产品中使用持久化 checkpointer [2]。\n- checkpointer 以 `thread_id` 为主键存储和检索检查点；没有它，checkpointer 无法保存状态，也无法在 interrupt 后恢复执行 [3]。\n- 带 checkpointer 调用图时，**必须**在 config 的 `configurable` 部分指定 `thread_id`，例如 `{\"configurable\": {\"thread_id\": \"1\"}}` [3]。\n- `thread_id` 是持久游标：复用同一值会恢复同一检查点，使用新值则开启空状态的新线程 [2]。\n\n**2. 调用位置与运行环境**\n\n- `interrupt()` 可在图的任意节点中调用；在节点内调用时，LangGraph 保存当前图状态并等待输入恢复 [2]。\n- 文档示例在节点函数中调用 `interrupt()`，并在编译时传入 checkpointer（如 `MemorySaver`），调用时传入 `thread_id` [2]。\n- 文档还说明：在节点内调用 `interrupt()` 时，运行时会通过抛出异常来挂起执行，该异常被运行时捕获后保存状态并等待外部输入 [2]。\n\n**3. 条件与限制**\n\n- `MemorySaver`/`InMemorySaver` 把检查点存在内存中，进程重启后全部丢失；生产环境应改用持久化 checkpointer [1]。\n- 文档提到 interrupt 响应 schema 需要 `langgraph>=1.2.12`（Python）或 `@langchain/langgraph` 1.4.16 及以上（JS）[2]；这是响应 schema 功能的条件，不应扩大为所有 `interrupt()` 用法的通用版本要求。\n- 文档未说明 `interrupt()` 必须在特定执行模式（如仅限 `invoke` 或仅限流式）下使用；可见材料只给出节点内调用与 checkpointer 配合的示例 [2]。\n\n**最小配置示意**（依据 [2][3] 的示例结构）：\n\n```python\nfrom langgraph.checkpoint.memory import InMemorySaver\nfrom langgraph.types import interrupt\n\ndef approval_node(state):\n    approved = interrupt(\"Do you approve this action?\")\n    return {\"approved\": approved}\n\ngraph = builder.compile(checkpointer=InMemorySaver())\ngraph.invoke(input, {\"configurable\": {\"thread_id\": \"1\"}})\n```\n\n恢复时用 `Command(resume=...)` 重新调用同一 `thread_id` 的图 [2]。",
+        "issues": [],
+        "unanswered_points": []
+      },
+      "feedback": {
+        "results": [
+          {
+            "key": "answer_correctness",
+            "score": 0.7,
+            "comment": "The candidate correctly identifies two of the three prerequisites (checkpointer and thread_id) and correctly notes interrupt() should be called inside a graph node, plus distinguishes production durability (MemorySaver/InMemorySaver vs persistent checkpointer). However, it omits the third explicit prerequisite from the reference: the interrupt() payload must be JSON-serializable. The reference lists three prerequisites: checkpointer, thread ID, and calling interrupt() with a JSON-serializable payload. The candidate covers the first two and the call location but not the JSON-serializable payload requirement, so it does not fully satisfy 'Name all three prerequisites.' Groundedness is high: the checkpointer/thread_id claims are directly supported by evidence [2] and [3], the node-call and exception-suspension behavior by [2], and the MemorySaver durability caveat by [1]. The version note is appropriately scoped. The only gap is the missing JSON-serializable payload prerequisite, which is a factual omission rather than an unsupported claim."
+          },
+          {
+            "key": "answer_groundedness",
+            "score": 0.9,
+            "comment": "The candidate correctly identifies two of the three prerequisites (checkpointer and thread_id) and correctly notes interrupt() should be called inside a graph node, plus distinguishes production durability (MemorySaver/InMemorySaver vs persistent checkpointer). However, it omits the third explicit prerequisite from the reference: the interrupt() payload must be JSON-serializable. The reference lists three prerequisites: checkpointer, thread ID, and calling interrupt() with a JSON-serializable payload. The candidate covers the first two and the call location but not the JSON-serializable payload requirement, so it does not fully satisfy 'Name all three prerequisites.' Groundedness is high: the checkpointer/thread_id claims are directly supported by evidence [2] and [3], the node-call and exception-suspension behavior by [2], and the MemorySaver durability caveat by [1]. The version note is appropriately scoped. The only gap is the missing JSON-serializable payload prerequisite, which is a factual omission rather than an unsupported claim."
+          },
+          {
+            "key": "task_accepted",
+            "score": false,
+            "comment": "The candidate correctly identifies two of the three prerequisites (checkpointer and thread_id) and correctly notes interrupt() should be called inside a graph node, plus distinguishes production durability (MemorySaver/InMemorySaver vs persistent checkpointer). However, it omits the third explicit prerequisite from the reference: the interrupt() payload must be JSON-serializable. The reference lists three prerequisites: checkpointer, thread ID, and calling interrupt() with a JSON-serializable payload. The candidate covers the first two and the call location but not the JSON-serializable payload requirement, so it does not fully satisfy 'Name all three prerequisites.' Groundedness is high: the checkpointer/thread_id claims are directly supported by evidence [2] and [3], the node-call and exception-suspension behavior by [2], and the MemorySaver durability caveat by [1]. The version note is appropriately scoped. The only gap is the missing JSON-serializable payload prerequisite, which is a factual omission rather than an unsupported claim."
+          }
+        ]
+      },
+      "calls": 1
+    },
+    {
+      "case": "conflicting_evidence-test-03",
+      "run_id": "01a1c0b9-6de0-7bb1-9b86-6c080056d248",
+      "review": {
+        "content": "**结论：冻结文档没有给出把“删除过期历史”与“保留有效 tool-call/tool-result 结构”统一起来的明确规则。** 文档分别规定了两侧要求，但裁剪示例只按消息数量和奇偶选择保留最近消息 [2]，未说明裁剪时须成对保留 tool-call/tool-result、禁止单独删除某一半，也未给出冲突处理方式。因此，按现有材料只能确认两项要求各自存在，不能确认它们已被协调；这是本次可见材料的缺口，不能推出全部文档没有答案。\n\n### 删除过期历史的规则与触发条件\n\n- 可删除对象是图状态中的消息；文档说明可删除特定消息或清空整个消息历史 [2]。\n- 裁剪示例在 `before_model` 钩子中执行：消息数不超过 3 条时不改动；超过 3 条时保留首条消息，再按总条数奇偶保留最后 3 条或最后 4 条，用 `RemoveMessage(id=REMOVE_ALL_MESSAGES)` 清空后重新写入保留消息 [2]。\n- 文档同时警告：删除后须保证结果历史对所用 LLM 提供方有效，例如部分提供方要求历史以 `user` 消息开头，多数提供方要求带工具调用的 `assistant` 消息后跟对应 `tool` 结果消息 [2]。\n\n### 保留有效工具消息结构的要求\n\n- 代理循环中，模型调用返回响应或请求执行工具，工具执行返回工具结果 [3]。\n- 工具通过 `Command` 更新状态时，应包含 `ToolMessage`，使模型能看到工具调用结果；当 `Command` 指向当前图时，`ToolMessage` 的 `tool_call_id` 须匹配当前工具调用 [1]。\n- 文档明确：消息历史中每个工具调用都必须有对应的 `ToolMessage`；`ToolNode` 会强制检查，缺少匹配的 `ToolMessage` 会抛出 `ValueError` [1]。工具普通返回值会转换为 `ToolMessage` [1]。\n- 例外：`Command` 写入父图（`graph=Command.PARENT`）时，该 `ToolMessage` 要求被解除，因为执行离开了当前图 [1]。\n\n### 两项要求如何协调：文档明确与未明确之处\n\n| 问题 | 文档是否明确 | 依据 |\n|---|---|---|\n| 删除历史时须成对保留 tool-call/tool-result | 未明确 | 裁剪示例只按数量与奇偶保留最近消息 [2] |\n| 禁止单独删除某一半 | 未明确 | 同上 [2] |\n| 裁剪边界如何避开工具调用对 | 未明确 | 示例未按消息角色或工具调用关系设边界 [2] |\n| 删除后历史须对提供方有效 | 明确为一般性警告 | 要求工具调用后跟对应结果 [2] |\n| 工具更新状态时须带匹配 `ToolMessage` | 明确 | `ToolNode` 强制检查 [1] |\n\n**取舍与适用条件：** 文档的裁剪示例以“控制上下文长度、保留首条与最近消息”为目标 [2]；工具消息要求以“模型能看到工具结果、历史结构合法”为目标 [1][2]。两者在示例层面可能冲突：若裁剪边界落在工具调用与其结果之间，按示例的纯数量规则可能留下不完整结构；但文档没有说明示例如何处理这种情况，也没有给出“先检查配对再裁剪”的步骤。因此不能把“应成对保留”写成文档已有规则，只能作为基于两项要求的推断，并标明需另行验证。\n\n**缺口说明：** 本次可见材料缺少裁剪与工具消息配对的联合规则、裁剪边界的角色约束、以及冲突时的处理顺序。若要确认实际行为，需核查裁剪实现是否在删除前检查 `tool_call_id` 配对，或在裁剪后由 `ToolNode` 报错；这属于验证建议，不是文档已述事实。",
+        "issues": [
+          "将裁剪示例中的 `RemoveMessage(id=REMOVE_ALL_MESSAGES)` 补全为原文的 `RemoveMessage(id=REMOVE_ALL_MESSAGES)` 形式，避免省略参数名造成与原文不符。",
+          "原稿对“文档是否明确”的表格与结论一致，但需强调“未明确”仅指本次可见材料，不能扩大为全部文档无答案，已在结论与缺口说明中保留该限定。"
+        ],
+        "unanswered_points": [
+          "裁剪时是否须成对保留 tool-call/tool-result、禁止单独删除某一半，文档未明确。",
+          "裁剪边界如何避开工具调用对（按角色或 tool_call_id 设边界），文档未明确。",
+          "删除历史与工具消息配对冲突时的处理顺序或联合规则，文档未给出。"
+        ]
+      },
+      "feedback": {
+        "results": [
+          {
+            "key": "answer_correctness",
+            "score": 0.55,
+            "comment": "The candidate correctly identifies both requirements from the frozen docs: stale history may be removed (context management) and the resulting history must remain valid per provider constraints (leading user message, assistant tool calls followed by tool results), plus the ToolNode enforcement of matching ToolMessage. However, the reference's core reconciliation point is that removal must preserve coherent units / valid ordering and not leave orphan calls/results. The candidate largely treats this as an undocumented gap, asserting the trimming example only uses count/parity and does not address pairing, and concludes the docs give no explicit rule to reconcile the two. This is partly defensible (the example indeed doesn't show pairing logic), but it understates the reference's requirement that deletion must not create orphan tool exchanges—the provider-validity warning plus the 'every tool call must have a corresponding ToolMessage' rule together do imply no orphan exchanges, which the candidate frames as only an inference needing verification. So it partially satisfies the reconciliation requirement but hedges more than the reference expects. Groundedness is high: the cited excerpts support the trimming example, the provider-validity warning, and the ToolNode/ToolMessage enforcement, and the candidate's claims map to those passages. The main weakness is the framing of the reconciliation as an unresolved gap rather than deriving the no-orphan rule from the combined requirements."
+          },
+          {
+            "key": "answer_groundedness",
+            "score": 0.85,
+            "comment": "The candidate correctly identifies both requirements from the frozen docs: stale history may be removed (context management) and the resulting history must remain valid per provider constraints (leading user message, assistant tool calls followed by tool results), plus the ToolNode enforcement of matching ToolMessage. However, the reference's core reconciliation point is that removal must preserve coherent units / valid ordering and not leave orphan calls/results. The candidate largely treats this as an undocumented gap, asserting the trimming example only uses count/parity and does not address pairing, and concludes the docs give no explicit rule to reconcile the two. This is partly defensible (the example indeed doesn't show pairing logic), but it understates the reference's requirement that deletion must not create orphan tool exchanges—the provider-validity warning plus the 'every tool call must have a corresponding ToolMessage' rule together do imply no orphan exchanges, which the candidate frames as only an inference needing verification. So it partially satisfies the reconciliation requirement but hedges more than the reference expects. Groundedness is high: the cited excerpts support the trimming example, the provider-validity warning, and the ToolNode/ToolMessage enforcement, and the candidate's claims map to those passages. The main weakness is the framing of the reconciliation as an unresolved gap rather than deriving the no-orphan rule from the combined requirements."
+          },
+          {
+            "key": "task_accepted",
+            "score": false,
+            "comment": "The candidate correctly identifies both requirements from the frozen docs: stale history may be removed (context management) and the resulting history must remain valid per provider constraints (leading user message, assistant tool calls followed by tool results), plus the ToolNode enforcement of matching ToolMessage. However, the reference's core reconciliation point is that removal must preserve coherent units / valid ordering and not leave orphan calls/results. The candidate largely treats this as an undocumented gap, asserting the trimming example only uses count/parity and does not address pairing, and concludes the docs give no explicit rule to reconcile the two. This is partly defensible (the example indeed doesn't show pairing logic), but it understates the reference's requirement that deletion must not create orphan tool exchanges—the provider-validity warning plus the 'every tool call must have a corresponding ToolMessage' rule together do imply no orphan exchanges, which the candidate frames as only an inference needing verification. So it partially satisfies the reconciliation requirement but hedges more than the reference expects. Groundedness is high: the cited excerpts support the trimming example, the provider-validity warning, and the ToolNode/ToolMessage enforcement, and the candidate's claims map to those passages. The main weakness is the framing of the reconciliation as an unresolved gap rather than deriving the no-orphan rule from the combined requirements."
+          }
+        ]
+      },
+      "calls": 1
+    }
+  ],
+  "candidate": [
+    {
+      "case": "single_hop-test-03",
+      "run_id": "01a1c0ba-8d5f-75b3-b45f-6489e276e677",
+      "review": {
+        "issues": [
+          "草稿将 Runtime 对象包含的五项信息表述为“Runtime context 包含五项”，混淆了 Runtime 对象与其中的 Context 字段；原文标题为 Runtime，五项是 Runtime 对象的信息。",
+          "草稿称“Context 为静态信息”，但原文对 Context 的定义是“static information like user id, db connections, or other dependencies for an agent invocation”，草稿漏掉了“for an agent invocation”这一限定，且把“静态信息”单独作为定义不完整。",
+          "草稿在“适用方式与边界”中称“文档未给出性能或安全方面的量化收益”，原文确实未给出量化收益，但草稿将其作为边界陈述可以保留；不过草稿未明确区分 Python 与 JS 的 context_schema/contextSchema 命名差异已保留，无需修改。",
+          "草稿首句“冻结文档规定 Runtime context 包含五项”应改为“Runtime 对象包含五项信息”，并说明 Context 是其中一项。",
+          "草稿表格中“Context | 静态信息，如用户 id、数据库连接或代理调用的其他依赖”应补充“for an agent invocation”的限定，并明确这是 Runtime 对象中的 Context 字段。",
+          "草稿“为何不用硬编码全局依赖”部分引用[1]正确，但需注意原文 Tip 中“Runtime context provides dependency injection”是 Python 版表述，JS 版表述为“thread data through your agent”，草稿已区分，无需修改。",
+          "草稿“适用方式与边界”中“创建代理时用 context_schema（JS 为 contextSchema）定义 context 结构”正确，但原文还说明“调用时传 context 参数”，草稿已保留，无需修改。",
+          "草稿未提及原文中“You can access the runtime information within tools and middleware”以及工具内可访问 context、读写长期记忆、写入 custom stream 等具体用途，但这些属于额外细节，非用户问题核心，可不补。"
+        ],
+        "unanswered_points": [],
+        "content": "**结论：** 冻结文档规定 LangGraph 的 `Runtime` 对象包含五项信息：Context、Store、Stream writer、Execution info、Server info [1]；建议用它替代硬编码全局依赖，是因为 Runtime context 为工具和中间件提供依赖注入，使工具更可测试、可复用、更灵活，并让数据贯穿代理而不落入全局状态 [1]。\n\n**包含内容**\n\n| 组成 | 定义 |\n|---|---|\n| Context | 静态信息，如用户 id、数据库连接或代理调用的其他依赖 [1] |\n| Store | 用于长期记忆的 BaseStore 实例 [1] |\n| Stream writer | 通过 `\"custom\"` 流模式流式传输信息的对象 [1] |\n| Execution info | 当前执行的身份与重试信息：线程 ID、运行 ID、尝试次数 [1] |\n| Server info | 在 LangGraph Server 上运行时的服务器元数据：assistant ID、graph ID、已认证用户 [1] |\n\n**为何不用硬编码全局依赖**\n\n- 文档称 Runtime context 为工具和中间件提供**依赖注入**：可在调用代理时注入数据库连接、用户 ID 或配置，而非硬编码值或全局状态，从而更可测试、可复用、更灵活 [1]。\n- JS 版表述为：把数据库连接、用户会话或配置附加到 context 并在工具和中间件内访问，保持无状态、可测试、可复用 [1]。\n\n**适用方式与边界**\n\n创建代理时用 `context_schema`（JS 为 `contextSchema`）定义 context 结构，调用时传 `context` 参数，并在工具和中间件内访问运行时信息 [1]。文档未给出性能或安全方面的量化收益，上述理由仅为文档陈述的设计动机 [1]。"
+      },
+      "feedback": {
+        "results": [
+          {
+            "key": "answer_correctness",
+            "score": 1.0,
+            "comment": "The candidate answer fully satisfies the question and reference requirements. It correctly lists the five Runtime components (Context, Store, Stream writer, Execution info, Server info) matching the reference quote, correctly defines Context as invocation-scoped static information (user id, db connections, dependencies), and correctly explains the dependency-injection rationale (avoiding hardcoded values/global state, making tools testable, reusable, flexible). It also properly distinguishes Store (long-term memory BaseStore) from Context, satisfying the 'do not confuse Store with Context' requirement. The JS variant note and the boundary statement (no quantified performance/security benefits) are accurate and appropriately hedged. All claims are directly entailed by the provided evidence_excerpts (evidence [1] contains the exact Runtime list, the Python dependency-injection tip, and the JS tip). Groundedness is high because every substantive claim is supported by the cited excerpt, with correct attribution to source [1]."
+          },
+          {
+            "key": "answer_groundedness",
+            "score": 1.0,
+            "comment": "The candidate answer fully satisfies the question and reference requirements. It correctly lists the five Runtime components (Context, Store, Stream writer, Execution info, Server info) matching the reference quote, correctly defines Context as invocation-scoped static information (user id, db connections, dependencies), and correctly explains the dependency-injection rationale (avoiding hardcoded values/global state, making tools testable, reusable, flexible). It also properly distinguishes Store (long-term memory BaseStore) from Context, satisfying the 'do not confuse Store with Context' requirement. The JS variant note and the boundary statement (no quantified performance/security benefits) are accurate and appropriately hedged. All claims are directly entailed by the provided evidence_excerpts (evidence [1] contains the exact Runtime list, the Python dependency-injection tip, and the JS tip). Groundedness is high because every substantive claim is supported by the cited excerpt, with correct attribution to source [1]."
+          },
+          {
+            "key": "task_accepted",
+            "score": true,
+            "comment": "The candidate answer fully satisfies the question and reference requirements. It correctly lists the five Runtime components (Context, Store, Stream writer, Execution info, Server info) matching the reference quote, correctly defines Context as invocation-scoped static information (user id, db connections, dependencies), and correctly explains the dependency-injection rationale (avoiding hardcoded values/global state, making tools testable, reusable, flexible). It also properly distinguishes Store (long-term memory BaseStore) from Context, satisfying the 'do not confuse Store with Context' requirement. The JS variant note and the boundary statement (no quantified performance/security benefits) are accurate and appropriately hedged. All claims are directly entailed by the provided evidence_excerpts (evidence [1] contains the exact Runtime list, the Python dependency-injection tip, and the JS tip). Groundedness is high because every substantive claim is supported by the cited excerpt, with correct attribution to source [1]."
+          }
+        ]
+      },
+      "calls": 1
+    },
+    {
+      "case": "single_hop-dev-02",
+      "run_id": "01a1c0ba-8e32-7c71-9f76-cc90d8ab7ff2",
+      "review": {
+        "issues": [
+          "草稿称“文档明确列出使用 interrupt() 需要‘A checkpointer to persist the graph state’”，但原文该句在“To use interrupt(), you need:”处被截断，未完整列出全部前置条件；草稿把截断处补成完整清单，属超出原文的推断。",
+          "草稿称“文档还说明：在节点内调用 interrupt() 时，运行时会通过抛出异常来挂起执行”，原文确有该句，但草稿将其归入“调用位置与运行环境”的前置要求，原文只是机制说明，非前置条件，层级归类不当。",
+          "草稿称“文档未说明 interrupt() 必须在特定执行模式（如仅限 invoke 或仅限流式）下使用”，原文未作此否定性陈述，属草稿自行推断的“未说明”结论，不应作为文档结论呈现。"
+        ],
+        "unanswered_points": [
+          "冻结文档在“To use interrupt(), you need:”处被截断，未完整列出使用 interrupt() 所需的全部前置条件清单；除 checkpointer 外是否还有其他必要条件无法从现有原文确认。"
+        ],
+        "content": "结论：按冻结文档，用 `interrupt()` 暂停工作流的前置条件是：编译图时配置 **checkpointer** 以持久化图状态，并在调用时于 config 的 `configurable` 中提供 **`thread_id`**；`interrupt()` 应在**图节点内**调用 [2][3]。\n\n**1. 持久化与 thread_id**\n\n- 文档在“To use `interrupt()`, you need:”下列出“A **checkpointer** to persist the graph state（产品中使用持久化 checkpointer）”，但该句在原文摘录中被截断，未能确认是否还有后续条件 [2]。\n- checkpointer 以 `thread_id` 为主键存储和检索检查点；没有它，checkpointer 无法保存状态，也无法在 interrupt 后恢复执行 [3]。\n- 带 checkpointer 调用图时，**必须**在 config 的 `configurable` 部分指定 `thread_id`，例如 `{\"configurable\": {\"thread_id\": \"1\"}}` [3]。\n- `thread_id` 是持久游标：复用同一值会恢复同一检查点，使用新值则开启空状态的新线程 [2]。\n\n**2. 调用位置与运行环境**\n\n- `interrupt()` 可在图的任意节点中调用；在节点内调用时，LangGraph 保存当前图状态并等待输入恢复 [2]。\n- 文档示例在节点函数中调用 `interrupt()`，并在编译时传入 checkpointer（如 `MemorySaver`），调用时传入 `thread_id` [2]。\n- 文档说明：在节点内调用 `interrupt()` 时，运行时会通过抛出异常来挂起执行，该异常被运行时捕获后保存状态并等待外部输入 [2]。这是机制说明，非额外前置条件。\n\n**3. 条件与限制**\n\n- `MemorySaver`/`InMemorySaver` 把检查点存在内存中，进程重启后全部丢失；生产环境应改用持久化 checkpointer [1]。\n- 文档提到 interrupt 响应 schema 需要 `langgraph>=1.2.12`（Python）或 `@langchain/langgraph` 1.4.16 及以上（JS）[2]；这是响应 schema 功能的条件，不应扩大为所有 `interrupt()` 用法的通用版本要求。\n\n**最小配置示意**（依据 [2][3] 的示例结构）：\n\n```python\nfrom langgraph.checkpoint.memory import InMemorySaver\nfrom langgraph.types import interrupt\n\ndef approval_node(state):\n    approved = interrupt(\"Do you approve this action?\")\n    return {\"approved\": approved}\n\ngraph = builder.compile(checkpointer=InMemorySaver())\ngraph.invoke(input, {\"configurable\": {\"thread_id\": \"1\"}})\n```\n\n恢复时用 `Command(resume=...)` 重新调用同一 `thread_id` 的图 [2]。"
+      },
+      "feedback": {
+        "results": [
+          {
+            "key": "answer_correctness",
+            "score": 0.75,
+            "comment": "The candidate correctly identifies the checkpointer and thread_id prerequisites and the in-node call location, and it distinguishes production durability (MemorySaver/InMemorySaver vs persistent checkpointer) [1]. However, it omits the third explicit prerequisite from the reference: the interrupt() payload must be JSON-serializable. The candidate mentions JSON-serializable only indirectly (it does not state it as a prerequisite), and its 'minimum configuration' example passes a string payload without noting the serializability requirement. It also hedges on the truncated 'To use interrupt(), you need:' list [2], which is reasonable given the excerpt cut off, but the reference requirement 'Name all three prerequisites' is not fully satisfied. Groundedness is high: checkpointer, thread_id, in-node call, exception mechanism, MemorySaver durability, and version notes are all supported by the cited excerpts [1][2][3]. The main factual gap is the missing JSON-serializable payload prerequisite, which lowers the correctness score."
+          },
+          {
+            "key": "answer_groundedness",
+            "score": 0.9,
+            "comment": "The candidate correctly identifies the checkpointer and thread_id prerequisites and the in-node call location, and it distinguishes production durability (MemorySaver/InMemorySaver vs persistent checkpointer) [1]. However, it omits the third explicit prerequisite from the reference: the interrupt() payload must be JSON-serializable. The candidate mentions JSON-serializable only indirectly (it does not state it as a prerequisite), and its 'minimum configuration' example passes a string payload without noting the serializability requirement. It also hedges on the truncated 'To use interrupt(), you need:' list [2], which is reasonable given the excerpt cut off, but the reference requirement 'Name all three prerequisites' is not fully satisfied. Groundedness is high: checkpointer, thread_id, in-node call, exception mechanism, MemorySaver durability, and version notes are all supported by the cited excerpts [1][2][3]. The main factual gap is the missing JSON-serializable payload prerequisite, which lowers the correctness score."
+          },
+          {
+            "key": "task_accepted",
+            "score": false,
+            "comment": "The candidate correctly identifies the checkpointer and thread_id prerequisites and the in-node call location, and it distinguishes production durability (MemorySaver/InMemorySaver vs persistent checkpointer) [1]. However, it omits the third explicit prerequisite from the reference: the interrupt() payload must be JSON-serializable. The candidate mentions JSON-serializable only indirectly (it does not state it as a prerequisite), and its 'minimum configuration' example passes a string payload without noting the serializability requirement. It also hedges on the truncated 'To use interrupt(), you need:' list [2], which is reasonable given the excerpt cut off, but the reference requirement 'Name all three prerequisites' is not fully satisfied. Groundedness is high: checkpointer, thread_id, in-node call, exception mechanism, MemorySaver durability, and version notes are all supported by the cited excerpts [1][2][3]. The main factual gap is the missing JSON-serializable payload prerequisite, which lowers the correctness score."
+          }
+        ]
+      },
+      "calls": 1
+    },
+    {
+      "case": "conflicting_evidence-test-03",
+      "run_id": "01a1c0ba-c5ea-7c20-b47e-9b17e06b4678",
+      "review": {
+        "issues": [
+          "草稿称“文档没有给出统一规则”，但原文[2]的删除警告明确要求：删除后历史须对提供方有效，且多数提供方要求带工具调用的 assistant 消息后跟对应 tool 结果；这构成删除操作必须保持的有效性条件，可据此作有界推导，不能仅因缺少专用算法就判定无法协调。",
+          "草稿把“成对保留/禁止单独删除某一半”列为未明确，但[2]的警告已明确要求工具调用后跟对应结果，[1]又要求每个工具调用都有对应 ToolMessage；删除时若拆散配对即违反该有效性条件，应据此说明裁剪边界须避开配对，而非仅列为缺口。",
+          "草稿的表格与“缺口说明”把可推导的兼容条件写成文档未明确，需改为：文档未给出具体裁剪算法，但给出删除后必须保持有效性的约束，并据此说明如何兼容。",
+          "草稿对[1]的引用基本正确，但需保留例外：Command 写入父图时 ToolMessage 要求解除；同时保留 ToolNode 对当前图 Command 缺少匹配 ToolMessage 抛 ValueError 的强制检查。",
+          "草稿应保留[2]裁剪示例的具体触发与操作：before_model 中消息数≤3 不改动，超过 3 条保留首条并按奇偶保留最后 3 或 4 条，用 RemoveMessage(id=REMOVE_ALL_MESSAGES) 清空后重写；同时指出该示例未按角色或配对设边界，属于示例局限而非文档否定配对要求。",
+          "草稿的“验证建议”可保留，但应明确这是验证实现行为，不是原文结论；不能把缺少算法写成要求本身无法协调。"
+        ],
+        "unanswered_points": [
+          "冻结文档未给出裁剪时具体如何识别并成对保留 tool-call/tool-result 的算法或步骤（如按 tool_call_id 配对、裁剪边界选择规则）。",
+          "冻结文档未说明裁剪示例与工具消息配对要求冲突时的处理顺序或内置实现行为；需另行核查实现。"
+        ],
+        "content": "**结论：冻结文档没有给出把“删除过期历史”与“保留有效 tool-call/tool-result 结构”统一起来的具体裁剪算法，但给出了删除后历史必须保持有效的约束。** 因此可以作有界推导：删除或裁剪消息时，不能留下只有 tool-call 没有对应 tool 结果、或只有 tool 结果没有对应 tool-call 的不完整结构；具体如何选择裁剪边界、如何按 `tool_call_id` 配对，文档未给出步骤，需另行验证实现。\n\n### 删除过期历史的规则与触发条件\n\n- 可删除对象是图状态中的消息；文档说明可删除特定消息或清空整个消息历史 [2]。\n- 裁剪示例在 `before_model` 钩子中执行：消息数不超过 3 条时不改动；超过 3 条时保留首条消息，再按总条数奇偶保留最后 3 条或最后 4 条，用 `RemoveMessage(id=REMOVE_ALL_MESSAGES)` 清空后重新写入保留消息 [2]。\n- 文档同时警告：删除后须保证结果历史对所用 LLM 提供方有效，例如部分提供方要求历史以 `user` 消息开头，多数提供方要求带工具调用的 `assistant` 消息后跟对应 `tool` 结果消息 [2]。\n\n### 保留有效工具消息结构的要求\n\n- 代理循环中，模型调用返回响应或请求执行工具，工具执行返回工具结果 [3]。\n- 工具通过 `Command` 更新状态时，应包含 `ToolMessage`，使模型能看到工具调用结果；当 `Command` 指向当前图时，`ToolMessage` 的 `tool_call_id` 须匹配当前工具调用 [1]。\n- 文档明确：消息历史中每个工具调用都必须有对应的 `ToolMessage`；`ToolNode` 会强制检查，缺少匹配的 `ToolMessage` 会抛出 `ValueError` [1]。工具普通返回值会转换为 `ToolMessage` [1]。\n- 例外：`Command` 写入父图（`graph=Command.PARENT`）时，该 `ToolMessage` 要求被解除，因为执行离开了当前图 [1]。\n\n### 两项要求如何协调：文档明确与可推导之处\n\n| 问题 | 文档状态 | 依据 |\n|---|---|---|\n| 删除历史时须成对保留 tool-call/tool-result | 可由有效性约束推导，非专用算法 | 删除后历史须对提供方有效，工具调用后须跟对应结果 [2]；每个工具调用须有对应 `ToolMessage` [1] |\n| 禁止单独删除某一半 | 可由上述约束推导 | 单独删除会使工具调用缺少对应结果或结果缺少调用，违反 [1][2] |\n| 裁剪边界如何避开工具调用对 | 文档未给具体算法 | 示例只按数量与奇偶保留最近消息 [2] |\n| 删除后历史须对提供方有效 | 明确为一般性警告 | 要求工具调用后跟对应结果 [2] |\n| 工具更新状态时须带匹配 `ToolMessage` | 明确 | `ToolNode` 强制检查 [1] |\n\n**取舍与适用条件：** 文档的裁剪示例以“控制上下文长度、保留首条与最近消息”为目标 [2]；工具消息要求以“模型能看到工具结果、历史结构合法”为目标 [1][2]。两者在示例层面可能冲突：若裁剪边界落在工具调用与其结果之间，按示例的纯数量规则可能留下不完整结构；但文档没有说明示例如何处理这种情况，也没有给出“先检查配对再裁剪”的步骤。因此不能把“应成对保留”写成文档已有专用算法，但可以把它写成基于删除有效性约束与工具消息完整性要求的有界推导，并标明具体实现需另行验证。\n\n**缺口说明：** 本次可见材料缺少裁剪与工具消息配对的具体算法、裁剪边界的角色约束、以及冲突时的处理顺序。若要确认实际行为，需核查裁剪实现是否在删除前检查 `tool_call_id` 配对，或在裁剪后由 `ToolNode` 报错；这属于验证建议，不是文档已述事实。"
+      },
+      "feedback": {
+        "results": [
+          {
+            "key": "answer_correctness",
+            "score": 0.9,
+            "comment": "The candidate correctly reconciles the two requirements: it states that stale history may be removed (context reduction permitted), that the resulting history must remain valid per provider constraints (leading user message, assistant tool calls followed by tool results), and that orphan tool calls/results must not be left. It also correctly notes that the frozen docs do not provide a specific trimming algorithm that guarantees pairing, which is a bounded and accurate observation rather than an invented claim. All three reference requirements are satisfied. Groundedness is high: the claims about deletion validity warnings, the before_model trimming example, the ToolNode enforcement of matching ToolMessage, and the Command.PARENT exception are all directly supported by the provided evidence excerpts [1] and [2]. Minor deduction only because the candidate adds some interpretive framing (e.g., 'bounded derivation') that goes slightly beyond the literal text, but it is clearly labeled as inference rather than documented fact, so it does not constitute an unsupported claim."
+          },
+          {
+            "key": "answer_groundedness",
+            "score": 0.9,
+            "comment": "The candidate correctly reconciles the two requirements: it states that stale history may be removed (context reduction permitted), that the resulting history must remain valid per provider constraints (leading user message, assistant tool calls followed by tool results), and that orphan tool calls/results must not be left. It also correctly notes that the frozen docs do not provide a specific trimming algorithm that guarantees pairing, which is a bounded and accurate observation rather than an invented claim. All three reference requirements are satisfied. Groundedness is high: the claims about deletion validity warnings, the before_model trimming example, the ToolNode enforcement of matching ToolMessage, and the Command.PARENT exception are all directly supported by the provided evidence excerpts [1] and [2]. Minor deduction only because the candidate adds some interpretive framing (e.g., 'bounded derivation') that goes slightly beyond the literal text, but it is clearly labeled as inference rather than documented fact, so it does not constitute an unsupported claim."
+          },
+          {
+            "key": "task_accepted",
+            "score": true,
+            "comment": "The candidate correctly reconciles the two requirements: it states that stale history may be removed (context reduction permitted), that the resulting history must remain valid per provider constraints (leading user message, assistant tool calls followed by tool results), and that orphan tool calls/results must not be left. It also correctly notes that the frozen docs do not provide a specific trimming algorithm that guarantees pairing, which is a bounded and accurate observation rather than an invented claim. All three reference requirements are satisfied. Groundedness is high: the claims about deletion validity warnings, the before_model trimming example, the ToolNode enforcement of matching ToolMessage, and the Command.PARENT exception are all directly supported by the provided evidence excerpts [1] and [2]. Minor deduction only because the candidate adds some interpretive framing (e.g., 'bounded derivation') that goes slightly beyond the literal text, but it is clearly labeled as inference rather than documented fact, so it does not constitute an unsupported claim."
+          }
+        ]
+      },
+      "calls": 1
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "type": "ValidationError",
+  "reason": "4 validation errors for Grade\nB.claims.7.status\n  Input should be 'supported', 'unsupported', 'contradicted' or 'nonfactual' [type=literal_error, input_value='partial', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/literal_error\nB.claims.8.status\n  Input should be 'supported', 'unsupported', 'contradicted' or 'nonfactual' [type=literal_error, input_value='partial', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/literal_"
+}

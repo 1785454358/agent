@@ -1,0 +1,496 @@
+{
+  "research": {
+    "source_eligibility": {
+      "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf": "eligible",
+      "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1": "eligible",
+      "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e": "eligible",
+      "evidence-4c423e7ae373e98cd74c5bc47d533caf751d989cd8e8ffde3cbb737a91378439": "eligible",
+      "evidence-e96b591d44601bce04ed0458e2ab910306f53a0e0bcdb4e36a1cc547f21aff83": "eligible"
+    },
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "LangGraph checkpoint 机制的定义与作用是什么：它保存什么（图状态快照）、何时保存、由哪个组件（checkpointer）负责。"
+      },
+      {
+        "id": "r2",
+        "description": "checkpoint 机制中的关键概念与结构：thread_id/thread、checkpoint 与 checkpoint 元数据、状态通道（channels）如何被持久化。"
+      },
+      {
+        "id": "r3",
+        "description": "checkpoint 机制支持哪些典型用途：会话持久化、故障恢复/断点续跑、human-in-the-loop 中断与恢复、时间旅行/回放历史状态。"
+      },
+      {
+        "id": "r4",
+        "description": "checkpoint 机制的适用条件与限制：支持的 checkpointer 后端（内存、数据库等）、配置要求、已知限制或注意事项。"
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "covered",
+          "reason": "原文明确 checkpointer 是持久化层、在每个 super-step 保存图状态，checkpoint 是图状态快照，并说明保存时机为 super-step 边界及节点级写入。",
+          "finding_ids": [
+            "finding-1",
+            "finding-2"
+          ]
+        },
+        {
+          "requirement_id": "r2",
+          "status": "covered",
+          "reason": "原文说明 thread/thread_id、checkpoint_id、checkpoint tuple 含 config/metadata/pending writes，以及 config 含 thread_id、checkpoint_ns、checkpoint_id；channels 持久化的具体细节未直接展开。",
+          "finding_ids": [
+            "finding-3",
+            "finding-1"
+          ]
+        },
+        {
+          "requirement_id": "r3",
+          "status": "covered",
+          "reason": "原文列出会话连续性、human-in-the-loop、时间旅行、容错，并说明故障恢复不重跑成功节点。",
+          "finding_ids": [
+            "finding-4",
+            "finding-5"
+          ]
+        },
+        {
+          "requirement_id": "r4",
+          "status": "covered",
+          "reason": "原文列出内存/SQLite/Postgres/MongoDB 等多种后端、BaseCheckpointSaver 接口要求、thread_id 长度限制、checkpoint 清理建议、DeltaChannel 版本与 beta 限制及持久化模式。",
+          "finding_ids": [
+            "finding-6",
+            "finding-7",
+            "finding-8"
+          ]
+        }
+      ]
+    },
+    "decomposition_degraded": false,
+    "mode": "workflow",
+    "evidence_ids": [
+      "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+      "evidence-4c423e7ae373e98cd74c5bc47d533caf751d989cd8e8ffde3cbb737a91378439",
+      "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+      "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e",
+      "evidence-e96b591d44601bce04ed0458e2ab910306f53a0e0bcdb4e36a1cc547f21aff83"
+    ],
+    "findings": [
+      {
+        "id": "finding-1",
+        "claim": "Checkpointer 是 LangGraph 的持久化层，负责在每个 super-step 保存图状态，从而支持 human-in-the-loop、跨交互记忆和持久执行；checkpoint 是某一时刻图状态的快照，checkpoint tuple 则包含 checkpoint 及关联的 config、metadata 和 pending writes。",
+        "evidence_ids": [
+          "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+          "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+            "version": 1,
+            "content_hash": "sha256:51cdfb2973139993f729002143663ab9b6bbd0a190f157073f112fe805e566eb",
+            "start": 0,
+            "end": 459,
+            "quote": "To help you ship LangGraph apps to production faster, check out LangSmith. LangSmith is a unified developer platform for building, testing, and monitoring LLM applications.\n\n`uv add langgraph-checkpoint`\nThis library defines the base interface for LangGraph checkpointers. Checkpointers provide a persistence layer for LangGraph: they save graph state at every superstep, enabling human-in-the-loop, memory between interactions, durable execution, and more.\n\n"
+          },
+          {
+            "evidence_id": "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+            "version": 1,
+            "content_hash": "sha256:51cdfb2973139993f729002143663ab9b6bbd0a190f157073f112fe805e566eb",
+            "start": 459,
+            "end": 952,
+            "quote": "For full documentation, see the API reference. For conceptual guides on persistence and memory, see the LangGraph Docs.\n\nCheckpoint is a snapshot of the graph state at a given point in time. Checkpoint tuple refers to an object containing checkpoint and the associated config, metadata and pending writes.\n\nThreads enable the checkpointing of multiple different runs, making them essential for multi-tenant chat applications and other scenarios where maintaining separate states is necessary. "
+          },
+          {
+            "evidence_id": "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+            "version": 1,
+            "content_hash": "sha256:51cdfb2973139993f729002143663ab9b6bbd0a190f157073f112fe805e566eb",
+            "start": 952,
+            "end": 1418,
+            "quote": "A thread is a unique ID assigned to a series of checkpoints saved by a checkpointer. When using a checkpointer, you must specify a `thread_id` and optionally `checkpoint_id` when running the graph.\n\n- `thread_id` is simply the ID of a thread. This is always required.\n- `checkpoint_id` can optionally be passed. This identifier refers to a specific checkpoint within a thread. This can be used to kick off a run of a graph from some point halfway through a thread.\n\n"
+          },
+          {
+            "evidence_id": "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+            "version": 1,
+            "content_hash": "sha256:51cdfb2973139993f729002143663ab9b6bbd0a190f157073f112fe805e566eb",
+            "start": 1418,
+            "end": 1721,
+            "quote": "You must pass these when invoking the graph as part of the configurable part of the config, e.g.\n\n```\n{\"configurable\": {\"thread_id\": \"1\"}}  # valid config\n{\n    \"configurable\": {\n        \"thread_id\": \"1\",\n        \"checkpoint_id\": \"0c62ca34-ac19-445d-bbb0-5b4984975b2a\",\n    }\n}  # also valid config\n```\n"
+          },
+          {
+            "evidence_id": "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+            "version": 1,
+            "content_hash": "sha256:51cdfb2973139993f729002143663ab9b6bbd0a190f157073f112fe805e566eb",
+            "start": 1721,
+            "end": 2017,
+            "quote": "`langgraph-checkpoint` also defines protocol for serialization/deserialization (serde) and provides a default implementation (`langgraph.checkpoint.serde.jsonplus.JsonPlusSerializer`) that handles a wide variety of types, including LangChain and LangGraph primitives, datetimes, enums and more.\n\n"
+          },
+          {
+            "evidence_id": "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e",
+            "version": 1,
+            "content_hash": "sha256:df4bc3afa9d468c259fffea0d88e2c9ad1307063c3ce492d1b2f6f57e3126164",
+            "start": 0,
+            "end": 427,
+            "quote": "Checkpointers enable persistence in LangGraph, allowing agents to save and resume state across interactions. To implement your own checkpointer for a custom storage backend, see Build a custom checkpointer.\n\nBackend | Package | Source\n\nIn-memory | langgraph-checkpoint | langchain-ai/langgraph\n\nSQLite | langgraph-checkpoint-sqlite | langchain-ai/langgraph\n\nPostgreSQL | langgraph-checkpoint-postgres | langchain-ai/langgraph\n\n"
+          },
+          {
+            "evidence_id": "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e",
+            "version": 1,
+            "content_hash": "sha256:df4bc3afa9d468c259fffea0d88e2c9ad1307063c3ce492d1b2f6f57e3126164",
+            "start": 427,
+            "end": 900,
+            "quote": "AWS (DynamoDB, Bedrock, Valkey) | langgraph-checkpoint-aws | langchain-ai/langchain-aws\n\nMongoDB | langgraph-checkpoint-mongodb | langchain-ai/langchain-mongodb\n\nAzure Cosmos DB NoSQL | langchain-azure-cosmosdb | langchain-ai/langchain-azure\n\nRedis | langgraph-checkpoint-redis | redis-developer/langgraph-redis\n\nCockroach DB | langchain-cockroachdb | cockroachdb/langchain-cockroachdb\n\nAerospike | langgraph-checkpoint-aerospike | aerospike-community/aerospike-langgraph\n\n"
+          },
+          {
+            "evidence_id": "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e",
+            "version": 1,
+            "content_hash": "sha256:df4bc3afa9d468c259fffea0d88e2c9ad1307063c3ce492d1b2f6f57e3126164",
+            "start": 900,
+            "end": 1367,
+            "quote": "ScyllaDB | langgraph-checkpoint-scylladb | scylladb/langchain-scylladb\n\nTigris | langgraph-checkpoint-tigris | tigrisdata/tigris-langgraph\n\nTypeDB | langgraph-checkpoint-typedb | typedb/langgraph-checkpoint-typedb\n\nInspeximus | langgraph-checkpoint-inspeximus | DanceNitra/inspeximus\n\nSupabase | langgraph-checkpoint-supabase | Tghez/langgraph-checkpoint-supabase\n\nAmazon DynamoDB (agentstate) | langgraph-dynamodb-checkpoint | skamalj/langgraph_dynamodb_checkpoint\n\n"
+          },
+          {
+            "evidence_id": "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e",
+            "version": 1,
+            "content_hash": "sha256:df4bc3afa9d468c259fffea0d88e2c9ad1307063c3ce492d1b2f6f57e3126164",
+            "start": 1367,
+            "end": 1806,
+            "quote": "Azure Cosmos DB NoSQL (agentstate) | langgraph-checkpoint-cosmosdb | skamalj/langgraph_checkpoint_cosmosdb\n\nGoogle Firestore (agentstate) | langgraph-checkpoint-firestore | skamalj/langgraph_checkpoint_firestore\n\nSingleStore | langgraph-singlestore | singlestore-labs/langchain-singlestore\n\nConnect these docs to your agent of choice via MCP for real-time answers.\n\nEdit this page on GitHub or file an issue.\n\nWas this page helpful?\n\nYesNo"
+          }
+        ]
+      },
+      {
+        "id": "finding-2",
+        "claim": "LangGraph 在每个 super-step 边界创建 checkpoint；super-step 是图中所有该步节点（可能并行）执行的一个“tick”，因此顺序图 START->A->B->END 会在输入、节点 A、节点 B 之后各产生一个 checkpoint。此外，节点（task）级也会持久化写入：每个节点完成时其输出作为 task 条目写入 checkpoint_writes 表并关联到进行中的 checkpoint。",
+        "evidence_ids": [
+          "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+          "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+            "version": 1,
+            "content_hash": "sha256:b18410b720f7ef0f805c0f314e4f874a38d2935a5a3d344f041ffaa5541459bd",
+            "start": 4749,
+            "end": 5240,
+            "quote": "LangGraph creates a checkpoint at each super-step boundary. A super-step is a single “tick” of the graph where all nodes scheduled for that step execute (potentially in parallel). For a sequential graph like START -> A -> B -> END, there are separate super-steps for the input, node A, and node B — producing a checkpoint after each one. Understanding super-step boundaries is important for time travel, because you can only resume execution from a checkpoint (i.e., a super-step boundary). "
+          },
+          {
+            "evidence_id": "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+            "version": 1,
+            "content_hash": "sha256:b18410b720f7ef0f805c0f314e4f874a38d2935a5a3d344f041ffaa5541459bd",
+            "start": 5240,
+            "end": 5503,
+            "quote": "In addition to super-step checkpoints, LangGraph also persists writes at the node (task) level. As each node within a super-step finishes, its outputs are written to the checkpointer’s checkpoint_writes table as task entries linked to the in-progress checkpoint. "
+          },
+          {
+            "evidence_id": "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+            "version": 1,
+            "content_hash": "sha256:51cdfb2973139993f729002143663ab9b6bbd0a190f157073f112fe805e566eb",
+            "start": 2356,
+            "end": 2767,
+            "quote": "\nWhen a graph node fails mid-execution at a given superstep, LangGraph stores pending checkpoint writes from any other nodes that completed successfully at that superstep, so that whenever we resume graph execution from that superstep we don't re-run the successful nodes.\n\nEach checkpointer should conform to `langgraph.checkpoint.base.BaseCheckpointSaver` interface and must implement the following methods:\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-3",
+        "claim": "thread 是 checkpointer 保存的一系列 checkpoint 的唯一 ID；使用 checkpointer 时必须指定 thread_id，可选指定 checkpoint_id，后者指向线程内某个具体 checkpoint，可用于从线程中途某点启动运行。这些参数通过 config 的 configurable 部分传入，config 包含 thread_id、checkpoint_ns 和 checkpoint_id。",
+        "evidence_ids": [
+          "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+          "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+            "version": 1,
+            "content_hash": "sha256:51cdfb2973139993f729002143663ab9b6bbd0a190f157073f112fe805e566eb",
+            "start": 0,
+            "end": 459,
+            "quote": "To help you ship LangGraph apps to production faster, check out LangSmith. LangSmith is a unified developer platform for building, testing, and monitoring LLM applications.\n\n`uv add langgraph-checkpoint`\nThis library defines the base interface for LangGraph checkpointers. Checkpointers provide a persistence layer for LangGraph: they save graph state at every superstep, enabling human-in-the-loop, memory between interactions, durable execution, and more.\n\n"
+          },
+          {
+            "evidence_id": "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+            "version": 1,
+            "content_hash": "sha256:51cdfb2973139993f729002143663ab9b6bbd0a190f157073f112fe805e566eb",
+            "start": 459,
+            "end": 952,
+            "quote": "For full documentation, see the API reference. For conceptual guides on persistence and memory, see the LangGraph Docs.\n\nCheckpoint is a snapshot of the graph state at a given point in time. Checkpoint tuple refers to an object containing checkpoint and the associated config, metadata and pending writes.\n\nThreads enable the checkpointing of multiple different runs, making them essential for multi-tenant chat applications and other scenarios where maintaining separate states is necessary. "
+          },
+          {
+            "evidence_id": "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+            "version": 1,
+            "content_hash": "sha256:51cdfb2973139993f729002143663ab9b6bbd0a190f157073f112fe805e566eb",
+            "start": 952,
+            "end": 1418,
+            "quote": "A thread is a unique ID assigned to a series of checkpoints saved by a checkpointer. When using a checkpointer, you must specify a `thread_id` and optionally `checkpoint_id` when running the graph.\n\n- `thread_id` is simply the ID of a thread. This is always required.\n- `checkpoint_id` can optionally be passed. This identifier refers to a specific checkpoint within a thread. This can be used to kick off a run of a graph from some point halfway through a thread.\n\n"
+          },
+          {
+            "evidence_id": "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+            "version": 1,
+            "content_hash": "sha256:51cdfb2973139993f729002143663ab9b6bbd0a190f157073f112fe805e566eb",
+            "start": 1418,
+            "end": 1721,
+            "quote": "You must pass these when invoking the graph as part of the configurable part of the config, e.g.\n\n```\n{\"configurable\": {\"thread_id\": \"1\"}}  # valid config\n{\n    \"configurable\": {\n        \"thread_id\": \"1\",\n        \"checkpoint_id\": \"0c62ca34-ac19-445d-bbb0-5b4984975b2a\",\n    }\n}  # also valid config\n```\n"
+          },
+          {
+            "evidence_id": "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+            "version": 1,
+            "content_hash": "sha256:51cdfb2973139993f729002143663ab9b6bbd0a190f157073f112fe805e566eb",
+            "start": 1721,
+            "end": 2017,
+            "quote": "`langgraph-checkpoint` also defines protocol for serialization/deserialization (serde) and provides a default implementation (`langgraph.checkpoint.serde.jsonplus.JsonPlusSerializer`) that handles a wide variety of types, including LangChain and LangGraph primitives, datetimes, enums and more.\n\n"
+          },
+          {
+            "evidence_id": "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+            "version": 1,
+            "content_hash": "sha256:b18410b720f7ef0f805c0f314e4f874a38d2935a5a3d344f041ffaa5541459bd",
+            "start": 10028,
+            "end": 10099,
+            "quote": "config | dict | Contains thread_id, checkpoint_ns, and checkpoint_id.\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-4",
+        "claim": "checkpoint 机制支持会话连续性、human-in-the-loop 工作流、时间旅行和容错等短期的、线程范围的记忆用途；时间旅行可检查某个 checkpoint 并从该保存状态继续执行以探索替代路径。",
+        "evidence_ids": [
+          "evidence-e96b591d44601bce04ed0458e2ab910306f53a0e0bcdb4e36a1cc547f21aff83",
+          "evidence-4c423e7ae373e98cd74c5bc47d533caf751d989cd8e8ffde3cbb737a91378439"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-e96b591d44601bce04ed0458e2ab910306f53a0e0bcdb4e36a1cc547f21aff83",
+            "version": 1,
+            "content_hash": "sha256:667991c8e93eb94e0cd726d5556f98ea2e2fe75d071b1a1e252a759ab5b137c4",
+            "start": 0,
+            "end": 371,
+            "quote": "Persistence lets LangGraph applications keep useful information beyond a single graph run. It matters when an agent needs to continue a conversation, resume after an interruption, recover from a failure, or remember information across interactions. LangGraph provides two complementary persistence systems:\n\n- Checkpointers persist a thread’s graph state as checkpoints. "
+          },
+          {
+            "evidence_id": "evidence-e96b591d44601bce04ed0458e2ab910306f53a0e0bcdb4e36a1cc547f21aff83",
+            "version": 1,
+            "content_hash": "sha256:667991c8e93eb94e0cd726d5556f98ea2e2fe75d071b1a1e252a759ab5b137c4",
+            "start": 371,
+            "end": 517,
+            "quote": "Use them for short-term, thread-scoped memory, including conversation continuity, human-in-the-loop workflows, time travel, and fault tolerance.\n\n"
+          },
+          {
+            "evidence_id": "evidence-4c423e7ae373e98cd74c5bc47d533caf751d989cd8e8ffde3cbb737a91378439",
+            "version": 1,
+            "content_hash": "sha256:a76e4db1d5ec069b0e6967d312d268ed4350820be4c0db99a544c6b162270768",
+            "start": 347,
+            "end": 618,
+            "quote": "LangGraph persists agent state at super-step boundaries. Nodes that run in parallel in the same super-step share a checkpoint boundary. Each persisted state is a ThreadState object that captures:\n\n- checkpoint: The checkpoint identifier, including its ID and namespace.\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-5",
+        "claim": "故障恢复方面，当图节点在某个 super-step 执行中途失败时，LangGraph 会保存该 super-step 中其他已成功完成节点的 pending checkpoint writes，从该 super-step 恢复执行时不会重跑已成功的节点。",
+        "evidence_ids": [
+          "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+          "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+            "version": 1,
+            "content_hash": "sha256:b18410b720f7ef0f805c0f314e4f874a38d2935a5a3d344f041ffaa5541459bd",
+            "start": 1871,
+            "end": 2155,
+            "quote": "- Pending writes: When a graph node fails mid-execution at a given super-step, LangGraph stores pending checkpoint writes from any other nodes that completed successfully at that super-step. When you resume graph execution from that super-step you don’t re-run the successful nodes.\n\n"
+          },
+          {
+            "evidence_id": "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+            "version": 1,
+            "content_hash": "sha256:51cdfb2973139993f729002143663ab9b6bbd0a190f157073f112fe805e566eb",
+            "start": 2356,
+            "end": 2767,
+            "quote": "\nWhen a graph node fails mid-execution at a given superstep, LangGraph stores pending checkpoint writes from any other nodes that completed successfully at that superstep, so that whenever we resume graph execution from that superstep we don't re-run the successful nodes.\n\nEach checkpointer should conform to `langgraph.checkpoint.base.BaseCheckpointSaver` interface and must implement the following methods:\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-6",
+        "claim": "checkpointer 需符合 BaseCheckpointSaver 接口，LangGraph 提供多种可独立安装的实现：内存版 InMemorySaver（langgraph-checkpoint 自带，适合实验）、SQLite（SqliteSaver/AsyncSqliteSaver，适合实验和本地工作流）、Postgres（PostgresSaver/AsyncPostgresSaver，适合生产）、MongoDB 等；集成页面还列出 DynamoDB、Redis、Cosmos DB 等多种后端。",
+        "evidence_ids": [
+          "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+          "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+            "version": 1,
+            "content_hash": "sha256:b18410b720f7ef0f805c0f314e4f874a38d2935a5a3d344f041ffaa5541459bd",
+            "start": 18741,
+            "end": 18966,
+            "quote": "Under the hood, checkpointing is powered by checkpointer objects that conform to BaseCheckpointSaver interface. LangGraph provides several checkpointer implementations, all implemented via standalone, installable libraries.\n\n"
+          },
+          {
+            "evidence_id": "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+            "version": 1,
+            "content_hash": "sha256:b18410b720f7ef0f805c0f314e4f874a38d2935a5a3d344f041ffaa5541459bd",
+            "start": 19022,
+            "end": 19496,
+            "quote": "- langgraph-checkpoint: The base interface for checkpointer savers (BaseCheckpointSaver) and serialization/deserialization interface (SerializerProtocol). Includes in-memory checkpointer implementation (InMemorySaver) for experimentation. LangGraph comes with langgraph-checkpoint included.\n\n- langgraph-checkpoint-sqlite: An implementation of LangGraph checkpointer that uses SQLite database (SqliteSaver / AsyncSqliteSaver). Ideal for experimentation and local workflows. "
+          },
+          {
+            "evidence_id": "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+            "version": 1,
+            "content_hash": "sha256:b18410b720f7ef0f805c0f314e4f874a38d2935a5a3d344f041ffaa5541459bd",
+            "start": 19496,
+            "end": 19917,
+            "quote": "Needs to be installed separately.\n\n- langgraph-checkpoint-postgres: An advanced checkpointer that uses Postgres database (PostgresSaver / AsyncPostgresSaver), used in LangSmith. Ideal for using in production. Needs to be installed separately.\n\n- langgraph-checkpoint-mongodb: An advanced checkpointer that uses MongoDB (MongoDBSaver / AsyncMongoDBSaver). Ideal for using in production. Needs to be installed separately.\n\n"
+          },
+          {
+            "evidence_id": "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+            "version": 1,
+            "content_hash": "sha256:b18410b720f7ef0f805c0f314e4f874a38d2935a5a3d344f041ffaa5541459bd",
+            "start": 19917,
+            "end": 20220,
+            "quote": "- langchain-azure-cosmosdb: An implementation of LangGraph checkpointer that uses Azure Cosmos DB for NoSQL (CosmosDBSaverSync / CosmosDBSaver). Ideal for using in production with Azure. Supports both sync and async operations, with Microsoft Entra ID authentication. Needs to be installed separately.\n\n"
+          },
+          {
+            "evidence_id": "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e",
+            "version": 1,
+            "content_hash": "sha256:df4bc3afa9d468c259fffea0d88e2c9ad1307063c3ce492d1b2f6f57e3126164",
+            "start": 0,
+            "end": 427,
+            "quote": "Checkpointers enable persistence in LangGraph, allowing agents to save and resume state across interactions. To implement your own checkpointer for a custom storage backend, see Build a custom checkpointer.\n\nBackend | Package | Source\n\nIn-memory | langgraph-checkpoint | langchain-ai/langgraph\n\nSQLite | langgraph-checkpoint-sqlite | langchain-ai/langgraph\n\nPostgreSQL | langgraph-checkpoint-postgres | langchain-ai/langgraph\n\n"
+          },
+          {
+            "evidence_id": "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e",
+            "version": 1,
+            "content_hash": "sha256:df4bc3afa9d468c259fffea0d88e2c9ad1307063c3ce492d1b2f6f57e3126164",
+            "start": 427,
+            "end": 900,
+            "quote": "AWS (DynamoDB, Bedrock, Valkey) | langgraph-checkpoint-aws | langchain-ai/langchain-aws\n\nMongoDB | langgraph-checkpoint-mongodb | langchain-ai/langchain-mongodb\n\nAzure Cosmos DB NoSQL | langchain-azure-cosmosdb | langchain-ai/langchain-azure\n\nRedis | langgraph-checkpoint-redis | redis-developer/langgraph-redis\n\nCockroach DB | langchain-cockroachdb | cockroachdb/langchain-cockroachdb\n\nAerospike | langgraph-checkpoint-aerospike | aerospike-community/aerospike-langgraph\n\n"
+          },
+          {
+            "evidence_id": "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e",
+            "version": 1,
+            "content_hash": "sha256:df4bc3afa9d468c259fffea0d88e2c9ad1307063c3ce492d1b2f6f57e3126164",
+            "start": 900,
+            "end": 1367,
+            "quote": "ScyllaDB | langgraph-checkpoint-scylladb | scylladb/langchain-scylladb\n\nTigris | langgraph-checkpoint-tigris | tigrisdata/tigris-langgraph\n\nTypeDB | langgraph-checkpoint-typedb | typedb/langgraph-checkpoint-typedb\n\nInspeximus | langgraph-checkpoint-inspeximus | DanceNitra/inspeximus\n\nSupabase | langgraph-checkpoint-supabase | Tghez/langgraph-checkpoint-supabase\n\nAmazon DynamoDB (agentstate) | langgraph-dynamodb-checkpoint | skamalj/langgraph_dynamodb_checkpoint\n\n"
+          },
+          {
+            "evidence_id": "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e",
+            "version": 1,
+            "content_hash": "sha256:df4bc3afa9d468c259fffea0d88e2c9ad1307063c3ce492d1b2f6f57e3126164",
+            "start": 1367,
+            "end": 1806,
+            "quote": "Azure Cosmos DB NoSQL (agentstate) | langgraph-checkpoint-cosmosdb | skamalj/langgraph_checkpoint_cosmosdb\n\nGoogle Firestore (agentstate) | langgraph-checkpoint-firestore | skamalj/langgraph_checkpoint_firestore\n\nSingleStore | langgraph-singlestore | singlestore-labs/langchain-singlestore\n\nConnect these docs to your agent of choice via MCP for real-time answers.\n\nEdit this page on GitHub or file an issue.\n\nWas this page helpful?\n\nYesNo"
+          }
+        ]
+      },
+      {
+        "id": "finding-7",
+        "claim": "使用限制与注意事项包括：PostgresSaver/AsyncPostgresSaver 的 thread_id 存储在长度有限的列中，超过列大小会报数据库错误，应保持在 255 字符以下；可考虑用 cron 任务删除超过 N 天的 checkpoint；DeltaChannel 需要 langgraph>=1.2 且目前处于 beta，API 可能变化。",
+        "evidence_ids": [
+          "evidence-e96b591d44601bce04ed0458e2ab910306f53a0e0bcdb4e36a1cc547f21aff83",
+          "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf"
+        ],
+        "confidence": 0.9,
+        "supports": [
+          {
+            "evidence_id": "evidence-e96b591d44601bce04ed0458e2ab910306f53a0e0bcdb4e36a1cc547f21aff83",
+            "version": 1,
+            "content_hash": "sha256:667991c8e93eb94e0cd726d5556f98ea2e2fe75d071b1a1e252a759ab5b137c4",
+            "start": 2050,
+            "end": 2485,
+            "quote": "### ​PostgresSaver: thread_id too long\n\nWhen using PostgresSaver (or AsyncPostgresSaver), the thread_id is stored in a column with limited length. If your thread_id exceeds the column size, you will see a database error. Fix: Keep thread_id values under 255 characters. Use a UUID or hash if you need deterministic IDs:\n\n```\nfrom langchain_core.utils.uuid import uuid7\nconfig = {\"configurable\": {\"thread_id\": str(uuid7())[:255]}}\n```\n\n"
+          },
+          {
+            "evidence_id": "evidence-e96b591d44601bce04ed0458e2ab910306f53a0e0bcdb4e36a1cc547f21aff83",
+            "version": 1,
+            "content_hash": "sha256:667991c8e93eb94e0cd726d5556f98ea2e2fe75d071b1a1e252a759ab5b137c4",
+            "start": 3003,
+            "end": 3256,
+            "quote": "```\nfrom langgraph.checkpoint.postgres import PostgresSaver\n\ncheckpointer = PostgresSaver.from_conn_string(\"postgresql://...\")\ncheckpointer.setup()  # Creates tables with indexes\n# Consider adding a cron job to delete checkpoints older than N days\n```\n\n"
+          },
+          {
+            "evidence_id": "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+            "version": 1,
+            "content_hash": "sha256:b18410b720f7ef0f805c0f314e4f874a38d2935a5a3d344f041ffaa5541459bd",
+            "start": 18610,
+            "end": 18713,
+            "quote": "DeltaChannel requires langgraph>=1.2 and is currently in beta. The API may change in future releases.\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-8",
+        "claim": "LangGraph 支持三种持久化模式以平衡性能与数据一致性：sync 模式在下一步开始前同步持久化变更，确保每个 checkpoint 写入后才继续执行，耐久性高但有性能开销；async 模式在第一个用户节点执行前开始写输入 checkpoint 但不等待完成，第一个用户节点可能在 checkpoint 提交前运行。",
+        "evidence_ids": [
+          "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf"
+        ],
+        "confidence": 0.9,
+        "supports": [
+          {
+            "evidence_id": "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+            "version": 1,
+            "content_hash": "sha256:b18410b720f7ef0f805c0f314e4f874a38d2935a5a3d344f041ffaa5541459bd",
+            "start": 15886,
+            "end": 16061,
+            "quote": "LangGraph supports three durability modes that let you balance performance and data consistency. You can specify the durability mode when calling any graph execution method:\n\n"
+          },
+          {
+            "evidence_id": "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+            "version": 1,
+            "content_hash": "sha256:b18410b720f7ef0f805c0f314e4f874a38d2935a5a3d344f041ffaa5541459bd",
+            "start": 16763,
+            "end": 16993,
+            "quote": "- \"sync\": LangGraph persists changes synchronously before the next step starts. This ensures that LangGraph writes every checkpoint before continuing execution, providing high durability at the cost of some performance overhead.\n\n"
+          }
+        ]
+      }
+    ],
+    "unresolved_gaps": [
+      "diagnostic:read_anchor_omitted:evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf"
+    ],
+    "executed_steps": 24,
+    "termination_reason": "completed"
+  },
+  "response": {
+    "response_mode": "answer",
+    "content": "LangGraph 的 checkpoint 机制是：由 checkpointer（持久化层）在每个 super-step 边界保存图状态快照，并按 thread 组织，从而支持会话记忆、human-in-the-loop、时间旅行和容错执行 [1][2]。\n\n**保存什么、何时保存**\n\n- checkpoint 是某一时刻图状态的快照；checkpoint tuple 还包含关联的 config、metadata 和 pending writes [2]。\n- 保存时机是 super-step 边界。super-step 是图中该步所有节点（可能并行）执行的一个“tick”；例如 START -> A -> B -> END 会在输入、节点 A、节点 B 之后各产生一个 checkpoint [1]。\n- 除 super-step 级 checkpoint 外，节点（task）级也会写入：每个节点完成时，其输出作为 task 条目写入 checkpoint_writes 表，并关联到进行中的 checkpoint [1]。\n\n**关键概念**\n\n- thread：checkpointer 保存的一系列 checkpoint 的唯一 ID。使用 checkpointer 时必须指定 `thread_id`，可选指定 `checkpoint_id` 以从线程中途某点启动运行 [2]。\n- 这些参数通过 config 的 configurable 部分传入，例如 `{\"configurable\": {\"thread_id\": \"1\"}}`；config 中包含 thread_id、checkpoint_ns 和 checkpoint_id [1][2]。\n- 状态通道（channels）的持久化细节，本次可见材料未直接展开；只能确认 checkpoint 结构含 channel_values、channel_versions 等字段 [2]。\n\n**典型用途**\n\n- 会话连续性：在同一 thread 内跨交互保留状态 [3]。\n- human-in-the-loop：在中断处暂停，并从保存状态恢复；时间旅行可与人工审核结合，在动作执行前的 checkpoint 恢复并给出纠正输入 [4]。\n- 时间旅行：检查某个 checkpoint 并从该保存状态继续执行，探索替代路径 [4]。\n- 容错：某 super-step 中部分节点失败时，已成功节点的 pending writes 会被保存，从该 super-step 恢复时不重跑成功节点 [1][2]。\n\n**条件与限制**\n\n- checkpointer 需符合 `BaseCheckpointSaver` 接口，实现 `put`、`put_writes` 等写入与读取方法 [1][2]。\n- 后端包括内存版 InMemorySaver（适合实验，进程重启即丢失）、SQLite（实验和本地工作流）、Postgres 与 MongoDB（生产用途），以及 DynamoDB、Redis、Cosmos DB 等集成 [1][5][3]。\n- PostgresSaver/AsyncPostgresSaver 的 thread_id 列长度有限，应保持在 255 字符以下 [3]。\n- checkpoint 会随长对话累积，建议定期清理或设置保留策略 [3]。\n- DeltaChannel 需要 langgraph>=1.2 且目前处于 beta，API 可能变化 [1]。\n- 持久化模式影响一致性与性能：sync 在下一步开始前同步写入，耐久性高但有开销；async 不等待输入 checkpoint 写完，第一个用户节点可能在提交前运行 [1]。\n\n**与 store 的区别**：checkpointer 保存单 thread 内的图状态快照，属短期、线程范围记忆；store 保存跨 thread 的应用自定义数据，属长期记忆 [3]。",
+    "citations": [
+      {
+        "evidence_id": "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+        "marker": "[1]"
+      },
+      {
+        "evidence_id": "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+        "marker": "[2]"
+      },
+      {
+        "evidence_id": "evidence-e96b591d44601bce04ed0458e2ab910306f53a0e0bcdb4e36a1cc547f21aff83",
+        "marker": "[3]"
+      },
+      {
+        "evidence_id": "evidence-4c423e7ae373e98cd74c5bc47d533caf751d989cd8e8ffde3cbb737a91378439",
+        "marker": "[4]"
+      },
+      {
+        "evidence_id": "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e",
+        "marker": "[5]"
+      }
+    ],
+    "cited_evidence_ids": [
+      "evidence-177b86b757929489078666edcca78ad222ba44b6f7be941712d83293c2b3c9cf",
+      "evidence-c84bc66d52ed0499ba8ce4a4bf0ef00688cd64827e6952a97685307ce81527a1",
+      "evidence-e96b591d44601bce04ed0458e2ab910306f53a0e0bcdb4e36a1cc547f21aff83",
+      "evidence-4c423e7ae373e98cd74c5bc47d533caf751d989cd8e8ffde3cbb737a91378439",
+      "evidence-dfb8e4355690ff3a7f8bac550810979cc3ebdb96e08e37aaf53db42746cb902e"
+    ],
+    "partial_reason": null
+  }
+}

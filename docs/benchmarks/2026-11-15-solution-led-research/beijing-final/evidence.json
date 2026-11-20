@@ -1,0 +1,202 @@
+[
+  {
+    "id": "evidence-126519de7aa198008d86cad3165a0ab577f45816ebdf454a803fef6bfcfa3d1a",
+    "canonical_url": "http://bj.bendibao.com/tour/2023515/347727.shtm",
+    "title": "北京天坛公园门票怎么预约？预约入口及须知- 北京本地宝",
+    "media_type": "text/html",
+    "content_hash": "sha256:511d7a18f61c7a8b64e20fa0125f2e758048ef7dc826b1410640acb3fc629bf5",
+    "fetched_at": "2026-11-15T11:11:18.683222Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "http://bj.bendibao.com/tour/2023515/347727.shtm",
+      "final_url": "http://bj.bendibao.com/tour/2023515/347727.shtm",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-261c946efd70f1c21f5e4044ddbb64eddeea3be2d78633f2f1b6b3e94e0869ad",
+    "canonical_url": "https://s.visitbeijing.com.cn/attraction/117811",
+    "title": "景山公园",
+    "media_type": "text/html",
+    "content_hash": "sha256:ae5557003de4336b03f379bb1e2b2431ba623b246c21f574869f2b377fc51761",
+    "fetched_at": "2026-11-15T11:11:14.667685Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://s.visitbeijing.com.cn/attraction/117811",
+      "final_url": "https://s.visitbeijing.com.cn/attraction/117811",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+    "canonical_url": "https://ticket.dpm.org.cn/",
+    "title": "在线订票 - 故宫博物院",
+    "media_type": "text/html",
+    "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+    "fetched_at": "2026-11-15T11:11:15.974643Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://ticket.dpm.org.cn/",
+      "final_url": "https://ticket.dpm.org.cn/",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-689e9731416b74cd89893fbef8938c9842604bb07151c11fd329ba6e965932d7",
+    "canonical_url": "https://tamgw.beijing.gov.cn/zhengwugongkai/tzgg/202609/t20260924_4880476.html",
+    "title": "天安门广场预约参观服务提示_公示通告_北京市人民政府天安门地区管理委员会门户网站",
+    "media_type": "text/html",
+    "content_hash": "sha256:0b6869198232ac277a0b638a5b3a1517c77ddfd1798dcc4029471bf59b4b6451",
+    "fetched_at": "2026-11-15T11:11:13.491499Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://tamgw.beijing.gov.cn/zhengwugongkai/tzgg/202609/t20260924_4880476.html",
+      "final_url": "https://tamgw.beijing.gov.cn/zhengwugongkai/tzgg/202609/t20260924_4880476.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_bs4",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-6cce7949aaa24a79850b525a8ae13b88041de89c0f2d7f37d1342c810e88b90f",
+    "canonical_url": "https://m.bjnews.com.cn/detail/1726808555129233.html",
+    "title": "9月24日12点可预约！十一当天去天安门广场看升旗记得定闹铃",
+    "media_type": "text/html",
+    "content_hash": "sha256:28e77abc8aa8b7cb1891bdd087436636d71c196a7a749a5407f6ce5626b35b03",
+    "fetched_at": "2026-11-15T11:11:13.280670Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://m.bjnews.com.cn/detail/1726808555129233.html",
+      "final_url": "https://m.bjnews.com.cn/detail/1726808555129233.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-97800dd06a6901539fae69fe2c33710491693577cab9aab940d239ae53f19a9b",
+    "canonical_url": "http://bj.bendibao.com/tour/2026928/386507.shtm",
+    "title": "2026国庆天安门广场预约参观攻略（时间+入口+安检提示）- 北京本地宝",
+    "media_type": "text/html",
+    "content_hash": "sha256:0764e551ad4efbcea9f56b41014bab286003758235b6cb1873116e06d2e556e2",
+    "fetched_at": "2026-11-15T11:11:13.962255Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "http://bj.bendibao.com/tour/2026928/386507.shtm",
+      "final_url": "http://bj.bendibao.com/tour/2026928/386507.shtm",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-18e6e50eeb4d1a2af1da181fc52c57fd20dfa1366b1a4efe4dea94212853b75d",
+    "canonical_url": "https://www.mtr.bj.cn/page/instructions.html",
+    "title": "购票指南 - 北京京港地铁有限公司",
+    "media_type": "text/html",
+    "content_hash": "sha256:1876ca5b5de1f57ad75bd7373e8f782d1a0cb149a96001cd8bf5f3c532af1f1e",
+    "fetched_at": "2026-11-15T11:11:15.162161Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.mtr.bj.cn/page/instructions.html",
+      "final_url": "https://www.mtr.bj.cn/page/instructions.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-9278ced76ca4c96f7b6d79fccd2171240f2343d39571f0fe07416f813711573c",
+    "canonical_url": "https://www.busda.com/article-detail/bV6xjv4b",
+    "title": "慕田峪长城门票价格是多少？票价档位与预约流程一目了然_旅游资讯_巴士达BusDa",
+    "media_type": "text/html",
+    "content_hash": "sha256:1edc7cfac86174adaa28f21c7fb5e40c1cb07b9de5e213a09ecfe46dee896a2f",
+    "fetched_at": "2026-11-15T11:11:17.690916Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.busda.com/article-detail/bV6xjv4b",
+      "final_url": "https://www.busda.com/article-detail/bV6xjv4b",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-d1d564178d1439f1dae069397cdb8c6f96f6f735551513531bd9c330a4219b8b",
+    "canonical_url": "https://zh.wikipedia.org/wiki/%E5%8C%97%E4%BA%AC%E5%B8%82%E6%94%BF%E4%BA%A4%E9%80%9A%E4%B8%80%E5%8D%A1%E9%80%9A",
+    "title": "北京市政交通一卡通 - 维基百科，自由的百科全书",
+    "media_type": "text/html",
+    "content_hash": "sha256:37934a537ccc5740a3ca45c69d98bde1b95afb68285060a709c46835a72ce829",
+    "fetched_at": "2026-11-15T11:11:17.444517Z",
+    "published_at": "2004-12-06T16:38:46Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://zh.wikipedia.org/wiki/%E5%8C%97%E4%BA%AC%E5%B8%82%E6%94%BF%E4%BA%A4%E9%80%9A%E4%B8%80%E5%8D%A1%E9%80%9A",
+      "final_url": "https://zh.wikipedia.org/wiki/%E5%8C%97%E4%BA%AC%E5%B8%82%E6%94%BF%E4%BA%A4%E9%80%9A%E4%B8%80%E5%8D%A1%E9%80%9A",
+      "publisher_canonical_url": "https://zh.wikipedia.org/wiki/%E5%8C%97%E4%BA%AC%E5%B8%82%E6%94%BF%E4%BA%A4%E9%80%9A%E4%B8%80%E5%8D%A1%E9%80%9A",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": "维基媒体基金会"
+    }
+  },
+  {
+    "id": "evidence-527663593d1fb7b9c47194b712391db572211461990af91970d8596bc760a4f7",
+    "canonical_url": "https://all.accor.com/hotel/C1S9/index.zh.shtml",
+    "title": "宜必思北京天安门广场酒店 - ALL",
+    "media_type": "text/html",
+    "content_hash": "sha256:f0f7bdde8ddc0062b28fceabe6c6a091d55e36b2340df0be179d88e84bb621d9",
+    "fetched_at": "2026-11-15T11:11:50.095148Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://all.accor.com/hotel/C1S9/index.zh.shtml",
+      "final_url": "https://all.accor.com/hotel/C1S9/index.zh.shtml",
+      "publisher_canonical_url": "https://all.accor.com/hotel/C1S9/index.zh.shtml",
+      "scraper_used": "httpx_bs4",
+      "publisher": null
+    }
+  }
+]

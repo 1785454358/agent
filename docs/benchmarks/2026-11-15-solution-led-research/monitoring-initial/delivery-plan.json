@@ -1,0 +1,45 @@
+{
+  "approach": "主线选开源自托管 Uptime Kuma 部署在现有闲置 Linux 服务器上：20 个 HTTPS 监控、故障通知、30 天历史均可在自托管内实现，边际现金成本接近 0，仅需核实通知渠道（如邮件 SMTP、Telegram 等）的免费额度与运行条件，以及服务器/域名的既有成本是否计入。",
+  "assumptions": [
+    "闲置 Linux 服务器可安装 Docker 或 Node.js 运行环境，且已有公网或内网可达性满足监控需求",
+    "5 人团队仅需查看告警与历史，不要求多租户、SLA 或高级报表",
+    "每月 300 元预算按人民币计，服务器电费/带宽视为已有资源不计入新增现金支出",
+    "通知渠道优先选免费额度可覆盖 20 个站点故障通知的渠道，如 SMTP 邮件或 Telegram Bot"
+  ],
+  "outline": [
+    "确认 Uptime Kuma 版本、HTTPS 监控能力、检查间隔下限与 30 天历史保留机制",
+    "核实通知渠道（SMTP/Telegram/Webhook 等）的免费额度、速率限制与运行条件",
+    "核算费用分项：软件 0 元、服务器既有成本、域名/证书、通知渠道费用，确认合计 ≤300 元/月",
+    "编写部署步骤：环境准备、Docker 部署、添加 20 个 HTTPS 监控、配置通知、设置历史保留",
+    "做一致性检查：步骤依赖、20 个监控与 5 人使用、30 天历史与检查频率是否匹配预算"
+  ],
+  "evidence_needs": [
+    {
+      "requirement_id": "r1",
+      "query": "Uptime Kuma HTTPS monitor interval history retention documentation"
+    },
+    {
+      "requirement_id": "r2",
+      "query": "Uptime Kuma notification SMTP Telegram setup free limits"
+    },
+    {
+      "requirement_id": "r3",
+      "query": "Uptime Kuma Docker install steps Linux self-hosted"
+    },
+    {
+      "requirement_id": "r4",
+      "query": "Telegram Bot API free rate limits notifications"
+    },
+    {
+      "requirement_id": "r5",
+      "query": "SMTP email free tier transaction limits 2026"
+    }
+  ],
+  "consistency_checks": [
+    "费用分项合计是否 ≤300 元/月，且未把付费功能当作免费",
+    "20 个 HTTPS 监控与 5 人查看需求是否都被方案覆盖",
+    "30 天历史保留与检查频率是否在自托管资源下可行",
+    "部署步骤的环境依赖（Docker/Node.js、端口、域名/证书）是否齐全",
+    "通知渠道的免费额度与速率限制是否覆盖 20 个站点的故障通知量"
+  ]
+}

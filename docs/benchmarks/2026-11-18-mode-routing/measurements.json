@@ -1,0 +1,31 @@
+{
+  "manual_same_question": [
+    {
+      "mode": "workflow",
+      "status": "completed",
+      "seconds": 136.39,
+      "chars": 2556,
+      "source_links": 5,
+      "model_calls": 6,
+      "total_tokens": 40675
+    },
+    {
+      "mode": "plan_execute",
+      "status": "completed",
+      "seconds": 127.26,
+      "chars": 2451,
+      "source_links": 5,
+      "model_calls": 6,
+      "total_tokens": 40562
+    },
+    {
+      "mode": "multi_agent",
+      "status": "completed",
+      "seconds": 162.06,
+      "chars": 2675,
+      "source_links": 3,
+      "model_calls": 10,
+      "total_tokens": 57457
+    }
+  ]
+}

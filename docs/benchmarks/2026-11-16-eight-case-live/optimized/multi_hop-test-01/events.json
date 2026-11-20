@@ -1,0 +1,1377 @@
+[
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "88351a73516e41d5a309edaec6742d0d:1",
+      "role": "planner",
+      "estimated_input_tokens": 2499
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "88351a73516e41d5a309edaec6742d0d:1",
+      "role": "planner",
+      "duration_ms": 11969,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1538,
+      "output_tokens": 696
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "88351a73516e41d5a309edaec6742d0d:2",
+      "role": "researcher",
+      "estimated_input_tokens": 2508
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "88351a73516e41d5a309edaec6742d0d:3",
+      "role": "researcher",
+      "estimated_input_tokens": 2490
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "88351a73516e41d5a309edaec6742d0d:3",
+      "role": "researcher",
+      "duration_ms": 2609,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 2004,
+      "output_tokens": 66
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-0b6f487ee995bc031244826d5abc462c",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "db7b10aa042ed5d62e7679533db42de9",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "long-term memory store cross-thread configuration InMemoryStore compile"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-0b6f487ee995bc031244826d5abc462c",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "db7b10aa042ed5d62e7679533db42de9",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 23
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "88351a73516e41d5a309edaec6742d0d:2",
+      "role": "researcher",
+      "duration_ms": 2688,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 2024,
+      "output_tokens": 65
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-0b6f487ee995bc031244826d5abc462c",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "991087ddae4f51ed652ca671d9dae392",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "long-term memory store cross-thread configuration InMemoryStore compile"
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-0b6f487ee995bc031244826d5abc462c",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "b524552d23a390d35f4667079ba5c069",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "short-term memory thread scope checkpointer new thread limitation"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-0b6f487ee995bc031244826d5abc462c",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "991087ddae4f51ed652ca671d9dae392",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 101
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-0b6f487ee995bc031244826d5abc462c",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "ef2555aa23f3d4e962a1f689edfb4b56",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "short-term memory thread scope checkpointer new thread limitation"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-0b6f487ee995bc031244826d5abc462c",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "b524552d23a390d35f4667079ba5c069",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 136
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-0b6f487ee995bc031244826d5abc462c",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "ef2555aa23f3d4e962a1f689edfb4b56",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 111
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-0b6f487ee995bc031244826d5abc462c",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "0902c5cc7bfbf5fc8adb1ed5c2ccb519",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "long-term memory store cross-thread configuration InMemoryStore compile"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-0b6f487ee995bc031244826d5abc462c",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "0902c5cc7bfbf5fc8adb1ed5c2ccb519",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 26
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-2a023225bbfcd32f16ce7076bf01da9b",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "e239534ad59637b5ee41e613fea67490",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "short-term memory thread scope checkpointer new thread limitations"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-2a023225bbfcd32f16ce7076bf01da9b",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "e239534ad59637b5ee41e613fea67490",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 33
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-0b6f487ee995bc031244826d5abc462c",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "46b7d950a225bbafafae1ac2fb1dfeda",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "short-term memory thread scope checkpointer new thread limitation"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-0b6f487ee995bc031244826d5abc462c",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "46b7d950a225bbafafae1ac2fb1dfeda",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 23
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "caller_id": "workflow-graph",
+      "branch": "conversation thread persistence user preferences memory configuration documentation",
+      "tool_call_id": "batch-d3ebf0c08b99ed12dc6874ca874913c7",
+      "call_id": "ef2555aa23f3d4e962a1f689edfb4b56",
+      "tool": "read_evidence",
+      "query": "short-term memory thread scope checkpointer new thread limitation",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518\",\"version\":1,\"content_hash\":\"sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118\",\"historical\":false,\"passages\":[{\"ref\":\"n1\",\"start\":0,\"end\":219,\"text\":\"---\\ntitle: Short-term memory\\n---\\n\\nimport ShortTermMemoryUsagePy from '/snippets/code-samples/short-term-memory-usage-py.mdx';\\nimport ShortTermMemoryUsageJs from '/snippets/code-samples/short-term-memory-usage-js.mdx';\\n\\n\"},{\"ref\":\"n2\",\"start\":592,\"end\":1065,\"text\":\"Short term memory lets your application remember previous interactions within a single thread or conversation.\\n\\n<Note>\\n    A thread organizes multiple interactions in a session, similar to the way email groups messages in a single conversation.\\n</Note>\\n\\nConversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\\n\\n\"},{\"ref\":\"n3\",\"start\":1708,\"end\":1936,\"text\":\"<Tip>\\n    Need to remember information **across** conversations? Use [long-term memory](/oss/langchain/long-term-memory) to store and recall user-specific or application-level data across different threads and sessions.\\n</Tip>\\n\\n\"},{\"ref\":\"n4\",\"start\":1946,\"end\":2438,\"text\":\"To add short-term memory (thread-level persistence) to an agent, you need to specify a `checkpointer` when creating an agent.\\n\\n<Info>\\n    LangChain's agent manages short-term memory as a part of your agent's state.\\n\\n    By storing these in the graph's state, the agent can access the full context for a given conversation while maintaining separation between different threads.\\n\\n    State is persisted to a database (or memory) using a checkpointer so the thread can be resumed at any time.\\n\\n\"},{\"ref\":\"n5\",\"start\":2438,\"end\":2595,\"text\":\"    Short-term memory updates when the agent is invoked or a step (like a tool call) is completed, and the state is read at the start of each step.\\n</Info>\\n\\n\"},{\"ref\":\"n6\",\"start\":4312,\"end\":4480,\"text\":\"## Customizing agent memory\\n\\n:::python\\nBy default, agents use @[`AgentState`] to manage short term memory, specifically the conversation history via a `messages` key.\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":36526,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "caller_id": "workflow-graph",
+      "branch": "conversation thread persistence user preferences memory configuration documentation",
+      "tool_call_id": "batch-58637e65b10004675407a11bc2568542",
+      "call_id": "991087ddae4f51ed652ca671d9dae392",
+      "tool": "read_evidence",
+      "query": "long-term memory store cross-thread configuration InMemoryStore compile",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518\",\"version\":1,\"content_hash\":\"sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118\",\"historical\":false,\"passages\":[{\"ref\":\"n1\",\"start\":0,\"end\":219,\"text\":\"---\\ntitle: Short-term memory\\n---\\n\\nimport ShortTermMemoryUsagePy from '/snippets/code-samples/short-term-memory-usage-py.mdx';\\nimport ShortTermMemoryUsageJs from '/snippets/code-samples/short-term-memory-usage-js.mdx';\\n\\n\"},{\"ref\":\"n2\",\"start\":592,\"end\":1065,\"text\":\"Short term memory lets your application remember previous interactions within a single thread or conversation.\\n\\n<Note>\\n    A thread organizes multiple interactions in a session, similar to the way email groups messages in a single conversation.\\n</Note>\\n\\nConversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\\n\\n\"},{\"ref\":\"n3\",\"start\":1708,\"end\":1936,\"text\":\"<Tip>\\n    Need to remember information **across** conversations? Use [long-term memory](/oss/langchain/long-term-memory) to store and recall user-specific or application-level data across different threads and sessions.\\n</Tip>\\n\\n\"},{\"ref\":\"n7\",\"start\":1946,\"end\":2073,\"text\":\"To add short-term memory (thread-level persistence) to an agent, you need to specify a `checkpointer` when creating an agent.\\n\\n\"},{\"ref\":\"n6\",\"start\":4312,\"end\":4480,\"text\":\"## Customizing agent memory\\n\\n:::python\\nBy default, agents use @[`AgentState`] to manage short term memory, specifically the conversation history via a `messages` key.\\n\\n\"},{\"ref\":\"n8\",\"start\":6584,\"end\":6705,\"text\":\"With [short-term memory](#usage) enabled, long conversations can exceed the LLM's context window. Common solutions are:\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":36526,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "caller_id": "workflow-graph",
+      "branch": "conversation thread persistence user preferences memory configuration documentation",
+      "tool_call_id": "batch-edfc9dcbc4ba4f9c13064c4f1ff68d8f",
+      "call_id": "b524552d23a390d35f4667079ba5c069",
+      "tool": "read_evidence",
+      "query": "short-term memory thread scope checkpointer new thread limitation",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb\",\"version\":1,\"content_hash\":\"sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4\",\"historical\":false,\"passages\":[{\"ref\":\"n9\",\"start\":0,\"end\":146,\"text\":\"---\\ntitle: Long-term memory\\ndescription: Add long-term memory to LangChain agents to store and recall data across conversations and sessions\\n---\\n\\n\"},{\"ref\":\"n10\",\"start\":1758,\"end\":2098,\"text\":\"import LongTermMemoryWriteToolPostgresPy from '/snippets/code-samples/long-term-memory-write-tool-postgres-py.mdx';\\nimport LongTermMemoryWriteToolPostgresJs from '/snippets/code-samples/long-term-memory-write-tool-postgres-js.mdx';\\n\\nLong-term memory lets your agent store and recall information across different conversations and sessions.\\n\"},{\"ref\":\"n11\",\"start\":2098,\"end\":2410,\"text\":\"Unlike [short-term memory](/oss/langchain/short-term-memory), which is scoped to a single thread, long-term memory persists across threads and can be recalled at any time.\\n\\nLong-term memory is built on [LangGraph stores](/oss/langgraph/stores), which save data as JSON documents organized by namespace and key.\\n\\n\"},{\"ref\":\"n12\",\"start\":2420,\"end\":2507,\"text\":\"To add long-term memory to an agent, create a store and pass it to @[`create_agent`]:\\n\\n\"},{\"ref\":\"n13\",\"start\":3365,\"end\":3711,\"text\":\"<Note>\\n    For other store backends, including Redis and MongoDB, see the [store integrations](/oss/integrations/long-term-memory) list. For a MongoDB walkthrough, see [long-term memory with MongoDB](/oss/integrations/memory/mongodb-long-term-memory).\\n</Note>\\n\\nTools can then read from and write to the store using the `runtime.store` parameter. \"},{\"ref\":\"n14\",\"start\":3711,\"end\":4181,\"text\":\"See [Read long-term memory in tools](#read-long-term-memory-in-tools) and [Write long-term memory from tools](#write-long-term-memory-from-tools) for examples.\\n\\n<Tip>\\n    For a deeper dive into memory types (semantic, episodic, procedural) and strategies for writing memories, see the [Memory conceptual guide](/oss/concepts/memory#long-term-memory).\\n</Tip>\\n\\n## Memory storage\\n\\nLangGraph stores long-term memories as JSON documents in a [store](/oss/langgraph/stores).\\n\\n\"},{\"ref\":\"n15\",\"start\":4181,\"end\":4400,\"text\":\"Each memory is organized under a custom `namespace` (similar to a folder) and a distinct `key` (like a file name). Namespaces often include user or org IDs or other labels that makes it easier to organize information.\\n\\n\"},{\"ref\":\"n16\",\"start\":4833,\"end\":4966,\"text\":\"For more information about the memory store, see the [Persistence](/oss/langgraph/stores) guide.\\n\\n## Read long-term memory in tools\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":5646,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "caller_id": "workflow-graph",
+      "branch": "conversation thread persistence user preferences memory configuration documentation",
+      "tool_call_id": "batch-0297f14c13fbfa09939265756838cd1b",
+      "call_id": "db7b10aa042ed5d62e7679533db42de9",
+      "tool": "read_evidence",
+      "query": "long-term memory store cross-thread configuration InMemoryStore compile",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb\",\"version\":1,\"content_hash\":\"sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4\",\"historical\":false,\"passages\":[{\"ref\":\"n9\",\"start\":0,\"end\":146,\"text\":\"---\\ntitle: Long-term memory\\ndescription: Add long-term memory to LangChain agents to store and recall data across conversations and sessions\\n---\\n\\n\"},{\"ref\":\"n10\",\"start\":1758,\"end\":2098,\"text\":\"import LongTermMemoryWriteToolPostgresPy from '/snippets/code-samples/long-term-memory-write-tool-postgres-py.mdx';\\nimport LongTermMemoryWriteToolPostgresJs from '/snippets/code-samples/long-term-memory-write-tool-postgres-js.mdx';\\n\\nLong-term memory lets your agent store and recall information across different conversations and sessions.\\n\"},{\"ref\":\"n11\",\"start\":2098,\"end\":2410,\"text\":\"Unlike [short-term memory](/oss/langchain/short-term-memory), which is scoped to a single thread, long-term memory persists across threads and can be recalled at any time.\\n\\nLong-term memory is built on [LangGraph stores](/oss/langgraph/stores), which save data as JSON documents organized by namespace and key.\\n\\n\"},{\"ref\":\"n17\",\"start\":2420,\"end\":2598,\"text\":\"To add long-term memory to an agent, create a store and pass it to @[`create_agent`]:\\n\\n<Tabs>\\n    <Tab title=\\\"InMemoryStore\\\">\\n:::python\\n\\n<LongTermMemoryCreateAgentInmemoryPy />\\n\\n\"},{\"ref\":\"n13\",\"start\":3365,\"end\":3711,\"text\":\"<Note>\\n    For other store backends, including Redis and MongoDB, see the [store integrations](/oss/integrations/long-term-memory) list. For a MongoDB walkthrough, see [long-term memory with MongoDB](/oss/integrations/memory/mongodb-long-term-memory).\\n</Note>\\n\\nTools can then read from and write to the store using the `runtime.store` parameter. \"},{\"ref\":\"n14\",\"start\":3711,\"end\":4181,\"text\":\"See [Read long-term memory in tools](#read-long-term-memory-in-tools) and [Write long-term memory from tools](#write-long-term-memory-from-tools) for examples.\\n\\n<Tip>\\n    For a deeper dive into memory types (semantic, episodic, procedural) and strategies for writing memories, see the [Memory conceptual guide](/oss/concepts/memory#long-term-memory).\\n</Tip>\\n\\n## Memory storage\\n\\nLangGraph stores long-term memories as JSON documents in a [store](/oss/langgraph/stores).\\n\\n\"},{\"ref\":\"n18\",\"start\":4181,\"end\":4619,\"text\":\"Each memory is organized under a custom `namespace` (similar to a folder) and a distinct `key` (like a file name). Namespaces often include user or org IDs or other labels that makes it easier to organize information.\\n\\nThis structure enables hierarchical organization of memories. Cross-namespace searching is then supported through content filters.\\n\\n<Tabs>\\n    <Tab title=\\\"InMemoryStore\\\">\\n:::python\\n\\n<LongTermMemoryStorageInmemoryPy />\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":5646,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "caller_id": "workflow-graph",
+      "branch": "conversation thread persistence user preferences memory configuration documentation",
+      "tool_call_id": "batch-b1b154b486f9c147ca789f2ecdbf5591",
+      "call_id": "46b7d950a225bbafafae1ac2fb1dfeda",
+      "tool": "read_evidence",
+      "query": "short-term memory thread scope checkpointer new thread limitation",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402\",\"version\":1,\"content_hash\":\"sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330\",\"historical\":false,\"passages\":[{\"ref\":\"n19\",\"start\":0,\"end\":143,\"text\":\"---\\ntitle: Stores\\ndescription: LangGraph stores provide cross-thread long-term memory, complementing per-thread checkpointer persistence.\\n---\\n\\n\"},{\"ref\":\"n20\",\"start\":1676,\"end\":1801,\"text\":\"<Note>\\nSee [store integrations](/oss/integrations/long-term-memory/index) for the full list of available providers.\\n</Note>\\n\\n\"},{\"ref\":\"n21\",\"start\":1910,\"end\":2133,\"text\":\":::python\\n```python\\nfrom langgraph.store.memory import InMemoryStore\\nstore = InMemoryStore()\\n```\\n:::\\n\\n:::js\\n```typescript\\nimport { MemoryStore } from \\\"@langchain/langgraph\\\";\\n\\nconst memoryStore = new MemoryStore();\\n```\\n:::\\n\\n\"},{\"ref\":\"n22\",\"start\":4413,\"end\":4532,\"text\":\"* `created_at`: Timestamp for when this memory was created\\n* `updated_at`: Timestamp for when this memory was updated\\n\\n\"},{\"ref\":\"n23\",\"start\":5239,\"end\":5356,\"text\":\"* `createdAt`: Timestamp for when this memory was created\\n* `updatedAt`: Timestamp for when this memory was updated\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":21373,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "caller_id": "workflow-graph",
+      "branch": "conversation thread persistence user preferences memory configuration documentation",
+      "tool_call_id": "batch-bf8cf5b11953c8c37cedfc969f81f856",
+      "call_id": "0902c5cc7bfbf5fc8adb1ed5c2ccb519",
+      "tool": "read_evidence",
+      "query": "long-term memory store cross-thread configuration InMemoryStore compile",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402\",\"version\":1,\"content_hash\":\"sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330\",\"historical\":false,\"passages\":[{\"ref\":\"n19\",\"start\":0,\"end\":143,\"text\":\"---\\ntitle: Stores\\ndescription: LangGraph stores provide cross-thread long-term memory, complementing per-thread checkpointer persistence.\\n---\\n\\n\"},{\"ref\":\"n20\",\"start\":1676,\"end\":1801,\"text\":\"<Note>\\nSee [store integrations](/oss/integrations/long-term-memory/index) for the full list of available providers.\\n</Note>\\n\\n\"},{\"ref\":\"n24\",\"start\":1817,\"end\":2012,\"text\":\"The following code snippet shows the @[InMemoryStore] in isolation without using LangGraph:\\n\\n:::python\\n```python\\nfrom langgraph.store.memory import InMemoryStore\\nstore = InMemoryStore()\\n```\\n:::\\n\\n\"},{\"ref\":\"n25\",\"start\":2782,\"end\":2938,\"text\":\":::python\\n```python\\nmemory_id = str(uuid.uuid4())\\nmemory = {\\\"food_preference\\\" : \\\"I like pizza\\\"}\\nstore.put(namespace_for_memory, memory_id, memory)\\n```\\n:::\\n\\n\"},{\"ref\":\"n26\",\"start\":3118,\"end\":3507,\"text\":\"Read out memories from your namespace using the `store.search` method, which returns memories for a given user as a list, up to the `limit` argument (default `10`). With `InMemoryStore`, items are returned in insertion order, so the most recent memory is last in the list; other backends may order memories differently (see [Listing items in a namespace](#listing-items-in-a-namespace)).\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":21373,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-2a023225bbfcd32f16ce7076bf01da9b",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "85c92668595cd9a67edec15783e8eaf6",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "short-term memory thread scope checkpointer new thread limitations"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-2a023225bbfcd32f16ce7076bf01da9b",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "85c92668595cd9a67edec15783e8eaf6",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 16
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-2a023225bbfcd32f16ce7076bf01da9b",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "c5a42f4d016622c992b0d8cc63993525",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "long-term memory store configuration cross-thread user preferences namespace"
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-2a023225bbfcd32f16ce7076bf01da9b",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "420a4575357182f547250ce3b4b546e9",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "long-term memory store configuration cross-thread user preferences namespace"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-2a023225bbfcd32f16ce7076bf01da9b",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "c5a42f4d016622c992b0d8cc63993525",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 50
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-2a023225bbfcd32f16ce7076bf01da9b",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "420a4575357182f547250ce3b4b546e9",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 54
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-2a023225bbfcd32f16ce7076bf01da9b",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "a0fec4d73e1ae40946afa1c2e65f9e74",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "short-term memory thread scope checkpointer new thread limitations"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-2a023225bbfcd32f16ce7076bf01da9b",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "a0fec4d73e1ae40946afa1c2e65f9e74",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 22
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-2a023225bbfcd32f16ce7076bf01da9b",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "a145faaccd97aa636be864867c0904a9",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "long-term memory store configuration cross-thread user preferences namespace"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-2a023225bbfcd32f16ce7076bf01da9b",
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "thread_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "a145faaccd97aa636be864867c0904a9",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 29
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "caller_id": "workflow-graph",
+      "branch": "agent memory architecture short-term history vs long-term durable preferences configuration",
+      "tool_call_id": "batch-2008420390acd016161756a1bf7879ec",
+      "call_id": "e239534ad59637b5ee41e613fea67490",
+      "tool": "read_evidence",
+      "query": "short-term memory thread scope checkpointer new thread limitations",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518\",\"version\":1,\"content_hash\":\"sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118\",\"historical\":false,\"passages\":[{\"ref\":\"n1\",\"start\":0,\"end\":219,\"text\":\"---\\ntitle: Short-term memory\\n---\\n\\nimport ShortTermMemoryUsagePy from '/snippets/code-samples/short-term-memory-usage-py.mdx';\\nimport ShortTermMemoryUsageJs from '/snippets/code-samples/short-term-memory-usage-js.mdx';\\n\\n\"},{\"ref\":\"n2\",\"start\":592,\"end\":1065,\"text\":\"Short term memory lets your application remember previous interactions within a single thread or conversation.\\n\\n<Note>\\n    A thread organizes multiple interactions in a session, similar to the way email groups messages in a single conversation.\\n</Note>\\n\\nConversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\\n\\n\"},{\"ref\":\"n3\",\"start\":1708,\"end\":1936,\"text\":\"<Tip>\\n    Need to remember information **across** conversations? Use [long-term memory](/oss/langchain/long-term-memory) to store and recall user-specific or application-level data across different threads and sessions.\\n</Tip>\\n\\n\"},{\"ref\":\"n4\",\"start\":1946,\"end\":2438,\"text\":\"To add short-term memory (thread-level persistence) to an agent, you need to specify a `checkpointer` when creating an agent.\\n\\n<Info>\\n    LangChain's agent manages short-term memory as a part of your agent's state.\\n\\n    By storing these in the graph's state, the agent can access the full context for a given conversation while maintaining separation between different threads.\\n\\n    State is persisted to a database (or memory) using a checkpointer so the thread can be resumed at any time.\\n\\n\"},{\"ref\":\"n5\",\"start\":2438,\"end\":2595,\"text\":\"    Short-term memory updates when the agent is invoked or a step (like a tool call) is completed, and the state is read at the start of each step.\\n</Info>\\n\\n\"},{\"ref\":\"n6\",\"start\":4312,\"end\":4480,\"text\":\"## Customizing agent memory\\n\\n:::python\\nBy default, agents use @[`AgentState`] to manage short term memory, specifically the conversation history via a `messages` key.\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":36526,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "caller_id": "workflow-graph",
+      "branch": "agent memory architecture short-term history vs long-term durable preferences configuration",
+      "tool_call_id": "batch-68750849e2d34775ba2e80bba038ea0f",
+      "call_id": "c5a42f4d016622c992b0d8cc63993525",
+      "tool": "read_evidence",
+      "query": "long-term memory store configuration cross-thread user preferences namespace",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518\",\"version\":1,\"content_hash\":\"sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118\",\"historical\":false,\"passages\":[{\"ref\":\"n1\",\"start\":0,\"end\":219,\"text\":\"---\\ntitle: Short-term memory\\n---\\n\\nimport ShortTermMemoryUsagePy from '/snippets/code-samples/short-term-memory-usage-py.mdx';\\nimport ShortTermMemoryUsageJs from '/snippets/code-samples/short-term-memory-usage-js.mdx';\\n\\n\"},{\"ref\":\"n7\",\"start\":232,\"end\":711,\"text\":\"Memory is a system that remembers information about previous interactions. For AI agents, memory is crucial because it lets them remember previous interactions, learn from feedback, and adapt to user preferences. As agents tackle more complex tasks with numerous user interactions, this capability becomes essential for both efficiency and user satisfaction.\\n\\nShort term memory lets your application remember previous interactions within a single thread or conversation.\\n\\n<Note>\\n\"},{\"ref\":\"n8\",\"start\":711,\"end\":1065,\"text\":\"    A thread organizes multiple interactions in a session, similar to the way email groups messages in a single conversation.\\n</Note>\\n\\nConversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\\n\\n\"},{\"ref\":\"n3\",\"start\":1708,\"end\":1936,\"text\":\"<Tip>\\n    Need to remember information **across** conversations? Use [long-term memory](/oss/langchain/long-term-memory) to store and recall user-specific or application-level data across different threads and sessions.\\n</Tip>\\n\\n\"},{\"ref\":\"n9\",\"start\":1946,\"end\":2073,\"text\":\"To add short-term memory (thread-level persistence) to an agent, you need to specify a `checkpointer` when creating an agent.\\n\\n\"},{\"ref\":\"n6\",\"start\":4312,\"end\":4480,\"text\":\"## Customizing agent memory\\n\\n:::python\\nBy default, agents use @[`AgentState`] to manage short term memory, specifically the conversation history via a `messages` key.\\n\\n\"},{\"ref\":\"n10\",\"start\":6584,\"end\":6705,\"text\":\"With [short-term memory](#usage) enabled, long conversations can exceed the LLM's context window. Common solutions are:\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":36526,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "caller_id": "workflow-graph",
+      "branch": "agent memory architecture short-term history vs long-term durable preferences configuration",
+      "tool_call_id": "batch-e7ce841effceaed56c5c39ac67b3dcd3",
+      "call_id": "85c92668595cd9a67edec15783e8eaf6",
+      "tool": "read_evidence",
+      "query": "short-term memory thread scope checkpointer new thread limitations",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb\",\"version\":1,\"content_hash\":\"sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4\",\"historical\":false,\"passages\":[{\"ref\":\"n11\",\"start\":0,\"end\":146,\"text\":\"---\\ntitle: Long-term memory\\ndescription: Add long-term memory to LangChain agents to store and recall data across conversations and sessions\\n---\\n\\n\"},{\"ref\":\"n12\",\"start\":1758,\"end\":2098,\"text\":\"import LongTermMemoryWriteToolPostgresPy from '/snippets/code-samples/long-term-memory-write-tool-postgres-py.mdx';\\nimport LongTermMemoryWriteToolPostgresJs from '/snippets/code-samples/long-term-memory-write-tool-postgres-js.mdx';\\n\\nLong-term memory lets your agent store and recall information across different conversations and sessions.\\n\"},{\"ref\":\"n13\",\"start\":2098,\"end\":2410,\"text\":\"Unlike [short-term memory](/oss/langchain/short-term-memory), which is scoped to a single thread, long-term memory persists across threads and can be recalled at any time.\\n\\nLong-term memory is built on [LangGraph stores](/oss/langgraph/stores), which save data as JSON documents organized by namespace and key.\\n\\n\"},{\"ref\":\"n14\",\"start\":2420,\"end\":2507,\"text\":\"To add long-term memory to an agent, create a store and pass it to @[`create_agent`]:\\n\\n\"},{\"ref\":\"n15\",\"start\":3365,\"end\":3711,\"text\":\"<Note>\\n    For other store backends, including Redis and MongoDB, see the [store integrations](/oss/integrations/long-term-memory) list. For a MongoDB walkthrough, see [long-term memory with MongoDB](/oss/integrations/memory/mongodb-long-term-memory).\\n</Note>\\n\\nTools can then read from and write to the store using the `runtime.store` parameter. \"},{\"ref\":\"n16\",\"start\":3711,\"end\":4181,\"text\":\"See [Read long-term memory in tools](#read-long-term-memory-in-tools) and [Write long-term memory from tools](#write-long-term-memory-from-tools) for examples.\\n\\n<Tip>\\n    For a deeper dive into memory types (semantic, episodic, procedural) and strategies for writing memories, see the [Memory conceptual guide](/oss/concepts/memory#long-term-memory).\\n</Tip>\\n\\n## Memory storage\\n\\nLangGraph stores long-term memories as JSON documents in a [store](/oss/langgraph/stores).\\n\\n\"},{\"ref\":\"n17\",\"start\":4181,\"end\":4400,\"text\":\"Each memory is organized under a custom `namespace` (similar to a folder) and a distinct `key` (like a file name). Namespaces often include user or org IDs or other labels that makes it easier to organize information.\\n\\n\"},{\"ref\":\"n18\",\"start\":4833,\"end\":4966,\"text\":\"For more information about the memory store, see the [Persistence](/oss/langgraph/stores) guide.\\n\\n## Read long-term memory in tools\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":5646,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "caller_id": "workflow-graph",
+      "branch": "agent memory architecture short-term history vs long-term durable preferences configuration",
+      "tool_call_id": "batch-25f8095e53af69f011986b816bfe6d11",
+      "call_id": "420a4575357182f547250ce3b4b546e9",
+      "tool": "read_evidence",
+      "query": "long-term memory store configuration cross-thread user preferences namespace",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb\",\"version\":1,\"content_hash\":\"sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4\",\"historical\":false,\"passages\":[{\"ref\":\"n11\",\"start\":0,\"end\":146,\"text\":\"---\\ntitle: Long-term memory\\ndescription: Add long-term memory to LangChain agents to store and recall data across conversations and sessions\\n---\\n\\n\"},{\"ref\":\"n12\",\"start\":1758,\"end\":2098,\"text\":\"import LongTermMemoryWriteToolPostgresPy from '/snippets/code-samples/long-term-memory-write-tool-postgres-py.mdx';\\nimport LongTermMemoryWriteToolPostgresJs from '/snippets/code-samples/long-term-memory-write-tool-postgres-js.mdx';\\n\\nLong-term memory lets your agent store and recall information across different conversations and sessions.\\n\"},{\"ref\":\"n13\",\"start\":2098,\"end\":2410,\"text\":\"Unlike [short-term memory](/oss/langchain/short-term-memory), which is scoped to a single thread, long-term memory persists across threads and can be recalled at any time.\\n\\nLong-term memory is built on [LangGraph stores](/oss/langgraph/stores), which save data as JSON documents organized by namespace and key.\\n\\n\"},{\"ref\":\"n14\",\"start\":2420,\"end\":2507,\"text\":\"To add long-term memory to an agent, create a store and pass it to @[`create_agent`]:\\n\\n\"},{\"ref\":\"n15\",\"start\":3365,\"end\":3711,\"text\":\"<Note>\\n    For other store backends, including Redis and MongoDB, see the [store integrations](/oss/integrations/long-term-memory) list. For a MongoDB walkthrough, see [long-term memory with MongoDB](/oss/integrations/memory/mongodb-long-term-memory).\\n</Note>\\n\\nTools can then read from and write to the store using the `runtime.store` parameter. \"},{\"ref\":\"n16\",\"start\":3711,\"end\":4181,\"text\":\"See [Read long-term memory in tools](#read-long-term-memory-in-tools) and [Write long-term memory from tools](#write-long-term-memory-from-tools) for examples.\\n\\n<Tip>\\n    For a deeper dive into memory types (semantic, episodic, procedural) and strategies for writing memories, see the [Memory conceptual guide](/oss/concepts/memory#long-term-memory).\\n</Tip>\\n\\n## Memory storage\\n\\nLangGraph stores long-term memories as JSON documents in a [store](/oss/langgraph/stores).\\n\\n\"},{\"ref\":\"n19\",\"start\":4181,\"end\":4532,\"text\":\"Each memory is organized under a custom `namespace` (similar to a folder) and a distinct `key` (like a file name). Namespaces often include user or org IDs or other labels that makes it easier to organize information.\\n\\nThis structure enables hierarchical organization of memories. Cross-namespace searching is then supported through content filters.\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":5646,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "caller_id": "workflow-graph",
+      "branch": "agent memory architecture short-term history vs long-term durable preferences configuration",
+      "tool_call_id": "batch-1de044c7db54c932ae5d14e6cda067ec",
+      "call_id": "a0fec4d73e1ae40946afa1c2e65f9e74",
+      "tool": "read_evidence",
+      "query": "short-term memory thread scope checkpointer new thread limitations",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402\",\"version\":1,\"content_hash\":\"sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330\",\"historical\":false,\"passages\":[{\"ref\":\"n20\",\"start\":0,\"end\":143,\"text\":\"---\\ntitle: Stores\\ndescription: LangGraph stores provide cross-thread long-term memory, complementing per-thread checkpointer persistence.\\n---\\n\\n\"},{\"ref\":\"n21\",\"start\":1676,\"end\":1801,\"text\":\"<Note>\\nSee [store integrations](/oss/integrations/long-term-memory/index) for the full list of available providers.\\n</Note>\\n\\n\"},{\"ref\":\"n22\",\"start\":1910,\"end\":2133,\"text\":\":::python\\n```python\\nfrom langgraph.store.memory import InMemoryStore\\nstore = InMemoryStore()\\n```\\n:::\\n\\n:::js\\n```typescript\\nimport { MemoryStore } from \\\"@langchain/langgraph\\\";\\n\\nconst memoryStore = new MemoryStore();\\n```\\n:::\\n\\n\"},{\"ref\":\"n23\",\"start\":4413,\"end\":4532,\"text\":\"* `created_at`: Timestamp for when this memory was created\\n* `updated_at`: Timestamp for when this memory was updated\\n\\n\"},{\"ref\":\"n24\",\"start\":5239,\"end\":5356,\"text\":\"* `createdAt`: Timestamp for when this memory was created\\n* `updatedAt`: Timestamp for when this memory was updated\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":21373,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "caller_id": "workflow-graph",
+      "branch": "agent memory architecture short-term history vs long-term durable preferences configuration",
+      "tool_call_id": "batch-6e61d1d9c03dd87d30b12f13f157949f",
+      "call_id": "a145faaccd97aa636be864867c0904a9",
+      "tool": "read_evidence",
+      "query": "long-term memory store configuration cross-thread user preferences namespace",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402\",\"version\":1,\"content_hash\":\"sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330\",\"historical\":false,\"passages\":[{\"ref\":\"n20\",\"start\":0,\"end\":143,\"text\":\"---\\ntitle: Stores\\ndescription: LangGraph stores provide cross-thread long-term memory, complementing per-thread checkpointer persistence.\\n---\\n\\n\"},{\"ref\":\"n25\",\"start\":744,\"end\":1083,\"text\":\"Stores let agents persist information across threads, including user preferences, accumulated knowledge, and facts that should survive beyond a single conversation. Unlike [checkpointers](/oss/langgraph/checkpointers), which save the full graph state scoped to one thread, stores hold arbitrary key-value data accessible from any thread.\\n\\n\"},{\"ref\":\"n21\",\"start\":1676,\"end\":1801,\"text\":\"<Note>\\nSee [store integrations](/oss/integrations/long-term-memory/index) for the full list of available providers.\\n</Note>\\n\\n\"},{\"ref\":\"n26\",\"start\":1910,\"end\":2012,\"text\":\":::python\\n```python\\nfrom langgraph.store.memory import InMemoryStore\\nstore = InMemoryStore()\\n```\\n:::\\n\\n\"},{\"ref\":\"n27\",\"start\":3118,\"end\":3507,\"text\":\"Read out memories from your namespace using the `store.search` method, which returns memories for a given user as a list, up to the `limit` argument (default `10`). With `InMemoryStore`, items are returned in insertion order, so the most recent memory is last in the list; other backends may order memories differently (see [Listing items in a namespace](#listing-items-in-a-namespace)).\\n\\n\"},{\"ref\":\"n28\",\"start\":4932,\"end\":5094,\"text\":\"* `value`: The value of this memory\\n* `key`: A unique key for this memory in this namespace\\n* `namespace`: A tuple of strings, the namespace of this memory type\\n\\n\"},{\"ref\":\"n29\",\"start\":5361,\"end\":5394,\"text\":\"## Listing items in a namespace\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":21373,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+      "version": 1,
+      "content_hash": "sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330",
+      "start": 0,
+      "end": 143,
+      "passage_id": "p-370bbc3ebc9e9efb66126844d533ad2e",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+      "version": 1,
+      "content_hash": "sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4",
+      "start": 0,
+      "end": 146,
+      "passage_id": "p-5325f5e62ac4ab0a36831c698f8fb22e",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 0,
+      "end": 219,
+      "passage_id": "p-6c4159540a211862f583e6baf72a3231",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+      "version": 1,
+      "content_hash": "sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330",
+      "start": 744,
+      "end": 1083,
+      "passage_id": "p-2c50bb50e0ac68f0743ea9c1e10c7d37",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+      "version": 1,
+      "content_hash": "sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4",
+      "start": 1758,
+      "end": 2098,
+      "passage_id": "p-52b69770bec6870f79836411418de557",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+      "version": 1,
+      "content_hash": "sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4",
+      "start": 2098,
+      "end": 2410,
+      "passage_id": "p-faf600209bd88c45891097d9c4c5b2b6",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 232,
+      "end": 711,
+      "passage_id": "p-127b0d9b25fab68d1a6639cf30e04c3e",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 711,
+      "end": 1065,
+      "passage_id": "p-33c380864930ebeb1a076274935f64fe",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+      "version": 1,
+      "content_hash": "sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330",
+      "start": 1676,
+      "end": 1801,
+      "passage_id": "p-e3d99da10cd6cb02c3c1799241a1edad",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+      "version": 1,
+      "content_hash": "sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4",
+      "start": 2420,
+      "end": 2598,
+      "passage_id": "p-be8ca498cde3000496660fdb903ad1aa",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 1708,
+      "end": 1936,
+      "passage_id": "p-3f2ea897b84ac503ff68ba46eee09c77",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+      "version": 1,
+      "content_hash": "sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4",
+      "start": 3365,
+      "end": 3711,
+      "passage_id": "p-91c49fdfe303c71b73698547a7f4abe9",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+      "version": 1,
+      "content_hash": "sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4",
+      "start": 3711,
+      "end": 4181,
+      "passage_id": "p-dba098635851511812d65c7f3d6936cb",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+      "version": 1,
+      "content_hash": "sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4",
+      "start": 4181,
+      "end": 4619,
+      "passage_id": "p-7cb61668d765933e9b0b41e04b544bb7",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 1946,
+      "end": 2438,
+      "passage_id": "p-c0e2da015c2a04cb48a5f53978c0ae9c",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 2438,
+      "end": 2595,
+      "passage_id": "p-df1bc22bd1f9605d996d29c1c30d87ab",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+      "version": 1,
+      "content_hash": "sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330",
+      "start": 2782,
+      "end": 2938,
+      "passage_id": "p-df8ee608de0b3f483df656041149e773",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+      "version": 1,
+      "content_hash": "sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4",
+      "start": 4833,
+      "end": 4966,
+      "passage_id": "p-f30635510649626afb35be5db0002c5c",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 4312,
+      "end": 4480,
+      "passage_id": "p-9370173ed17026969e11770033db6769",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+      "version": 1,
+      "content_hash": "sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330",
+      "start": 3118,
+      "end": 3507,
+      "passage_id": "p-fd34ff356f449d061f70d720b4e6fa07",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 6584,
+      "end": 6705,
+      "passage_id": "p-52d98f8c2e016b73b2b6fac4746130ed",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+      "version": 1,
+      "content_hash": "sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330",
+      "start": 4413,
+      "end": 4532,
+      "passage_id": "p-fb1915aab9a0b0120e5d093db58ae4a3",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+      "version": 1,
+      "content_hash": "sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330",
+      "start": 4932,
+      "end": 5094,
+      "passage_id": "p-7f8d8db5747999ec1cc3835c39dffb57",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+      "version": 1,
+      "content_hash": "sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330",
+      "start": 5239,
+      "end": 5356,
+      "passage_id": "p-ec26f1541110a5d14b3a4e3782a42402",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+      "version": 1,
+      "content_hash": "sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330",
+      "start": 5361,
+      "end": 5394,
+      "passage_id": "p-ac8565f6f4031c94357a758154d24195",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+      "version": 1,
+      "content_hash": "sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330",
+      "start": 1817,
+      "end": 2133,
+      "passage_id": "p-6195823939d662281697c955ca24ccf6",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "88351a73516e41d5a309edaec6742d0d:4",
+      "role": "evaluator",
+      "estimated_input_tokens": 6658
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "88351a73516e41d5a309edaec6742d0d:4",
+      "role": "evaluator",
+      "duration_ms": 10844,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 5261,
+      "output_tokens": 789
+    }
+  },
+  {
+    "event_type": "response.excerpts",
+    "payload": {
+      "algorithm": "query-windows-v1",
+      "response_mode": "answer",
+      "attempt": 1,
+      "per_source_chars": 6000,
+      "sources": [
+        {
+          "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+          "segment": "source_1",
+          "strategy": "support-first-v2",
+          "body_chars": 21373,
+          "excerpt_chars": 2260,
+          "pre_token_ranges": [
+            {
+              "start": 143,
+              "end": 1386,
+              "start_line": 6,
+              "end_line": 21
+            },
+            {
+              "start": 2938,
+              "end": 3828,
+              "start_line": 75,
+              "end_line": 95
+            }
+          ],
+          "omitted_ranges": [],
+          "token_status": "full"
+        },
+        {
+          "evidence_id": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+          "segment": "source_2",
+          "strategy": "support-first-v2",
+          "body_chars": 5646,
+          "excerpt_chars": 3498,
+          "pre_token_ranges": [
+            {
+              "start": 959,
+              "end": 2797,
+              "start_line": 13,
+              "end_line": 52
+            },
+            {
+              "start": 3227,
+              "end": 4760,
+              "start_line": 66,
+              "end_line": 113
+            }
+          ],
+          "omitted_ranges": [],
+          "token_status": "full"
+        },
+        {
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "segment": "source_3",
+          "strategy": "support-first-v2",
+          "body_chars": 36526,
+          "excerpt_chars": 2426,
+          "pre_token_ranges": [
+            {
+              "start": 34,
+              "end": 1288,
+              "start_line": 5,
+              "end_line": 21
+            },
+            {
+              "start": 1708,
+              "end": 2754,
+              "start_line": 24,
+              "end_line": 56
+            }
+          ],
+          "omitted_ranges": [],
+          "token_status": "full"
+        }
+      ]
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+      "version": 1,
+      "content_hash": "sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330",
+      "start": 143,
+      "end": 1386,
+      "passage_id": "p-c01c759697eba2b7b72b0d0cb92bdc80",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-071ad1b6d36b1eec4fac4e0bca4a831995831c68a538d22b0211f97785507402",
+      "version": 1,
+      "content_hash": "sha256:72d57e625e51db5452cbac3a98567b9662ea2f995b2986f1f3772bb02290a330",
+      "start": 2938,
+      "end": 3828,
+      "passage_id": "p-02394414b33145447cbc2b8bc2a738c7",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+      "version": 1,
+      "content_hash": "sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4",
+      "start": 959,
+      "end": 2797,
+      "passage_id": "p-0299699d3411ee62f31773b9b4355652",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-539b4a6f6f22254986bfc8a5a92f0116d1ab8cc68df9cefc5934cc5b84f25efb",
+      "version": 1,
+      "content_hash": "sha256:ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4",
+      "start": 3227,
+      "end": 4760,
+      "passage_id": "p-a6ae73564c9261972946f5f232af4b85",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 34,
+      "end": 1288,
+      "passage_id": "p-cfc182519b28be44dee374e93b2a5a6c",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 1708,
+      "end": 2754,
+      "passage_id": "p-788a70c5225f5bc372ad73c9026c2a9e",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "88351a73516e41d5a309edaec6742d0d:5",
+      "role": "responder",
+      "estimated_input_tokens": 4980
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "88351a73516e41d5a309edaec6742d0d:5",
+      "role": "responder",
+      "duration_ms": 7734,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 3922,
+      "output_tokens": 373
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "88351a73516e41d5a309edaec6742d0d:6",
+      "role": "responder",
+      "estimated_input_tokens": 5194
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "88351a73516e41d5a309edaec6742d0d",
+      "call_id": "88351a73516e41d5a309edaec6742d0d:6",
+      "role": "responder",
+      "duration_ms": 5843,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 3954,
+      "output_tokens": 383
+    }
+  },
+  {
+    "event_type": "response.fact_review.completed",
+    "payload": {
+      "issues_count": 0,
+      "unanswered_points": [],
+      "consistency_checks": [],
+      "budgets": []
+    }
+  }
+]

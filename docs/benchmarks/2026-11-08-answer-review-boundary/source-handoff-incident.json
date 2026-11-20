@@ -1,0 +1,15 @@
+{
+  "missing_original_paragraph": {
+    "end": 6894,
+    "start": 6426,
+    "text": "- You must use the **same thread ID** when resuming that was used when the interrupt occurred\n- The value passed to `Command(resume=...)` becomes the return value of the @[`interrupt`] call\n- The node restarts from the beginning of the node where the @[`interrupt`] was called when resumed, so any code before the @[`interrupt`] runs again\n- You can pass any JSON-serializable value as the resume value, subject to validation when you specify a typed `response_schema`"
+  },
+  "observed_effect": "The final visible Interrupts passage has Command resumption but no same-thread condition.",
+  "original_question": "Using only the frozen documentation, a node writes to an external service before interrupt(). How should resumption and duplicate side effects be handled?",
+  "present_in_final_visible_sources": false,
+  "question_id": "multi_hop-dev-02",
+  "scope_of_conclusion": "A confirmed source-handoff omission on this saved case; not a general recall rate.",
+  "source_body_sha256": "d31c79657d893d74ead0b5e5055993d257f291ab6e787a2b1251fbe658498646",
+  "source_url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langgraph/interrupts.mdx",
+  "status": "diagnosed; semantic candidate rejected; retrieval/source selection remains unresolved"
+}

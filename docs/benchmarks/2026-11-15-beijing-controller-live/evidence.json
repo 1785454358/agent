@@ -1,0 +1,122 @@
+[
+  {
+    "id": "evidence-3e22cfa860c0e9247080e580d5560c8b2665b9801a9d6269ac0943ac67e3d02f",
+    "canonical_url": "https://www.tibetcn.com/wenda/283.html",
+    "title": "[2027北京旅游攻略]第一次去北京旅游必看保姆级游玩攻略「附景点」",
+    "media_type": "text/html",
+    "content_hash": "sha256:73975f8cd98c1242eedc02a97f66ea0669861a5d26c275a99bb02320be646ace",
+    "fetched_at": "2026-11-15T09:23:54.956801Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.tibetcn.com/wenda/283.html",
+      "final_url": "https://www.tibetcn.com/wenda/283.html",
+      "publisher_canonical_url": "https://www.tibetcn.com/wenda/283.html",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-d3dcd56304361d56d1869d0e4a305b93e1155e6eaf386c53e90df82b12ec6f99",
+    "canonical_url": "https://andyventure.com/china-beijing-travel-guide",
+    "title": "北京自由行攻略－行前準備、旅遊心得、推薦景點、行程安排｜自助旅遊教學 - 冒險安迪",
+    "media_type": "text/html",
+    "content_hash": "sha256:f0def327c874d3e653aee8d9ba4927c83b6b2c70448b9eadf578f7a30af642ff",
+    "fetched_at": "2026-11-15T09:24:19.073698Z",
+    "published_at": "2025-07-11T05:33:51Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://andyventure.com/china-beijing-travel-guide",
+      "final_url": "https://andyventure.com/china-beijing-travel-guide",
+      "publisher_canonical_url": "https://andyventure.com/china-beijing-travel-guide",
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+    "canonical_url": "https://ticket.dpm.org.cn/",
+    "title": "在线订票 - 故宫博物院",
+    "media_type": "text/html",
+    "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+    "fetched_at": "2026-11-15T09:24:41.593298Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://ticket.dpm.org.cn/",
+      "final_url": "https://ticket.dpm.org.cn/",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+    "canonical_url": "https://www.dpm.org.cn/singles_detail/259831.html",
+    "title": "故宫博物院参观须知 - 故宫博物院",
+    "media_type": "text/html",
+    "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+    "fetched_at": "2026-11-15T09:24:41.776625Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.dpm.org.cn/singles_detail/259831.html",
+      "final_url": "https://www.dpm.org.cn/singles_detail/259831.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-14728cfd7e7ffdd5bb49b7e85067e0ff5082c9124881e8259873d494ca23103d",
+    "canonical_url": "https://www.summerpalace.net.cn/",
+    "title": "颐和园官网",
+    "media_type": "text/html",
+    "content_hash": "sha256:8e1bb6ee1b65c9ad2a74f2895a61ad24e6ac41efa4006e8bcaf0a93d1defc250",
+    "fetched_at": "2026-11-15T09:24:43.099429Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.summerpalace.net.cn/",
+      "final_url": "https://www.summerpalace.net.cn/",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-cf50b7149a2d20db18bf36cb45c02d2f7bbafde4e650e38516dd4edf1dd17466",
+    "canonical_url": "https://travelnews.qunar.com/qa_strategy/beijing-attraction-reservation-travel-guide-5",
+    "title": "北京旅游热门景点怎么预约？有什么攻略？ - 去哪儿",
+    "media_type": "text/html",
+    "content_hash": "sha256:fa1bf8671ec42ce529bb77395ca3de2639c3000bae1c8f9a2c3b322fd7536edc",
+    "fetched_at": "2026-11-15T09:24:40.702680Z",
+    "published_at": "2026-05-13T00:00:00Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://travelnews.qunar.com/qa_strategy/beijing-attraction-reservation-travel-guide-5",
+      "final_url": "https://travelnews.qunar.com/qa_strategy/beijing-attraction-reservation-travel-guide-5",
+      "publisher_canonical_url": "https://travelnews.qunar.com/qa_strategy/beijing-attraction-reservation-travel-guide-5",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  }
+]

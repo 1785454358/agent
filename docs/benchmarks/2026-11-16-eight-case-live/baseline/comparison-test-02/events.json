@@ -1,0 +1,1097 @@
+[
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "7430fce496c04eac9d6e9e7ed0818743:1",
+      "role": "planner",
+      "estimated_input_tokens": 2431
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "7430fce496c04eac9d6e9e7ed0818743:1",
+      "role": "planner",
+      "duration_ms": 11781,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1490,
+      "output_tokens": 764
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "7430fce496c04eac9d6e9e7ed0818743:2",
+      "role": "researcher",
+      "estimated_input_tokens": 2445
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "7430fce496c04eac9d6e9e7ed0818743:3",
+      "role": "researcher",
+      "estimated_input_tokens": 2536
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "7430fce496c04eac9d6e9e7ed0818743:2",
+      "role": "researcher",
+      "duration_ms": 1937,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1981,
+      "output_tokens": 40
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-24639a171104c4d61e9bbaec0c2daaa4",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "436461732f48b99344d8dc628cc1953f",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "trimming deleting summarizing messages comparison recommendation when to use compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-24639a171104c4d61e9bbaec0c2daaa4",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "a60464c7c70984cf8b33f2ceda6850f0",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "trimming deleting summarizing messages comparison recommendation when to use compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-24639a171104c4d61e9bbaec0c2daaa4",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "436461732f48b99344d8dc628cc1953f",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 57
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-24639a171104c4d61e9bbaec0c2daaa4",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "a60464c7c70984cf8b33f2ceda6850f0",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 105
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "caller_id": "workflow-graph",
+      "branch": "documentation message trimming vs deleting vs summarizing context management",
+      "tool_call_id": "batch-2ae18d8b80b928eafb9296da6d8c89f1",
+      "call_id": "436461732f48b99344d8dc628cc1953f",
+      "tool": "read_evidence",
+      "query": "trimming deleting summarizing messages comparison recommendation when to use compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518\",\"version\":1,\"content_hash\":\"sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118\",\"historical\":false,\"passages\":[{\"ref\":\"n1\",\"start\":1708,\"end\":1936,\"text\":\"<Tip>\\n    Need to remember information **across** conversations? Use [long-term memory](/oss/langchain/long-term-memory) to store and recall user-specific or application-level data across different threads and sessions.\\n</Tip>\\n\\n\"},{\"ref\":\"n2\",\"start\":2697,\"end\":2754,\"text\":\"In production, use a checkpointer backed by a database:\\n\\n\"},{\"ref\":\"n3\",\"start\":4341,\"end\":4480,\"text\":\":::python\\nBy default, agents use @[`AgentState`] to manage short term memory, specifically the conversation history via a `messages` key.\\n\\n\"},{\"ref\":\"n4\",\"start\":7444,\"end\":7463,\"text\":\"### Trim messages\\n\\n\"},{\"ref\":\"n5\",\"start\":8271,\"end\":8368,\"text\":\":::python\\nTo trim message history in an agent, use the @[`@before_model`] middleware decorator:\\n\\n\"},{\"ref\":\"n6\",\"start\":10029,\"end\":10126,\"text\":\":::js\\nTo trim message history in an agent, use @[`createMiddleware`] with a `beforeModel` hook:\\n\\n\"},{\"ref\":\"n7\",\"start\":11027,\"end\":11432,\"text\":\"### Delete messages\\n\\nYou can delete messages from the graph state to manage the message history.\\n\\nThis is useful when you want to remove specific messages or clear the entire message history.\\n\\n:::python\\nTo delete messages from the graph state, you can use the `RemoveMessage`.\\n\\nFor `RemoveMessage` to work, you need to use a state key with @[`add_messages`] [reducer](/oss/langgraph/graph-api#reducers).\\n\\n\"},{\"ref\":\"n8\",\"start\":11476,\"end\":11506,\"text\":\"To remove specific messages:\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":36526,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "caller_id": "workflow-graph",
+      "branch": "documentation message trimming vs deleting vs summarizing context management",
+      "tool_call_id": "batch-ebf8a3d7cb8e5bec4818767b08c37781",
+      "call_id": "a60464c7c70984cf8b33f2ceda6850f0",
+      "tool": "read_evidence",
+      "query": "trimming deleting summarizing messages comparison recommendation when to use compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f\",\"version\":1,\"content_hash\":\"sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6\",\"historical\":false,\"passages\":[{\"ref\":\"n9\",\"start\":93,\"end\":262,\"text\":\"The hard part of building agents (or any LLM application) is making them reliable enough. While they may work for a prototype, they often fail in real-world use cases.\\n\\n\"},{\"ref\":\"n10\",\"start\":972,\"end\":1141,\"text\":\"<Tip>\\nNew to context engineering? Start with the [conceptual overview](/oss/concepts/context) to understand the different types of context and when to use them.\\n</Tip>\\n\\n\"},{\"ref\":\"n11\",\"start\":3694,\"end\":3807,\"text\":\"Throughout this guide, you'll see frequent use of the middleware API as a means to the context engineering end.\\n\\n\"},{\"ref\":\"n12\",\"start\":3825,\"end\":3991,\"text\":\"Control what goes into each model call - instructions, available tools, which model to use, and output format. These decisions directly impact reliability and cost.\\n\\n\"},{\"ref\":\"n13\",\"start\":10910,\"end\":10924,\"text\":\"### Messages\\n\\n\"},{\"ref\":\"n14\",\"start\":21192,\"end\":21621,\"text\":\"<Note>\\n**Transient vs Persistent Message Updates:**\\n\\nThe examples above use `wrap_model_call` to make **transient** updates - modifying what messages are sent to the model for a single call without changing what's saved in state.\\n\\nFor **persistent** updates that modify state, you can:\\n\\n:::python\\n- Return a @[`ExtendedModelResponse`] with a @[`Command`] from `wrap_model_call` to inject state updates from the model call layer.\\n\"},{\"ref\":\"n15\",\"start\":21621,\"end\":22081,\"text\":\"- Use life-cycle hooks like `before_model`, `after_model`, or `wrap_tool_call` (for tool returns) to update the conversation history. See the [middleware documentation](/oss/langchain/middleware) for more details.\\n:::\\n\\n:::js\\n- Return a @[`Command`] directly from `wrapModelCall` to inject state updates from the model call layer.\\n- Use life-cycle hooks like `beforeModel`, `afterModel`, or `wrapToolCall` (for tool returns) to update the conversation history. \"},{\"ref\":\"n16\",\"start\":22081,\"end\":22265,\"text\":\"See the [middleware documentation](/oss/langchain/middleware) for more details.\\n:::\\n\\nSee [State updates](/oss/langchain/middleware/custom#state-updates) for more information.\\n</Note>\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":65466,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "7430fce496c04eac9d6e9e7ed0818743:3",
+      "role": "researcher",
+      "duration_ms": 2593,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 2068,
+      "output_tokens": 78
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-e7e929d0f4ee428970b6a446fa13cee6",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "93bc5452c81a238f53eb5f7f979f0d2a",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "trim_messages how to use trimming long conversations token limit compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-e7e929d0f4ee428970b6a446fa13cee6",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "93bc5452c81a238f53eb5f7f979f0d2a",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 47
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-e7e929d0f4ee428970b6a446fa13cee6",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "e2b612a019ff0021b13a840e5298b128",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "trim_messages how to use trimming long conversations token limit compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-e7e929d0f4ee428970b6a446fa13cee6",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "e2b612a019ff0021b13a840e5298b128",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 78
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-e7e929d0f4ee428970b6a446fa13cee6",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "f11ace69d148cb85f8e735f997a1c897",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "summarizationmiddleware summarize messages when conversation history too long compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-e7e929d0f4ee428970b6a446fa13cee6",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "63bf232e68201f01b8c916297269068d",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "removemessage delete messages from state long conversation compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-e7e929d0f4ee428970b6a446fa13cee6",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "f11ace69d148cb85f8e735f997a1c897",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 46
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-e7e929d0f4ee428970b6a446fa13cee6",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "63bf232e68201f01b8c916297269068d",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 73
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-e7e929d0f4ee428970b6a446fa13cee6",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "f70ebc1a6b93785856ac5023e1011d3b",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "removemessage delete messages from state long conversation compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-e7e929d0f4ee428970b6a446fa13cee6",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "6f1ad555475d6c992c8eef6dca417cc5",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "summarizationmiddleware summarize messages when conversation history too long compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-e7e929d0f4ee428970b6a446fa13cee6",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "f70ebc1a6b93785856ac5023e1011d3b",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 56
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-e7e929d0f4ee428970b6a446fa13cee6",
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "thread_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "6f1ad555475d6c992c8eef6dca417cc5",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 109
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation trimming deleting summarizing messages long conversations",
+      "tool_call_id": "batch-d7ad73cb063ee30a53b1b908c9e9f217",
+      "call_id": "93bc5452c81a238f53eb5f7f979f0d2a",
+      "tool": "read_evidence",
+      "query": "trim_messages how to use trimming long conversations token limit compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518\",\"version\":1,\"content_hash\":\"sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118\",\"historical\":false,\"passages\":[{\"ref\":\"n1\",\"start\":846,\"end\":1288,\"text\":\"Conversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\\n\\nEven if your model supports the full context length, most LLMs still perform poorly over long contexts. They get \\\"distracted\\\" by stale or off-topic content, all while suffering from slower response times and higher costs.\\n\\n\"},{\"ref\":\"n2\",\"start\":1708,\"end\":1936,\"text\":\"<Tip>\\n    Need to remember information **across** conversations? Use [long-term memory](/oss/langchain/long-term-memory) to store and recall user-specific or application-level data across different threads and sessions.\\n</Tip>\\n\\n\"},{\"ref\":\"n3\",\"start\":2697,\"end\":2754,\"text\":\"In production, use a checkpointer backed by a database:\\n\\n\"},{\"ref\":\"n4\",\"start\":6584,\"end\":6705,\"text\":\"With [short-term memory](#usage) enabled, long conversations can exceed the LLM's context window. Common solutions are:\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":36526,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation trimming deleting summarizing messages long conversations",
+      "tool_call_id": "batch-9549b4e69aa297c7b7c4ced2600d4f5c",
+      "call_id": "63bf232e68201f01b8c916297269068d",
+      "tool": "read_evidence",
+      "query": "removemessage delete messages from state long conversation compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518\",\"version\":1,\"content_hash\":\"sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118\",\"historical\":false,\"passages\":[{\"ref\":\"n5\",\"start\":592,\"end\":1065,\"text\":\"Short term memory lets your application remember previous interactions within a single thread or conversation.\\n\\n<Note>\\n    A thread organizes multiple interactions in a session, similar to the way email groups messages in a single conversation.\\n</Note>\\n\\nConversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\\n\\n\"},{\"ref\":\"n6\",\"start\":4341,\"end\":4480,\"text\":\":::python\\nBy default, agents use @[`AgentState`] to manage short term memory, specifically the conversation history via a `messages` key.\\n\\n\"},{\"ref\":\"n4\",\"start\":6584,\"end\":6705,\"text\":\"With [short-term memory](#usage) enabled, long conversations can exceed the LLM's context window. Common solutions are:\\n\\n\"},{\"ref\":\"n7\",\"start\":7343,\"end\":7463,\"text\":\"This allows the agent to keep track of the conversation without exceeding the LLM's context window.\\n\\n### Trim messages\\n\\n\"},{\"ref\":\"n8\",\"start\":11027,\"end\":11125,\"text\":\"### Delete messages\\n\\nYou can delete messages from the graph state to manage the message history.\\n\\n\"},{\"ref\":\"n9\",\"start\":11220,\"end\":11432,\"text\":\":::python\\nTo delete messages from the graph state, you can use the `RemoveMessage`.\\n\\nFor `RemoveMessage` to work, you need to use a state key with @[`add_messages`] [reducer](/oss/langgraph/graph-api#reducers).\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":36526,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation trimming deleting summarizing messages long conversations",
+      "tool_call_id": "batch-26130a2b178aa9f33f27555c63106c17",
+      "call_id": "f11ace69d148cb85f8e735f997a1c897",
+      "tool": "read_evidence",
+      "query": "summarizationmiddleware summarize messages when conversation history too long compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518\",\"version\":1,\"content_hash\":\"sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118\",\"historical\":false,\"passages\":[{\"ref\":\"n5\",\"start\":592,\"end\":1065,\"text\":\"Short term memory lets your application remember previous interactions within a single thread or conversation.\\n\\n<Note>\\n    A thread organizes multiple interactions in a session, similar to the way email groups messages in a single conversation.\\n</Note>\\n\\nConversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\\n\\n\"},{\"ref\":\"n10\",\"start\":1065,\"end\":1288,\"text\":\"Even if your model supports the full context length, most LLMs still perform poorly over long contexts. They get \\\"distracted\\\" by stale or off-topic content, all while suffering from slower response times and higher costs.\\n\\n\"},{\"ref\":\"n6\",\"start\":4341,\"end\":4480,\"text\":\":::python\\nBy default, agents use @[`AgentState`] to manage short term memory, specifically the conversation history via a `messages` key.\\n\\n\"},{\"ref\":\"n11\",\"start\":6584,\"end\":7023,\"text\":\"With [short-term memory](#usage) enabled, long conversations can exceed the LLM's context window. Common solutions are:\\n\\n<CardGroup cols={2}>\\n    <Card title=\\\"Trim messages\\\" icon=\\\"scissors\\\" href=\\\"#trim-messages\\\" arrow>\\n        Remove first or last N messages (before calling LLM)\\n    </Card>\\n    <Card title=\\\"Delete messages\\\" icon=\\\"trash\\\" href=\\\"#delete-messages\\\" arrow>\\n        Delete messages from LangGraph state permanently\\n    </Card>\\n\"},{\"ref\":\"n12\",\"start\":7023,\"end\":7463,\"text\":\"    <Card title=\\\"Summarize messages\\\" icon=\\\"stack-2\\\" href=\\\"#summarize-messages\\\" arrow>\\n        Summarize earlier messages in the history and replace them with a summary\\n    </Card>\\n    <Card title=\\\"Custom strategies\\\" icon=\\\"adjustments\\\">\\n        Custom strategies (e.g., message filtering, etc.)\\n    </Card>\\n</CardGroup>\\n\\nThis allows the agent to keep track of the conversation without exceeding the LLM's context window.\\n\\n### Trim messages\\n\\n\"},{\"ref\":\"n13\",\"start\":8271,\"end\":8368,\"text\":\":::python\\nTo trim message history in an agent, use the @[`@before_model`] middleware decorator:\\n\\n\"},{\"ref\":\"n14\",\"start\":11027,\"end\":11220,\"text\":\"### Delete messages\\n\\nYou can delete messages from the graph state to manage the message history.\\n\\nThis is useful when you want to remove specific messages or clear the entire message history.\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":36526,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation trimming deleting summarizing messages long conversations",
+      "tool_call_id": "batch-ba6b59c4bc2463162574968757388ea4",
+      "call_id": "e2b612a019ff0021b13a840e5298b128",
+      "tool": "read_evidence",
+      "query": "trim_messages how to use trimming long conversations token limit compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f\",\"version\":1,\"content_hash\":\"sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6\",\"historical\":false,\"passages\":[{\"ref\":\"n15\",\"start\":4712,\"end\":4871,\"text\":\"All of these types of model context can draw from **state** (short-term memory), **store** (long-term memory), or **runtime context** (static configuration).\\n\\n\"},{\"ref\":\"n16\",\"start\":6502,\"end\":6576,\"text\":\"  <Tab title=\\\"Store\\\">\\n    Access user preferences from long-term memory:\\n\\n\"},{\"ref\":\"n17\",\"start\":22653,\"end\":23113,\"text\":\":::python\\n```python\\nfrom langchain.tools import tool\\n\\n@tool(parse_docstring=True)\\ndef search_orders(\\n    user_id: str,\\n    status: str,\\n    limit: int = 10\\n) -> str:\\n    \\\"\\\"\\\"Search for user orders by status.\\n\\n    Use this when the user asks about order history or wants to check\\n    order status. Always filter by the provided status.\\n\\n    Args:\\n        user_id: Unique identifier for the user\\n        status: Order status: 'pending', 'shipped', or 'delivered'\\n\"},{\"ref\":\"n18\",\"start\":23113,\"end\":23216,\"text\":\"        limit: Maximum number of results to return\\n    \\\"\\\"\\\"\\n    # Implementation here\\n    pass\\n```\\n:::\\n\\n\"},{\"ref\":\"n19\",\"start\":23940,\"end\":24238,\"text\":\"Not every tool is appropriate for every situation. Too many tools may overwhelm the model (overload context) and increase errors; too few limit capabilities. Dynamic tool selection adapts the available toolset based on authentication state, user permissions, feature flags, or conversation stage.\\n\\n\"},{\"ref\":\"n20\",\"start\":62774,\"end\":63097,\"text\":\"One of the most common life-cycle patterns is automatically condensing conversation history when it gets too long. Unlike the transient message trimming shown in [Model Context](#messages), summarization **persistently updates state** - permanently replacing old messages with a summary that's saved for all future turns.\\n\\n\"},{\"ref\":\"n21\",\"start\":63833,\"end\":64084,\"text\":\"When the conversation exceeds the token limit, `SummarizationMiddleware` automatically:\\n1. Summarizes older messages using a separate LLM call\\n2. Replaces them with a summary message in State (permanently)\\n3. Keeps recent messages intact for context\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":65466,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation trimming deleting summarizing messages long conversations",
+      "tool_call_id": "batch-69710158ffa2f9715b09940d785f65ed",
+      "call_id": "f70ebc1a6b93785856ac5023e1011d3b",
+      "tool": "read_evidence",
+      "query": "removemessage delete messages from state long conversation compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f\",\"version\":1,\"content_hash\":\"sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6\",\"historical\":false,\"passages\":[{\"ref\":\"n22\",\"start\":2882,\"end\":3379,\"text\":\"| Data Source | Also Known As | Scope | Examples |\\n|-------------|---------------|-------|----------|\\n| **Runtime Context** | Static configuration | Conversation-scoped | User ID, API keys, database connections, permissions, environment settings |\\n| **State** | Short-term memory | Conversation-scoped | Current messages, uploaded files, authentication status, tool results |\\n| **Store** | Long-term memory | Cross-conversation | User preferences, extracted insights, memories, historical data |\\n\\n\"},{\"ref\":\"n15\",\"start\":4712,\"end\":4871,\"text\":\"All of these types of model context can draw from **state** (short-term memory), **store** (long-term memory), or **runtime context** (static configuration).\\n\\n\"},{\"ref\":\"n23\",\"start\":5174,\"end\":5265,\"text\":\"<Tabs>\\n  <Tab title=\\\"State\\\">\\n    Access message count or conversation context from state:\\n\\n\"},{\"ref\":\"n24\",\"start\":21192,\"end\":21621,\"text\":\"<Note>\\n**Transient vs Persistent Message Updates:**\\n\\nThe examples above use `wrap_model_call` to make **transient** updates - modifying what messages are sent to the model for a single call without changing what's saved in state.\\n\\nFor **persistent** updates that modify state, you can:\\n\\n:::python\\n- Return a @[`ExtendedModelResponse`] with a @[`Command`] from `wrap_model_call` to inject state updates from the model call layer.\\n\"},{\"ref\":\"n25\",\"start\":21621,\"end\":22081,\"text\":\"- Use life-cycle hooks like `before_model`, `after_model`, or `wrap_tool_call` (for tool returns) to update the conversation history. See the [middleware documentation](/oss/langchain/middleware) for more details.\\n:::\\n\\n:::js\\n- Return a @[`Command`] directly from `wrapModelCall` to inject state updates from the model call layer.\\n- Use life-cycle hooks like `beforeModel`, `afterModel`, or `wrapToolCall` (for tool returns) to update the conversation history. \"},{\"ref\":\"n26\",\"start\":22081,\"end\":22265,\"text\":\"See the [middleware documentation](/oss/langchain/middleware) for more details.\\n:::\\n\\nSee [State updates](/oss/langchain/middleware/custom#state-updates) for more information.\\n</Note>\\n\\n\"},{\"ref\":\"n27\",\"start\":31851,\"end\":31947,\"text\":\"<Tabs>\\n  <Tab title=\\\"State\\\">\\n    Use different models based on conversation length from State:\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":65466,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation trimming deleting summarizing messages long conversations",
+      "tool_call_id": "batch-af0ee35d19087b3d48765a90ac947d58",
+      "call_id": "6f1ad555475d6c992c8eef6dca417cc5",
+      "tool": "read_evidence",
+      "query": "summarizationmiddleware summarize messages when conversation history too long compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f\",\"version\":1,\"content_hash\":\"sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6\",\"historical\":false,\"passages\":[{\"ref\":\"n16\",\"start\":6502,\"end\":6576,\"text\":\"  <Tab title=\\\"Store\\\">\\n    Access user preferences from long-term memory:\\n\\n\"},{\"ref\":\"n24\",\"start\":21192,\"end\":21621,\"text\":\"<Note>\\n**Transient vs Persistent Message Updates:**\\n\\nThe examples above use `wrap_model_call` to make **transient** updates - modifying what messages are sent to the model for a single call without changing what's saved in state.\\n\\nFor **persistent** updates that modify state, you can:\\n\\n:::python\\n- Return a @[`ExtendedModelResponse`] with a @[`Command`] from `wrap_model_call` to inject state updates from the model call layer.\\n\"},{\"ref\":\"n25\",\"start\":21621,\"end\":22081,\"text\":\"- Use life-cycle hooks like `before_model`, `after_model`, or `wrap_tool_call` (for tool returns) to update the conversation history. See the [middleware documentation](/oss/langchain/middleware) for more details.\\n:::\\n\\n:::js\\n- Return a @[`Command`] directly from `wrapModelCall` to inject state updates from the model call layer.\\n- Use life-cycle hooks like `beforeModel`, `afterModel`, or `wrapToolCall` (for tool returns) to update the conversation history. \"},{\"ref\":\"n26\",\"start\":22081,\"end\":22265,\"text\":\"See the [middleware documentation](/oss/langchain/middleware) for more details.\\n:::\\n\\nSee [State updates](/oss/langchain/middleware/custom#state-updates) for more information.\\n</Note>\\n\\n\"},{\"ref\":\"n19\",\"start\":23940,\"end\":24238,\"text\":\"Not every tool is appropriate for every situation. Too many tools may overwhelm the model (overload context) and increase errors; too few limit capabilities. Dynamic tool selection adapts the available toolset based on authentication state, user permissions, feature flags, or conversation stage.\\n\\n\"},{\"ref\":\"n28\",\"start\":62255,\"end\":62551,\"text\":\"1. **Update context** - Modify state and store to persist changes, update conversation history, or save insights\\n2. **Jump in the lifecycle** - Move to different steps in the agent cycle based on context (e.g., skip tool execution if a condition is met, repeat model call with modified context)\\n\\n\"},{\"ref\":\"n20\",\"start\":62774,\"end\":63097,\"text\":\"One of the most common life-cycle patterns is automatically condensing conversation history when it gets too long. Unlike the transient message trimming shown in [Model Context](#messages), summarization **persistently updates state** - permanently replacing old messages with a summary that's saved for all future turns.\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":65466,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 592,
+      "end": 1065,
+      "passage_id": "p-d2b03b60a9fcc9f049aba10152a6188a",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 1065,
+      "end": 1288,
+      "passage_id": "p-405323c3c85f3163d8971f351bc65199",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 93,
+      "end": 262,
+      "passage_id": "p-0cb1424c0cb5376841b78590965cb40b",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 1708,
+      "end": 1936,
+      "passage_id": "p-3f2ea897b84ac503ff68ba46eee09c77",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 972,
+      "end": 1141,
+      "passage_id": "p-2b994948d2bfe810eb625e1ed3f7b610",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 2697,
+      "end": 2754,
+      "passage_id": "p-38757db08de16dc917d9c9d86e927973",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 2882,
+      "end": 3379,
+      "passage_id": "p-d1699aa6a72b83d2be38363b65da9a2f",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 4341,
+      "end": 4480,
+      "passage_id": "p-b997fe6afcf8376486ce946ccddf305c",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 3694,
+      "end": 3807,
+      "passage_id": "p-14d599d37e8bb6dc1a8721839e43ff98",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 6584,
+      "end": 7023,
+      "passage_id": "p-7d5b1aa0d619e82493a9c0d26424f094",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 7023,
+      "end": 7463,
+      "passage_id": "p-61abec83572dbef359274406e0c888a0",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 3825,
+      "end": 3991,
+      "passage_id": "p-a6c25f3c1c61f5411853638d8ef5a4ca",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 8271,
+      "end": 8368,
+      "passage_id": "p-6cd358784b6717e2e4c85a2fef68d2fa",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 4712,
+      "end": 4871,
+      "passage_id": "p-754ae72df3af4e725987bd4f1427a3c4",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 10029,
+      "end": 10126,
+      "passage_id": "p-bd1e11073cdf9da890af0bf6579506a1",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 5174,
+      "end": 5265,
+      "passage_id": "p-6b9138fd7263ca35575932eaea1b4db7",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 11027,
+      "end": 11432,
+      "passage_id": "p-1d82d646f4bcab3737b8b3da8e732415",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 6502,
+      "end": 6576,
+      "passage_id": "p-8836dfded14b8fff8aaaa2eaab8d47b3",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 11476,
+      "end": 11506,
+      "passage_id": "p-3ff441742743e1b06b22f41c01f639ad",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 10910,
+      "end": 10924,
+      "passage_id": "p-aaa4a730ae7226b0a58ad6ebd9900b0b",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 21192,
+      "end": 21621,
+      "passage_id": "p-d648e2dd0cce583aebfaeaa3e12029ea",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 21621,
+      "end": 22081,
+      "passage_id": "p-765812d7268cb237831784c7b84827a9",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 22081,
+      "end": 22265,
+      "passage_id": "p-f0a772c778e47ffe9750c9bcd96ac144",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 22653,
+      "end": 23113,
+      "passage_id": "p-c5e12d5d385469ec525f87019f7c8361",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 23113,
+      "end": 23216,
+      "passage_id": "p-13925e1759ac8dfb702dacd57a7ad263",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 23940,
+      "end": 24238,
+      "passage_id": "p-60c693189f81fbb339ba0e0d2aec38b0",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 62774,
+      "end": 63097,
+      "passage_id": "p-f3ba135b636bffeefc665215b3789b3a",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 63833,
+      "end": 64084,
+      "passage_id": "p-710cd0c2cb5bd992cd5d1c7782c52185",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "7430fce496c04eac9d6e9e7ed0818743:4",
+      "role": "evaluator",
+      "estimated_input_tokens": 6748
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "7430fce496c04eac9d6e9e7ed0818743:4",
+      "role": "evaluator",
+      "duration_ms": 19890,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 5325,
+      "output_tokens": 1469
+    }
+  },
+  {
+    "event_type": "response.excerpts",
+    "payload": {
+      "algorithm": "query-windows-v1",
+      "response_mode": "answer",
+      "attempt": 1,
+      "per_source_chars": 6000,
+      "sources": [
+        {
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "segment": "source_1",
+          "strategy": "support-first-v2",
+          "body_chars": 36526,
+          "excerpt_chars": 6180,
+          "pre_token_ranges": [
+            {
+              "start": 232,
+              "end": 1708,
+              "start_line": 10,
+              "end_line": 23
+            },
+            {
+              "start": 5620,
+              "end": 8488,
+              "start_line": 141,
+              "end_line": 211
+            },
+            {
+              "start": 9909,
+              "end": 11552,
+              "start_line": 256,
+              "end_line": 319
+            }
+          ],
+          "omitted_ranges": [],
+          "token_status": "full"
+        },
+        {
+          "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+          "segment": "source_2",
+          "strategy": "support-first-v2",
+          "body_chars": 65466,
+          "excerpt_chars": 4868,
+          "pre_token_ranges": [
+            {
+              "start": 19376,
+              "end": 22449,
+              "start_line": 590,
+              "end_line": 668
+            },
+            {
+              "start": 62551,
+              "end": 64214,
+              "start_line": 1984,
+              "end_line": 2041
+            }
+          ],
+          "omitted_ranges": [],
+          "token_status": "full"
+        }
+      ]
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 232,
+      "end": 1708,
+      "passage_id": "p-ec3219597aed1f7a6c6db73bacafa24c",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 5620,
+      "end": 8488,
+      "passage_id": "p-e06a7341208371ad5866ae7a7a118976",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "version": 1,
+      "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+      "start": 9909,
+      "end": 11552,
+      "passage_id": "p-5c2811c7d44a5164ec08a50cd2eb2525",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 19376,
+      "end": 22449,
+      "passage_id": "p-94de97f1ae48c2e04725b6dd1b68af4f",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f",
+      "version": 1,
+      "content_hash": "sha256:802bb38b931f82e3fbfaa977c2182f7aeeb44fea9459208d34ed3736066f1ac6",
+      "start": 62551,
+      "end": 64214,
+      "passage_id": "p-d2858dc0b07837ed24d7f71da782125a",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "7430fce496c04eac9d6e9e7ed0818743:5",
+      "role": "responder",
+      "estimated_input_tokens": 6136
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "7430fce496c04eac9d6e9e7ed0818743",
+      "call_id": "7430fce496c04eac9d6e9e7ed0818743:5",
+      "role": "responder",
+      "duration_ms": 14485,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 4947,
+      "output_tokens": 759
+    }
+  }
+]

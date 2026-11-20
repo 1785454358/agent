@@ -1,0 +1,14 @@
+{
+  "multi_agent": {
+    "exit_code": 1,
+    "verdict": "fail"
+  },
+  "plan_execute": {
+    "exit_code": 1,
+    "verdict": "fail"
+  },
+  "workflow": {
+    "exit_code": 1,
+    "verdict": "fail"
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "run_id": "2377d1ccd77e45d08f748c1c2f680601",
+  "thread_id": "2377d1ccd77e45d08f748c1c2f680601",
+  "status": "completed",
+  "response_outcome": {
+    "response_mode": "answer",
+    "content": "结论：两者不矛盾——自动选择策略只适用于“直接传入 schema 类型（`type[StructuredResponseT]`）”的情形；JSON Schema 字典是显式例外，必须用 `ProviderStrategy` 或 `ToolStrategy` 包装，否则不会被自动识别 [1]。\n\n依据与条件：\n\n- 文档把 `response_format` 的取值分为四类：`ToolStrategy[...]`、`ProviderStrategy[...]`、`type[StructuredResponseT]`、`None`；其中只有 `type[StructuredResponseT]` 被描述为“根据模型能力自动选择最佳策略” [1]。\n- 自动选择的具体规则是：模型/提供商支持原生结构化输出时用 `ProviderStrategy`（如 OpenAI、Anthropic、xAI），其余模型用 `ToolStrategy` [1]。\n- 同一文档的 Warning 明确：JSON Schema 字典直接传给 `response_format` 时不会被自动检测，必须包进显式策略（`ProviderStrategy` 或 `ToolStrategy`）[1]。\n\n调和方式：这是一条“通用规则 + 显式例外”的关系，而非冲突。自动机制针对的是可识别的 schema 类型（如 Pydantic 类这类 `type[...]`）；JSON Schema 字典只是普通 `dict`，类型签名上虽可传入，但不在自动检测范围内，因此文档要求用户手动指定策略，把“选哪种策略”的决定权交还给调用方 [1]。\n\n这与默认行为的描述一致：agent 默认采用 tool calling 策略，仅对支持原生结构化输出的特定模型切换策略——即“自动”始终发生在已识别 schema 的前提下，而非对任意输入都生效 [1]。\n\n实践取舍（基于上述文档规则的推论，非原文新增事实）：若你的 schema 是 Pydantic 类，可直接传类型享受自动选择；若只有 JSON Schema 字典，需自行判断模型是否支持原生结构化输出，再选 `ProviderStrategy`（支持时）或 `ToolStrategy`（兜底）。文档另注：`langchain>=1.1` 时原生支持能力从模型 profile 动态读取，缺失时可手动提供 profile [1]。",
+    "citations": [
+      {
+        "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+        "marker": "[1]"
+      }
+    ],
+    "cited_evidence_ids": [
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+    ],
+    "partial_reason": null
+  },
+  "research_outcome": {
+    "delivery_plan": null,
+    "source_eligibility": {
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375": "eligible"
+    },
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "Identify the documentation statements governing automatic strategy choice for a schema type and the warning that JSON Schema dictionaries are not automatically detected, and reconcile them without adding external behavior."
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "covered",
+          "reason": "Both governing statements are identified from the frozen doc: automatic selection for directly provided schema types (p1) and the warning that JSON Schema dictionaries are not auto-detected and need explicit strategy wrapping (p2). They are reconciled as general rule plus explicit exception, consistent with the default tool-calling strategy description (p4), without adding external behavior.",
+          "finding_ids": [
+            "finding-1",
+            "finding-2",
+            "finding-3"
+          ],
+          "unanswered_parts": []
+        }
+      ]
+    },
+    "decomposition_degraded": false,
+    "mode": "workflow",
+    "evidence_ids": [
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+    ],
+    "findings": [
+      {
+        "id": "finding-1",
+        "claim": "The documentation states that when a schema type (`type[StructuredResponseT]`) is provided directly as `response_format`, LangChain automatically selects the best strategy based on model capabilities; `None` means structured output is not explicitly requested, while `ToolStrategy` and `ProviderStrategy` are explicit strategy wrappers.",
+        "evidence_ids": [
+          "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 1176,
+            "end": 1591,
+            "quote": "- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-2",
+        "claim": "A warning in the same documentation states that JSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`) because they are not automatically detected when passed directly to `response_format`.",
+        "evidence_ids": [
+          "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 1883,
+            "end": 2370,
+            "quote": "<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>\n\n<Note>\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```python\n    custom_profile = {\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 2370,
+            "end": 2601,
+            "quote": "        \"structured_output\": True,\n        # ...\n    }\n    model = init_chat_model(\"...\", profile=custom_profile)\n    ```\n    If tools are specified, the model must support simultaneous use of tools and structured output.\n</Note>\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-3",
+        "claim": "Reconciliation within the frozen documentation: automatic strategy choice applies when a schema type is passed directly, but JSON Schema dictionaries are an exception—they are not auto-detected and require an explicit `ProviderStrategy` or `ToolStrategy` wrapper. This is consistent with the default behavior description that the agent uses a tool calling strategy by default and switches to native structured output only for certain models that support it.",
+        "evidence_ids": [
+          "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+        ],
+        "confidence": 0.9,
+        "supports": [
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 1176,
+            "end": 1591,
+            "quote": "- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 1883,
+            "end": 2370,
+            "quote": "<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>\n\n<Note>\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```python\n    custom_profile = {\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 2370,
+            "end": 2601,
+            "quote": "        \"structured_output\": True,\n        # ...\n    }\n    model = init_chat_model(\"...\", profile=custom_profile)\n    ```\n    If tools are specified, the model must support simultaneous use of tools and structured output.\n</Note>\n\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 3705,
+            "end": 4095,
+            "quote": "Controls how the agent returns structured data. You can provide a Zod schema, any [Standard Schema](https://standardschema.dev/)-compatible schema, or a JSON Schema object. By default, the agent uses a tool calling strategy, in which the output is created by an additional tool call. Certain models support native structured output, in which case the agent will use that strategy instead.\n\n"
+          }
+        ]
+      }
+    ],
+    "unresolved_gaps": [],
+    "executed_steps": 3,
+    "termination_reason": "completed"
+  },
+  "termination_reason": "workflow_completed",
+  "executed_steps": 3,
+  "unresolved_gaps": [],
+  "sources": [
+    "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx"
+  ],
+  "research_sufficiency": "sufficient"
+}

@@ -1,0 +1,476 @@
+{
+  "baseline_mode": "workflow",
+  "candidate_mode": "workflow",
+  "checks": [
+    {
+      "baseline": 1.0,
+      "candidate": 1.0,
+      "data_kind": "synthetic",
+      "dataset": "controlled-gate-fixture",
+      "delta": 0.0,
+      "max_drop": 0.0,
+      "name": "completion_rate",
+      "reason": "operational rate only; not semantic task success",
+      "split": "dev",
+      "status": "pass"
+    },
+    {
+      "baseline": 1.0,
+      "candidate": 1.0,
+      "data_kind": "synthetic",
+      "dataset": "controlled-gate-fixture",
+      "delta": 0.0,
+      "max_drop": 0.0,
+      "name": "answered_rate",
+      "reason": "operational rate only; not semantic task success",
+      "split": "dev",
+      "status": "pass"
+    },
+    {
+      "coverage": {
+        "baseline": 1.0,
+        "candidate": 0.5
+      },
+      "data_kind": "synthetic",
+      "dataset": "controlled-gate-fixture",
+      "delta": 0.0,
+      "excluded_tasks": [
+        "q0"
+      ],
+      "improved_tasks": [],
+      "interval_95": null,
+      "max_drop": 0.0,
+      "max_task_drop": 0.1,
+      "name": "factual_correctness",
+      "paired_tasks": 1,
+      "protected_regressions": [],
+      "reason": "insufficient paired tasks or score coverage",
+      "regressed_tasks": [],
+      "split": "dev",
+      "status": "inconclusive",
+      "task_differences": {
+        "q1": 0.0
+      }
+    }
+  ],
+  "comparison": {
+    "confidence_level": 0.95,
+    "difference_direction": "candidate_minus_baseline",
+    "groups": [
+      {
+        "comparisons": {
+          "candidate": {
+            "agent_goal_accuracy": {
+              "all_output": {
+                "difference": null,
+                "excluded_tasks": [
+                  "q0",
+                  "q1"
+                ],
+                "interval_95": null,
+                "paired_tasks": 0,
+                "task_differences": {}
+              },
+              "completed_only": {
+                "difference": null,
+                "excluded_tasks": [
+                  "q0",
+                  "q1"
+                ],
+                "interval_95": null,
+                "paired_tasks": 0,
+                "task_differences": {}
+              }
+            },
+            "citation_accuracy": {
+              "all_output": {
+                "difference": null,
+                "excluded_tasks": [
+                  "q0",
+                  "q1"
+                ],
+                "interval_95": null,
+                "paired_tasks": 0,
+                "task_differences": {}
+              },
+              "completed_only": {
+                "difference": null,
+                "excluded_tasks": [
+                  "q0",
+                  "q1"
+                ],
+                "interval_95": null,
+                "paired_tasks": 0,
+                "task_differences": {}
+              }
+            },
+            "claim_groundedness": {
+              "all_output": {
+                "difference": null,
+                "excluded_tasks": [
+                  "q0",
+                  "q1"
+                ],
+                "interval_95": null,
+                "paired_tasks": 0,
+                "task_differences": {}
+              },
+              "completed_only": {
+                "difference": null,
+                "excluded_tasks": [
+                  "q0",
+                  "q1"
+                ],
+                "interval_95": null,
+                "paired_tasks": 0,
+                "task_differences": {}
+              }
+            },
+            "factual_correctness": {
+              "all_output": {
+                "difference": 0.0,
+                "excluded_tasks": [
+                  "q0"
+                ],
+                "interval_95": null,
+                "paired_tasks": 1,
+                "task_differences": {
+                  "q1": 0.0
+                }
+              },
+              "completed_only": {
+                "difference": 0.0,
+                "excluded_tasks": [
+                  "q0"
+                ],
+                "interval_95": null,
+                "paired_tasks": 1,
+                "task_differences": {
+                  "q1": 0.0
+                }
+              }
+            },
+            "faithfulness": {
+              "all_output": {
+                "difference": null,
+                "excluded_tasks": [
+                  "q0",
+                  "q1"
+                ],
+                "interval_95": null,
+                "paired_tasks": 0,
+                "task_differences": {}
+              },
+              "completed_only": {
+                "difference": null,
+                "excluded_tasks": [
+                  "q0",
+                  "q1"
+                ],
+                "interval_95": null,
+                "paired_tasks": 0,
+                "task_differences": {}
+              }
+            }
+          }
+        },
+        "data_kind": "synthetic",
+        "dataset": "controlled-gate-fixture",
+        "split": "dev",
+        "systems": {
+          "baseline": {
+            "answered_runs": 2,
+            "attempted_runs": 2,
+            "attempted_tasks": 2,
+            "completed_runs": 2,
+            "latency_ms": {
+              "p50": 100.0,
+              "p95": 100.0
+            },
+            "quality": {
+              "agent_goal_accuracy": {
+                "available_question_mean": null,
+                "category_means": {},
+                "coverage": 0.0,
+                "error_runs": 0,
+                "missing_runs": 2,
+                "not_applicable_runs": 0,
+                "question_means": {},
+                "scored_runs": 0
+              },
+              "citation_accuracy": {
+                "available_question_mean": null,
+                "category_means": {},
+                "coverage": 0.0,
+                "error_runs": 0,
+                "missing_runs": 2,
+                "not_applicable_runs": 0,
+                "question_means": {},
+                "scored_runs": 0
+              },
+              "claim_groundedness": {
+                "available_question_mean": null,
+                "category_means": {},
+                "coverage": 0.0,
+                "error_runs": 0,
+                "missing_runs": 2,
+                "not_applicable_runs": 0,
+                "question_means": {},
+                "scored_runs": 0
+              },
+              "factual_correctness": {
+                "available_question_mean": 0.75,
+                "category_means": {
+                  "memory": 0.75
+                },
+                "coverage": 1.0,
+                "error_runs": 0,
+                "missing_runs": 0,
+                "not_applicable_runs": 0,
+                "question_means": {
+                  "q0": 0.5,
+                  "q1": 1.0
+                },
+                "scored_runs": 2
+              },
+              "faithfulness": {
+                "available_question_mean": null,
+                "category_means": {},
+                "coverage": 0.0,
+                "error_runs": 0,
+                "missing_runs": 2,
+                "not_applicable_runs": 0,
+                "question_means": {},
+                "scored_runs": 0
+              }
+            },
+            "status_counts": {
+              "completed": 2
+            },
+            "termination_counts": {
+              "completed": 2
+            },
+            "usage": {
+              "input_tokens": {
+                "missing_runs": 0,
+                "observed_subtotal": 100,
+                "total": 100
+              },
+              "output_tokens": {
+                "missing_runs": 0,
+                "observed_subtotal": 20,
+                "total": 20
+              },
+              "provider_attempts": {
+                "missing_runs": 0,
+                "observed_subtotal": 2,
+                "total": 2
+              }
+            }
+          },
+          "candidate": {
+            "answered_runs": 2,
+            "attempted_runs": 2,
+            "attempted_tasks": 2,
+            "completed_runs": 2,
+            "latency_ms": {
+              "p50": 100.0,
+              "p95": 100.0
+            },
+            "quality": {
+              "agent_goal_accuracy": {
+                "available_question_mean": null,
+                "category_means": {},
+                "coverage": 0.0,
+                "error_runs": 0,
+                "missing_runs": 2,
+                "not_applicable_runs": 0,
+                "question_means": {},
+                "scored_runs": 0
+              },
+              "citation_accuracy": {
+                "available_question_mean": null,
+                "category_means": {},
+                "coverage": 0.0,
+                "error_runs": 0,
+                "missing_runs": 2,
+                "not_applicable_runs": 0,
+                "question_means": {},
+                "scored_runs": 0
+              },
+              "claim_groundedness": {
+                "available_question_mean": null,
+                "category_means": {},
+                "coverage": 0.0,
+                "error_runs": 0,
+                "missing_runs": 2,
+                "not_applicable_runs": 0,
+                "question_means": {},
+                "scored_runs": 0
+              },
+              "factual_correctness": {
+                "available_question_mean": 1.0,
+                "category_means": {
+                  "memory": 1.0
+                },
+                "coverage": 0.5,
+                "error_runs": 1,
+                "missing_runs": 0,
+                "not_applicable_runs": 0,
+                "question_means": {
+                  "q1": 1.0
+                },
+                "scored_runs": 1
+              },
+              "faithfulness": {
+                "available_question_mean": null,
+                "category_means": {},
+                "coverage": 0.0,
+                "error_runs": 0,
+                "missing_runs": 2,
+                "not_applicable_runs": 0,
+                "question_means": {},
+                "scored_runs": 0
+              }
+            },
+            "status_counts": {
+              "completed": 2
+            },
+            "termination_counts": {
+              "completed": 2
+            },
+            "usage": {
+              "input_tokens": {
+                "missing_runs": 0,
+                "observed_subtotal": 100,
+                "total": 100
+              },
+              "output_tokens": {
+                "missing_runs": 0,
+                "observed_subtotal": 20,
+                "total": 20
+              },
+              "provider_attempts": {
+                "missing_runs": 0,
+                "observed_subtotal": 2,
+                "total": 2
+              }
+            }
+          }
+        }
+      }
+    ],
+    "method": "question_paired_percentile_bootstrap",
+    "resamples": 2000,
+    "schema_version": 1,
+    "seed": 7
+  },
+  "decision_method": "observed_question_mean_tolerance",
+  "limitations": [
+    "Completion and answered rates are operational, not semantic task success.",
+    "Point-estimate tolerances are policy checks, not statistical non-inferiority proof.",
+    "CI95 bootstraps questions; repeats are averaged within each question.",
+    "A pass establishes no absolute quality floor or general population improvement.",
+    "Hashes verify artifact consistency, not independent authenticity or judge accuracy."
+  ],
+  "policy": {
+    "max_answered_rate_drop": 0.0,
+    "max_completion_rate_drop": 0.0,
+    "max_latency_ratio": null,
+    "metrics": {
+      "factual_correctness": {
+        "max_drop": 0.0,
+        "max_task_drop": 0.1
+      }
+    },
+    "min_paired_tasks": 2,
+    "min_score_coverage": 1.0,
+    "name": "synthetic-gate-demonstration-only",
+    "schema_version": 1
+  },
+  "policy_sha256": "70867483ee0baa6e256e1e1686f7e71beac9f74dc9f1bcfcf403f5c7bade39c8",
+  "provenance": {
+    "baseline": {
+      "experiment_identity": "47ab39bec86ccaa832ba8f4ddbab1814d156e774a86f5b5d4762ac4ae007e2bb",
+      "human_review": null,
+      "input_sha256": "7f5ab3677d4ccf10ab58bccc87bd544a88739c53b79270a7caa335b7cd3f5e5c",
+      "metadata_sha256": "a46170ced35ee2d459cefef2404307fe5c745c7ab20c801dd06baf3d2276c809",
+      "scores": [
+        {
+          "configuration": {
+            "max_claims": 30
+          },
+          "judge": {
+            "adapter": "fixture-v1",
+            "model": "controlled-fixture",
+            "scorer_sha256": "fixed"
+          },
+          "judged_input_sha256": "7f5ab3677d4ccf10ab58bccc87bd544a88739c53b79270a7caa335b7cd3f5e5c",
+          "scores_sha256": "e917ec7a3312641965772719321f3364e608c0b953f2956bfd9918f3e6523a11"
+        }
+      ]
+    },
+    "candidate": {
+      "experiment_identity": "9bba0de935aad41ada17ed49c7c5b697027f2cc18ed90c975242efdd19b9dd9d",
+      "human_review": null,
+      "input_sha256": "d34a71beeb2129bba5c819ba60eb17c2c5fb8df8c4dab0a74412e212a2f9fbe5",
+      "metadata_sha256": "a46170ced35ee2d459cefef2404307fe5c745c7ab20c801dd06baf3d2276c809",
+      "scores": [
+        {
+          "configuration": {
+            "max_claims": 30
+          },
+          "judge": {
+            "adapter": "fixture-v1",
+            "model": "controlled-fixture",
+            "scorer_sha256": "fixed"
+          },
+          "judged_input_sha256": "d34a71beeb2129bba5c819ba60eb17c2c5fb8df8c4dab0a74412e212a2f9fbe5",
+          "scores_sha256": "4da51e4d54e9f4ce011b7778368d806b6845a24a037eda09d65d3a6ac3c027ba"
+        }
+      ]
+    },
+    "files": {
+      "baseline": "D:\\Dev\\Projects\\agent_new\\docs\\benchmarks\\2026-11-07-evaluation\\controlled\\baseline\\quality_eval.json",
+      "candidate": "D:\\Dev\\Projects\\agent_new\\docs\\benchmarks\\2026-11-07-evaluation\\controlled\\inconclusive\\candidate\\quality_eval.json",
+      "metadata": "D:\\Dev\\Projects\\agent_new\\docs\\benchmarks\\2026-11-07-evaluation\\controlled\\baseline\\metadata.json",
+      "policy": "D:\\Dev\\Projects\\agent_new\\docs\\benchmarks\\2026-11-07-evaluation\\controlled\\policy.json"
+    }
+  },
+  "schema_version": 1,
+  "trials": {
+    "baseline": [
+      {
+        "mode": "workflow",
+        "question_id": "q0",
+        "repeat_index": 0,
+        "run_id": "old-q0-0",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "q1",
+        "repeat_index": 0,
+        "run_id": "old-q1-0",
+        "status": "completed"
+      }
+    ],
+    "candidate": [
+      {
+        "mode": "workflow",
+        "question_id": "q0",
+        "repeat_index": 0,
+        "run_id": "inconclusive-q0-0",
+        "status": "completed"
+      },
+      {
+        "mode": "workflow",
+        "question_id": "q1",
+        "repeat_index": 0,
+        "run_id": "inconclusive-q1-0",
+        "status": "completed"
+      }
+    ]
+  },
+  "verdict": "inconclusive"
+}

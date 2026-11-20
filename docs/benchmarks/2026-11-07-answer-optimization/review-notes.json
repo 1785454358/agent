@@ -1,0 +1,20 @@
+{
+  "reviewer": "Agent (Codex), not human annotation",
+  "scope": "Original 12 Workflow answers, corresponding questions, frozen reference passages and selected model traces; structural replay covers saved evaluator responses across all three strategies",
+  "purpose": "Diagnosis; these notes do not replace gold labels or automated scores",
+  "cases": [
+    {"question_id":"single_hop-dev-01","finding":"核心检查点时机与 thread_id 作用已答；额外 DeltaChannel、生产数据库及版本细节扩大了答案，增加无关事实。","class":"correct_core_with_extras"},
+    {"question_id":"single_hop-dev-02","finding":"checkpointer、thread_id、JSON 可序列化中断载荷三项前提已答；追加 Python/JS 输出版本与 Agent Server 细节，并非题目所需。","class":"correct_core_with_extras"},
+    {"question_id":"multi_hop-dev-01","finding":"回答主要机制和标识符，但最终自审把完整 interrupt 调用与 Store 重启实现扩成必答缺口；应按原题检查机制及标识符关系。","class":"scope_inflation"},
+    {"question_id":"multi_hop-dev-02","finding":"中断恢复从节点开头重跑、外部写入须幂等的核心正确；最终答复没有明确恢复必须使用同一 thread_id，属于实际遗漏。","class":"actual_omission"},
+    {"question_id":"comparison-dev-01","finding":"最终仅有无证据兜底。规划擅自要求 Graph API 迁移细节；后两次证据判断带根字段 type=json_object，被严格 schema 全部拒收，已有发现随之丢失。","class":"protocol_loss_and_scope_inflation","trace_sequences":[0,3,5,6]},
+    {"question_id":"comparison-dev-02","finding":"exit/async/sync 写入时机和崩溃风险的核心比较正确；表格后重复同样取舍，且扩大到 checkpointer 后端，未给出虚构定量性能。","class":"correct_core_with_extras"},
+    {"question_id":"version_boundary-dev-01","finding":"正确区分 Python 与 JS 的包及版本边界；当前未定位到需针对该题修复的核心错误。","class":"no_core_error_found"},
+    {"question_id":"version_boundary-dev-02","finding":"Python 3.10 的 RunnableConfig 显式传递与自定义 writer 显式参数已答；附带示例用了 JS 的 streamMode 拼写，混入 Python 环境，属于实际 API 错误。","class":"actual_language_boundary_error"},
+    {"question_id":"conflicting_evidence-dev-01","finding":"正确区分 update_state 修改状态与跳到任意执行位置；多次重复未说明/不能确认，核心否定边界可更简明。","class":"correct_core_with_extras"},
+    {"question_id":"conflicting_evidence-dev-02","finding":"正确区分 super-step 快照与 pending task writes；额外重试、超时机制分散了问题重点。","class":"correct_core_with_extras"},
+    {"question_id":"insufficient_evidence-dev-01","finding":"正确拒绝从文档推导精确吞吐量、成本与 SLA；可保留测量缺口，减少无关后端配置展开。","class":"correct_abstention_with_extras"},
+    {"question_id":"insufficient_evidence-dev-02","finding":"正确拒绝给出 API-choice guide 中没有的 Graph 相对 Functional API 延迟改善百分比；随后展开完整 Graph/Functional API 选型清单，偏离定量延迟问题。answered=false 不能单独说明任务失败。","class":"correct_abstention_with_extras"}
+  ],
+  "limitations": ["Automated judges use the same model family as generation", "Single development trial per task; no statistical claim of general improvement", "No human-reviewed labels; held-out test tasks remain untouched", "A correct core answer can still receive low reference claim F1 when it includes many extra facts"]
+}

@@ -1,0 +1,10 @@
+{
+  "prepared_before_live_execution": true,
+  "reviewer": "agent source verification; not independent human gold",
+  "source_urls": [
+    "https://docs.langchain.com/oss/python/langgraph/interrupts",
+    "https://docs.langchain.com/oss/python/langgraph/persistence",
+    "https://www.sqlite.org/wal.html"
+  ],
+  "scope": "small live supplement; not mixed into the frozen 12-task benchmark"
+}

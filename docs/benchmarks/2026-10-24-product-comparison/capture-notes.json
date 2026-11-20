@@ -1,0 +1,4 @@
+{
+  "project_export_error": "The research completed and its full outcome was saved. A later optional evidence metadata export used tenant_id instead of workspace_id and failed. Original project-run.json and traceback are preserved. outputs/project.md was recovered verbatim from the saved response; no research or model rerun.",
+  "competitor_clipboard_export": "Copy buttons returned empty clipboard text. Rendered DOM text, response HTML and screenshots were saved instead; readable Markdown will be converted from that HTML."
+}

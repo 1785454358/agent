@@ -1,0 +1,939 @@
+[
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:1",
+      "role": "planner",
+      "estimated_input_tokens": 2471
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:1",
+      "role": "planner",
+      "duration_ms": 9703,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1523,
+      "output_tokens": 679
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:2",
+      "role": "researcher",
+      "estimated_input_tokens": 2454
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:3",
+      "role": "researcher",
+      "estimated_input_tokens": 2438
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:3",
+      "role": "researcher",
+      "duration_ms": 2359,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1979,
+      "output_tokens": 78
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:4",
+      "role": "researcher",
+      "estimated_input_tokens": 2507
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:2",
+      "role": "researcher",
+      "duration_ms": 2594,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1998,
+      "output_tokens": 97
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:5",
+      "role": "researcher",
+      "estimated_input_tokens": 2523
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:4",
+      "role": "researcher",
+      "duration_ms": 1734,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 2028,
+      "output_tokens": 44
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-db1bee369dd97fd6e62f583e38db0ede",
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "thread_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "01dbacbaf6cb3201dab8889ce129992b",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "human-in-the-loop tool call approval model capability structured output requirements compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-db1bee369dd97fd6e62f583e38db0ede",
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "thread_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "01dbacbaf6cb3201dab8889ce129992b",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 54
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-db1bee369dd97fd6e62f583e38db0ede",
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "thread_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "7de54d891b350c0645d269b32c0737c7",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "human-in-the-loop tool call approval model capability structured output requirements compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-db1bee369dd97fd6e62f583e38db0ede",
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "thread_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "7de54d891b350c0645d269b32c0737c7",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 44
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-db1bee369dd97fd6e62f583e38db0ede",
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "thread_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "8430eecdecab816a6c4f9f7f556e9021",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "human-in-the-loop tool call approval model capability structured output requirements compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-db1bee369dd97fd6e62f583e38db0ede",
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "thread_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "8430eecdecab816a6c4f9f7f556e9021",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 33
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "caller_id": "workflow-graph",
+      "branch": "does human-in-the-loop remove model capability requirement provider native structured output",
+      "tool_call_id": "batch-92166a3aca4e4b36c8b59c8a58f37192",
+      "call_id": "8430eecdecab816a6c4f9f7f556e9021",
+      "tool": "read_evidence",
+      "query": "human-in-the-loop tool call approval model capability structured output requirements compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563\",\"version\":1,\"content_hash\":\"sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8\",\"historical\":false,\"passages\":[{\"ref\":\"n1\",\"start\":0,\"end\":34,\"text\":\"---\\ntitle: Human-in-the-loop\\n---\\n\\n\"},{\"ref\":\"n2\",\"start\":117,\"end\":430,\"text\":\"The Human-in-the-Loop (HITL) [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) lets you add human oversight to agent tool calls.\\nWhen a model proposes an action that might require review—for example, writing to a file or executing SQL—the middleware can pause execution and wait for a decision.\\n\\n\"},{\"ref\":\"n3\",\"start\":1186,\"end\":1483,\"text\":\":::python\\nThe [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines four built-in ways a human can respond to an interrupt:\\n:::\\n\\n:::js\\nThe [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines three built-in ways a human can respond to an interrupt:\\n:::\\n\\n\"},{\"ref\":\"n4\",\"start\":2082,\"end\":2407,\"text\":\":::js\\nUse `reject` when the human is denying the requested action.\\n:::\\n\\n\\n<Tip>\\nWhen **editing** tool arguments, make changes conservatively. Significant modifications to the original arguments may cause the model to re-evaluate its approach and potentially execute the tool multiple times or take unexpected actions.\\n</Tip>\\n\\n\"},{\"ref\":\"n5\",\"start\":2434,\"end\":2581,\"text\":\"To use HITL, add the [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) to the agent's `middleware` list when creating the agent.\\n\\n\"},{\"ref\":\"n6\",\"start\":6247,\"end\":6639,\"text\":\":::python\\n<ParamField body=\\\"interrupt_on\\\" type=\\\"dict\\\" required>\\n    Mapping of tool names to approval configs. Values can be `True` (interrupt with default config), `False` (auto-approve), or an `InterruptOnConfig` object.\\n</ParamField>\\n\\n<ParamField body=\\\"description_prefix\\\" type=\\\"string\\\" default=\\\"Tool execution requires approval\\\">\\n    Prefix for action request descriptions\\n</ParamField>\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":26703,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "caller_id": "workflow-graph",
+      "branch": "does human-in-the-loop remove model capability requirement provider native structured output",
+      "tool_call_id": "batch-0e04e1b2768d69e70d27f3eb06419baf",
+      "call_id": "7de54d891b350c0645d269b32c0737c7",
+      "tool": "read_evidence",
+      "query": "human-in-the-loop tool call approval model capability structured output requirements compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375\",\"version\":1,\"content_hash\":\"sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703\",\"historical\":false,\"passages\":[{\"ref\":\"n7\",\"start\":0,\"end\":34,\"text\":\"---\\ntitle: Structured output\\n---\\n\\n\"},{\"ref\":\"n8\",\"start\":2089,\"end\":2492,\"text\":\"<Note>\\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\\n    ```python\\n    custom_profile = {\\n        \\\"structured_output\\\": True,\\n        # ...\\n    }\\n    model = init_chat_model(\\\"...\\\", profile=custom_profile)\\n    ```\\n\"},{\"ref\":\"n9\",\"start\":2492,\"end\":2601,\"text\":\"    If tools are specified, the model must support simultaneous use of tools and structured output.\\n</Note>\\n\\n\"},{\"ref\":\"n10\",\"start\":3705,\"end\":4095,\"text\":\"Controls how the agent returns structured data. You can provide a Zod schema, any [Standard Schema](https://standardschema.dev/)-compatible schema, or a JSON Schema object. By default, the agent uses a tool calling strategy, in which the output is created by an additional tool call. Certain models support native structured output, in which case the agent will use that strategy instead.\\n\\n\"},{\"ref\":\"n11\",\"start\":4095,\"end\":4211,\"text\":\"You can control the behavior by wrapping `ResponseFormat` in a `toolStrategy` or `providerStrategy` function call:\\n\\n\"},{\"ref\":\"n12\",\"start\":4610,\"end\":5048,\"text\":\"<Tip>\\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\\n    ```typescript\\n    const customProfile: ModelProfile = {\\n        structuredOutput: true,\\n        // ...\\n    }\\n    const model = await initChatModel(\\\"...\\\", { profile: customProfile });\\n    ```\\n\"},{\"ref\":\"n13\",\"start\":5048,\"end\":5160,\"text\":\"    If tools are specified, the model must support simultaneous use of tools and structured output.\\n</Tip>\\n:::\\n\\n\"},{\"ref\":\"n14\",\"start\":5182,\"end\":5362,\"text\":\"Some model providers support structured output natively through their APIs (e.g. OpenAI, xAI (Grok), Gemini, Anthropic (Claude)). This is the most reliable method when available.\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":44432,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "caller_id": "workflow-graph",
+      "branch": "does human-in-the-loop remove model capability requirement provider native structured output",
+      "tool_call_id": "batch-547dcd493cdc07f0657882d6dcb0fe61",
+      "call_id": "01dbacbaf6cb3201dab8889ce129992b",
+      "tool": "read_evidence",
+      "query": "human-in-the-loop tool call approval model capability structured output requirements compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-8d15bb9caba341ecd08b922f445cf1248f5c2c70537ecdff735dfcadc66ed589\",\"version\":1,\"content_hash\":\"sha256:d31c79657d893d74ead0b5e5055993d257f291ab6e787a2b1251fbe658498646\",\"historical\":false,\"passages\":[{\"ref\":\"n15\",\"start\":9519,\"end\":9592,\"text\":\"This example uses the approval schema from LangGraph's interrupt tests:\\n\\n\"},{\"ref\":\"n16\",\"start\":14495,\"end\":14764,\"text\":\"### Stream with human-in-the-loop (HITL) interrupts\\n\\nWhen building interactive agents with human-in-the-loop workflows, you can use [event streaming](/oss/langgraph/event-streaming) to consume message chunks and state snapshots concurrently while handling interrupts.\\n\\n\"},{\"ref\":\"n17\",\"start\":15259,\"end\":15643,\"text\":\"- **`stream.messages`**: Chat-model output as content blocks; iterate each `message.text` for token deltas. For nested subgraphs, read message chunks from `stream.subgraphs[*].messages`.\\n- **`stream.values`**: Full state snapshots after each step\\n- **`stream.interrupted` / `stream.interrupts`**: After each run, check whether the graph paused; read payloads from `stream.interrupts`\\n\"},{\"ref\":\"n18\",\"start\":15643,\"end\":15777,\"text\":\"- **`Command(resume=...)`**: Pass as the next `stream_events` input to resume; loop until the run completes without interrupting\\n:::\\n\\n\"},{\"ref\":\"n19\",\"start\":15820,\"end\":16199,\"text\":\"- **`stream.messages`**: Chat-model output as content blocks; iterate `message.text` for token deltas. For nested subgraphs, read message chunks from `stream.subgraphs[*].messages`.\\n- **`stream.values`**: Full state snapshots after each step\\n- **`stream.interrupted` / `stream.interrupts`**: After each run, check whether the graph paused; read payloads from `stream.interrupts`\\n\"},{\"ref\":\"n20\",\"start\":16199,\"end\":16332,\"text\":\"- **`Command(resume=...)`**: Pass as the next `streamEvents` input to resume; loop until the run completes without interrupting\\n:::\\n\\n\"},{\"ref\":\"n21\",\"start\":18585,\"end\":18806,\"text\":\"One of the most common uses of interrupts is to pause before a critical action and ask for approval. For example, you might want to ask a human to approve an API call, a database change, or any other important decision.\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":60650,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:5",
+      "role": "researcher",
+      "duration_ms": 1875,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 2047,
+      "output_tokens": 47
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-dea4033aaefae95ee23b132e07a88cd3",
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "thread_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "2cc03b99887ae05af46ebeeb976b3f19",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "human-in-the-loop tool call approval structured output model capability requirement compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-dea4033aaefae95ee23b132e07a88cd3",
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "thread_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "2cc03b99887ae05af46ebeeb976b3f19",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 77
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-dea4033aaefae95ee23b132e07a88cd3",
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "thread_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "63a14ef28f4fc1615f74c95906385e93",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "human-in-the-loop tool call approval structured output model capability requirement compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-dea4033aaefae95ee23b132e07a88cd3",
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "thread_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "63a14ef28f4fc1615f74c95906385e93",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 66
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-dea4033aaefae95ee23b132e07a88cd3",
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "thread_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4cbcd0cda7d800b56779950ecced15c1",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "human-in-the-loop tool call approval structured output model capability requirement compatibility simultaneous support requirements"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-dea4033aaefae95ee23b132e07a88cd3",
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "thread_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4cbcd0cda7d800b56779950ecced15c1",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 47
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation HITL tool calls structured output model capability requirement",
+      "tool_call_id": "batch-08345b5408110d1595bca752fd56fd3e",
+      "call_id": "63a14ef28f4fc1615f74c95906385e93",
+      "tool": "read_evidence",
+      "query": "human-in-the-loop tool call approval structured output model capability requirement compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563\",\"version\":1,\"content_hash\":\"sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8\",\"historical\":false,\"passages\":[{\"ref\":\"n1\",\"start\":0,\"end\":34,\"text\":\"---\\ntitle: Human-in-the-loop\\n---\\n\\n\"},{\"ref\":\"n2\",\"start\":117,\"end\":430,\"text\":\"The Human-in-the-Loop (HITL) [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) lets you add human oversight to agent tool calls.\\nWhen a model proposes an action that might require review—for example, writing to a file or executing SQL—the middleware can pause execution and wait for a decision.\\n\\n\"},{\"ref\":\"n3\",\"start\":1186,\"end\":1483,\"text\":\":::python\\nThe [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines four built-in ways a human can respond to an interrupt:\\n:::\\n\\n:::js\\nThe [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines three built-in ways a human can respond to an interrupt:\\n:::\\n\\n\"},{\"ref\":\"n4\",\"start\":2082,\"end\":2407,\"text\":\":::js\\nUse `reject` when the human is denying the requested action.\\n:::\\n\\n\\n<Tip>\\nWhen **editing** tool arguments, make changes conservatively. Significant modifications to the original arguments may cause the model to re-evaluate its approach and potentially execute the tool multiple times or take unexpected actions.\\n</Tip>\\n\\n\"},{\"ref\":\"n5\",\"start\":2434,\"end\":2581,\"text\":\"To use HITL, add the [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) to the agent's `middleware` list when creating the agent.\\n\\n\"},{\"ref\":\"n6\",\"start\":6247,\"end\":6639,\"text\":\":::python\\n<ParamField body=\\\"interrupt_on\\\" type=\\\"dict\\\" required>\\n    Mapping of tool names to approval configs. Values can be `True` (interrupt with default config), `False` (auto-approve), or an `InterruptOnConfig` object.\\n</ParamField>\\n\\n<ParamField body=\\\"description_prefix\\\" type=\\\"string\\\" default=\\\"Tool execution requires approval\\\">\\n    Prefix for action request descriptions\\n</ParamField>\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":26703,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation HITL tool calls structured output model capability requirement",
+      "tool_call_id": "batch-649e6ed82cd4a77f605b1a30b5c5553a",
+      "call_id": "4cbcd0cda7d800b56779950ecced15c1",
+      "tool": "read_evidence",
+      "query": "human-in-the-loop tool call approval structured output model capability requirement compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375\",\"version\":1,\"content_hash\":\"sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703\",\"historical\":false,\"passages\":[{\"ref\":\"n7\",\"start\":0,\"end\":34,\"text\":\"---\\ntitle: Structured output\\n---\\n\\n\"},{\"ref\":\"n8\",\"start\":2089,\"end\":2492,\"text\":\"<Note>\\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\\n    ```python\\n    custom_profile = {\\n        \\\"structured_output\\\": True,\\n        # ...\\n    }\\n    model = init_chat_model(\\\"...\\\", profile=custom_profile)\\n    ```\\n\"},{\"ref\":\"n9\",\"start\":2492,\"end\":2601,\"text\":\"    If tools are specified, the model must support simultaneous use of tools and structured output.\\n</Note>\\n\\n\"},{\"ref\":\"n10\",\"start\":3705,\"end\":4095,\"text\":\"Controls how the agent returns structured data. You can provide a Zod schema, any [Standard Schema](https://standardschema.dev/)-compatible schema, or a JSON Schema object. By default, the agent uses a tool calling strategy, in which the output is created by an additional tool call. Certain models support native structured output, in which case the agent will use that strategy instead.\\n\\n\"},{\"ref\":\"n11\",\"start\":4095,\"end\":4211,\"text\":\"You can control the behavior by wrapping `ResponseFormat` in a `toolStrategy` or `providerStrategy` function call:\\n\\n\"},{\"ref\":\"n12\",\"start\":4610,\"end\":5048,\"text\":\"<Tip>\\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\\n    ```typescript\\n    const customProfile: ModelProfile = {\\n        structuredOutput: true,\\n        // ...\\n    }\\n    const model = await initChatModel(\\\"...\\\", { profile: customProfile });\\n    ```\\n\"},{\"ref\":\"n13\",\"start\":5048,\"end\":5160,\"text\":\"    If tools are specified, the model must support simultaneous use of tools and structured output.\\n</Tip>\\n:::\\n\\n\"},{\"ref\":\"n14\",\"start\":5182,\"end\":5362,\"text\":\"Some model providers support structured output natively through their APIs (e.g. OpenAI, xAI (Grok), Gemini, Anthropic (Claude)). This is the most reliable method when available.\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":44432,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation HITL tool calls structured output model capability requirement",
+      "tool_call_id": "batch-06435484f70dd3c2a7907ebf8277fa81",
+      "call_id": "2cc03b99887ae05af46ebeeb976b3f19",
+      "tool": "read_evidence",
+      "query": "human-in-the-loop tool call approval structured output model capability requirement compatibility simultaneous support requirements",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-8d15bb9caba341ecd08b922f445cf1248f5c2c70537ecdff735dfcadc66ed589\",\"version\":1,\"content_hash\":\"sha256:d31c79657d893d74ead0b5e5055993d257f291ab6e787a2b1251fbe658498646\",\"historical\":false,\"passages\":[{\"ref\":\"n15\",\"start\":9519,\"end\":9592,\"text\":\"This example uses the approval schema from LangGraph's interrupt tests:\\n\\n\"},{\"ref\":\"n16\",\"start\":14495,\"end\":14764,\"text\":\"### Stream with human-in-the-loop (HITL) interrupts\\n\\nWhen building interactive agents with human-in-the-loop workflows, you can use [event streaming](/oss/langgraph/event-streaming) to consume message chunks and state snapshots concurrently while handling interrupts.\\n\\n\"},{\"ref\":\"n17\",\"start\":15259,\"end\":15643,\"text\":\"- **`stream.messages`**: Chat-model output as content blocks; iterate each `message.text` for token deltas. For nested subgraphs, read message chunks from `stream.subgraphs[*].messages`.\\n- **`stream.values`**: Full state snapshots after each step\\n- **`stream.interrupted` / `stream.interrupts`**: After each run, check whether the graph paused; read payloads from `stream.interrupts`\\n\"},{\"ref\":\"n18\",\"start\":15643,\"end\":15777,\"text\":\"- **`Command(resume=...)`**: Pass as the next `stream_events` input to resume; loop until the run completes without interrupting\\n:::\\n\\n\"},{\"ref\":\"n19\",\"start\":15820,\"end\":16199,\"text\":\"- **`stream.messages`**: Chat-model output as content blocks; iterate `message.text` for token deltas. For nested subgraphs, read message chunks from `stream.subgraphs[*].messages`.\\n- **`stream.values`**: Full state snapshots after each step\\n- **`stream.interrupted` / `stream.interrupts`**: After each run, check whether the graph paused; read payloads from `stream.interrupts`\\n\"},{\"ref\":\"n20\",\"start\":16199,\"end\":16332,\"text\":\"- **`Command(resume=...)`**: Pass as the next `streamEvents` input to resume; loop until the run completes without interrupting\\n:::\\n\\n\"},{\"ref\":\"n21\",\"start\":18585,\"end\":18806,\"text\":\"One of the most common uses of interrupts is to pause before a critical action and ask for approval. For example, you might want to ask a human to approve an API call, a database change, or any other important decision.\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":60650,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+      "version": 1,
+      "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+      "start": 0,
+      "end": 34,
+      "passage_id": "p-a5567c08fac20b221cb45e4ddf8f4689",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-8d15bb9caba341ecd08b922f445cf1248f5c2c70537ecdff735dfcadc66ed589",
+      "version": 1,
+      "content_hash": "sha256:d31c79657d893d74ead0b5e5055993d257f291ab6e787a2b1251fbe658498646",
+      "start": 9519,
+      "end": 9592,
+      "passage_id": "p-03fcbfdf3e403a13c40e2b2357a567ec",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 0,
+      "end": 34,
+      "passage_id": "p-7cc9296d1f762d7238359e6f7088567b",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+      "version": 1,
+      "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+      "start": 117,
+      "end": 430,
+      "passage_id": "p-3e1e212e6b3430d60f1444b0c86ceea2",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-8d15bb9caba341ecd08b922f445cf1248f5c2c70537ecdff735dfcadc66ed589",
+      "version": 1,
+      "content_hash": "sha256:d31c79657d893d74ead0b5e5055993d257f291ab6e787a2b1251fbe658498646",
+      "start": 14495,
+      "end": 14764,
+      "passage_id": "p-bbdf28cd0a187e074057e9416557bab8",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 2089,
+      "end": 2492,
+      "passage_id": "p-3184f0ee9c023fe4130391e3e1f2947c",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 2492,
+      "end": 2601,
+      "passage_id": "p-d43569945431bd4fea3d5a72bf047780",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+      "version": 1,
+      "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+      "start": 1186,
+      "end": 1483,
+      "passage_id": "p-29aae631cb59cd7a0e49ce6f7215f024",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-8d15bb9caba341ecd08b922f445cf1248f5c2c70537ecdff735dfcadc66ed589",
+      "version": 1,
+      "content_hash": "sha256:d31c79657d893d74ead0b5e5055993d257f291ab6e787a2b1251fbe658498646",
+      "start": 15259,
+      "end": 15643,
+      "passage_id": "p-0e2e298e29532b874c88c9877abf1ffa",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-8d15bb9caba341ecd08b922f445cf1248f5c2c70537ecdff735dfcadc66ed589",
+      "version": 1,
+      "content_hash": "sha256:d31c79657d893d74ead0b5e5055993d257f291ab6e787a2b1251fbe658498646",
+      "start": 15643,
+      "end": 15777,
+      "passage_id": "p-af45ca6cdeef4f4cd260304f658f78d3",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 3705,
+      "end": 4095,
+      "passage_id": "p-981ae499b2e49ba9e3094fff8949a7f0",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 4095,
+      "end": 4211,
+      "passage_id": "p-5ea48150d712b5df8d9bd5ec23f18885",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+      "version": 1,
+      "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+      "start": 2082,
+      "end": 2407,
+      "passage_id": "p-5e89fe867fc19cbf72b37cb22c1c6e1b",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-8d15bb9caba341ecd08b922f445cf1248f5c2c70537ecdff735dfcadc66ed589",
+      "version": 1,
+      "content_hash": "sha256:d31c79657d893d74ead0b5e5055993d257f291ab6e787a2b1251fbe658498646",
+      "start": 15820,
+      "end": 16199,
+      "passage_id": "p-aaab975cda7bf01ce2c2c2fc60c9b49e",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-8d15bb9caba341ecd08b922f445cf1248f5c2c70537ecdff735dfcadc66ed589",
+      "version": 1,
+      "content_hash": "sha256:d31c79657d893d74ead0b5e5055993d257f291ab6e787a2b1251fbe658498646",
+      "start": 16199,
+      "end": 16332,
+      "passage_id": "p-bfebca1df50cd4f49183e32a6274efa1",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 4610,
+      "end": 5048,
+      "passage_id": "p-b03439fea22ac465b49a6ce88ed4d52a",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 5048,
+      "end": 5160,
+      "passage_id": "p-8173a1332bef87b3650526716499252a",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+      "version": 1,
+      "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+      "start": 2434,
+      "end": 2581,
+      "passage_id": "p-bffd31dc06d88a62deba98fc2fd9eba7",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-8d15bb9caba341ecd08b922f445cf1248f5c2c70537ecdff735dfcadc66ed589",
+      "version": 1,
+      "content_hash": "sha256:d31c79657d893d74ead0b5e5055993d257f291ab6e787a2b1251fbe658498646",
+      "start": 18585,
+      "end": 18806,
+      "passage_id": "p-14dfbfd88d129fb8d7c9376e28a59607",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 5182,
+      "end": 5362,
+      "passage_id": "p-24bb0c8de7775ff53bcd90bf06fe5848",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+      "version": 1,
+      "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+      "start": 6247,
+      "end": 6639,
+      "passage_id": "p-4d59312334120ac168407ba2f1e6a8b7",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:6",
+      "role": "evaluator",
+      "estimated_input_tokens": 6009
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:6",
+      "role": "evaluator",
+      "duration_ms": 12609,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 4713,
+      "output_tokens": 730
+    }
+  },
+  {
+    "event_type": "response.excerpts",
+    "payload": {
+      "algorithm": "query-windows-v1",
+      "response_mode": "answer",
+      "attempt": 1,
+      "per_source_chars": 6000,
+      "sources": [
+        {
+          "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+          "segment": "source_1",
+          "strategy": "support-first-v2",
+          "body_chars": 26703,
+          "excerpt_chars": 2194,
+          "pre_token_ranges": [
+            {
+              "start": 0,
+              "end": 729,
+              "start_line": 1,
+              "end_line": 11
+            },
+            {
+              "start": 5486,
+              "end": 6827,
+              "start_line": 118,
+              "end_line": 148
+            }
+          ],
+          "omitted_ranges": [],
+          "token_status": "full"
+        },
+        {
+          "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+          "segment": "source_2",
+          "strategy": "support-first-v2",
+          "body_chars": 44432,
+          "excerpt_chars": 2249,
+          "pre_token_ranges": [
+            {
+              "start": 1883,
+              "end": 2869,
+              "start_line": 41,
+              "end_line": 61
+            },
+            {
+              "start": 3378,
+              "end": 4513,
+              "start_line": 68,
+              "end_line": 97
+            }
+          ],
+          "omitted_ranges": [],
+          "token_status": "full"
+        }
+      ]
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+      "version": 1,
+      "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+      "start": 0,
+      "end": 729,
+      "passage_id": "p-4662f6be92c6640e3d11ea088fef4840",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+      "version": 1,
+      "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+      "start": 5486,
+      "end": 6827,
+      "passage_id": "p-36d6ea2441732043e4b7874019ec2b8e",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 1883,
+      "end": 2869,
+      "passage_id": "p-5091489bdf1561fa40835c084b628f51",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 3378,
+      "end": 4513,
+      "passage_id": "p-81ae675ae538cd7031ffa1ee81afba02",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:7",
+      "role": "responder",
+      "estimated_input_tokens": 3663
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:7",
+      "role": "responder",
+      "duration_ms": 8500,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 2780,
+      "output_tokens": 377
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:8",
+      "role": "responder",
+      "estimated_input_tokens": 3975
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+      "call_id": "4b869bd52f5448afbe4b282dce44eed3:8",
+      "role": "responder",
+      "duration_ms": 5141,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 2834,
+      "output_tokens": 387
+    }
+  },
+  {
+    "event_type": "response.fact_review.completed",
+    "payload": {
+      "issues_count": 0,
+      "unanswered_points": [],
+      "consistency_checks": [],
+      "budgets": []
+    }
+  }
+]

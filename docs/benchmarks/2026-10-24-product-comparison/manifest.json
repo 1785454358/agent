@@ -1,0 +1,178 @@
+{
+  "date": "2026-10-24",
+  "timezone": "Asia/Shanghai",
+  "kind": "single-prompt-observed-product-comparison",
+  "prompt": "对比 LangGraph 的 checkpoint 与 Store 的用途、线程边界与恢复能力。依据当前官方文档，用中文回答：先给结论，再用表格比较；分别说明进程重启、interrupt 恢复、跨线程共享时的行为与前提，并给出适用场景和带链接的来源。明确区分事实、推断和无法确认的事项。",
+  "sampling": "one output per available mode; no best-of selection",
+  "scope": "anonymous modes only; not a premium/deep-research ranking",
+  "runs": [
+    {
+      "product": "chatgpt",
+      "authenticated": false,
+      "mode": "Chat default (anonymous, model undisclosed)",
+      "url": "https://chatgpt.com/uc/6adc991b-06c4-83ea-8dcf-d278784aafc5",
+      "captured_at": "2026-10-24T11:44:07.315Z",
+      "answer_file": "outputs/chatgpt.txt",
+      "answer_characters": 4984,
+      "prompt_in_original_capture": true,
+      "answer_is_verbatim_contiguous_original_substring": true,
+      "status": "completed"
+    },
+    {
+      "product": "gemini",
+      "authenticated": false,
+      "mode": "3.5 Flash-Lite (anonymous)",
+      "url": "https://gemini.google.com/app/79b6f3907806b066",
+      "captured_at": "2026-10-24T11:44:07.292Z",
+      "answer_file": "outputs/gemini.txt",
+      "answer_characters": 2756,
+      "prompt_in_original_capture": true,
+      "answer_is_verbatim_contiguous_original_substring": true,
+      "status": "completed"
+    },
+    {
+      "product": "perplexity",
+      "authenticated": false,
+      "mode": "Search (anonymous, default model)",
+      "url": "https://www.perplexity.ai/search/15eeb083-02b6-4092-befb-8b020e550fb1",
+      "captured_at": "2026-10-24T11:44:07.269Z",
+      "answer_file": "outputs/perplexity.txt",
+      "answer_characters": 3033,
+      "prompt_in_original_capture": true,
+      "answer_is_verbatim_contiguous_original_substring": true,
+      "status": "completed"
+    },
+    {
+      "product": "project",
+      "mode": "workflow",
+      "model": "deepseek-v4.1-flash",
+      "provider_model": "deepseek-v4-1-flash-261017",
+      "status": "completed",
+      "partial_reason": "insufficient_evidence",
+      "answer_file": "outputs/project.md",
+      "answer_characters": 2162,
+      "capture_error": "AttributeError after outcome saved; recovered without rerun"
+    }
+  ],
+  "excluded": [
+    {
+      "product": "Kimi deep research",
+      "reason": "login required",
+      "output_obtained": false
+    }
+  ],
+  "files": {
+    "capture-notes.json": {
+      "bytes": 533,
+      "sha256": "3e22376d5b6517ba3bc93a63a9f728537c1223095a869a5faedd34108cf02853"
+    },
+    "comparison.md": {
+      "bytes": 11176,
+      "sha256": "9d033d7c8b76ad16ca007033bd2ca9bb5cd8f5d026bdb8b9cb5843cec6d19285"
+    },
+    "methodology.md": {
+      "bytes": 2036,
+      "sha256": "e8b196924dd312add3de3dc4e2d8c94af4a9e0bb62618fe5eff5f02da96423b5"
+    },
+    "outputs/chatgpt.txt": {
+      "bytes": 11195,
+      "sha256": "caaa3fd2fd27eb997b1f59983bc8813d2f5374535c8dd6ba2cc611868872e0ff"
+    },
+    "outputs/gemini.txt": {
+      "bytes": 5372,
+      "sha256": "03f592fe9eddea0288468748c99dabf847e591c8aa53a62463708eb50c98399f"
+    },
+    "outputs/perplexity.txt": {
+      "bytes": 5632,
+      "sha256": "95e74ea40bb07ecc7809ec1dff40cbf1ecfa782411513f2575912e5c9cf8c057"
+    },
+    "outputs/project.md": {
+      "bytes": 4225,
+      "sha256": "870d42eccb08a693a0dd3e835c0bdba29d04dfdb372aaf4b23e479fbf964477b"
+    },
+    "project-run.json": {
+      "bytes": 40959,
+      "sha256": "ca8ee2458d86e58f65cb8a041e3c96b6d8aab34a7f373ae9c1cb4133d2f0f16f"
+    },
+    "prompt.txt": {
+      "bytes": 350,
+      "sha256": "8f86b503ad46acab1d987ba2f1e3d89024f2ace7909083648eb94de0b9f39028"
+    },
+    "raw/chatgpt-diagram.jpg": {
+      "bytes": 67550,
+      "sha256": "fb47d12445d7320d91b77713f217ca81830389b932516722bed0d56d35168ce2"
+    },
+    "raw/chatgpt-final-state.txt": {
+      "bytes": 23625,
+      "sha256": "42e938baf1bfa72892d4adda70fd5c1bec86c6b75bbf6689620da68d212cf069"
+    },
+    "raw/chatgpt-overview.jpg": {
+      "bytes": 94117,
+      "sha256": "5fcf81a5c5c4642329ffff06ebc9b409c3876bac21609d1dce218b3c25ebab44"
+    },
+    "raw/chatgpt-response.html": {
+      "bytes": 202245,
+      "sha256": "78936bc6c59ae7aa7d71f624cddb0ee5cf66641046b791755ae94719beb4bab6"
+    },
+    "raw/chatgpt.jpg": {
+      "bytes": 749553,
+      "sha256": "1166f1bfa23329fe09dd64e06828175a3e56ed7e1c09dee75788c7c260a62990"
+    },
+    "raw/chatgpt.json": {
+      "bytes": 17062,
+      "sha256": "42c124b39d4bcff73f15b801c8860866f55c3d4f8a3a33dd55ae6d967d0ab9a2"
+    },
+    "raw/gemini-final-state.txt": {
+      "bytes": 17599,
+      "sha256": "e790698970ab22f9b99d83a5ee5f1ec09a7392049e963116223f7a75deb8e94b"
+    },
+    "raw/gemini-response.html": {
+      "bytes": 65298,
+      "sha256": "d87b303aee4f15c4a352ae5da692417255e0ceee5c90bedb8e1b6b02ec55cfdd"
+    },
+    "raw/gemini-source-detail.json": {
+      "bytes": 8294,
+      "sha256": "28d9056fe8e56b9d738c6b8c3f2d86f2b1df2c0439a0078711da51a254628c59"
+    },
+    "raw/gemini.jpg": {
+      "bytes": 82708,
+      "sha256": "9af263058438252bb0886e316bd8b78adb82ecb8a16896a3175804aa829b9147"
+    },
+    "raw/gemini.json": {
+      "bytes": 7679,
+      "sha256": "b0fc2789ab0b75dd98a6e94807e36843e7e06ee7f59fdd4724cd8dc0d8e59d44"
+    },
+    "raw/kimi-login.jpg": {
+      "bytes": 53770,
+      "sha256": "79c7268dc15080df582417b0c7dd81ff5ef5f2ed49b6a6df802203e45da4cb71"
+    },
+    "raw/kimi-login.txt": {
+      "bytes": 5552,
+      "sha256": "5facab7284070a4060d737f99f50188d1bdbbb06590cd53033daeb85545262c5"
+    },
+    "raw/perplexity-final-state.txt": {
+      "bytes": 13456,
+      "sha256": "13c69c8e18bc492325542de5e53193417787186b5c0da8e87f7f9c16125bb977"
+    },
+    "raw/perplexity-response.html": {
+      "bytes": 56877,
+      "sha256": "2c14ae4b9cf55696972378c9c090345b15eaa3bed0fde16f6765a251234b6cf0"
+    },
+    "raw/perplexity-sources.json": {
+      "bytes": 14550,
+      "sha256": "29e840383e4259bbe2fd2544503954b0d99062e4ed0566de41bf0b5acfc390cb"
+    },
+    "raw/perplexity.jpg": {
+      "bytes": 52531,
+      "sha256": "17ea36cd61a8385f93f721465b7520a9ba42bfe448471089d3fac8f169bbda88"
+    },
+    "raw/perplexity.json": {
+      "bytes": 7439,
+      "sha256": "65fb5b4e8522382e8d65e4ed7ea13902d4711d9cf06911bddd6ea1bc147cfde8"
+    },
+    "source-link-checks.json": {
+      "bytes": 2250,
+      "sha256": "a0127f59c6ab8594ca4e96cf3d9f3690cb27e2a80aa92f09692576e6d9229713"
+    }
+  }
+}

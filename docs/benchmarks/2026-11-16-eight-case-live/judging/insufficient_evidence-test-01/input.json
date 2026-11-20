@@ -1,0 +1,30 @@
+{
+  "question": "Using only the frozen documentation, using only the structured-output guide, name the universally cheapest and lowest-latency strategy and give its cost savings.",
+  "reference_answer": "The guide explains native versus tool-calling strategies and capability-based selection. It does not establish a universally cheapest or fastest strategy or measured savings. Model/provider prices, schema size, retries, output length and latency measurements are required; abstain from a numeric or universal ranking.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text": "No universal cost/latency ranking"
+    },
+    {
+      "id": "R2",
+      "text": "Identify missing workload/pricing data"
+    },
+    {
+      "id": "R3",
+      "text": "No fabricated savings"
+    }
+  ],
+  "candidates": {
+    "A": {
+      "answer": "本次研究未能生成有引用支持的完整内容。以下是可追溯的资料来源：",
+      "citation_map": {},
+      "visible_passages": []
+    },
+    "B": {
+      "answer": "本次研究未能生成有引用支持的完整内容。以下是可追溯的资料来源：",
+      "citation_map": {},
+      "visible_passages": []
+    }
+  }
+}

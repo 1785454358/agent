@@ -1,0 +1,57 @@
+{
+  "run_id": "68ac98ac75a348729026d81cb7792c0f",
+  "thread_id": "68ac98ac75a348729026d81cb7792c0f",
+  "status": "partial",
+  "response_outcome": {
+    "response_mode": "answer",
+    "content": "本次研究未能生成有引用支持的完整内容。以下是可追溯的资料来源：",
+    "citations": [],
+    "cited_evidence_ids": [],
+    "partial_reason": "no_evidence"
+  },
+  "research_outcome": {
+    "delivery_plan": null,
+    "source_eligibility": {
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375": "eligible"
+    },
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "The specific strategy named in the frozen documentation's structured-output guide as universally cheapest and lowest-latency, along with its stated cost savings."
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "missing",
+          "reason": "The visible passages describe ProviderStrategy as 'most reliable' and ToolStrategy as the fallback for models without native support, but no passage names any strategy as universally cheapest or lowest-latency, and no cost savings figure appears anywhere in the visible text.",
+          "finding_ids": [],
+          "unanswered_parts": [
+            "Which strategy is named as universally cheapest and lowest-latency",
+            "The stated cost savings amount or percentage"
+          ]
+        }
+      ]
+    },
+    "decomposition_degraded": false,
+    "mode": "workflow",
+    "evidence_ids": [
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+    ],
+    "findings": [],
+    "unresolved_gaps": [
+      "r1:missing:The visible passages describe ProviderStrategy as 'most reliable' and ToolStrategy as the fallback for models without native support, but no passage names any strategy as universally cheapest or lowest-latency, and no cost savings figure appears anywhere in the visible text."
+    ],
+    "executed_steps": 13,
+    "termination_reason": "insufficient_evidence"
+  },
+  "termination_reason": "insufficient_evidence",
+  "executed_steps": 13,
+  "unresolved_gaps": [
+    "r1:missing:The visible passages describe ProviderStrategy as 'most reliable' and ToolStrategy as the fallback for models without native support, but no passage names any strategy as universally cheapest or lowest-latency, and no cost savings figure appears anywhere in the visible text."
+  ],
+  "sources": [],
+  "research_sufficiency": "insufficient"
+}

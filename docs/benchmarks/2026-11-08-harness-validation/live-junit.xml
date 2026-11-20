@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="51.151" timestamp="2026-11-08T23:34:12.708287+08:00" hostname="DESKTOP-8HBNEFK"><testcase classname="tests.real.test_real_smoke" name="test_real_workflow_run_returns_cited_answer" time="50.687"><failure message="AssertionError: assert 'answer_review_incomplete' == 'workflow_completed'&#10;  &#10;  - workflow_completed&#10;  + answer_review_incomplete">tests\real\test_real_smoke.py:169: in test_real_workflow_run_returns_cited_answer
+    assert outcome.termination_reason == "workflow_completed"
+E   AssertionError: assert 'answer_review_incomplete' == 'workflow_completed'
+E     
+E     - workflow_completed
+E     + answer_review_incomplete</failure></testcase></testsuite></testsuites>

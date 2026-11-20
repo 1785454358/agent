@@ -1,0 +1,86 @@
+[
+  {
+    "first_request_byte_identical": true,
+    "new_provider_attempts": 0,
+    "question_id": "single_hop-dev-01",
+    "replayed_calls": 1,
+    "review_unchanged": true
+  },
+  {
+    "first_request_byte_identical": true,
+    "new_provider_attempts": 0,
+    "question_id": "single_hop-dev-02",
+    "replayed_calls": 1,
+    "review_unchanged": true
+  },
+  {
+    "first_request_byte_identical": true,
+    "new_provider_attempts": 0,
+    "question_id": "multi_hop-dev-01",
+    "replayed_calls": 1,
+    "review_unchanged": true
+  },
+  {
+    "first_request_byte_identical": true,
+    "new_provider_attempts": 0,
+    "question_id": "multi_hop-dev-02",
+    "replayed_calls": 1,
+    "review_unchanged": true
+  },
+  {
+    "first_request_byte_identical": true,
+    "new_provider_attempts": 0,
+    "question_id": "comparison-dev-01",
+    "replayed_calls": 1,
+    "review_unchanged": true
+  },
+  {
+    "first_request_byte_identical": true,
+    "new_provider_attempts": 0,
+    "question_id": "comparison-dev-02",
+    "replayed_calls": 1,
+    "review_unchanged": true
+  },
+  {
+    "first_request_byte_identical": true,
+    "new_provider_attempts": 0,
+    "question_id": "version_boundary-dev-01",
+    "replayed_calls": 1,
+    "review_unchanged": true
+  },
+  {
+    "first_request_byte_identical": true,
+    "new_provider_attempts": 0,
+    "question_id": "version_boundary-dev-02",
+    "replayed_calls": 1,
+    "review_unchanged": true
+  },
+  {
+    "first_request_byte_identical": true,
+    "new_provider_attempts": 0,
+    "question_id": "conflicting_evidence-dev-01",
+    "replayed_calls": 1,
+    "review_unchanged": true
+  },
+  {
+    "first_request_byte_identical": true,
+    "new_provider_attempts": 0,
+    "question_id": "conflicting_evidence-dev-02",
+    "replayed_calls": 1,
+    "review_unchanged": true
+  },
+  {
+    "first_request_byte_identical": true,
+    "new_provider_attempts": 0,
+    "question_id": "insufficient_evidence-dev-01",
+    "replayed_calls": 1,
+    "review_unchanged": true
+  },
+  {
+    "first_request_byte_identical": true,
+    "new_provider_attempts": 0,
+    "question_id": "insufficient_evidence-dev-02",
+    "replayed_calls": 1,
+    "review_unchanged": true
+  }
+]

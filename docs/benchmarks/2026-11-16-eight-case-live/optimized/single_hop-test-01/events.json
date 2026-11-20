@@ -1,0 +1,448 @@
+[
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "dd98bc58e8d5427c994e3f67172f25c2:1",
+      "role": "planner",
+      "estimated_input_tokens": 2463
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "dd98bc58e8d5427c994e3f67172f25c2:1",
+      "role": "planner",
+      "duration_ms": 8594,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1514,
+      "output_tokens": 495
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "dd98bc58e8d5427c994e3f67172f25c2:2",
+      "role": "researcher",
+      "estimated_input_tokens": 2423
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "dd98bc58e8d5427c994e3f67172f25c2:2",
+      "role": "researcher",
+      "duration_ms": 1812,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 1951,
+      "output_tokens": 58
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-18d93af72637df4231922e958fbd8685",
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "thread_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "dfa8bb28a8518b685a1c7c5948645a59",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "create_agent structured output response_format structured_response validated return"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-18d93af72637df4231922e958fbd8685",
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "thread_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "dfa8bb28a8518b685a1c7c5948645a59",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 35
+    }
+  },
+  {
+    "event_type": "tool.started",
+    "payload": {
+      "request_id": "request-18d93af72637df4231922e958fbd8685",
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "thread_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "bdba95dfed97d301b09e962fcfff27f0",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "query": "response_format schema type strategy selection ProviderStrategy ToolStrategy create_agent"
+    }
+  },
+  {
+    "event_type": "tool.completed",
+    "payload": {
+      "request_id": "request-18d93af72637df4231922e958fbd8685",
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "thread_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "bdba95dfed97d301b09e962fcfff27f0",
+      "tool": "read_evidence",
+      "caller_id": "workflow-graph",
+      "mode": "workflow",
+      "ok": true,
+      "error_code": null,
+      "error_category": null,
+      "retryable": false,
+      "message": null,
+      "cached": false,
+      "replayed": false,
+      "budget_delta": {
+        "model_calls": 0,
+        "tool_calls": 1,
+        "network_requests": 0,
+        "fetched_pages": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "rounds": 0
+      },
+      "duration_ms": 40
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation create_agent validated structured output schema type strategy",
+      "tool_call_id": "batch-f2d6efd4a0201bce03e38a237da044a3",
+      "call_id": "dfa8bb28a8518b685a1c7c5948645a59",
+      "tool": "read_evidence",
+      "query": "create_agent structured output response_format structured_response validated return",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375\",\"version\":1,\"content_hash\":\"sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703\",\"historical\":false,\"passages\":[{\"ref\":\"n1\",\"start\":0,\"end\":34,\"text\":\"---\\ntitle: Structured output\\n---\\n\\n\"},{\"ref\":\"n2\",\"start\":45,\"end\":446,\"text\":\"Structured output allows agents to return data in a specific, predictable format. Instead of parsing natural language responses, you get structured data in the form of JSON objects, [Pydantic models](https://docs.pydantic.dev/latest/concepts/models/#basic-model-usage), or dataclasses that your application can use directly.\\n\\n<Tip>\\nThis page covers structured output with agents using `create_agent`. \"},{\"ref\":\"n3\",\"start\":446,\"end\":931,\"text\":\"To use structured output directly on a model (outside of agents), see [Models - Structured output](/oss/langchain/models#structured-output).\\n</Tip>\\n\\nLangChain's @[`create_agent`] handles structured output automatically. The user sets their desired structured output schema, and when the model generates the structured data, it's captured, validated, and returned in the `'structured_response'` key of the agent's state.\\n\\n```python\\ndef create_agent(\\n    ...\\n    response_format: Union[\\n\"},{\"ref\":\"n4\",\"start\":931,\"end\":1083,\"text\":\"        ToolStrategy[StructuredResponseT],\\n        ProviderStrategy[StructuredResponseT],\\n        type[StructuredResponseT],\\n        None,\\n    ]\\n)\\n```\\n\\n\"},{\"ref\":\"n5\",\"start\":1103,\"end\":1176,\"text\":\"Use `response_format` to control how the agent returns structured data:\\n\\n\"},{\"ref\":\"n6\",\"start\":2601,\"end\":2869,\"text\":\"The structured response is returned in the `structured_response` key of the agent's final state.\\n:::\\n:::js\\nStructured output allows agents to return data in a specific, predictable format. Instead of parsing natural language responses, you get typed structured data.\\n\\n\"},{\"ref\":\"n7\",\"start\":3092,\"end\":3378,\"text\":\"LangChain's prebuilt ReAct agent `createAgent` handles structured output automatically. The user sets their desired structured output schema, and when the model generates the structured data, it's captured, validated, and returned in the `structuredResponse` key of the agent's state.\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":44432,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "agent.tool_observation",
+    "payload": {
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "caller_id": "workflow-graph",
+      "branch": "frozen documentation create_agent validated structured output schema type strategy",
+      "tool_call_id": "batch-529c7417ef90bcb58cf8859b873223c8",
+      "call_id": "bdba95dfed97d301b09e962fcfff27f0",
+      "tool": "read_evidence",
+      "query": "response_format schema type strategy selection ProviderStrategy ToolStrategy create_agent",
+      "result": {
+        "ok": true,
+        "tool": "read_evidence",
+        "preview": "{\"evidence_id\":\"evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375\",\"version\":1,\"content_hash\":\"sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703\",\"historical\":false,\"passages\":[{\"ref\":\"n8\",\"start\":867,\"end\":1083,\"text\":\"```python\\ndef create_agent(\\n    ...\\n    response_format: Union[\\n        ToolStrategy[StructuredResponseT],\\n        ProviderStrategy[StructuredResponseT],\\n        type[StructuredResponseT],\\n        None,\\n    ]\\n)\\n```\\n\\n\"},{\"ref\":\"n9\",\"start\":1103,\"end\":1591,\"text\":\"Use `response_format` to control how the agent returns structured data:\\n\\n- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\\n- **`None`**: Structured output not explicitly requested\\n\\nWhen a schema type is provided directly, LangChain automatically chooses:\\n\\n\"},{\"ref\":\"n10\",\"start\":1883,\"end\":2089,\"text\":\"<Warning>\\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\\n</Warning>\\n\\n\"},{\"ref\":\"n11\",\"start\":4095,\"end\":4513,\"text\":\"You can control the behavior by wrapping `ResponseFormat` in a `toolStrategy` or `providerStrategy` function call:\\n\\n```ts\\nimport { toolStrategy, providerStrategy } from \\\"langchain\\\";\\n\\nconst agent = createAgent({\\n    // use a provider strategy if supported by the model\\n    responseFormat: providerStrategy(z.object({ ... }))\\n    // or enforce a tool strategy\\n    responseFormat: toolStrategy(z.object({ ... }))\\n})\\n```\\n\\n\"},{\"ref\":\"n12\",\"start\":5160,\"end\":5182,\"text\":\"## Provider strategy\\n\\n\"},{\"ref\":\"n13\",\"start\":5362,\"end\":5606,\"text\":\"To use this strategy, configure a `ProviderStrategy`:\\n\\n:::python\\n```python\\nclass ProviderStrategy(Generic[SchemaT]):\\n    schema: type[SchemaT]\\n    strict: bool | None = None\\n```\\n<Info>\\n    The `strict` param requires `langchain>=1.2`.\\n</Info>\\n\\n\"}],\"selection\":{\"strategy\":\"query\",\"body_length\":44432,\"omitted\":true,\"found\":true,\"reason\":\"preview_budget_omitted\"}}",
+        "evidence_ids": []
+      },
+      "research_findings": []
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 0,
+      "end": 34,
+      "passage_id": "p-7cc9296d1f762d7238359e6f7088567b",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 45,
+      "end": 446,
+      "passage_id": "p-27baa173c4aaf6484591d661859aad34",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 446,
+      "end": 931,
+      "passage_id": "p-766bc96dd2973bb56d7bb69973760479",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 931,
+      "end": 1083,
+      "passage_id": "p-01ba8292317277be2bd7af2690af86b3",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 1103,
+      "end": 1591,
+      "passage_id": "p-b54b9b01ec176844015a35a91ccde3dd",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 1883,
+      "end": 2089,
+      "passage_id": "p-b5c4ad66d895d503925b28b5f574d66d",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 2601,
+      "end": 2869,
+      "passage_id": "p-5af1f509168d6a3d0113925f01d52774",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 3092,
+      "end": 3378,
+      "passage_id": "p-2e24672f85b5b7639f0e72c4c321f794",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 4211,
+      "end": 4513,
+      "passage_id": "p-43e5de8c3aaa3eb6d6561951d8e69b38",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 5160,
+      "end": 5182,
+      "passage_id": "p-c66732154ef509ccb915254ab2de0273",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "evaluation",
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 5362,
+      "end": 5606,
+      "passage_id": "p-bd9bef62e983bed598a5597c14e79bcf",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "dd98bc58e8d5427c994e3f67172f25c2:3",
+      "role": "evaluator",
+      "estimated_input_tokens": 4951
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "dd98bc58e8d5427c994e3f67172f25c2:3",
+      "role": "evaluator",
+      "duration_ms": 6500,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 3739,
+      "output_tokens": 473
+    }
+  },
+  {
+    "event_type": "response.excerpts",
+    "payload": {
+      "algorithm": "query-windows-v1",
+      "response_mode": "answer",
+      "attempt": 1,
+      "per_source_chars": 6000,
+      "sources": [
+        {
+          "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+          "segment": "source_1",
+          "strategy": "support-first-v2",
+          "body_chars": 44432,
+          "excerpt_chars": 3604,
+          "pre_token_ranges": [
+            {
+              "start": 0,
+              "end": 1883,
+              "start_line": 1,
+              "end_line": 40
+            },
+            {
+              "start": 2089,
+              "end": 3685,
+              "start_line": 45,
+              "end_line": 80
+            }
+          ],
+          "omitted_ranges": [],
+          "token_status": "full"
+        }
+      ]
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 0,
+      "end": 1883,
+      "passage_id": "p-058700f5f5b992e46ce0b77bbe44fcda",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "evidence.view",
+    "payload": {
+      "stage": "response",
+      "attempt": 1,
+      "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "version": 1,
+      "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+      "start": 2089,
+      "end": 3685,
+      "passage_id": "p-c666e21ad06aa44a02f2acb60c660ec1",
+      "visibility": true
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "dd98bc58e8d5427c994e3f67172f25c2:4",
+      "role": "responder",
+      "estimated_input_tokens": 3146
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "dd98bc58e8d5427c994e3f67172f25c2:4",
+      "role": "responder",
+      "duration_ms": 6610,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 2286,
+      "output_tokens": 358
+    }
+  },
+  {
+    "event_type": "model.started",
+    "payload": {
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "dd98bc58e8d5427c994e3f67172f25c2:5",
+      "role": "responder",
+      "estimated_input_tokens": 3452
+    }
+  },
+  {
+    "event_type": "model.completed",
+    "payload": {
+      "run_id": "dd98bc58e8d5427c994e3f67172f25c2",
+      "call_id": "dd98bc58e8d5427c994e3f67172f25c2:5",
+      "role": "responder",
+      "duration_ms": 5016,
+      "error_code": null,
+      "usage_known": true,
+      "input_tokens": 2418,
+      "output_tokens": 368
+    }
+  },
+  {
+    "event_type": "response.fact_review.completed",
+    "payload": {
+      "issues_count": 0,
+      "unanswered_points": [],
+      "consistency_checks": [],
+      "budgets": []
+    }
+  }
+]

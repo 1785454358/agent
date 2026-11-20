@@ -1,0 +1,819 @@
+{
+  "product": "DeepResearch (project)",
+  "mode": "workflow",
+  "prompt": "对比 LangGraph 的 checkpoint 与 Store 的用途、线程边界与恢复能力。依据当前官方文档，用中文回答：先给结论，再用表格比较；分别说明进程重启、interrupt 恢复、跨线程共享时的行为与前提，并给出适用场景和带链接的来源。明确区分事实、推断和无法确认的事项。",
+  "started_at": "2026-10-24T11:42:06.839481+00:00",
+  "config": {
+    "model": "deepseek-v4.1-flash",
+    "max_model_calls": 20,
+    "max_input_tokens": 100000,
+    "max_tool_calls": 240
+  },
+  "model_calls": [
+    {
+      "role": "planner",
+      "started_at": "2026-10-24T11:42:06.931039+00:00",
+      "seconds": 7.828,
+      "usage": {
+        "input_tokens": 2462,
+        "output_tokens": 1646,
+        "total_tokens": 4108,
+        "input_token_details": {
+          "cache_read": 0
+        },
+        "output_token_details": {
+          "reasoning": 0
+        }
+      },
+      "provider_model": "deepseek-v4-1-flash-261017"
+    },
+    {
+      "role": "researcher",
+      "started_at": "2026-10-24T11:42:26.246933+00:00",
+      "seconds": 3.189,
+      "usage": {
+        "input_tokens": 3489,
+        "output_tokens": 638,
+        "total_tokens": 4127,
+        "input_token_details": {
+          "cache_read": 0
+        },
+        "output_token_details": {
+          "reasoning": 0
+        }
+      },
+      "provider_model": "deepseek-v4-1-flash-261017"
+    },
+    {
+      "role": "researcher",
+      "started_at": "2026-10-24T11:42:34.032704+00:00",
+      "seconds": 4.179,
+      "usage": {
+        "input_tokens": 4965,
+        "output_tokens": 859,
+        "total_tokens": 5824,
+        "input_token_details": {
+          "cache_read": 0
+        },
+        "output_token_details": {
+          "reasoning": 0
+        }
+      },
+      "provider_model": "deepseek-v4-1-flash-261017"
+    },
+    {
+      "role": "researcher",
+      "started_at": "2026-10-24T11:42:38.231111+00:00",
+      "seconds": 2.901,
+      "usage": {
+        "input_tokens": 5027,
+        "output_tokens": 601,
+        "total_tokens": 5628,
+        "input_token_details": {
+          "cache_read": 896
+        },
+        "output_token_details": {
+          "reasoning": 0
+        }
+      },
+      "provider_model": "deepseek-v4-1-flash-261017"
+    },
+    {
+      "role": "researcher",
+      "started_at": "2026-10-24T11:42:38.530208+00:00",
+      "seconds": 2.96,
+      "usage": {
+        "input_tokens": 4929,
+        "output_tokens": 594,
+        "total_tokens": 5523,
+        "input_token_details": {
+          "cache_read": 896
+        },
+        "output_token_details": {
+          "reasoning": 0
+        }
+      },
+      "provider_model": "deepseek-v4-1-flash-261017"
+    },
+    {
+      "role": "evaluator",
+      "started_at": "2026-10-24T11:42:41.591080+00:00",
+      "seconds": 6.426,
+      "usage": {
+        "input_tokens": 9745,
+        "output_tokens": 1473,
+        "total_tokens": 11218,
+        "input_token_details": {
+          "cache_read": 0
+        },
+        "output_token_details": {
+          "reasoning": 0
+        }
+      },
+      "provider_model": "deepseek-v4-1-flash-261017"
+    },
+    {
+      "role": "responder",
+      "started_at": "2026-10-24T11:42:48.200639+00:00",
+      "seconds": 5.242,
+      "usage": {
+        "input_tokens": 6347,
+        "output_tokens": 1078,
+        "total_tokens": 7425,
+        "input_token_details": {
+          "cache_read": 0
+        },
+        "output_token_details": {
+          "reasoning": 0
+        }
+      },
+      "provider_model": "deepseek-v4-1-flash-261017"
+    },
+    {
+      "role": "responder",
+      "started_at": "2026-10-24T11:42:53.448246+00:00",
+      "seconds": 4.422,
+      "usage": {
+        "input_tokens": 6357,
+        "output_tokens": 1255,
+        "total_tokens": 7612,
+        "input_token_details": {
+          "cache_read": 0
+        },
+        "output_token_details": {
+          "reasoning": 0
+        }
+      },
+      "provider_model": "deepseek-v4-1-flash-261017"
+    }
+  ],
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "search_web",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "search_web",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "search_web",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "search_web",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "search_web",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "fetch_page",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 1
+    },
+    {
+      "tool": "fetch_page",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 1
+    },
+    {
+      "tool": "fetch_page",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 1
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "fetch_page",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 1
+    },
+    {
+      "tool": "fetch_page",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 1
+    },
+    {
+      "tool": "fetch_page",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 1
+    },
+    {
+      "tool": "fetch_page",
+      "ok": false,
+      "error_code": "response_too_large",
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "fetch_page",
+      "ok": false,
+      "error_code": "response_too_large",
+      "evidence_count": 0
+    },
+    {
+      "tool": "fetch_page",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 1
+    },
+    {
+      "tool": "fetch_page",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 1
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    },
+    {
+      "tool": "read_evidence",
+      "ok": true,
+      "error_code": null,
+      "evidence_count": 0
+    }
+  ],
+  "outcome": {
+    "run_id": "product-compare-one",
+    "thread_id": "product-compare-fresh",
+    "status": "completed",
+    "response_outcome": {
+      "response_mode": "brief",
+      "content": "## 结论\n\nCheckpoint 是**线程内的图状态快照机制**：编译图时提供 checkpointer 后，每个 superstep 保存一次图状态；不提供则无法保存或恢复状态 [1]。它支撑同一 thread 的续跑、状态查询/更新与 interrupt 暂停恢复 [1][2]。Store 是**跨线程的长期记忆存储**：官方定义为“可选的长期记忆存储，允许跨线程持久化与检索数据” [1]，长期记忆按自定义 namespace 组织、可在任意线程召回 [3]。\n\n取舍：需要“接着上次继续跑/人工审批后恢复”用 checkpoint；需要“不同会话共享用户偏好、提示词、事实”用 Store。二者可同时配置，但职责不同。\n\n## 对比表\n\n| 维度 | Checkpoint（checkpointer） | Store |\n|---|---|---|\n| 官方定位 | 持久化图状态；每个 superstep 存检查点；未配置则不能保存/恢复 [1] | 可选长期记忆存储，跨线程持久化与检索 [1] |\n| 存什么 | 图状态快照、状态历史；getState/getStateHistory/updateState 均依赖它 [1] | JSON 文档，按 namespace（类似文件夹）+ key（类似文件名）组织 [3] |\n| 线程边界 | 线程作用域：短期记忆由 checkpointer 持久化，使该 thread 可随时恢复 [3]；子图用 checkpoint namespace 区分多次调用 [2] | 作用域是自定义 namespace，而非单一 thread ID；跨会话、跨线程共享 [3] |\n| 恢复能力 | 支持从暂停处恢复；无检查点时子图无法暂停/恢复，也无持久执行 [2] | 提供记忆的保存与召回，不是执行断点恢复机制（据定义推断）[1][3] |\n| 检索方式 | 按 thread 配置取状态/历史 [1] | 支持语义搜索与按内容过滤；可跨 namespace 用内容过滤搜索 [3] |\n\n## 分场景说明\n\n**进程重启**\n- 事实：checkpointer 把状态持久化到数据库，使线程可随时恢复 [3]；未配置 checkpointer 则图无法保存或恢复状态 [1]。\n- 无法确认：本次可见材料未直接说明“进程重启后数据是否保留”及具体依赖哪种后端（仅提到数据库持久化与内存版示例）。因此“用持久化后端即可跨重启恢复”属合理推断，需按所选后端核查。\n- Store 同理：材料只说跨线程持久化 [1]，未直接给出重启语义。\n\n**interrupt 恢复**\n- 事实：checkpointer 支持 interrupt() 暂停并等待用户输入，再从暂停处恢复；无检查点时子图无法暂停/恢复 [2]。有状态子图继承父图 checkpointer，从而支持 interrupt、持久化与状态检查 [2]。\n- 前提（据材料）：配置 checkpointer、同一 thread、存在对应检查点。\n- 无法确认：材料未提及 Command(resume=...) 的具体用法，也未说明 Store 在 interrupt 恢复中的角色；按定义推断 Store 不承担断点恢复。\n\n**跨线程共享**\n- 事实：长期记忆跨对话线程共享，可在任意时间、任意线程召回，作用域为自定义 namespace [3]；Store 支持语义搜索与内容过滤 [3]。\n- 前提：写入时用一致的 namespace/key 约定（常含用户或组织 ID）[3]。\n- 无法确认：材料未说明 checkpoint 能否跨 thread 读取另一线程状态；按“线程作用域”表述推断不能直接跨线程复用。\n\n## 适用场景\n\n- 用 checkpoint：多轮对话续跑、human-in-the-loop 审批、状态检查与回放、子图持久化 [1][2]。\n- 用 Store：跨会话用户画像/偏好、可复用提示词、需语义检索的事实库 [3]。\n- 组合：执行状态放 checkpoint，跨线程知识放 Store（推断，依据二者定位互补 [1][3]）。\n\n## 缺口说明\n\n本次可见材料未覆盖：Store 的完整 API 定义细节、checkpoint 与 Store 作用域差异的原文对比、进程重启行为的直接表述、Command(resume=...) 用法。以上缺口仅表示当前材料不足，不代表官方文档无答案。\n\n## 来源\n\n- [1] CompiledStateGraph API：https://langchain-ai.github.io/langgraphjs/reference/classes/langgraph.CompiledStateGraph.html\n- [3] Memory overview：https://docs.langchain.com/oss/python/concepts/memory\n- [2] Subgraphs：https://docs.langchain.com/oss/python/langgraph/use-subgraphs",
+      "citations": [
+        {
+          "evidence_id": "evidence-113b087d3025714ea443eeedb109b32228929e9592eb5eba6d7b3ab006029999",
+          "marker": "[1]"
+        },
+        {
+          "evidence_id": "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+          "marker": "[2]"
+        },
+        {
+          "evidence_id": "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e",
+          "marker": "[3]"
+        }
+      ],
+      "cited_evidence_ids": [
+        "evidence-113b087d3025714ea443eeedb109b32228929e9592eb5eba6d7b3ab006029999",
+        "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+        "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e"
+      ],
+      "partial_reason": "insufficient_evidence"
+    },
+    "research_outcome": {
+      "source_eligibility": {
+        "evidence-113b087d3025714ea443eeedb109b32228929e9592eb5eba6d7b3ab006029999": "eligible",
+        "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17": "eligible",
+        "evidence-ccf835038741b6bc6a13b5eebbf6e692ef8e85342324c2e79ed6f9f9c712cea3": "ineligible",
+        "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e": "eligible",
+        "evidence-825471a9b6328a926550f6ac9b6c05d382c6844523f99be607fbdb22330d9261": "ineligible",
+        "evidence-fad3eab5a6961e2d47221c760a3b736c52d2af5a8f842c57515d2b9b32d6f3de": "ineligible",
+        "evidence-f3ff7319b932b1496ae6d101f89b02b425fc9400daa816daab8af0f1f5e2bcf5": "eligible"
+      },
+      "evidence_contract_version": 3,
+      "requirements": [
+        {
+          "id": "r1",
+          "description": "LangGraph checkpoint（checkpointer）的官方定义用途是什么：它保存什么（图状态快照、待处理任务、元数据等），与 thread_id 的关系，以及官方文档对其定位的表述。"
+        },
+        {
+          "id": "r2",
+          "description": "LangGraph Store（BaseStore/InMemoryStore 等）的官方定义用途是什么：它存储什么（namespace/key/value 结构）、与线程的关系，以及官方文档对其作为跨线程长期记忆的定位表述。"
+        },
+        {
+          "id": "r3",
+          "description": "checkpoint 与 Store 各自的线程边界：checkpoint 是否绑定单一 thread_id、checkpoint_ns 的作用；Store 是否跨线程/跨会话共享、如何用 namespace 组织。官方文档如何描述二者的作用域差异。"
+        },
+        {
+          "id": "r4",
+          "description": "进程重启后的恢复行为与前提：checkpoint 在何种持久化后端下可跨进程重启恢复、需要哪些条件（同一 thread_id、持久化 checkpointer 而非内存版）；Store 在进程重启后数据是否保留、依赖什么后端。"
+        },
+        {
+          "id": "r5",
+          "description": "interrupt 恢复的行为与前提：LangGraph interrupt 恢复是否依赖 checkpointer、需要哪些条件（thread_id、checkpoint 存在、Command(resume=...) 等），Store 在 interrupt 恢复中扮演什么角色（若有）。"
+        },
+        {
+          "id": "r6",
+          "description": "跨线程共享时的行为与前提：Store 如何实现跨线程共享（namespace/key）、checkpoint 是否支持跨线程读取状态；官方文档给出的适用场景（何时用 checkpoint、何时用 Store、二者组合使用）。"
+        }
+      ],
+      "coverage": {
+        "items": [
+          {
+            "requirement_id": "r1",
+            "status": "covered",
+            "reason": "官方 API 与概念文档给出 checkpointer 保存每步图状态、需 thread 恢复、getState 等依赖 checkpointer 的定位。",
+            "finding_ids": [
+              "finding-1",
+              "finding-2",
+              "finding-9"
+            ]
+          },
+          {
+            "requirement_id": "r2",
+            "status": "missing",
+            "reason": "unsupported_requirement_coverage",
+            "finding_ids": []
+          },
+          {
+            "requirement_id": "r3",
+            "status": "missing",
+            "reason": "unsupported_requirement_coverage",
+            "finding_ids": []
+          },
+          {
+            "requirement_id": "r4",
+            "status": "missing",
+            "reason": "现有原文未明确说明进程重启后 checkpoint 或 Store 数据是否保留及依赖何种持久化后端（仅提及持久化到数据库/内存版示例，未直接回答重启行为）。",
+            "finding_ids": []
+          },
+          {
+            "requirement_id": "r5",
+            "status": "covered",
+            "reason": "原文说明 checkpointer 支持 interrupt 暂停与恢复，无检查点则无法暂停/恢复；未提及 Store 在 interrupt 恢复中的角色。",
+            "finding_ids": [
+              "finding-8",
+              "finding-7"
+            ]
+          },
+          {
+            "requirement_id": "r6",
+            "status": "missing",
+            "reason": "unsupported_requirement_coverage",
+            "finding_ids": []
+          }
+        ]
+      },
+      "decomposition_degraded": false,
+      "mode": "workflow",
+      "evidence_ids": [
+        "evidence-113b087d3025714ea443eeedb109b32228929e9592eb5eba6d7b3ab006029999",
+        "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e",
+        "evidence-825471a9b6328a926550f6ac9b6c05d382c6844523f99be607fbdb22330d9261",
+        "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+        "evidence-ccf835038741b6bc6a13b5eebbf6e692ef8e85342324c2e79ed6f9f9c712cea3",
+        "evidence-f3ff7319b932b1496ae6d101f89b02b425fc9400daa816daab8af0f1f5e2bcf5",
+        "evidence-fad3eab5a6961e2d47221c760a3b736c52d2af5a8f842c57515d2b9b32d6f3de"
+      ],
+      "findings": [
+        {
+          "id": "finding-1",
+          "claim": "官方 API 文档将 checkpointer 定义为可选的、用于持久化图状态的组件：提供后会在每个 superstep 保存图状态检查点；未提供时禁用检查点，图无法保存或恢复状态。",
+          "evidence_ids": [
+            "evidence-113b087d3025714ea443eeedb109b32228929e9592eb5eba6d7b3ab006029999"
+          ],
+          "confidence": 0.95,
+          "supports": [
+            {
+              "evidence_id": "evidence-113b087d3025714ea443eeedb109b32228929e9592eb5eba6d7b3ab006029999",
+              "version": 1,
+              "content_hash": "sha256:dd066a8098bb5e04f01b8576f49ba4948c0345b0a4d9f8078811e071d025505a",
+              "start": 252,
+              "end": 485,
+              "quote": "Optional checkpointer for persisting graph state. When provided, saves a checkpoint of the graph state at every superstep. When false or undefined, checkpointing is disabled, and the graph will not be able to save or restore state.\n\n"
+            }
+          ]
+        },
+        {
+          "id": "finding-2",
+          "claim": "官方文档将短期记忆（thread-scoped memory）描述为在会话内维护消息历史，由 checkpointer 持久化到数据库，使线程可随时恢复；状态在每步开始时读取、在图调用或步骤完成时更新。",
+          "evidence_ids": [
+            "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e"
+          ],
+          "confidence": 0.9,
+          "supports": [
+            {
+              "evidence_id": "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e",
+              "version": 1,
+              "content_hash": "sha256:b0ab1668536745aba6daf73c29397d12618f867ce4d32f41d1e30a94c02060ba",
+              "start": 2505,
+              "end": 2903,
+              "quote": "Long-term memory in LangGraph allows systems to retain information across different conversations or sessions. Unlike short-term memory, which is\n**thread-scoped**, long-term memory is saved within custom “namespaces.” Long-term memory is a complex challenge without a one-size-fits-all solution. However, the following questions provide a framework to help you navigate the different techniques:\n\n"
+            }
+          ]
+        },
+        {
+          "id": "finding-3",
+          "claim": "官方 API 文档将 Store 定义为可选的长期记忆存储，允许跨线程持久化与检索数据。",
+          "evidence_ids": [
+            "evidence-113b087d3025714ea443eeedb109b32228929e9592eb5eba6d7b3ab006029999"
+          ],
+          "confidence": 0.95,
+          "supports": [
+            {
+              "evidence_id": "evidence-113b087d3025714ea443eeedb109b32228929e9592eb5eba6d7b3ab006029999",
+              "version": 1,
+              "content_hash": "sha256:dd066a8098bb5e04f01b8576f49ba4948c0345b0a4d9f8078811e071d025505a",
+              "start": 1536,
+              "end": 1778,
+              "quote": "Optional long-term memory store for the graph, allows for persistence & retrieval of data across threads\n\nOptional channels to stream. If not specified, all channels will be streamed. Can be a single channel key or an array of channel keys.\n\n"
+            }
+          ]
+        },
+        {
+          "id": "finding-4",
+          "claim": "官方文档将长期记忆描述为跨会话、跨对话线程共享，可在任意时间、任意线程召回，作用域为自定义 namespace 而非单一 thread ID；LangGraph 提供 stores 用于保存和召回长期记忆。",
+          "evidence_ids": [
+            "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e"
+          ],
+          "confidence": 0.9,
+          "supports": [
+            {
+              "evidence_id": "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e",
+              "version": 1,
+              "content_hash": "sha256:b0ab1668536745aba6daf73c29397d12618f867ce4d32f41d1e30a94c02060ba",
+              "start": 2505,
+              "end": 2903,
+              "quote": "Long-term memory in LangGraph allows systems to retain information across different conversations or sessions. Unlike short-term memory, which is\n**thread-scoped**, long-term memory is saved within custom “namespaces.” Long-term memory is a complex challenge without a one-size-fits-all solution. However, the following questions provide a framework to help you navigate the different techniques:\n\n"
+            }
+          ]
+        },
+        {
+          "id": "finding-6",
+          "claim": "官方文档指出，启用持久化后可用 subgraphs 选项检查子图状态；无状态检查点（checkpointer=False）时不保存子图检查点，子图状态不可用。checkpointer 参数还提供 checkpoint namespace 以区分多次子图调用。",
+          "evidence_ids": [
+            "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17"
+          ],
+          "confidence": 0.85,
+          "supports": [
+            {
+              "evidence_id": "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+              "version": 1,
+              "content_hash": "sha256:d022e7daeba9566a9863774402410c127f452e81cf054d391c24ef260522e0f5",
+              "start": 5390,
+              "end": 5887,
+              "quote": "When you enable persistence, you can inspect the subgraph state using the subgraphs option. With stateless checkpointing (`checkpointer=False`), no subgraph checkpoints are saved, so subgraph state is not available.\n**statically discover**the subgraph—i.e., it is added as a node or called inside a node. It does not work when a subgraph is called inside a tool function or other indirection (e.g., the subagents pattern). Interrupts still propagate to the top-level graph regardless of nesting.\n\n"
+            },
+            {
+              "evidence_id": "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+              "version": 1,
+              "content_hash": "sha256:d022e7daeba9566a9863774402410c127f452e81cf054d391c24ef260522e0f5",
+              "start": 4192,
+              "end": 4645,
+              "quote": "Use this when you want to run a subagent like a plain function call with no checkpointing overhead. The subgraph cannot pause/resume and does not benefit from durable execution. Compile with`checkpointer=False`.\n### Checkpointer reference\n\nControl subgraph persistence with the`checkpointer` parameter on `.compile()`:\n- **Interrupts (HITL)** : The subgraph can use interrupt() to pause execution and wait for user input, then resume where it left off.\n"
+            },
+            {
+              "evidence_id": "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+              "version": 1,
+              "content_hash": "sha256:d022e7daeba9566a9863774402410c127f452e81cf054d391c24ef260522e0f5",
+              "start": 4645,
+              "end": 5106,
+              "quote": "- **Multi-turn memory** : The subgraph retains its state across multiple invocations within the same thread. Each call picks up where the last one left off rather than starting fresh.\n- **Multiple calls (different subgraphs)** : Multiple different subgraph instances can be invoked within a single node without checkpoint namespace conflicts.\n- **Multiple calls (same subgraph)** : The same subgraph instance can be invoked multiple times within a single node. "
+            },
+            {
+              "evidence_id": "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+              "version": 1,
+              "content_hash": "sha256:d022e7daeba9566a9863774402410c127f452e81cf054d391c24ef260522e0f5",
+              "start": 5106,
+              "end": 5237,
+              "quote": "With stateful persistence, these calls write to the same checkpoint namespace and conflict—use per-invocation persistence instead.\n"
+            }
+          ]
+        },
+        {
+          "id": "finding-7",
+          "claim": "官方文档说明，有状态子图继承父图的 checkpointer，从而支持 interrupt、持久化和状态检查；per-thread 持久化使子代理在同一线程的多次调用间累积对话历史与数据。",
+          "evidence_ids": [
+            "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17"
+          ],
+          "confidence": 0.85,
+          "supports": [
+            {
+              "evidence_id": "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+              "version": 1,
+              "content_hash": "sha256:d022e7daeba9566a9863774402410c127f452e81cf054d391c24ef260522e0f5",
+              "start": 1776,
+              "end": 2189,
+              "quote": "When you use a subgraph, you need to decide what happens to its internal data between calls. Consider a customer support bot that delegates to specialist subagents: should the “billing expert” subagent remember the customer’s earlier questions, or start fresh each time it’s called? The`checkpointer` parameter on `.compile()` controls subgraph persistence:\n`create_agent`, which is a common way to build agents. "
+            },
+            {
+              "evidence_id": "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+              "version": 1,
+              "content_hash": "sha256:d022e7daeba9566a9863774402410c127f452e81cf054d391c24ef260522e0f5",
+              "start": 2189,
+              "end": 2660,
+              "quote": "`create_agent` produces a LangGraph graph under the hood, so all subgraph persistence concepts apply directly. If you’re building with raw LangGraph `StateGraph`, the same patterns and configuration options apply—see the Graph API for details.\n### Stateful\n\nStateful subgraphs inherit the parent graph’s checkpointer, which enables interrupts, persistence, and state inspection. The two stateful modes differ in how long state is retained.\n#### Per-invocation (default)\n\n"
+            },
+            {
+              "evidence_id": "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+              "version": 1,
+              "content_hash": "sha256:d022e7daeba9566a9863774402410c127f452e81cf054d391c24ef260522e0f5",
+              "start": 3485,
+              "end": 3912,
+              "quote": "Use per-thread persistence when a subagent needs to remember previous interactions. For example, a research assistant that builds up context over several exchanges, or a coding assistant that tracks what files it has already edited. The subagent’s conversation history and data accumulate across calls on the same thread. Each call picks up where the last one left off. Compile with`checkpointer=True` to enable this behavior.\n"
+            },
+            {
+              "evidence_id": "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+              "version": 1,
+              "content_hash": "sha256:d022e7daeba9566a9863774402410c127f452e81cf054d391c24ef260522e0f5",
+              "start": 3912,
+              "end": 4051,
+              "quote": "The following examples use a fruit expert subagent compiled with `checkpointer=True`:\n- Interrupts\n- Multi-turn\n- Multiple subgraph calls\n\n"
+            }
+          ]
+        },
+        {
+          "id": "finding-8",
+          "claim": "官方文档指出，checkpointer 支持 interrupt() 暂停执行并等待用户输入，然后从暂停处恢复；无检查点时子图无法暂停/恢复，也不具备持久执行能力。",
+          "evidence_ids": [
+            "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17"
+          ],
+          "confidence": 0.9,
+          "supports": [
+            {
+              "evidence_id": "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+              "version": 1,
+              "content_hash": "sha256:d022e7daeba9566a9863774402410c127f452e81cf054d391c24ef260522e0f5",
+              "start": 4192,
+              "end": 4645,
+              "quote": "Use this when you want to run a subagent like a plain function call with no checkpointing overhead. The subgraph cannot pause/resume and does not benefit from durable execution. Compile with`checkpointer=False`.\n### Checkpointer reference\n\nControl subgraph persistence with the`checkpointer` parameter on `.compile()`:\n- **Interrupts (HITL)** : The subgraph can use interrupt() to pause execution and wait for user input, then resume where it left off.\n"
+            },
+            {
+              "evidence_id": "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+              "version": 1,
+              "content_hash": "sha256:d022e7daeba9566a9863774402410c127f452e81cf054d391c24ef260522e0f5",
+              "start": 4645,
+              "end": 5106,
+              "quote": "- **Multi-turn memory** : The subgraph retains its state across multiple invocations within the same thread. Each call picks up where the last one left off rather than starting fresh.\n- **Multiple calls (different subgraphs)** : Multiple different subgraph instances can be invoked within a single node without checkpoint namespace conflicts.\n- **Multiple calls (same subgraph)** : The same subgraph instance can be invoked multiple times within a single node. "
+            },
+            {
+              "evidence_id": "evidence-aa1231602bf3df286c601572b223bfa8cb59d37f1f9a7264d082df11be4b1c17",
+              "version": 1,
+              "content_hash": "sha256:d022e7daeba9566a9863774402410c127f452e81cf054d391c24ef260522e0f5",
+              "start": 5106,
+              "end": 5237,
+              "quote": "With stateful persistence, these calls write to the same checkpoint namespace and conflict—use per-invocation persistence instead.\n"
+            }
+          ]
+        },
+        {
+          "id": "finding-9",
+          "claim": "官方 API 文档说明 getState、getStateHistory、updateState 均需要配置 checkpointer；getStateHistory 用于获取图状态历史。",
+          "evidence_ids": [
+            "evidence-113b087d3025714ea443eeedb109b32228929e9592eb5eba6d7b3ab006029999"
+          ],
+          "confidence": 0.9,
+          "supports": [
+            {
+              "evidence_id": "evidence-113b087d3025714ea443eeedb109b32228929e9592eb5eba6d7b3ab006029999",
+              "version": 1,
+              "content_hash": "sha256:dd066a8098bb5e04f01b8576f49ba4948c0345b0a4d9f8078811e071d025505a",
+              "start": 4396,
+              "end": 4476,
+              "quote": "Gets the current state of the graph. Requires a checkpointer to be configured.\n\n"
+            },
+            {
+              "evidence_id": "evidence-113b087d3025714ea443eeedb109b32228929e9592eb5eba6d7b3ab006029999",
+              "version": 1,
+              "content_hash": "sha256:dd066a8098bb5e04f01b8576f49ba4948c0345b0a4d9f8078811e071d025505a",
+              "start": 4575,
+              "end": 4664,
+              "quote": "Gets the history of graph states. Requires a checkpointer to be configured. Useful for:\n\n"
+            },
+            {
+              "evidence_id": "evidence-113b087d3025714ea443eeedb109b32228929e9592eb5eba6d7b3ab006029999",
+              "version": 1,
+              "content_hash": "sha256:dd066a8098bb5e04f01b8576f49ba4948c0345b0a4d9f8078811e071d025505a",
+              "start": 6336,
+              "end": 6427,
+              "quote": "Updates the state of the graph with new values. Requires a checkpointer to be configured.\n\n"
+            }
+          ]
+        },
+        {
+          "id": "finding-11",
+          "claim": "官方文档说明，Store 支持语义搜索与按内容过滤，可用于保存提示词等数据并在节点间读写。",
+          "evidence_ids": [
+            "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e"
+          ],
+          "confidence": 0.8,
+          "supports": [
+            {
+              "evidence_id": "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e",
+              "version": 1,
+              "content_hash": "sha256:b0ab1668536745aba6daf73c29397d12618f867ce4d32f41d1e30a94c02060ba",
+              "start": 6053,
+              "end": 6379,
+              "quote": "`Store` currently supports both semantic search and filtering by content.\nFinally, using a collection of memories can make it challenging to provide comprehensive context to the model. While individual memories may follow a specific schema, this structure might not capture the full context or relationships between memories. "
+            },
+            {
+              "evidence_id": "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e",
+              "version": 1,
+              "content_hash": "sha256:b0ab1668536745aba6daf73c29397d12618f867ce4d32f41d1e30a94c02060ba",
+              "start": 6379,
+              "end": 6782,
+              "quote": "As a result, when using these memories to generate responses, the model may lack important contextual information that would be more readily available in a unified profile approach.\nRegardless of memory management approach, the central point is that the agent will use the semantic memories to ground its responses, which often leads to more personalized and relevant interactions.\n### Episodic memory\n\n"
+            },
+            {
+              "evidence_id": "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e",
+              "version": 1,
+              "content_hash": "sha256:b0ab1668536745aba6daf73c29397d12618f867ce4d32f41d1e30a94c02060ba",
+              "start": 9028,
+              "end": 9407,
+              "quote": "This involves prompting the agent with its current instructions (e.g., the system prompt) along with recent conversations or explicit user feedback. The agent then refines its own instructions based on this input. This method is particularly useful for tasks where instructions are challenging to specify upfront, as it allows the agent to learn and adapt from its interactions. "
+            },
+            {
+              "evidence_id": "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e",
+              "version": 1,
+              "content_hash": "sha256:b0ab1668536745aba6daf73c29397d12618f867ce4d32f41d1e30a94c02060ba",
+              "start": 9407,
+              "end": 9893,
+              "quote": "For example, we built a Tweet generator using external feedback and prompt re-writing to produce high-quality paper summaries for Twitter. In this case, the specific summarization prompt was difficult to specify\n*a priori*, but it was fairly easy for a user to critique the generated Tweets and provide feedback on how to improve the summarization process. The below pseudo-code shows how you might implement this with the LangGraph memory store, using the store to save a prompt, the\n\n"
+            },
+            {
+              "evidence_id": "evidence-16f0dcf34c1f832f115e721142829fa461465499b877fc9d8398dab375f86b7e",
+              "version": 1,
+              "content_hash": "sha256:b0ab1668536745aba6daf73c29397d12618f867ce4d32f41d1e30a94c02060ba",
+              "start": 9893,
+              "end": 10218,
+              "quote": "`update_instructions` node to get the current prompt (as well as feedback from the conversation with the user captured in `state[\"messages\"]`), update the prompt, and save the new prompt back to the store. Then, the `call_model` get the updated prompt from the store and uses it to generate a response.\n### Writing memories\n\n"
+            }
+          ]
+        }
+      ],
+      "unresolved_gaps": [
+        "r2:missing:unsupported_requirement_coverage",
+        "r3:missing:unsupported_requirement_coverage",
+        "r4:missing:现有原文未明确说明进程重启后 checkpoint 或 Store 数据是否保留及依赖何种持久化后端（仅提及持久化到数据库/内存版示例，未直接回答重启行为）。",
+        "r6:missing:unsupported_requirement_coverage",
+        "diagnostic:synthesis_window_omitted:5"
+      ],
+      "executed_steps": 42,
+      "termination_reason": "insufficient_evidence"
+    },
+    "termination_reason": "workflow_completed",
+    "executed_steps": 42,
+    "unresolved_gaps": [
+      "r2:missing:unsupported_requirement_coverage",
+      "r3:missing:unsupported_requirement_coverage",
+      "r4:missing:现有原文未明确说明进程重启后 checkpoint 或 Store 数据是否保留及依赖何种持久化后端（仅提及持久化到数据库/内存版示例，未直接回答重启行为）。",
+      "r6:missing:unsupported_requirement_coverage",
+      "diagnostic:synthesis_window_omitted:5",
+      "response:insufficient_evidence"
+    ],
+    "sources": [
+      "https://langchain-ai.github.io/langgraphjs/reference/classes/langgraph.CompiledStateGraph.html",
+      "https://docs.langchain.com/oss/python/langgraph/use-subgraphs",
+      "https://docs.langchain.com/oss/python/concepts/memory"
+    ]
+  },
+  "error": "AttributeError",
+  "elapsed_seconds": 51.143
+}

@@ -1,0 +1,94 @@
+[
+  {
+    "question_id": "multi_hop-dev-01",
+    "attempt_indices": [
+      20,
+      21
+    ],
+    "attempts": [
+      {
+        "input_tokens": 1290,
+        "messages": [
+          {
+            "content": "\n            As a genius expert, your task is to understand the content and provide\n            the parsed objects in json that match the following json_schema:\n\n\n            {\n  \"properties\": {\n    \"user_goal\": {\n      \"description\": \"The task or objective the user wants to achieve\",\n      \"title\": \"User Goal\",\n      \"type\": \"string\"\n    },\n    \"end_state\": {\n      \"description\": \"The final outcome or result of the workflow\",\n      \"title\": \"End State\",\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"user_goal\",\n    \"end_state\"\n  ],\n  \"title\": \"WorkflowOutput\",\n  \"type\": \"object\"\n}\n\n            Make sure to return an instance of the JSON, not the schema itself\n",
+            "role": "system"
+          },
+          {
+            "content": "Given an agentic workflow comprised of Human, AI and Tools, identify the user_goal (the task or objective the user wants to achieve) and the end_state (the final outcome or result of the workflow).\nPlease return the output in a JSON format that complies with the following schema as specified in JSON Schema:\n{\"properties\": {\"user_goal\": {\"description\": \"The task or objective the user wants to achieve\", \"title\": \"User Goal\", \"type\": \"string\"}, \"end_state\": {\"description\": \"The final outcome or result of the workflow\", \"title\": \"End State\", \"type\": \"string\"}}, \"required\": [\"user_goal\", \"end_state\"], \"title\": \"WorkflowOutput\", \"type\": \"object\"}Do not use single quotes in your response but double quotes,properly escaped with a backslash.\n\n--------EXAMPLES-----------\nExample 1\nInput: {\n    \"workflow\": \"Human: Hey, book a table at the nearest best Chinese restaurant for 8:00pm\\nAI: Sure, let me find the best options for you.\\nTools:\\n  restaurant_search: {'cuisine': 'Chinese', 'time': '8:00pm'}\\nToolOutput: Found a few options: 1. Golden Dragon, 2. Jade Palace\\nAI: I found some great options: Golden Dragon and Jade Palace. Which one would you prefer?\\nHuman: Let's go with Golden Dragon.\\nAI: Great choice! I'll book a table for 8:00pm at Golden Dragon.\\nTools:\\n  restaurant_book: {'name': 'Golden Dragon', 'time': '8:00pm'}\\nToolOutput: Table booked at Golden Dragon for 8:00pm.\\nAI: Your table at Golden Dragon is booked for 8:00pm. Enjoy your meal!\\nHuman: thanks\"\n}\nOutput: {\n    \"user_goal\": \"Book a table at the nearest best Chinese restaurant for 8:00pm.\",\n    \"end_state\": \"A table is successfully booked at Golden Dragon (Chinese restaurant) for 8:00pm.\"\n}\n-----------------------------\n\nNow perform the same with the following input\ninput: {\n    \"workflow\": \"Human: Using only the frozen documentation, design memory for a user whose active conversation must resume after a pause and whose preferences must be available in a new thread. Which persistence mechanisms and identifiers belong where?\\nAI: **结论：两套机制分开存放。暂停后恢复活跃对话用 checkpointer，以 `thread_id` 定位；新线程中可用的用户偏好用 store，以 `user_id` 命名空间定位。多数应用同时使用两者 [1]。**\\n\\n| 场景 | 机制 | 标识符 | 归属与用法 |\\n|---|---|---|---|\\n| 暂停后恢复活跃对话 | checkpointer（检查点存储） | `thread_id`；可选 `checkpoint_id` | `thread_id` 是检查点存取主键，必须在 `config` 的 `configurable` 中传入，否则无法保存状态或在中断后恢复 [2]；`checkpoint_id` 只在给定 `thread_id` 下检索特定快照 [2] |\\n| 新线程可用偏好 | store（长期记忆） | `user_id`（命名空间元组如 `(user_id, \\\"memories\\\")`） | 从节点或应用代码读写 [1]；新线程只要 `user_id` 相同仍可访问同一记忆 [3] |\\n\\n**条件与取舍**\\n\\n- checkpointer 持久化图状态快照，作用域为单个线程，属短期线程记忆，用于对话连续性、human-in-the-loop、time travel 和容错 [1]。恢复同一对话必须复用原 `thread_id`；换新 `thread_id` 即新线程，不会加载原线程状态。\\n- store 持久化图状态之外的应用自定义键值数据，跨线程，属长期记忆，用于用户偏好、事实和共享知识 [1]。命名空间可为任意长度、不必与用户绑定，示例用 `(user_id, \\\"memories\\\")` [3]。\\n- 两者分离：`thread_id` 管当前线程，`user_id` 管跨线程持久信息；`user_id` 不是检查点主键，`thread_id` 也不用于偏好命名空间 [1][3][2]。\\n\\n**最小调用顺序（Python 示例，原文形式）**\\n\\n```python\\ngraph = builder.compile(checkpointer=checkpointer, store=store)\\nconfig = {\\\"configurable\\\": {\\\"thread_id\\\": \\\"1\\\"}}\\ngraph.invoke(inputs, config, context=Context(user_id=\\\"1\\\"))\\n```\\n\\n恢复时沿用同一 `thread_id`；开新线程时改 `thread_id`（如 `\\\"2\\\"`）但保持同一 `user_id`，即可在新线程读取偏好 [3]。\\n\\n**边界**：以上仅据冻结文档；未涉及具体存储后端选型与并发/清理策略，文档未给出，故不展开。\"\n}\nOutput: ",
+            "role": "user"
+          }
+        ],
+        "model": "deepseek-v4.1-flash",
+        "output_tokens": 104,
+        "response": "{\"user_goal\": \"Using only the frozen documentation, design memory for a user whose active conversation must resume after a pause and whose preferences must be available in a new thread, determining which persistence mechanisms and identifiers belong where.\", \"end_state\": \"A documented design specifying that the checkpointer with thread_id (and optional checkpoint_id) handles resuming the active conversation after a pause, while the store with a user_id-based namespace handles cross-thread user preferences, including a minimal Python call sequence and boundary notes.\"}",
+        "status": "ok"
+      },
+      {
+        "input_tokens": 626,
+        "messages": [
+          {
+            "content": "\n            As a genius expert, your task is to understand the content and provide\n            the parsed objects in json that match the following json_schema:\n\n\n            {\n  \"properties\": {\n    \"reason\": {\n      \"description\": \"Explanation for why the outcomes match or differ\",\n      \"title\": \"Reason\",\n      \"type\": \"string\"\n    },\n    \"verdict\": {\n      \"description\": \"1 if outcomes match, 0 if they differ\",\n      \"enum\": [\n        \"0\",\n        \"1\"\n      ],\n      \"title\": \"Verdict\",\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"reason\",\n    \"verdict\"\n  ],\n  \"title\": \"CompareOutcomeOutput\",\n  \"type\": \"object\"\n}\n\n            Make sure to return an instance of the JSON, not the schema itself\n",
+            "role": "system"
+          },
+          {
+            "content": "Given user goal, desired outcome and achieved outcome compare them and identify if they are the same (1) or different (0).\nPlease return the output in a JSON format that complies with the following schema as specified in JSON Schema:\n{\"properties\": {\"reason\": {\"description\": \"Explanation for why the outcomes match or differ\", \"title\": \"Reason\", \"type\": \"string\"}, \"verdict\": {\"description\": \"1 if outcomes match, 0 if they differ\", \"enum\": [\"0\", \"1\"], \"title\": \"Verdict\", \"type\": \"string\"}}, \"required\": [\"reason\", \"verdict\"], \"title\": \"CompareOutcomeOutput\", \"type\": \"object\"}Do not use single quotes in your response but double quotes,properly escaped with a backslash.\n\n--------EXAMPLES-----------\nExample 1\nInput: {\n    \"desired_outcome\": \"A table is successfully booked at any Chinese restaurant for 8:00pm.\",\n    \"arrived_outcome\": \"A table is successfully booked at Jade Palace (Chinese restaurant) for 8:00pm.\"\n}\nOutput: {\n    \"reason\": \"The arrived outcome is same as the desired outcome and aligns with the user goal.\",\n    \"verdict\": \"1\"\n}\n-----------------------------\n\nNow perform the same with the following input\ninput: {\n    \"desired_outcome\": \"Use a checkpointer for the active thread's graph state, identified by thread_id. Use a Store for preferences that must survive across threads; the docs illustrate a user-scoped tuple namespace such as (user_id, memories). The checkpointer does not replace cross-thread application memory, and a namespace example is not proof of authorization enforcement.\",\n    \"arrived_outcome\": \"A documented design specifying that the checkpointer with thread_id (and optional checkpoint_id) handles resuming the active conversation after a pause, while the store with a user_id-based namespace handles cross-thread user preferences, including a minimal Python call sequence and boundary notes.\"\n}\nOutput: ",
+            "role": "user"
+          }
+        ],
+        "model": "deepseek-v4.1-flash",
+        "output_tokens": 82,
+        "response": "{\n  \"reason\": \"The arrived outcome covers the checkpointer with thread_id and the store with user_id-based namespace for cross-thread preferences, but it does not explicitly address the desired outcome's points that the checkpointer does not replace cross-thread application memory and that a namespace example is not proof of authorization enforcement. Thus, the outcomes differ in completeness.\",\n  \"verdict\": \"0\"\n}",
+        "status": "ok"
+      }
+    ],
+    "reviewer": "Agent",
+    "audit": "The judge expects a boundary about namespace examples not proving authorization. The new answer omits that explicit caveat; retain this regression signal.",
+    "metric_overwritten": false
+  },
+  {
+    "question_id": "comparison-dev-02",
+    "attempt_indices": [
+      40,
+      41
+    ],
+    "attempts": [
+      {
+        "input_tokens": 1061,
+        "messages": [
+          {
+            "content": "\n            As a genius expert, your task is to understand the content and provide\n            the parsed objects in json that match the following json_schema:\n\n\n            {\n  \"properties\": {\n    \"user_goal\": {\n      \"description\": \"The task or objective the user wants to achieve\",\n      \"title\": \"User Goal\",\n      \"type\": \"string\"\n    },\n    \"end_state\": {\n      \"description\": \"The final outcome or result of the workflow\",\n      \"title\": \"End State\",\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"user_goal\",\n    \"end_state\"\n  ],\n  \"title\": \"WorkflowOutput\",\n  \"type\": \"object\"\n}\n\n            Make sure to return an instance of the JSON, not the schema itself\n",
+            "role": "system"
+          },
+          {
+            "content": "Given an agentic workflow comprised of Human, AI and Tools, identify the user_goal (the task or objective the user wants to achieve) and the end_state (the final outcome or result of the workflow).\nPlease return the output in a JSON format that complies with the following schema as specified in JSON Schema:\n{\"properties\": {\"user_goal\": {\"description\": \"The task or objective the user wants to achieve\", \"title\": \"User Goal\", \"type\": \"string\"}, \"end_state\": {\"description\": \"The final outcome or result of the workflow\", \"title\": \"End State\", \"type\": \"string\"}}, \"required\": [\"user_goal\", \"end_state\"], \"title\": \"WorkflowOutput\", \"type\": \"object\"}Do not use single quotes in your response but double quotes,properly escaped with a backslash.\n\n--------EXAMPLES-----------\nExample 1\nInput: {\n    \"workflow\": \"Human: Hey, book a table at the nearest best Chinese restaurant for 8:00pm\\nAI: Sure, let me find the best options for you.\\nTools:\\n  restaurant_search: {'cuisine': 'Chinese', 'time': '8:00pm'}\\nToolOutput: Found a few options: 1. Golden Dragon, 2. Jade Palace\\nAI: I found some great options: Golden Dragon and Jade Palace. Which one would you prefer?\\nHuman: Let's go with Golden Dragon.\\nAI: Great choice! I'll book a table for 8:00pm at Golden Dragon.\\nTools:\\n  restaurant_book: {'name': 'Golden Dragon', 'time': '8:00pm'}\\nToolOutput: Table booked at Golden Dragon for 8:00pm.\\nAI: Your table at Golden Dragon is booked for 8:00pm. Enjoy your meal!\\nHuman: thanks\"\n}\nOutput: {\n    \"user_goal\": \"Book a table at the nearest best Chinese restaurant for 8:00pm.\",\n    \"end_state\": \"A table is successfully booked at Golden Dragon (Chinese restaurant) for 8:00pm.\"\n}\n-----------------------------\n\nNow perform the same with the following input\ninput: {\n    \"workflow\": \"Human: Using only the frozen documentation, compare exit, async and sync checkpoint durability for a long-running workflow exposed to process crashes.\\nAI: **结论：** 对暴露于进程崩溃的长运行工作流，持久性从低到高为 `exit` < `async` < `sync` [1]。`exit` 在崩溃中途无法恢复；`async` 有“可能未写入 checkpoint”的小风险；`sync` 在继续执行前确保每个 checkpoint 已写入 [1]。\\n\\n| 模式 | 写入时机 | 进程崩溃时的持久性 |\\n|---|---|---|\\n| `exit` | 仅在图执行退出时（成功、出错或 human-in-the-loop 中断） | 中间状态不保存，执行中途崩溃无法恢复 [1] |\\n| `async` | 在下一步执行期间异步写入 | 性能与持久性较好，但进程执行期间崩溃时可能未写入 checkpoint [1] |\\n| `sync` | 在下一步开始前同步写入 | 确保继续执行前每个 checkpoint 都已写入，持久性高，但有性能开销 [1] |\\n\\n**取舍：** 长运行图若最看重性能，`exit` 最好，但代价是崩溃后丢失全部中间进度 [1]；`async` 在性能与持久性间折中，但崩溃窗口内仍可能丢 checkpoint [1]；`sync` 持久性最高，适合不能接受崩溃丢失已写 checkpoint 的场景，代价是性能开销 [1]。\\n\\n**边界：** 文档只给出上述定性保证与排序，未量化崩溃窗口、丢失步数或性能开销 [1]；也未说明不同 checkpointer 后端（如内存型在进程重启后全部丢失 [2]）与三种模式的组合差异。因此不能据此推断具体恢复点或指标。\"\n}\nOutput: ",
+            "role": "user"
+          }
+        ],
+        "model": "deepseek-v4.1-flash",
+        "output_tokens": 74,
+        "response": "{\"user_goal\": \"Using only the frozen documentation, compare exit, async, and sync checkpoint durability for a long-running workflow exposed to process crashes.\", \"end_state\": \"A documented comparison is produced ranking durability as exit < async < sync, with a table of write timing and crash durability, trade-offs, and stated boundaries/limitations of the documentation.\"}",
+        "status": "ok"
+      },
+      {
+        "input_tokens": 615,
+        "messages": [
+          {
+            "content": "\n            As a genius expert, your task is to understand the content and provide\n            the parsed objects in json that match the following json_schema:\n\n\n            {\n  \"properties\": {\n    \"reason\": {\n      \"description\": \"Explanation for why the outcomes match or differ\",\n      \"title\": \"Reason\",\n      \"type\": \"string\"\n    },\n    \"verdict\": {\n      \"description\": \"1 if outcomes match, 0 if they differ\",\n      \"enum\": [\n        \"0\",\n        \"1\"\n      ],\n      \"title\": \"Verdict\",\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"reason\",\n    \"verdict\"\n  ],\n  \"title\": \"CompareOutcomeOutput\",\n  \"type\": \"object\"\n}\n\n            Make sure to return an instance of the JSON, not the schema itself\n",
+            "role": "system"
+          },
+          {
+            "content": "Given user goal, desired outcome and achieved outcome compare them and identify if they are the same (1) or different (0).\nPlease return the output in a JSON format that complies with the following schema as specified in JSON Schema:\n{\"properties\": {\"reason\": {\"description\": \"Explanation for why the outcomes match or differ\", \"title\": \"Reason\", \"type\": \"string\"}, \"verdict\": {\"description\": \"1 if outcomes match, 0 if they differ\", \"enum\": [\"0\", \"1\"], \"title\": \"Verdict\", \"type\": \"string\"}}, \"required\": [\"reason\", \"verdict\"], \"title\": \"CompareOutcomeOutput\", \"type\": \"object\"}Do not use single quotes in your response but double quotes,properly escaped with a backslash.\n\n--------EXAMPLES-----------\nExample 1\nInput: {\n    \"desired_outcome\": \"A table is successfully booked at any Chinese restaurant for 8:00pm.\",\n    \"arrived_outcome\": \"A table is successfully booked at Jade Palace (Chinese restaurant) for 8:00pm.\"\n}\nOutput: {\n    \"reason\": \"The arrived outcome is same as the desired outcome and aligns with the user goal.\",\n    \"verdict\": \"1\"\n}\n-----------------------------\n\nNow perform the same with the following input\ninput: {\n    \"desired_outcome\": \"exit persists on successful, erroneous or HITL exit, avoiding intermediate persistence overhead but cannot recover a mid-execution process crash. async persists while the next step runs and has a small risk of losing checkpoint writes on a crash. sync writes each checkpoint before the next step starts, favoring durability with performance overhead. These are qualitative tradeoffs, not measured throughput figures.\",\n    \"arrived_outcome\": \"A documented comparison is produced ranking durability as exit < async < sync, with a table of write timing and crash durability, trade-offs, and stated boundaries/limitations of the documentation.\"\n}\nOutput: ",
+            "role": "user"
+          }
+        ],
+        "model": "deepseek-v4.1-flash",
+        "output_tokens": 75,
+        "response": "{\n  \"reason\": \"The desired outcome describes qualitative tradeoffs between exit, async, and sync persistence modes, while the arrived outcome is a documented comparison ranking durability and including a table and limitations. Although the arrived outcome may be a reasonable deliverable, it does not match the specific qualitative tradeoff description in the desired outcome.\",\n  \"verdict\": \"0\"\n}",
+        "status": "ok"
+      }
+    ],
+    "reviewer": "Agent",
+    "audit": "Agent review finds the zero verdict questionable: both extracted outcomes describe qualitative durability tradeoffs, and the full answer includes them. Preserve zero rather than replacing it with an Agent label.",
+    "metric_overwritten": false
+  }
+]

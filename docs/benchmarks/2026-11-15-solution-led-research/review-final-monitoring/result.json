@@ -1,0 +1,49 @@
+{
+  "response_mode": "answer",
+  "content": "> 预算尚未完整计价：5人小团队、20个HTTPS站点、每月增量费用未计价：公网域名与TLS证书（可选）。不能据此承诺整体预算。\n\n**结论：主线选 Uptime Kuma 开源自托管，部署在现有闲置 Linux 服务器上，用 Docker Compose 运行，监控 20 个 HTTPS 站点，默认 60 秒心跳，SMTP 邮件通知，历史保留按全局清理策略处理。增量月费中服务器与软件按 0 元计，但 30 天保留能否显式配置、SMTP 是否已有可用账户、公网域名/证书费用均尚未完整确认，因此不能承诺整个方案一定低于 300 元/月。**\n\n## 一、主线与依据\n\nUptime Kuma 是开源自托管监控工具，按间隔检查 HTTP 等站点、记录响应时间、通过 90+ 通知提供方告警，数据存自有数据库 [1]。官方安装页给出 Docker 命令，镜像 `louislam/uptime-kuma:2`，映射 `/app/data`，端口 3001，并要求数据目录支持 POSIX 文件锁，避免 SQLite 损坏，支持主流 Linux 发行版 [2]。部署教程以 Ubuntu 24.04 为例，固定 `2.5.8` 镜像，端口仅绑 `127.0.0.1:3001`，数据放本地存储，勿用 NFS [3]。\n\nHTTPS 监控：添加监控时选 HTTP(s)，填含 `https://` 的完整 URL，可设心跳间隔、重试、超时、接受状态码；默认 2xx 成功，默认跟随最多 10 次重定向并评估最终状态码 [4]。\n\n通知：Settings → Notifications → Add New Notification 选 SMTP，填主机名、端口（465/587）、加密、用户名密码、发件地址；Gmail 需两步验证并生成 16 位应用密码，个人 Gmail 每日约 500 封上限 [5]。保存时有 Default Enabled 与 Apply on all existing monitors，可让通知覆盖全部监控项 [6]。\n\n历史：监控、通知设置和运行历史全部存于 `/app/data`（SQLite），必须挂载持久卷，否则重部署丢失 [1]。按监控项自定义保留是未实现特性，已关闭为“不计划”；v2 只存聚合结果以提升性能，保留更多数据仍影响性能 [7]。全局清理任务的具体保留天数与可配置性在可见材料中未明确，属未核实。\n\n## 二、检查频率与容量\n\n心跳间隔默认 60 秒，可低至 20 秒；更短间隔发现更快，但增加被监控服务负载和数据库行数，60 秒对多数服务是合理默认 [4][8]。20 个站点 × 每 60 秒 = 每分钟 20 次请求，单机具体资源占用未量化，属未核实。建议重试 1–2 次、超时 15–30 秒，减少误报 [4]。\n\n## 三、费用分项（5 人、20 站点、按月）\n\n**5人小团队、20个HTTPS站点、每月增量费用**\n\n| 项目 | 金额（人民币/月） | 性质 | 说明 |\n|---|---:|---|---|\n| 现有闲置Linux服务器增量成本 | 0 | 估算 | 假设电费/带宽为已有沉没成本，不计增量；来源为原始约束，非商户实价 |\n| Uptime Kuma 开源自托管软件 | 0 | 已核实 | 开源自托管，无按监控项费用[1][8] |\n| SMTP邮件通知（现有邮箱） | 0 | 估算 | 假设团队已有可用SMTP邮箱；Gmail个人版每日约500封[5]，未确认账户可用性 |\n| 公网域名与TLS证书（可选） | 待核实 | 待核实 | 仅当需公网HTTPS面板时发生，实价未核实；内网访问可省 |\n| **已列金额小计（不含待核实项）** | **0** | — | 按上表已列金额加总 |\n\n未计价项目仍需核实，不能据此承诺整体预算。\n\n已知小计：0。服务器电费/带宽视为已有沉没成本（假设）；Uptime Kuma 开源自托管无按监控项费用 [1][8]；SMTP 若用现有邮箱则增量 0 元，Gmail 个人版每日约 500 封 [5]。域名/证书仅当需公网 HTTPS 面板时发生，实价未核实，未按 0 计。\n\n## 四、部署步骤\n\n1. 确认 Ubuntu/Debian 等主流发行版，安装 Docker Engine 与 Compose v2，验证 `docker --version`、`docker compose version` [3][2]。\n2. 建目录：`sudo install -d /opt/uptime-kuma && cd /opt/uptime-kuma && mkdir -p data backups`，数据放本地存储，勿用 NFS [3][2]。\n3. 写 `compose.yaml`，固定镜像 `louislam/uptime-kuma:2.5.8`，端口仅绑 `127.0.0.1:3001`，挂载 `./data:/app/data` [3]。\n4. `docker compose pull && docker compose up -d`，查 `docker compose ps` 与日志，确认无数据库/文件锁报错 [3]。\n5. 浏览器开 `http://127.0.0.1:3001`，立即创建管理员账号（未建账号前任何人可抢占）[1]。\n6. 配置 SMTP 通知，点 Test 验证收信，勾选 Apply on all existing monitors [6][5]。\n7. 逐个添加 20 个 HTTP(s) 监控，填 https URL，间隔 60 秒，重试 1–2，超时 15–30 秒 [4]。\n8. 验证：手动停一个站点看是否收邮件；确认 `/app/data` 有数据、重启容器后历史仍在 [1]。\n9. 部署后进设置页核实全局历史保留期是否满足 30 天；若不满足，记录为未决项，不假设付费功能免费。\n\n## 五、缺口与一致性核对\n\n- **30 天历史**：可见材料只说明按监控项保留未实现、全局清理存在 [7]，未给出“保留 30 天”的显式配置项或默认值，属未核实；部署后应查设置页确认。\n- **容量**：20 站点单机具体资源占用未量化，属未核实；60 秒间隔方向可控 [4]。\n- **费用一致性**：步骤仅依赖 Docker、本地存储、SMTP 凭据；服务器与软件按 0 元增量，SMTP 若已有账户为 0 元，域名/证书为可选未核实项，故不能承诺总额以对应预算表为准。\n- **通知覆盖**：SMTP 可应用到全部监控项 [6]，无额外付费依赖；Gmail 限额约 500 封/日 [5]，20 站点正常告警远低于此。\n\n来源：[7] GitHub Issue #2992；[1] Railway 指南；[3] Raff 部署教程；[2] 官方安装 Wiki；[6] SmartX Wiki；[5] uptimekuma.io SMTP 指南；[4] uptimekuma.io HTTP(s) 指南；[8] Elestio 博客。",
+  "citations": [
+    {
+      "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+      "marker": "[1]"
+    },
+    {
+      "evidence_id": "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+      "marker": "[2]"
+    },
+    {
+      "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+      "marker": "[3]"
+    },
+    {
+      "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+      "marker": "[4]"
+    },
+    {
+      "evidence_id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+      "marker": "[5]"
+    },
+    {
+      "evidence_id": "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+      "marker": "[6]"
+    },
+    {
+      "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+      "marker": "[7]"
+    },
+    {
+      "evidence_id": "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a",
+      "marker": "[8]"
+    }
+  ],
+  "cited_evidence_ids": [
+    "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+    "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+    "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+    "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+    "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+    "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+    "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+    "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a"
+  ],
+  "partial_reason": "insufficient_evidence"
+}

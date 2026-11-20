@@ -1,0 +1,49 @@
+{
+  "question": "Using only the frozen documentation, reconcile removing stale history with the requirement to retain valid tool-call/tool-result message structure.",
+  "reference_answer": "Removing stale information is a context-management technique, not permission to create malformed history. When deleting, respect provider requirements: some require a leading user message, and most require assistant tool calls to be followed by corresponding tool results. Remove coherent units or otherwise maintain valid ordering rather than leaving orphan calls/results.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text": "Context reduction permitted"
+    },
+    {
+      "id": "R2",
+      "text": "Provider validity required"
+    },
+    {
+      "id": "R3",
+      "text": "No orphan tool exchanges"
+    }
+  ],
+  "candidates": {
+    "A": {
+      "answer": "本次研究未能生成有引用支持的完整内容。以下是可追溯的资料来源：",
+      "citation_map": {},
+      "visible_passages": []
+    },
+    "B": {
+      "answer": "结论：删除陈旧历史与保留合法工具调用结构并不冲突——文档的做法是允许用 RemoveMessage 删除或裁剪消息，但明确要求删除后的消息历史必须仍然满足 LLM 提供商的结构约束，尤其是工具调用配对与消息顺序 [1]。\n\n具体调和方式：\n\n- 删除是允许的：可以用 RemoveMessage 从图状态中删除指定消息，或用 REMOVE_ALL_MESSAGES 清空全部历史；前提是状态键使用 add_messages（Python）或 messagesStateReducer（JS）reducer，默认 AgentState 已提供 [1]。\n- 删除有硬性条件：文档以 Warning 形式要求，删除消息时必须确保结果历史仍然有效，需核对所用 LLM 提供商的限制，例如：\n  - 某些提供商要求历史以 user 消息开头；\n  - 大多数提供商要求带工具调用的 assistant 消息后面必须跟随对应的 tool 结果消息 [1]。\n- 裁剪是更安全的替代：可以用 @before_model 中间件（Python）或 createMiddleware 的 beforeModel 钩子（JS）裁剪历史，例如保留首条消息加最近几条，以控制上下文大小 [1]。\n\n取舍与适用条件：\n\n- 若删除会切断一对工具调用（删掉 assistant 的工具调用却留下 tool 结果，或反之），则该删除不合法；应整对删除或整对保留。文档只给出配对约束本身，未提供自动配对校验工具，因此配对完整性需调用方自行保证 [1]。\n- 文档示例的裁剪逻辑按消息条数（保留首条 + 最近 3~4 条）实现，并未演示按工具调用边界对齐；在含工具调用的历史中直接套用该示例可能破坏配对，需自行调整裁剪边界（此为基于约束的推断，非原文事实）。\n- 若无法确定安全边界，REMOVE_ALL_MESSAGES 全量清空是文档列出的合法选项，但会丢失全部上下文 [1]。\n\n缺口说明：可见材料未给出各提供商具体的结构限制清单，也未提供自动保证工具调用配对的删除工具；上述配对处理是基于文档警告的合规推断。",
+      "citation_map": {
+        "[1]": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+      },
+      "visible_passages": [
+        {
+          "ref": "P1",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 7539,
+          "end": 12314,
+          "text": ":::python\nOne way to decide when to truncate messages is to count the tokens in the message history and truncate whenever it approaches that limit. If you're using LangChain, you can use the trim messages utility and specify the number of tokens to keep from the list, as well as the `strategy` (e.g., keep the last `max_tokens`) to use for handling the boundary.\n:::\n:::js\nOne way to decide when to truncate messages is to count the tokens in the message history and truncate whenever it approaches that limit. If you're using LangChain, you can use the trim messages utility and specify the number of tokens to keep from the list, as well as the `strategy` (e.g., keep the last `maxTokens`) to use for handling the boundary.\n:::\n\n:::python\nTo trim message history in an agent, use the @[`@before_model`] middleware decorator:\n\n```python\nfrom langchain.messages import RemoveMessage\nfrom langgraph.graph.message import REMOVE_ALL_MESSAGES\nfrom langgraph.checkpoint.memory import InMemorySaver\nfrom langchain.agents import create_agent, AgentState\nfrom langchain.agents.middleware import before_model\nfrom langgraph.runtime import Runtime\nfrom langchain_core.runnables import RunnableConfig\nfrom typing import Any\n\n\n@before_model\ndef trim_messages(state: AgentState, runtime: Runtime) -> dict[str, Any] | None:\n    \"\"\"Keep only the last few messages to fit context window.\"\"\"\n    messages = state[\"messages\"]\n\n    if len(messages) <= 3:\n        return None  # No changes needed\n\n    first_msg = messages[0]\n    recent_messages = messages[-3:] if len(messages) % 2 == 0 else messages[-4:]\n    new_messages = [first_msg] + recent_messages\n\n    return {\n        \"messages\": [\n            RemoveMessage(id=REMOVE_ALL_MESSAGES),\n            *new_messages\n        ]\n    }\n\nagent = create_agent(\n    \"gpt-5.5\",\n    tools=[...],\n    middleware=[trim_messages],\n    checkpointer=InMemorySaver(),\n)\n\nconfig: RunnableConfig = {\"configurable\": {\"thread_id\": \"1\"}}\n\nagent.invoke({\"messages\": \"hi, my name is bob\"}, config)\nagent.invoke({\"messages\": \"write a short poem about cats\"}, config)\nagent.invoke({\"messages\": \"now do the same but for dogs\"}, config)\nfinal_response = agent.invoke({\"messages\": \"what's my name?\"}, config)\n\nfinal_response[\"messages\"][-1].pretty_print()\n\"\"\"\n================================== Ai Message ==================================\n\nYour name is Bob. You told me that earlier.\nIf you'd like me to call you a nickname or use a different name, just say the word.\n\"\"\"\n```\n:::\n\n:::js\nTo trim message history in an agent, use @[`createMiddleware`] with a `beforeModel` hook:\n\n```typescript\nimport { RemoveMessage } from \"@langchain/core/messages\";\nimport { createAgent, createMiddleware } from \"langchain\";\nimport { MemorySaver, REMOVE_ALL_MESSAGES } from \"@langchain/langgraph\";\n\nconst trimMessages = createMiddleware({\n  name: \"TrimMessages\",\n  beforeModel: (state) => {\n    const messages = state.messages;\n\n    if (messages.length <= 3) {\n      return; // No changes needed\n    }\n\n    const firstMsg = messages[0];\n    const recentMessages =\n      messages.length % 2 === 0 ? messages.slice(-3) : messages.slice(-4);\n    const newMessages = [firstMsg, ...recentMessages];\n\n    return {\n      messages: [\n        new RemoveMessage({ id: REMOVE_ALL_MESSAGES }),\n        ...newMessages,\n      ],\n    };\n  },\n});\n\nconst checkpointer = new MemorySaver();\nconst agent = createAgent({\n  model: \"gpt-5.5\",\n  tools: [...],\n  middleware: [trimMessages],\n  checkpointer,\n});\n```\n:::\n\n### Delete messages\n\nYou can delete messages from the graph state to manage the message history.\n\nThis is useful when you want to remove specific messages or clear the entire message history.\n\n:::python\nTo delete messages from the graph state, you can use the `RemoveMessage`.\n\nFor `RemoveMessage` to work, you need to use a state key with @[`add_messages`] [reducer](/oss/langgraph/graph-api#reducers).\n\nThe default @[`AgentState`] provides this.\n\nTo remove specific messages:\n\n```python\nfrom langchain.messages import RemoveMessage  # [!code highlight]\n\ndef delete_messages(state):\n    messages = state[\"messages\"]\n    if len(messages) > 2:\n        # remove the earliest two messages\n        return {\"messages\": [RemoveMessage(id=m.id) for m in messages[:2]]}  # [!code highlight]\n```\n\nTo remove **all** messages:\n\n```python\nfrom langgraph.graph.message import REMOVE_ALL_MESSAGES  # [!code highlight]\n\ndef delete_messages(state):\n    return {\"messages\": [RemoveMessage(id=REMOVE_ALL_MESSAGES)]}  # [!code highlight]\n```\n:::\n\n:::js\nTo delete messages from the graph state, you can use the `RemoveMessage`. For `RemoveMessage` to work, you need to use a state key with @[`messagesStateReducer`][messagesStateReducer] [reducer](/oss/langgraph/graph-api#reducers), like `MessagesValue`.\n\n"
+        },
+        {
+          "ref": "P2",
+          "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "start": 12344,
+          "end": 13217,
+          "text": "```typescript\nimport { RemoveMessage } from \"@langchain/core/messages\";\n\nconst deleteMessages = (state) => {\n    const messages = state.messages;\n    if (messages.length > 2) {\n        // remove the earliest two messages\n        return {\n        messages: messages\n            .slice(0, 2)\n            .map((m) => new RemoveMessage({ id: m.id })),\n        };\n    }\n};\n```\n:::\n\n<Warning>\n    When deleting messages, **make sure** that the resulting message history is valid. Check the limitations of the LLM provider you're using. For example:\n\n    * Some providers expect message history to start with a `user` message\n    * Most providers require `assistant` messages with tool calls to be followed by corresponding `tool` result messages.\n</Warning>\n\n:::python\n\n```python\nfrom langchain.messages import RemoveMessage\nfrom langchain.agents import create_agent, AgentState\n"
+        }
+      ]
+    }
+  }
+}

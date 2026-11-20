@@ -1,0 +1,131 @@
+{
+  "plan_id": "plan-beijing-live-ba61dcd45bf0",
+  "run_id": "beijing-live-ba61dcd45bf0",
+  "contract_revision": 1,
+  "revision": 2,
+  "parent_revision": 1,
+  "revision_reason": "Acquire evidence for verified coverage gaps",
+  "tasks": [
+    {
+      "id": "t1",
+      "type": "discover",
+      "objective": "Gather and verify original sources for: 故宫博物院 门票价格 预约规则 提前几天 官方",
+      "in_scope": "Requirements assigned to this research task",
+      "out_of_scope": "Final answer synthesis and other tasks",
+      "requirement_ids": [
+        "r1",
+        "r4"
+      ],
+      "depends_on": [],
+      "capabilities": [
+        "search_web",
+        "fetch_page",
+        "read_evidence"
+      ],
+      "query_seeds": [
+        "故宫博物院 门票价格 预约规则 提前几天 官方"
+      ],
+      "expected_output": "Findings with host-verified source spans",
+      "acceptance": [
+        "Every assigned requirement has a verified support"
+      ],
+      "budget": {
+        "max_calls": 2,
+        "max_pages": 3
+      },
+      "execution_hint": "auto"
+    },
+    {
+      "id": "t2",
+      "type": "discover",
+      "objective": "Gather and verify original sources for: 天安门广场 预约 规则 官方 2026",
+      "in_scope": "Requirements assigned to this research task",
+      "out_of_scope": "Final answer synthesis and other tasks",
+      "requirement_ids": [
+        "r2",
+        "r5"
+      ],
+      "depends_on": [],
+      "capabilities": [
+        "search_web",
+        "fetch_page",
+        "read_evidence"
+      ],
+      "query_seeds": [
+        "天安门广场 预约 规则 官方 2026"
+      ],
+      "expected_output": "Findings with host-verified source spans",
+      "acceptance": [
+        "Every assigned requirement has a verified support"
+      ],
+      "budget": {
+        "max_calls": 2,
+        "max_pages": 3
+      },
+      "execution_hint": "auto"
+    },
+    {
+      "id": "t3",
+      "type": "discover",
+      "objective": "Gather and verify original sources for: 八达岭长城 慕田峪长城 门票价格 预约 官方",
+      "in_scope": "Requirements assigned to this research task",
+      "out_of_scope": "Final answer synthesis and other tasks",
+      "requirement_ids": [
+        "r3",
+        "r6"
+      ],
+      "depends_on": [],
+      "capabilities": [
+        "search_web",
+        "fetch_page",
+        "read_evidence"
+      ],
+      "query_seeds": [
+        "八达岭长城 慕田峪长城 门票价格 预约 官方"
+      ],
+      "expected_output": "Findings with host-verified source spans",
+      "acceptance": [
+        "Every assigned requirement has a verified support"
+      ],
+      "budget": {
+        "max_calls": 2,
+        "max_pages": 3
+      },
+      "execution_hint": "auto"
+    },
+    {
+      "id": "t4",
+      "type": "discover",
+      "objective": "Gather and verify original sources for: 故宫博物院 门票 60元 旺季 淡季 官方 票价",
+      "in_scope": "Requirements assigned to this research task",
+      "out_of_scope": "Final answer synthesis and other tasks",
+      "requirement_ids": [
+        "r1"
+      ],
+      "depends_on": [],
+      "capabilities": [
+        "search_web",
+        "fetch_page",
+        "read_evidence"
+      ],
+      "query_seeds": [
+        "故宫博物院 门票 60元 旺季 淡季 官方 票价"
+      ],
+      "expected_output": "Findings with host-verified source spans",
+      "acceptance": [
+        "Every assigned requirement has a verified support"
+      ],
+      "budget": {
+        "max_calls": 2,
+        "max_pages": 3
+      },
+      "execution_hint": "auto"
+    }
+  ],
+  "stop_conditions": [
+    "All acceptance requirements are covered"
+  ],
+  "replan_triggers": [
+    "A requirement remains missing after this wave"
+  ]
+}

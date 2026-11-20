@@ -1,0 +1,226 @@
+{
+  "A": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "回答明确指出校验后的结构化输出位于 agent 状态的 structured_response 键（并补充 JS 为 structuredResponse），与 P1/P2 原文一致。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "回答说明直接传 schema 类型时按模型/提供商能力自动选择：支持原生结构化输出用 ProviderStrategy，否则用 ToolStrategy，与 P1 的选择规则一致。"
+      },
+      {
+        "id": "R3",
+        "status": "missing",
+        "reason": "回答未提及 JSON Schema 字典属于例外、需要显式策略包装；可见原文 P1/P2 也未包含该例外内容。"
+      }
+    ],
+    "claims": [
+      {
+        "quote": "`create_agent` 把校验后的结构化输出放在 agent 状态的 `structured_response` 键（Python；JS 为 `structuredResponse`）[1]。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P2"],
+        "reason": "P1 写明 Python 中数据被捕获、校验并返回到 agent 状态的 'structured_response' 键；P2 的 JS 段写明返回到 structuredResponse 键。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "citation_map 中 [1] 对应 evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375，即 P1/P2 来源，完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "给 `response_format` 直接传一个 schema 类型（`type[StructuredResponseT]`）时，LangChain 按模型能力自动选策略：模型/提供商支持原生结构化输出就用 `ProviderStrategy`，否则用 `ToolStrategy`[1]。",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 明确：直接提供 schema 类型时，若模型和提供商支持原生结构化输出则选 ProviderStrategy，其他所有模型选 ToolStrategy。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应的 P1 原文完整支持该选择规则。"
+          }
+        ]
+      },
+      {
+        "quote": "文档说明用户设置 schema 后，模型生成的结构化数据会被捕获、校验，并返回到 agent 状态的 `structured_response` 键；同页还写明它位于 agent 最终状态的该键中[1]。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P2"],
+        "reason": "P1 说明捕获、校验并返回到 agent 状态的 'structured_response' 键；P2 说明位于 agent 最终状态的 structured_response 键。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应的 P1/P2 原文完整支持。"
+          }
+        ]
+      },
+      {
+        "quote": "`response_format` 可传 `ToolStrategy[...]`、`ProviderStrategy[...]`、`type[StructuredResponseT]` 或 `None`；其中 `type[StructuredResponseT]` 表示“schema 类型——根据模型能力自动选择最佳策略”[1]。",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 的 response_format 类型签名与列表说明与此一致，包括 type[StructuredResponseT] 的含义。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应的 P1 原文完整支持。"
+          }
+        ]
+      },
+      {
+        "quote": "直接给 schema 类型时，若所选模型和提供商支持原生结构化输出（文档举例 OpenAI、Anthropic/Claude、xAI/Grok）则选 `ProviderStrategy`；其他所有模型选 `ToolStrategy`[1]。",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 明确给出该规则并列举 OpenAI、Anthropic (Claude)、xAI (Grok) 为例。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应的 P1 原文完整支持。"
+          }
+        ]
+      },
+      {
+        "quote": "原生结构化输出能力在 `langchain>=1.1` 时从模型 profile 动态读取；若不可用需另行指定或手动配置 profile；若同时使用 tools，模型须同时支持 tools 与结构化输出[1]。",
+        "status": "supported",
+        "evidence_refs": ["P2"],
+        "reason": "P2 的 Note 段说明 langchain>=1.1 时从模型 profile 动态读取支持情况、不可用时需手动指定，以及 tools 与结构化输出须同时被支持。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应的 P2 原文完整支持。"
+          }
+        ]
+      },
+      {
+        "quote": "这些属于文档给出的条件，是否适用于某个具体模型取决于其 profile/提供商能力[1]。",
+        "status": "nonfactual",
+        "evidence_refs": ["P2"],
+        "reason": "这是基于文档条件作出的适用性说明/推断，属于解释性建议而非文档直接陈述的事实。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "partial",
+            "reason": "P2 支持前提条件（profile 动态读取、手动指定），但‘是否适用取决于具体模型’是回答者的解释性推论。"
+          }
+        ]
+      }
+    ]
+  },
+  "B": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "回答明确指出校验后的结构化输出位于 agent 最终状态的 structured_response 键，与 P1/P2 一致。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "回答说明直接传 schema 类型时按模型能力自动选择 ProviderStrategy 或 ToolStrategy，与 P1/P3 一致。"
+      },
+      {
+        "id": "R3",
+        "status": "missing",
+        "reason": "回答未提及 JSON Schema 字典例外需显式策略包装；可见原文 P1-P3 也未包含该例外内容。"
+      }
+    ],
+    "claims": [
+      {
+        "quote": "`create_agent` 把校验后的结构化输出放在 agent 最终状态的 `structured_response` 键中",
+        "status": "supported",
+        "evidence_refs": ["P1", "P2"],
+        "reason": "P1 说明数据被捕获、校验并返回到 agent 状态的 'structured_response' 键；P2 明确为 agent 最终状态的 structured_response 键。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应 evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375，即 P1/P2 来源，完整支持。"
+          }
+        ]
+      },
+      {
+        "quote": "直接向 `response_format` 传入 schema 类型（`type[StructuredResponseT]`）会让 LangChain 按模型能力自动选策略——模型/提供商支持原生结构化输出时用 `ProviderStrategy`，否则用 `ToolStrategy`。[1]",
+        "status": "supported",
+        "evidence_refs": ["P1", "P3"],
+        "reason": "P1 给出该自动选择规则；P3 进一步说明直接传 schema 类型且模型支持原生结构化输出时自动使用 ProviderStrategy。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应的 P1/P3 原文完整支持。"
+          }
+        ]
+      },
+      {
+        "quote": "文档说明，模型生成结构化数据后会被捕获、校验，并返回到 agent 状态的 `'structured_response'` 键；并明确为“agent's final state”的 `structured_response` 键。",
+        "status": "supported",
+        "evidence_refs": ["P1", "P2"],
+        "reason": "P1 与 P2 分别支持‘agent 状态’与‘agent 最终状态’两种表述。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应的 P1/P2 原文完整支持。"
+          }
+        ]
+      },
+      {
+        "quote": "示例中 `result[\"structured_response\"]` 得到 `ContactInfo(...)` 实例。[1]",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 的代码示例打印 result[\"structured_response\"] 并输出 ContactInfo(name='John Doe', ...) 实例。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应的 P3 原文完整支持。"
+          }
+        ]
+      },
+      {
+        "quote": "`response_format` 可接收 `ToolStrategy[StructuredResponseT]`、`ProviderStrategy[StructuredResponseT]`、`type[StructuredResponseT]` 或 `None`。",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 的 create_agent 签名中 response_format 的 Union 类型与此一致。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应的 P1 原文完整支持。"
+          }
+        ]
+      },
+      {
+        "quote": "当直接提供 schema 类型时，LangChain 自动选择：若所选模型和提供商支持原生结构化输出（如 OpenAI、Anthropic/Claude、xAI/Grok），用 `ProviderStrategy`；其他所有模型用 `ToolStrategy`。",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 明确给出该规则并列举相应提供商示例。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应的 P1 原文完整支持。"
+          }
+        ]
+      },
+      {
+        "quote": "文档还注明 `langchain>=1.1` 时原生结构化输出支持会动态读取模型 profile 数据；若不可用需另行指定或手动配置，且若同时使用工具，模型须支持工具与结构化输出同时使用。[1]",
+        "status": "supported",
+        "evidence_refs": ["P2"],
+        "reason": "P2 的 Note 段完整支持 langchain>=1.1 动态读取 profile、不可用时手动指定、以及 tools 与结构化输出须同时支持。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "[1] 对应的 P2 原文完整支持。"
+          }
+        ]
+      }
+    ]
+  }
+}

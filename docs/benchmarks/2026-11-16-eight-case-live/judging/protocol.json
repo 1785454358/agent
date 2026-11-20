@@ -1,0 +1,8 @@
+{
+  "model": "kimi-k3",
+  "blinding": "Candidate A/B order derived from case-id digest; group names and runtime status hidden",
+  "scope": "Frozen eight-case predefined rubric; same-model judge plus root-assistant review; no independent human review",
+  "claim_rule": "Unique semantic factual assertions, duplicates within an answer merged; nonfactual advice excluded",
+  "citation_rule": "Unique claim/marker relations, partial is not full support",
+  "script_sha256": "3c2890f3629f7fe36d10d30b524e9400022c461a0bba6c942aa9c173bd9886ec"
+}

@@ -1,0 +1,118 @@
+结论： LangGraph 的 Checkpointer 是“线程内、框架管理的短期执行状态存档”，用于恢复同一个 thread_id 的图执行；Store 是“跨线程、应用显式读写的长期键值记忆”，用于在不同会话/线程间共享用户偏好、事实和知识。二者互补，不是替代关系。
+docs.langchain
++1
+
+核心对比
+维度	Checkpointer / checkpoint	Store
+保存内容	图状态的快照（graph state snapshots）
+docs.langchain
+	应用定义的键值数据（key-value data）
+docs.langchain
+
+线程边界	限定在单个 thread，通过配置中的 thread_id 访问 
+docs.langchain
+	跨线程访问；由节点或应用代码读写 
+docs.langchain
+
+记忆类型	短期、线程内记忆 
+docs.langchain
+	长期、跨线程记忆 
+docs.langchain
+
+主要用途	会话连续性、human-in-the-loop、time travel、容错恢复 
+docs.langchain
+	用户偏好、事实、共享知识 
+docs.langchain
+
+写入方式	由 LangGraph 在图执行过程中保存状态快照 
+github
+	应用或节点显式调用 Store 的读写接口 
+docs.langchain
++1
+
+典型例子	保存当前对话消息、节点输出、待恢复执行位置	保存“用户偏好中文回复”“用户所属团队”等跨会话信息
+进程重启
+
+事实： 若使用 MemorySaver / InMemorySaver，checkpoint 保存在内存中；进程重启后，所有 checkpoint 都会丢失。官方建议在生产环境使用持久化 checkpointer，例如 PostgresSaver 或本地文件型 SqliteSaver。
+docs.langchain
++1
+
+事实： Store 的持久化能力取决于所选 Store 后端。官方文档说明 Store 用于跨线程长期记忆，但并未在上述检索到的页面中逐一列出所有后端在重启后的行为；因此不能笼统地说“任何 Store 都必然跨进程存活”。
+docs.langchain
+
+推断： 要在进程重启后恢复同一个对话或工作流，前提是：使用持久化 checkpointer，并在恢复时提供相同的 thread_id。否则即使数据仍在外部数据库中，运行时也无法定位到对应的线程状态。
+
+interrupt 恢复
+
+事实： Checkpointer 是 human-in-the-loop / interrupt 工作流的基础：它使应用能够查看、中断和批准图步骤，并在人工更新状态后恢复执行。
+github
+
+事实： 官方文档还说明，若某个 super-step 中部分节点失败，LangGraph 会保存该步骤中已成功节点的 pending checkpoint writes；恢复时不会重跑这些已成功的节点。
+github
+
+前提： interrupt 后恢复通常要求使用同一个 thread_id，并依赖可持久化或至少仍存活的 checkpointer。若使用内存型 saver 且进程已重启，恢复所需 checkpoint 已不存在。
+docs.langchain
++1
+
+推断： Store 本身不是 interrupt 恢复机制。它可以保存跨线程需要的业务数据，但“从哪个节点、以什么图状态继续执行”属于 checkpoint 的职责。
+
+跨线程共享
+
+事实： 仅靠 checkpointer 无法跨线程共享信息；官方以聊天机器人为例指出，若要在该用户的所有对话线程中保留信息，需要 Store。
+github
+
+事实： Store 保存任意键值数据，可从任意线程访问；典型用途包括用户偏好、累积知识和应超越单次会话存在的事实。
+docs.langchain
+
+前提： 跨线程共享依赖一致的命名空间或键设计，例如按用户、组织或其他业务实体组织数据。官方页面确认 Store 是跨线程机制，但未在检索到的内容中规定统一的命名空间模式，因此具体隔离规则应以所用 Store 实现和你的应用设计为准。
+docs.langchain
+
+事实： 在父子图场景中，子图有独立的 checkpoint namespace，父图未必立即看到子图状态变化；官方建议对需要跨越图边界共享的数据使用 Store，或配置子图写入父图 checkpoint。
+docs.langchain
++1
+
+适用场景
+
+用 Checkpointer： 多轮对话、人工审批、失败后从最近成功步骤恢复、时间旅行与调试回放。
+docs.langchain
++1
+
+用 Store： 用户画像、长期偏好、跨会话事实、团队/组织共享知识库。
+docs.langchain
++1
+
+两者一起用： checkpointer 跟踪当前线程的执行状态，Store 保存跨线程的持久信息；官方明确表示多数应用可同时使用二者。
+docs.langchain
+
+事实、推断与未确认
+
+事实： checkpoint 的作用域是单个 thread；Store 的作用域是跨线程。
+docs.langchain
+
+事实： 内存型 checkpointer 在进程重启后丢失 checkpoint；Postgres/SQLite 等持久化 checkpointer 是官方给出的替代方案。
+docs.langchain
++1
+
+事实： interrupt、human-in-the-loop、容错恢复依赖 checkpointer；跨线程记忆依赖 Store。
+docs.langchain
++1
+
+推断： 恢复中断需要相同 thread_id 和仍可用的 checkpoint；这是由“checkpoint 保存到 thread、通过 thread_id 访问”的官方语义推出的。
+docs.langchain
++1
+
+无法确认： 检索到的官方页面未给出所有 Store 后端在进程重启后的持久化保证，也未给出统一的跨线程命名空间规范；这些需查阅具体 Store 实现文档或你的部署配置。
+
+来源
+
+LangGraph 官方 Persistence 文档：https://docs.langchain.com/oss/python/langgraph/persistence
+docs.langchain
+
+LangGraph 官方 Stores 文档：https://docs.langchain.com/oss/python/langgraph/stores
+docs.langchain
+
+LangGraph JavaScript Persistence 文档：https://docs.langchain.com/oss/javascript/langgraph/persistence
+docs.langchain
+
+LangGraph 官方仓库中的 persistence 概念文档：https://github.com/langchain-ai/langgraphjs/blob/main/docs/docs/concepts/persistence.md
+github

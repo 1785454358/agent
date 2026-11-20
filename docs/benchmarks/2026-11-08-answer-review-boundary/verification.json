@@ -1,0 +1,19 @@
+{
+  "final_production_source_sha256": "01bfbaa233b82eda82011d3909435f9bc3bb4435a4faa60f22e5459702940cf1",
+  "first_review_requests_unchanged": 12,
+  "full_agent_gate_rejects_component_profile": true,
+  "graph_restored_byte_for_byte": true,
+  "historical_valid_reviews_unchanged": 12,
+  "limitations": [
+    "No new full 12-task Agent candidate was run after the component failed.",
+    "Historical trace replay is not a fresh model request.",
+    "Independent scores do not demonstrate an overall factual-F1 improvement.",
+    "Selected-source full bodies are the existing faithfulness context, not exact writer-visible excerpts.",
+    "Final production regression/lint and credential scan are recorded separately after completion."
+  ],
+  "live_repair_new_provider_attempts": 1,
+  "reproduction_archive": {
+    "bytes": 10364317,
+    "sha256": "c9c0c15b2f739186fa59d963c41f23d9ae26f94b42ea74dc4f8770616dc45f31"
+  }
+}

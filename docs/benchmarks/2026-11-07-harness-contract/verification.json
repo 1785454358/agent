@@ -1,0 +1,142 @@
+{
+  "backend_offline": {
+    "deselected": 2,
+    "passed": 1625,
+    "seconds": 79.71
+  },
+  "fixed_controls": [
+    "schema_version",
+    "dataset_sha256",
+    "corpus_sha256",
+    "model",
+    "limits",
+    "response_mode",
+    "response_max_content_chars",
+    "context_allocator",
+    "research_context_policy",
+    "evidence_policy",
+    "repeats",
+    "tools_backend",
+    "memory_backend",
+    "python_version",
+    "installed_versions",
+    "execution_profile"
+  ],
+  "judges": {
+    "claims": {
+      "identical_judge_identity": true,
+      "metric_status_counts": {
+        "baseline": {
+          "not_applicable": 4,
+          "ok": 20
+        },
+        "candidate": {
+          "not_applicable": 5,
+          "ok": 19
+        }
+      },
+      "usage": {
+        "baseline": {
+          "cost": null,
+          "input_tokens": 1322544,
+          "max_provider_attempts": 200,
+          "measured_usage_attempts": 119,
+          "missing_usage_attempts": 0,
+          "observed_input_tokens": 1322544,
+          "observed_output_tokens": 4470,
+          "output_tokens": 4470,
+          "provider_attempts": 119
+        },
+        "candidate": {
+          "cost": null,
+          "input_tokens": 1072075,
+          "max_provider_attempts": 200,
+          "measured_usage_attempts": 105,
+          "missing_usage_attempts": 0,
+          "observed_input_tokens": 1072075,
+          "observed_output_tokens": 3456,
+          "output_tokens": 3456,
+          "provider_attempts": 105
+        }
+      }
+    },
+    "ragas": {
+      "identical_judge_identity": true,
+      "metric_status_counts": {
+        "baseline": {
+          "not_applicable": 4,
+          "ok": 32
+        },
+        "candidate": {
+          "not_applicable": 5,
+          "ok": 31
+        }
+      },
+      "usage": {
+        "baseline": {
+          "cost": null,
+          "input_tokens": 208497,
+          "max_provider_attempts": 120,
+          "measured_usage_attempts": 88,
+          "missing_usage_attempts": 0,
+          "observed_input_tokens": 208497,
+          "observed_output_tokens": 48155,
+          "output_tokens": 48155,
+          "provider_attempts": 88
+        },
+        "candidate": {
+          "cost": null,
+          "input_tokens": 175785,
+          "max_provider_attempts": 120,
+          "measured_usage_attempts": 86,
+          "missing_usage_attempts": 0,
+          "observed_input_tokens": 175785,
+          "observed_output_tokens": 40151,
+          "output_tokens": 40151,
+          "provider_attempts": 86
+        }
+      }
+    }
+  },
+  "lint": "passed for changed production/tests and experiment driver",
+  "new_usage": {
+    "agent_trials": 30,
+    "cost": null,
+    "input_tokens": 3436304,
+    "output_tokens": 173728,
+    "provider_attempts": 600
+  },
+  "reproduction_archive": {
+    "bytes": 4458180,
+    "sha256": "b9ca75bee390aa2af0215daea23dd4a453db3aeb3fc847fdd861a21acce249e7"
+  },
+  "source_snapshots_verified": {
+    "baseline": 230,
+    "candidate": 230,
+    "strategy-probes": 230
+  },
+  "targeted_tests": {
+    "passed": 66,
+    "seconds": 5.02
+  },
+  "treatment": {
+    "baseline": {
+      "research_completion_scope": "decomposed"
+    },
+    "candidate": {
+      "research_completion_scope": "original_task"
+    }
+  },
+  "offline_reproduction": {
+    "exit_code": 1,
+    "checks_identical": true,
+    "comparison_identical": true,
+    "provider_calls": 0
+  },
+  "credential_scan": {
+    "matches": 0,
+    "credential_values_printed": false
+  },
+  "snapshot_archive_checksums_verified": true,
+  "final_decision": "No default promotion; both proposals fail quality gates. Aggregate policy removed; scope_review remains opt-in experimental, default decomposed."
+}

@@ -1,0 +1,213 @@
+{
+  "A": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "回答明确说明自动选择策略只适用于直接传入 schema 类型（type[StructuredResponseT]）的情形，并给出具体规则：支持原生结构化输出时用 ProviderStrategy，否则用 ToolStrategy。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "回答明确指出 JSON Schema 字典是显式例外，必须用 ProviderStrategy 或 ToolStrategy 包装，否则不会被自动识别。"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "回答通过'通用规则 + 显式例外'的框架调和两者，说明自动机制针对可识别的 schema 类型，字典不在自动检测范围内，未声称字典会被自动推断。"
+      }
+    ],
+    "claims": [
+      {
+        "quote": "自动选择策略只适用于\"直接传入 schema 类型（`type[StructuredResponseT]`）\"的情形",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 明确说明 'type[StructuredResponseT]: Schema type - automatically selects best strategy based on model capabilities'，且 'When a schema type is provided directly, LangChain automatically chooses'。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P1 原文支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "JSON Schema 字典是显式例外，必须用 `ProviderStrategy` 或 `ToolStrategy` 包装，否则不会被自动识别",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 Warning 明确：'JSON Schema dictionaries must be wrapped in an explicit strategy (ProviderStrategy or ToolStrategy). They are not automatically detected when passed directly to response_format.'",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P1 Warning 部分直接支持。"
+          }
+        ]
+      },
+      {
+        "quote": "文档把 `response_format` 的取值分为四类：`ToolStrategy[...]`、`ProviderStrategy[...]`、`type[StructuredResponseT]`、`None`",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 中 create_agent 函数签名显示 response_format 的 Union 类型包含这四类。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P1 函数签名部分支持。"
+          }
+        ]
+      },
+      {
+        "quote": "自动选择的具体规则是：模型/提供商支持原生结构化输出时用 `ProviderStrategy`（如 OpenAI、Anthropic、xAI），其余模型用 `ToolStrategy`",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 明确说明：'ProviderStrategy if the model and provider chosen supports native structured output (e.g. OpenAI, Anthropic (Claude), or xAI (Grok)). ToolStrategy for all other models.'",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P1 自动选择规则部分支持。"
+          }
+        ]
+      },
+      {
+        "quote": "JSON Schema 字典只是普通 `dict`，类型签名上虽可传入，但不在自动检测范围内",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 Warning 说明字典不会被自动检测，必须显式包装，暗示其不在自动检测范围内。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P1 Warning 部分支持。"
+          }
+        ]
+      },
+      {
+        "quote": "agent 默认采用 tool calling 策略，仅对支持原生结构化输出的特定模型切换策略",
+        "status": "supported",
+        "evidence_refs": ["P2"],
+        "reason": "P2 说明：'By default, the agent uses a tool calling strategy...Certain models support native structured output, in which case the agent will use that strategy instead.'",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P2 默认行为描述支持。"
+          }
+        ]
+      },
+      {
+        "quote": "`langchain>=1.1` 时原生支持能力从模型 profile 动态读取，缺失时可手动提供 profile",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 Note 说明：'Support for native structured output features is read dynamically from the model's profile data if using langchain>=1.1. If data are not available, use another condition or specify manually.'",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P1 Note 部分支持。"
+          }
+        ]
+      }
+    ]
+  },
+  "B": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "回答明确说明自动选择只适用于直接传入的 schema 类型对象（type[StructuredResponseT]），并给出具体规则：支持原生结构化输出时选 ProviderStrategy，否则选 ToolStrategy。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "回答明确指出 JSON Schema 字典必须显式包装（ProviderStrategy 或 ToolStrategy），并给出代码示例。"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "回答通过说明自动分派的触发条件是 schema 类型对象，裸字典不属于该类型，无法触发自动检测，调和了两者，未声称字典会被自动推断。"
+      }
+    ],
+    "claims": [
+      {
+        "quote": "自动选择只适用于直接传入的 schema 类型对象（type[StructuredResponseT]）",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 明确说明 'type[StructuredResponseT]: Schema type - automatically selects best strategy based on model capabilities'。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P1 原文支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "JSON Schema 字典是另一种表示形式，不在自动检测范围内，必须手动包一层策略",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 Warning 明确：'JSON Schema dictionaries must be wrapped in an explicit strategy (ProviderStrategy or ToolStrategy). They are not automatically detected when passed directly to response_format.'",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P1 Warning 部分直接支持。"
+          }
+        ]
+      },
+      {
+        "quote": "模型/提供商支持原生结构化输出（如 OpenAI、Anthropic、xAI）→ 选 `ProviderStrategy`；其他所有模型 → 选 `ToolStrategy`",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 明确说明：'ProviderStrategy if the model and provider chosen supports native structured output (e.g. OpenAI, Anthropic (Claude), or xAI (Grok)). ToolStrategy for all other models.'",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P1 自动选择规则部分支持。"
+          }
+        ]
+      },
+      {
+        "quote": "`response_format` 的联合类型只接受 `ToolStrategy`、`ProviderStrategy`、`type[StructuredResponseT]` 或 `None`",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 中 create_agent 函数签名显示 response_format 的 Union 类型包含这四类。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P1 函数签名部分支持。"
+          }
+        ]
+      },
+      {
+        "quote": "自动选择依赖模型 profile 数据（`langchain>=1.1` 动态读取）；数据缺失时需手动指定 profile 或改用显式策略",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 Note 说明：'Support for native structured output features is read dynamically from the model's profile data if using langchain>=1.1. If data are not available, use another condition or specify manually.'",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P1 Note 部分支持。"
+          }
+        ]
+      },
+      {
+        "quote": "若同时使用工具，模型须支持工具与结构化输出并行",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 Note 最后一句：'If tools are specified, the model must support simultaneous use of tools and structured output.'",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P1 Note 部分支持。"
+          }
+        ]
+      }
+    ]
+  }
+}

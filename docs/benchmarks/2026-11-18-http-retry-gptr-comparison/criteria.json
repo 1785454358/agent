@@ -1,0 +1,22 @@
+{
+  "defined_before_review": true,
+  "source_basis": [
+    "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
+    "https://www.rfc-editor.org/rfc/rfc9110.html#section-10.2.3",
+    "https://www.rfc-editor.org/rfc/rfc9110.html#section-15.6.4",
+    "https://www.rfc-editor.org/rfc/rfc6585.html#section-4"
+  ],
+  "criteria": [
+    {"id": "C1", "check": "Distinguishes GET and POST after an ambiguous connection failure; intended idempotent effect is distinct from receiving a response."},
+    {"id": "C2", "check": "Explains both 429 and 503 and covers each for GET and POST; status and Retry-After alone do not establish POST deduplication."},
+    {"id": "C3", "check": "Explains non-negative integer seconds and HTTP-date Retry-After, using response receipt/current wall-clock time appropriately."},
+    {"id": "C4", "check": "Handles absent/invalid Retry-After with an explicitly proposed bounded policy, preserving a valid server-indicated delay."},
+    {"id": "C5", "check": "Pseudocode bounds attempts to at most 3 including the initial request; it does not claim the RFC prescribes this number."},
+    {"id": "C6", "check": "Pseudocode uses a total 30-second deadline, includes request time and waits, and bounds every request timeout by remaining time."},
+    {"id": "C7", "check": "Stops when the selected wait exceeds remaining time and rechecks the deadline before a later attempt."},
+    {"id": "C8", "check": "Pseudocode enforces the stated GET/POST eligibility; an unavailable response is not treated as proof the POST was never applied."},
+    {"id": "C9", "check": "Uses original RFC sources and meaningful section references; recommendations are separated from normative requirements."},
+    {"id": "C10", "check": "Does not promise eventual success or invent an idempotency-key guarantee; acknowledges RFC 9110 9.2.2's SHOULD NOT on retrying a failed automatic retry, or makes a justified bounded policy choice rather than claiming blanket RFC approval."}
+  ],
+  "scoring": "Manual assessment per criterion: satisfied / partial / missing. Engine completion status is reported separately. Pseudocode is inspected, not described as executed code."
+}

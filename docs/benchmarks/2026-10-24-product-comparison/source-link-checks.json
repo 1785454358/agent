@@ -1,0 +1,57 @@
+[
+  {
+    "requested_url": "https://docs.langchain.com/oss/python/langgraph/long-term-memory",
+    "status": 404,
+    "final_url": "https://docs.langchain.com/oss/python/langgraph/long-term-memory",
+    "title": null,
+    "content_type": "text/html; charset=utf-8",
+    "retrieval_error": null
+  },
+  {
+    "requested_url": "https://langchain-ai.github.io/langgraph/reference/checkpoints/",
+    "status": 200,
+    "final_url": "https://langchain-ai.github.io/langgraph/reference/checkpoints/",
+    "title": "Redirecting...",
+    "content_type": "text/html; charset=utf-8",
+    "retrieval_error": null
+  },
+  {
+    "requested_url": "https://reference.langchain.com/python/langgraph/checkpoints",
+    "status": 200,
+    "final_url": "https://reference.langchain.com/python/langgraph/checkpoints",
+    "title": "checkpoints | langgraph | LangChain Reference",
+    "content_type": "text/html; charset=utf-8",
+    "retrieval_error": null
+  },
+  {
+    "requested_url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+    "status": 200,
+    "final_url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+    "title": "Persistence - Docs by LangChain",
+    "content_type": "text/html; charset=utf-8",
+    "retrieval_error": null
+  },
+  {
+    "requested_url": "https://docs.langchain.com/oss/python/langgraph/interrupts",
+    "status": 200,
+    "final_url": "https://docs.langchain.com/oss/python/langgraph/interrupts",
+    "title": "Interrupts - Docs by LangChain",
+    "content_type": "text/html; charset=utf-8",
+    "retrieval_error": null
+  },
+  {
+    "requested_url": "https://docs.langchain.com/oss/python/langgraph/stores",
+    "status": 200,
+    "final_url": "https://docs.langchain.com/oss/python/langgraph/stores",
+    "title": "Stores - Docs by LangChain",
+    "content_type": "text/html; charset=utf-8",
+    "retrieval_error": null
+  },
+  {
+    "requested_url": "https://docs.langchain.com/oss/python/langgraph/long-term-memory?utm_source=chatgpt.com",
+    "status": 404,
+    "final_url": "https://docs.langchain.com/oss/python/langgraph/long-term-memory?utm_source=chatgpt.com",
+    "content_type": "text/html; charset=utf-8",
+    "retrieval_error": null
+  }
+]

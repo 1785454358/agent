@@ -1,0 +1,148 @@
+{
+  "stability": {
+    "total": 8,
+    "passed": 8,
+    "scenarios": [
+      {
+        "scenario": "branch_isolation",
+        "test": "tests/research/test_runtime.py::test_ordinary_branch_failure_preserves_sibling_evidence_without_false_completion",
+        "passed": true,
+        "seconds": 4.318
+      },
+      {
+        "scenario": "sqlite_checkpoint_resume",
+        "test": "tests/research/test_runtime.py::test_sqlite_resume_reuses_completed_sibling_on_new_graph",
+        "passed": true,
+        "seconds": 0.884
+      },
+      {
+        "scenario": "transient_model_retry",
+        "test": "tests/harness/test_model_gateway.py::test_transport_timeout_retries_once",
+        "passed": true,
+        "seconds": 0.008
+      },
+      {
+        "scenario": "bounded_tool_retries",
+        "test": "tests/tools/test_gateway.py::test_transient_failure_is_retried_once_inside_the_gateway",
+        "passed": true,
+        "seconds": 0.014
+      },
+      {
+        "scenario": "fatal_tool_no_retry",
+        "test": "tests/tools/test_gateway.py::test_unhandled_tool_exception_is_fatal_and_never_retried",
+        "passed": true,
+        "seconds": 0.015
+      },
+      {
+        "scenario": "tool_timeout",
+        "test": "tests/tools/test_gateway.py::test_timeout_is_sanitized_recorded_and_charged",
+        "passed": true,
+        "seconds": 0.023
+      },
+      {
+        "scenario": "cancelled_budget_persists",
+        "test": "tests/harness/test_durable_model_budget.py::test_cancelled_call_consumption_survives_restart",
+        "passed": true,
+        "seconds": 0.008
+      },
+      {
+        "scenario": "duplicate_recovery_stops",
+        "test": "tests/research/test_adaptive_completion.py::test_unresolved_duplicate_recovery_stops_without_redispatching",
+        "passed": true,
+        "seconds": 0.187
+      }
+    ],
+    "scope": "Controlled injected responses/errors and actual runtime/storage code, not live-provider recovery reliability."
+  },
+  "budget_boundary": {
+    "total": 6,
+    "passed": 6,
+    "scenarios": [
+      {
+        "scenario": "task_model_cap",
+        "test": "tests/research/test_runtime.py::test_task_model_limit_is_enforced_before_provider_dispatch",
+        "passed": true,
+        "seconds": 0.01
+      },
+      {
+        "scenario": "concurrent_reservations",
+        "test": "tests/harness/test_model_run_budget.py::test_concurrent_research_calls_reserve_the_shared_run_budget_atomically",
+        "passed": true,
+        "seconds": 0.259
+      },
+      {
+        "scenario": "token_cap_and_writer_reserve",
+        "test": "tests/harness/test_model_run_budget.py::test_provider_input_usage_limits_next_call_without_spending_writer_reserve",
+        "passed": true,
+        "seconds": 0.005
+      },
+      {
+        "scenario": "final_review_call_reserve",
+        "test": "tests/harness/test_model_run_budget.py::test_final_review_has_a_call_reserved_within_the_existing_total_cap",
+        "passed": true,
+        "seconds": 0.028
+      },
+      {
+        "scenario": "research_and_finishing_deadlines",
+        "test": "tests/harness/test_model_run_budget.py::test_elapsed_research_window_leaves_a_separate_finishing_window",
+        "passed": true,
+        "seconds": 0.007
+      },
+      {
+        "scenario": "durable_run_caps",
+        "test": "tests/research/test_runtime.py::test_contract_budget_restores_original_run_limits_before_planning",
+        "passed": true,
+        "seconds": 0.009
+      }
+    ],
+    "scope": "Controlled injected responses/errors and actual runtime/storage code, not live-provider recovery reliability."
+  },
+  "evidence": {
+    "baseline": {
+      "runs": 8,
+      "final_citation_refs": 7,
+      "traceable_final_citation_refs": 7,
+      "accepted_support_segments": 51,
+      "exact_body_matches": 51,
+      "version_hash_matches": 51,
+      "generic_empty_answers": 3,
+      "budget_compliant_runs": 8
+    },
+    "optimized": {
+      "runs": 8,
+      "final_citation_refs": 11,
+      "traceable_final_citation_refs": 11,
+      "accepted_support_segments": 64,
+      "exact_body_matches": 64,
+      "version_hash_matches": 64,
+      "generic_empty_answers": 1,
+      "budget_compliant_runs": 8
+    },
+    "scope": "Accepted stored support segments and final citation identities only; not raw proposal quality, unique facts, semantic entailment or hallucination rate."
+  },
+  "live_budget": {
+    "compliant_runs": 16,
+    "total_runs": 16,
+    "caps": {
+      "model_calls": 20,
+      "input_tokens": 100000,
+      "research_seconds": 600
+    },
+    "time_note": "All recorded full-task elapsed times are below 600s, a stricter observation than the research-only cap; this does not claim a general hard end-to-end deadline.",
+    "page_budget_note": "Frozen documents were preloaded; no live page-budget stress or web duplicate-search rate is inferred."
+  },
+  "runtime_model": "kimi-k3",
+  "stable_resume_observation": {
+    "scenario": "sqlite_checkpoint_resume",
+    "completed_branch_calls_before_and_after_resume": 1,
+    "completed_branch_reexecutions": 0,
+    "interrupted_branch_total_calls": 2,
+    "scope": "One injected interruption and one fresh-graph SQLite resume, asserted by the named regression."
+  },
+  "cautions": [
+    "Scenario pass rates are not production uptime or real-provider recovery rates.",
+    "Accepted support segments can be repeated across findings; the denominator is stored support records, not distinct facts.",
+    "Exact quote matching verifies provenance, not whether the quote semantically supports the claim.",
+    "Both configurations already have host evidence checks; these observations do not prove that a new evidence mechanism improved citation accuracy."
+  ]
+}

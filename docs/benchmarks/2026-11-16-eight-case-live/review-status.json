@@ -1,0 +1,8 @@
+{
+  "execution": "16_of_16_collected",
+  "reference_rubric_review": "complete",
+  "reviewer": "same_model_blinded_judge_plus_root_assistant_review",
+  "independent_human_annotation": false,
+  "hallucination_and_citation_rate": "not_published_due_to_review_inconsistency",
+  "primary_metrics_file": "metrics.json"
+}

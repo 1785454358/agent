@@ -1,0 +1,648 @@
+{
+  "runs": [
+    {
+      "mode": "workflow",
+      "status": "partial",
+      "termination_reason": "insufficient_evidence",
+      "seconds": 42.586,
+      "usage": {
+        "provider_attempts": 7,
+        "measured_usage_attempts": 7,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 34521,
+        "output_tokens": 8266,
+        "total_tokens": 42787,
+        "observed_usage": {
+          "input_tokens": 34521,
+          "output_tokens": 8266,
+          "total_tokens": 42787
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 1096,
+            "output_tokens": 524,
+            "total_tokens": 1620
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "evaluator": {
+            "input_tokens": 17150,
+            "output_tokens": 4376,
+            "total_tokens": 21526
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 16275,
+            "output_tokens": 3366,
+            "total_tokens": 19641
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 1096,
+            "output_tokens": 524,
+            "total_tokens": 1620
+          },
+          "evaluator": {
+            "input_tokens": 17150,
+            "output_tokens": 4376,
+            "total_tokens": 21526
+          },
+          "writer": {
+            "input_tokens": 16275,
+            "output_tokens": 3366,
+            "total_tokens": 19641
+          }
+        },
+        "stage_seconds": {
+          "planner": 2.8119999999762513,
+          "evaluator": 20.48399999999674,
+          "writer": 17.57799999997951
+        },
+        "budget_state_available": true
+      },
+      "baseline_seconds": 39.915,
+      "baseline_usage": {
+        "provider_attempts": 5,
+        "measured_usage_attempts": 5,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 24393,
+        "output_tokens": 5406,
+        "total_tokens": 29799,
+        "observed_usage": {
+          "input_tokens": 24393,
+          "output_tokens": 5406,
+          "total_tokens": 29799
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 1096,
+            "output_tokens": 533,
+            "total_tokens": 1629
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "evaluator": {
+            "input_tokens": 12559,
+            "output_tokens": 2699,
+            "total_tokens": 15258
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 10738,
+            "output_tokens": 2174,
+            "total_tokens": 12912
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 1096,
+            "output_tokens": 533,
+            "total_tokens": 1629
+          },
+          "evaluator": {
+            "input_tokens": 12559,
+            "output_tokens": 2699,
+            "total_tokens": 15258
+          },
+          "writer": {
+            "input_tokens": 10738,
+            "output_tokens": 2174,
+            "total_tokens": 12912
+          }
+        },
+        "stage_seconds": {
+          "planner": 4.10999999998603,
+          "evaluator": 19.06300000002375,
+          "writer": 14.313000000023749
+        },
+        "budget_state_available": true
+      },
+      "scope_events": [
+        {
+          "evaluation_mode": "full",
+          "reason": "initial_or_invalidated",
+          "evaluated_requirements_json": "[\"r1\", \"r2\", \"r3\", \"r4\", \"r5\"]",
+          "retained_requirements_json": "[]"
+        },
+        {
+          "evaluation_mode": "full",
+          "reason": "impact_uncertain_or_changed",
+          "evaluated_requirements_json": "[\"r1\", \"r2\", \"r3\", \"r4\", \"r5\"]",
+          "retained_requirements_json": "[]"
+        }
+      ],
+      "gaps": [
+        "r2:missing:可见片段给出 Retry-After 的两种格式（HTTP-date 或秒数）及语义；缺失或无效时的处理规则未在可见片段中明确给出，但 RFC 未规定缺失时必须如何处理，客户端可自行决定。",
+        "r5:missing:unknown_resolution_not_authorized_or_unchecked",
+        "diagnostic:read_anchor_omitted:evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+        "diagnostic:read_anchor_omitted:evidence-f2857ca5db8fba0ab70ac7553f9ea089cbda0590f67e68a1f692a1d6ceabd403"
+      ],
+      "artifact": ".local-artifacts/incremental-flow-http-20261119/workflow/summary.json",
+      "quality_accepted": false
+    },
+    {
+      "mode": "plan_execute",
+      "status": "partial",
+      "termination_reason": "no_research_progress",
+      "seconds": 43.812,
+      "usage": {
+        "provider_attempts": 6,
+        "measured_usage_attempts": 6,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 29343,
+        "output_tokens": 8971,
+        "total_tokens": 38314,
+        "observed_usage": {
+          "input_tokens": 29343,
+          "output_tokens": 8971,
+          "total_tokens": 38314
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 1095,
+            "output_tokens": 1002,
+            "total_tokens": 2097
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "evaluator": {
+            "input_tokens": 10334,
+            "output_tokens": 2561,
+            "total_tokens": 12895
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 17914,
+            "output_tokens": 5408,
+            "total_tokens": 23322
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 1095,
+            "output_tokens": 1002,
+            "total_tokens": 2097
+          },
+          "evaluator": {
+            "input_tokens": 10334,
+            "output_tokens": 2561,
+            "total_tokens": 12895
+          },
+          "writer": {
+            "input_tokens": 17914,
+            "output_tokens": 5408,
+            "total_tokens": 23322
+          }
+        },
+        "stage_seconds": {
+          "planner": 5.0,
+          "evaluator": 11.531000000075437,
+          "writer": 25.594000000040978
+        },
+        "budget_state_available": true
+      },
+      "baseline_seconds": 75.478,
+      "baseline_usage": {
+        "provider_attempts": 7,
+        "measured_usage_attempts": 7,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 43840,
+        "output_tokens": 11647,
+        "total_tokens": 55487,
+        "observed_usage": {
+          "input_tokens": 43840,
+          "output_tokens": 11647,
+          "total_tokens": 55487
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 1095,
+            "output_tokens": 1141,
+            "total_tokens": 2236
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "researcher": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "evaluator": {
+            "input_tokens": 29372,
+            "output_tokens": 6038,
+            "total_tokens": 35410
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 13373,
+            "output_tokens": 4468,
+            "total_tokens": 17841
+          }
+        },
+        "observed_role_usage": {
+          "planner": {
+            "input_tokens": 1095,
+            "output_tokens": 1141,
+            "total_tokens": 2236
+          },
+          "evaluator": {
+            "input_tokens": 29372,
+            "output_tokens": 6038,
+            "total_tokens": 35410
+          },
+          "writer": {
+            "input_tokens": 13373,
+            "output_tokens": 4468,
+            "total_tokens": 17841
+          }
+        },
+        "stage_seconds": {
+          "planner": 7.202999999979511,
+          "evaluator": 36.7510000000475,
+          "writer": 27.141000000061467
+        },
+        "budget_state_available": true
+      },
+      "scope_events": [
+        {
+          "evaluation_mode": "full",
+          "reason": "initial_or_invalidated",
+          "evaluated_requirements_json": "[\"r1\", \"r2\", \"r3\", \"r4\"]",
+          "retained_requirements_json": "[]"
+        },
+        {
+          "evaluation_mode": "delta",
+          "reason": "new_evidence_for_pending_requirements",
+          "evaluated_requirements_json": "[\"r1\", \"r2\", \"r4\"]",
+          "retained_requirements_json": "[\"r3\"]"
+        },
+        {
+          "evaluation_mode": "reused",
+          "reason": "no_evidence_change",
+          "evaluated_requirements_json": "[]",
+          "retained_requirements_json": "[]"
+        }
+      ],
+      "gaps": [
+        "r1:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r2:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r4:missing:unknown_resolution_not_authorized_or_unchecked",
+        "diagnostic:read_anchor_omitted:evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+        "diagnostic:read_anchor_omitted:evidence-f2857ca5db8fba0ab70ac7553f9ea089cbda0590f67e68a1f692a1d6ceabd403",
+        "diagnostic:evaluation_snapshot_reused",
+        "no_research_progress"
+      ],
+      "artifact": ".local-artifacts/incremental-flow-http-20261119/plan_execute/summary.json",
+      "quality_accepted": false
+    },
+    {
+      "mode": "multi_agent",
+      "status": "partial",
+      "termination_reason": "no_research_progress",
+      "seconds": 27.379,
+      "usage": {
+        "provider_attempts": 4,
+        "measured_usage_attempts": 4,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 18380,
+        "output_tokens": 5428,
+        "total_tokens": 23808,
+        "observed_usage": {
+          "input_tokens": 18380,
+          "output_tokens": 5428,
+          "total_tokens": 23808
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 1094,
+            "output_tokens": 605,
+            "total_tokens": 1699
+          },
+          "researcher": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "evaluator": {
+            "input_tokens": 6843,
+            "output_tokens": 1282,
+            "total_tokens": 8125
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 10443,
+            "output_tokens": 3541,
+            "total_tokens": 13984
+          }
+        },
+        "observed_role_usage": {
+          "supervisor": {
+            "input_tokens": 1094,
+            "output_tokens": 605,
+            "total_tokens": 1699
+          },
+          "evaluator": {
+            "input_tokens": 6843,
+            "output_tokens": 1282,
+            "total_tokens": 8125
+          },
+          "writer": {
+            "input_tokens": 10443,
+            "output_tokens": 3541,
+            "total_tokens": 13984
+          }
+        },
+        "stage_seconds": {
+          "supervisor": 2.9369999999762513,
+          "evaluator": 6.155999999959022,
+          "writer": 17.0
+        },
+        "budget_state_available": true
+      },
+      "baseline_seconds": 50.898,
+      "baseline_usage": {
+        "provider_attempts": 5,
+        "measured_usage_attempts": 5,
+        "missing_usage_attempts": 0,
+        "usage_complete": true,
+        "input_tokens": 26459,
+        "output_tokens": 6701,
+        "total_tokens": 33160,
+        "observed_usage": {
+          "input_tokens": 26459,
+          "output_tokens": 6701,
+          "total_tokens": 33160
+        },
+        "role_usage": {
+          "planner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "executor": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "replanner": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "supervisor": {
+            "input_tokens": 1094,
+            "output_tokens": 646,
+            "total_tokens": 1740
+          },
+          "researcher": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "evaluator": {
+            "input_tokens": 13608,
+            "output_tokens": 2913,
+            "total_tokens": 16521
+          },
+          "summarizer": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_consolidator": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "other": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "writer": {
+            "input_tokens": 11757,
+            "output_tokens": 3142,
+            "total_tokens": 14899
+          }
+        },
+        "observed_role_usage": {
+          "supervisor": {
+            "input_tokens": 1094,
+            "output_tokens": 646,
+            "total_tokens": 1740
+          },
+          "evaluator": {
+            "input_tokens": 13608,
+            "output_tokens": 2913,
+            "total_tokens": 16521
+          },
+          "writer": {
+            "input_tokens": 11757,
+            "output_tokens": 3142,
+            "total_tokens": 14899
+          }
+        },
+        "stage_seconds": {
+          "supervisor": 5.0310000000172295,
+          "evaluator": 19.220000000030268,
+          "writer": 22.95299999997951
+        },
+        "budget_state_available": true
+      },
+      "scope_events": [
+        {
+          "evaluation_mode": "full",
+          "reason": "initial_or_invalidated",
+          "evaluated_requirements_json": "[\"r1\", \"r2\", \"r3\", \"r4\", \"r5\", \"r6\"]",
+          "retained_requirements_json": "[]"
+        },
+        {
+          "evaluation_mode": "reused",
+          "reason": "no_evidence_change",
+          "evaluated_requirements_json": "[]",
+          "retained_requirements_json": "[]"
+        }
+      ],
+      "gaps": [
+        "r1:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r2:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r4:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r5:missing:unknown_resolution_not_authorized_or_unchecked",
+        "r6:missing:unknown_resolution_not_authorized_or_unchecked",
+        "diagnostic:read_anchor_omitted:evidence-eff52809c164b647667187704c8d1b7a7696cd522167c32b411a2c59b261c652",
+        "diagnostic:evaluation_snapshot_reused",
+        "no_research_progress"
+      ],
+      "artifact": ".local-artifacts/incremental-flow-http-20261119/multi_agent/summary.json",
+      "quality_accepted": false
+    }
+  ],
+  "comparison": "Same supplied source bodies and real model; single runs with different generated plans, not a controlled statistical ablation.",
+  "tests": {
+    "passed": 1857,
+    "deselected": 1,
+    "warnings": 33,
+    "last_full_seconds": 77.12,
+    "final_rerun_pending": false,
+    "final_full_seconds": 77.24,
+    "post_review_targeted_passed": 23
+  }
+}

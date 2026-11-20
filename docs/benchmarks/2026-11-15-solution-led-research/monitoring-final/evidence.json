@@ -1,0 +1,222 @@
+[
+  {
+    "id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+    "canonical_url": "https://github.com/louislam/uptime-kuma/issues/2992",
+    "title": "Configurable monitor history retention per monitor · Issue #2992 · louislam/uptime-kuma · GitHub",
+    "media_type": "text/html",
+    "content_hash": "sha256:16cb79c0eaef16dfc8dc89c203adedcfc05d4c59a163b05d87863be924fd69fc",
+    "fetched_at": "2026-11-15T11:11:13.436455Z",
+    "published_at": "2023-03-28T20:18:17Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://github.com/louislam/uptime-kuma/issues/2992",
+      "final_url": "https://github.com/louislam/uptime-kuma/issues/2992",
+      "publisher_canonical_url": "https://github.com/louislam/uptime-kuma/issues/2992",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+    "canonical_url": "https://railway.com/guides/uptime-kuma",
+    "title": "Self-Host Uptime Kuma for Uptime Monitoring | Railway",
+    "media_type": "text/html",
+    "content_hash": "sha256:82ee0e1b44cb31983bb17397adb12bc7f9241780a15cee3d41e436d59e85e2f7",
+    "fetched_at": "2026-11-15T11:11:12.723612Z",
+    "published_at": "2026-07-29T00:00:00Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://railway.com/guides/uptime-kuma",
+      "final_url": "https://railway.com/guides/uptime-kuma",
+      "publisher_canonical_url": "https://railway.com/guides/uptime-kuma",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": "Railway"
+    }
+  },
+  {
+    "id": "evidence-f942ba051b33afbcfdeb470832e6aa58719157ff92b949a1523e1761a7ae7e0a",
+    "canonical_url": "https://betterstack.com/community/guides/monitoring/uptime-kuma-guide",
+    "title": "A Complete Guide to Monitoring With Uptime Kuma | Better Stack Community",
+    "media_type": "text/html",
+    "content_hash": "sha256:dde2bde373c3540d9410875d4238cdd39b93430f3f5d776050a39f7e98ded0f2",
+    "fetched_at": "2026-11-15T11:11:23.127411Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://betterstack.com/community/guides/monitoring/uptime-kuma-guide",
+      "final_url": "https://betterstack.com/community/guides/monitoring/uptime-kuma-guide",
+      "publisher_canonical_url": "https://betterstack.com/community/guides/monitoring/uptime-kuma-guide",
+      "scraper_used": "playwright_bs4",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+    "canonical_url": "https://rafftechnologies.com/learn/tutorials/deploy-uptime-kuma-docker-ubuntu-24-04",
+    "title": "Deploy Uptime Kuma with Docker on Ubuntu 24.04 | Raff",
+    "media_type": "text/html",
+    "content_hash": "sha256:8f34f1a9ddb5f16fa6b8232ad133a959cc5782f655c2e7a14f6c14613a2b9c9f",
+    "fetched_at": "2026-11-15T11:11:55.995550Z",
+    "published_at": "2026-03-13T00:00:00Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://rafftechnologies.com/learn/tutorials/deploy-uptime-kuma-docker-ubuntu-24-04",
+      "final_url": "https://rafftechnologies.com/learn/tutorials/deploy-uptime-kuma-docker-ubuntu-24-04",
+      "publisher_canonical_url": "https://rafftechnologies.com/learn/tutorials/deploy-uptime-kuma-docker-ubuntu-24-04",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+    "canonical_url": "https://github.com/louislam/uptime-kuma/wiki/%F0%9F%94%A7-How-to-Install",
+    "title": "🔧 How to Install · louislam/uptime-kuma Wiki · GitHub",
+    "media_type": "text/html",
+    "content_hash": "sha256:4784daa065b91e9abfcc58c49c22347b617ba6299b93d801d1b3a9bd924ea89f",
+    "fetched_at": "2026-11-15T11:11:54.526423Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://github.com/louislam/uptime-kuma/wiki/%F0%9F%94%A7-How-to-Install",
+      "final_url": "https://github.com/louislam/uptime-kuma/wiki/%F0%9F%94%A7-How-to-Install",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+    "canonical_url": "https://wiki.smartxtechnologies.com/uptime-kuma/notify-email",
+    "title": "Setting up email notifications in Uptime Kuma | Wiki SmartxTechnologies",
+    "media_type": "text/html",
+    "content_hash": "sha256:9d2f3bf3cd9fddbdec6a2c185b7f36ecd7d12245b9f83a270913b188a8fe610d",
+    "fetched_at": "2026-11-15T11:11:13.540966Z",
+    "published_at": "2026-04-22T12:57:13.606000Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://wiki.smartxtechnologies.com/uptime-kuma/notify-email",
+      "final_url": "https://wiki.smartxtechnologies.com/uptime-kuma/notify-email",
+      "publisher_canonical_url": "https://wiki.smartxtechnologies.com/uptime-kuma/notify-email",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": "Smartx Technologies Ltd"
+    }
+  },
+  {
+    "id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+    "canonical_url": "https://uptimekuma.io/smtp-email-notifications-uptime-kuma",
+    "title": "SMTP email notifications in Uptime Kuma (UK guide)",
+    "media_type": "text/html",
+    "content_hash": "sha256:0185171c0a41c3424104d444163c483f28d3d1ef93dd736b664fcbc9c67748c7",
+    "fetched_at": "2026-11-15T11:11:25.549080Z",
+    "published_at": "2026-03-19T10:42:24Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://uptimekuma.io/smtp-email-notifications-uptime-kuma",
+      "final_url": "https://uptimekuma.io/smtp-email-notifications-uptime-kuma",
+      "publisher_canonical_url": "https://uptimekuma.io/smtp-email-notifications-uptime-kuma",
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-c7291b9512e1cafc13b21b5cceed46765ff7cc0c5c313ec7e8541c319b8350d1",
+    "canonical_url": "https://cloudpap.com/blog/uptime-kuma-and-gmail-smtp",
+    "title": "Uptime Kuma and Gmail SMTP: Simple Hack for Maximum Uptime",
+    "media_type": "text/html",
+    "content_hash": "sha256:0d29fdd800c09f0bb3f1f80eabbd5120b58b906bdd6208d5bf8a94640468fc8a",
+    "fetched_at": "2026-11-15T11:11:28.357958Z",
+    "published_at": "2023-10-31T04:59:49Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://cloudpap.com/blog/uptime-kuma-and-gmail-smtp",
+      "final_url": "https://cloudpap.com/blog/uptime-kuma-and-gmail-smtp",
+      "publisher_canonical_url": "https://cloudpap.com/blog/uptime-kuma-and-gmail-smtp",
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-29652960de7739819baf471d8841c0acaf5f3c4ec111168f888d32b6d2cce112",
+    "canonical_url": "https://fiberax.com/en/uptime-kuma-getting-started-guide",
+    "title": "Uptime Kuma - Getting Started Guide — Fiberax",
+    "media_type": "text/html",
+    "content_hash": "sha256:b36dd7182cde79d8b4271cc23c7c0c66bce83ea2ff43f393587389709518b7e0",
+    "fetched_at": "2026-11-15T11:12:29.747772Z",
+    "published_at": "2026-06-22T22:44:21Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://fiberax.com/en/uptime-kuma-getting-started-guide",
+      "final_url": "https://fiberax.com/en/uptime-kuma-getting-started-guide",
+      "publisher_canonical_url": "https://fiberax.com/en/uptime-kuma-getting-started-guide",
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+    "canonical_url": "https://uptimekuma.io/http-https-monitoring-uptime-kuma",
+    "title": "HTTP(s) monitoring with Uptime Kuma: UK guide",
+    "media_type": "text/html",
+    "content_hash": "sha256:c239aa87563b217a8ac654e0bdbacd51213a0156bf84f4f0992f61f52f6bb516",
+    "fetched_at": "2026-11-15T11:12:39.314765Z",
+    "published_at": "2026-03-17T10:26:10Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://uptimekuma.io/http-https-monitoring-uptime-kuma",
+      "final_url": "https://uptimekuma.io/http-https-monitoring-uptime-kuma",
+      "publisher_canonical_url": "https://uptimekuma.io/http-https-monitoring-uptime-kuma",
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a",
+    "canonical_url": "https://blog.elest.io/how-to-set-up-uptime-monitoring-with-uptime-kuma-on-elestio",
+    "title": "How to Set Up Uptime Monitoring with Uptime Kuma on Elestio",
+    "media_type": "text/html",
+    "content_hash": "sha256:18074eb9d27cbdc9ff7a0796ac03ae38cee9b4957ee046bf48df33521f379713",
+    "fetched_at": "2026-11-15T11:12:28.165583Z",
+    "published_at": "2026-04-20T08:19:07Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://blog.elest.io/how-to-set-up-uptime-monitoring-with-uptime-kuma-on-elestio",
+      "final_url": "https://blog.elest.io/how-to-set-up-uptime-monitoring-with-uptime-kuma-on-elestio",
+      "publisher_canonical_url": "https://blog.elest.io/how-to-set-up-uptime-monitoring-with-uptime-kuma-on-elestio",
+      "scraper_used": "playwright_trafilatura",
+      "publisher": "Elestio blog"
+    }
+  }
+]

@@ -1,0 +1,202 @@
+[
+  {
+    "id": "evidence-58e7a48dd4ae7e5e198008952ec2d409d75a3af27427e5b5ee55cf39d8dae819",
+    "canonical_url": "https://s.visitbeijing.com.cn/attraction/101409",
+    "title": "天坛公园",
+    "media_type": "text/html",
+    "content_hash": "sha256:439db460518a076782252daeaa944a534743d11634b189a8e838b25293d8007c",
+    "fetched_at": "2026-11-15T10:51:37.637858Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://s.visitbeijing.com.cn/attraction/101409",
+      "final_url": "https://s.visitbeijing.com.cn/attraction/101409",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-970e41443ff120293d5aed16ee84c9956bf9051c78f0a05a2d7a990353043452",
+    "canonical_url": "https://mp.weixin.qq.com/miniprogram/landing_page/YBJwrqBV917tu7x15fLjmYPU/zh_CN",
+    "title": "天坛官方服务平台 | 微信小程序",
+    "media_type": "text/html",
+    "content_hash": "sha256:138c9a0efd145d2a56b908d229b6ac62b92d4edf8b075d11a8fa807f3b02a6c8",
+    "fetched_at": "2026-11-15T10:51:37.419752Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://mp.weixin.qq.com/miniprogram/landing_page/YBJwrqBV917tu7x15fLjmYPU/zh_CN",
+      "final_url": "https://mp.weixin.qq.com/miniprogram/landing_page/YBJwrqBV917tu7x15fLjmYPU/zh_CN",
+      "publisher_canonical_url": "https://mp.weixin.qq.com/miniprogram/landing_page/YBJwrqBV917tu7x15fLjmYPU/zh_CN",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-e1f64f89a86b1d9466908a9cd26fba8db1f88b2681825b31ae615715cf6431c5",
+    "canonical_url": "https://www.dpm.org.cn/singles_detail/259831.html",
+    "title": "故宫博物院参观须知 - 故宫博物院",
+    "media_type": "text/html",
+    "content_hash": "sha256:e974c8dfabe9b1deac30e04f55836675d8d1a5707f674422e01697e2934e3cd0",
+    "fetched_at": "2026-11-15T10:51:37.369052Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.dpm.org.cn/singles_detail/259831.html",
+      "final_url": "https://www.dpm.org.cn/singles_detail/259831.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-6bf285ec11fa5d01d7e0b9f2d300bd68bd093431b1326c9cfdb4fc0ebeb608bf",
+    "canonical_url": "http://bj.bendibao.com/news/20211122/303675.shtm",
+    "title": "北京天安门广场什么时候开始预约？怎么预约？- 北京本地宝",
+    "media_type": "text/html",
+    "content_hash": "sha256:383462bcf9d0a336dc05c9dcf876f8fa10966c3448ef39a5ee46d06d615a2c1e",
+    "fetched_at": "2026-11-15T10:51:43.073066Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "http://bj.bendibao.com/news/20211122/303675.shtm",
+      "final_url": "http://bj.bendibao.com/news/20211122/303675.shtm",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-77305595ee533a02d00fbc5caa9df116d152f1e78dc995cd3b521fd016599d5b",
+    "canonical_url": "https://www-uat.mtr.bj.cn/page/instructions.html",
+    "title": "北京市城市轨道交通车票使用规则 （2021年修订版） - 北京京港地铁有限公司",
+    "media_type": "text/html",
+    "content_hash": "sha256:21c69b16f0e2e5051b22640b167d5864cb7c7aa9f85420994caa470cc726168c",
+    "fetched_at": "2026-11-15T10:51:33.943192Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www-uat.mtr.bj.cn/page/instructions.html",
+      "final_url": "https://www-uat.mtr.bj.cn/page/instructions.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-f5ccc6889763096f137ae3727194fc561b38e59e5584e11a0d2695402885b1a7",
+    "canonical_url": "https://hk.trip.com/moments/detail/beijing-1-148668948",
+    "title": "北京天安門廣場遊玩攻略｜2026最新預約+升旗+聯遊完整指南｜Trip.com 北京",
+    "media_type": "text/html",
+    "content_hash": "sha256:d374691bd49f12e67a0ebad4d422fead316dde206b51bf6822a6b9457376f8e5",
+    "fetched_at": "2026-11-15T10:51:36.684857Z",
+    "published_at": "2026-07-20T17:58:51Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://hk.trip.com/moments/detail/beijing-1-148668948",
+      "final_url": "https://hk.trip.com/moments/detail/beijing-1-148668948",
+      "publisher_canonical_url": "https://hk.trip.com/moments/detail/beijing-1-148668948",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": "Trip.com"
+    }
+  },
+  {
+    "id": "evidence-4ae94f35803fd4edcb638e50f50fa12b6e0100b7a67d56d053efe2cd38d63457",
+    "canonical_url": "https://www.huixiaoer.com/ask/271761101169529727928",
+    "title": "北京酒店哪里便宜又好？2025全场景高性价比推荐-【会小二问答】",
+    "media_type": "text/html",
+    "content_hash": "sha256:3950c1db1f5dc5296e377336c8831a6e447735cc57dcffcbf90c5cd268d3d3c8",
+    "fetched_at": "2026-11-15T10:51:39.628134Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.huixiaoer.com/ask/271761101169529727928",
+      "final_url": "https://www.huixiaoer.com/ask/271761101169529727928",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-76a4ea111631744e38a8289b6fc53d005e09b346aaef125296ecedbe83a0bb8c",
+    "canonical_url": "https://www.beijinghotelchina.net/zh/theme/cheap-and-budget-hotels-9",
+    "title": "经济型酒店在北京",
+    "media_type": "text/html",
+    "content_hash": "sha256:a51d09ea186e5d5072f602bd0637a2b08e382e1df8c69c4ad0f1d786c8574039",
+    "fetched_at": "2026-11-15T10:51:48.642954Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.beijinghotelchina.net/zh/theme/cheap-and-budget-hotels-9",
+      "final_url": "https://www.beijinghotelchina.net/zh/theme/cheap-and-budget-hotels-9",
+      "publisher_canonical_url": "https://www.beijinghotelchina.net/zh/theme/cheap-and-budget-hotels-9",
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-9278ced76ca4c96f7b6d79fccd2171240f2343d39571f0fe07416f813711573c",
+    "canonical_url": "https://www.busda.com/article-detail/bV6xjv4b",
+    "title": "慕田峪长城门票价格是多少？票价档位与预约流程一目了然_旅游资讯_巴士达BusDa",
+    "media_type": "text/html",
+    "content_hash": "sha256:1edc7cfac86174adaa28f21c7fb5e40c1cb07b9de5e213a09ecfe46dee896a2f",
+    "fetched_at": "2026-11-15T10:51:38.144993Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.busda.com/article-detail/bV6xjv4b",
+      "final_url": "https://www.busda.com/article-detail/bV6xjv4b",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-e94eeef306eb32dd3c21da2a8aad2c1e25ebed425a424deeb46fff38f035c5a9",
+    "canonical_url": "https://m.bj.bendibao.com/news/278213.html",
+    "title": "故宫博物院门票价格及预约购票入口- 北京本地宝",
+    "media_type": "text/html",
+    "content_hash": "sha256:7142f672478bec2155469a39e708fce59799c6f3ee6ce067967e59a48f41b9d4",
+    "fetched_at": "2026-11-15T10:52:17.442133Z",
+    "published_at": null,
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://m.bj.bendibao.com/news/278213.html",
+      "final_url": "https://m.bj.bendibao.com/news/278213.html",
+      "publisher_canonical_url": "http://bj.bendibao.com/news/2020729/278213.shtm",
+      "scraper_used": "playwright_bs4",
+      "publisher": null
+    }
+  }
+]

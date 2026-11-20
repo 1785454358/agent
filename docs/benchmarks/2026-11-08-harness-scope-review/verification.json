@@ -1,0 +1,153 @@
+{
+  "backend_offline": {
+    "deselected": 2,
+    "passed": 1627,
+    "seconds": 81.26
+  },
+  "fixed_controls": [
+    "schema_version",
+    "dataset_sha256",
+    "corpus_sha256",
+    "model",
+    "limits",
+    "response_mode",
+    "response_max_content_chars",
+    "context_allocator",
+    "research_context_policy",
+    "evidence_policy",
+    "repeats",
+    "tools_backend",
+    "memory_backend",
+    "python_version",
+    "installed_versions",
+    "execution_profile"
+  ],
+  "judges": {
+    "claims": {
+      "identical_judge_identity": true,
+      "metric_status_counts": {
+        "baseline": {
+          "not_applicable": 4,
+          "ok": 20
+        },
+        "candidate": {
+          "not_applicable": 4,
+          "ok": 20
+        }
+      },
+      "usage": {
+        "baseline": {
+          "cost": null,
+          "input_tokens": 1322544,
+          "max_provider_attempts": 200,
+          "measured_usage_attempts": 119,
+          "missing_usage_attempts": 0,
+          "observed_input_tokens": 1322544,
+          "observed_output_tokens": 4470,
+          "output_tokens": 4470,
+          "provider_attempts": 119
+        },
+        "candidate": {
+          "cost": null,
+          "input_tokens": 1315178,
+          "max_provider_attempts": 200,
+          "measured_usage_attempts": 117,
+          "missing_usage_attempts": 0,
+          "observed_input_tokens": 1315178,
+          "observed_output_tokens": 4725,
+          "output_tokens": 4725,
+          "provider_attempts": 117
+        }
+      }
+    },
+    "ragas": {
+      "identical_judge_identity": true,
+      "metric_status_counts": {
+        "baseline": {
+          "not_applicable": 4,
+          "ok": 32
+        },
+        "candidate": {
+          "not_applicable": 4,
+          "ok": 32
+        }
+      },
+      "usage": {
+        "baseline": {
+          "cost": null,
+          "input_tokens": 208497,
+          "max_provider_attempts": 120,
+          "measured_usage_attempts": 88,
+          "missing_usage_attempts": 0,
+          "observed_input_tokens": 208497,
+          "observed_output_tokens": 48155,
+          "output_tokens": 48155,
+          "provider_attempts": 88
+        },
+        "candidate": {
+          "cost": null,
+          "input_tokens": 211501,
+          "max_provider_attempts": 120,
+          "measured_usage_attempts": 88,
+          "missing_usage_attempts": 0,
+          "observed_input_tokens": 211501,
+          "observed_output_tokens": 49225,
+          "output_tokens": 49225,
+          "provider_attempts": 88
+        }
+      }
+    }
+  },
+  "lint": "passed for changed production/tests and experiment driver",
+  "new_usage": {
+    "agent_trials": 14,
+    "cost": null,
+    "input_tokens": 1903591,
+    "output_tokens": 103315,
+    "provider_attempts": 319
+  },
+  "reproduction_archive": {
+    "bytes": 4416242,
+    "sha256": "51630f6afd4b3e07996a8d00a901621f2fcdca5a9c49bc1b5e41c327f6bf7d77"
+  },
+  "reused_baseline": "Exact byte copies of stage-one inputs and final scores; zero new baseline calls",
+  "source_snapshots_verified": {
+    "baseline": 230,
+    "candidate": 231,
+    "strategy-probes": 231
+  },
+  "targeted_tests": {
+    "passed": 61,
+    "seconds": 4.53
+  },
+  "treatment": {
+    "baseline": {
+      "research_completion_scope": "decomposed"
+    },
+    "candidate": {
+      "research_completion_scope": "scope_review"
+    }
+  },
+  "offline_reproduction": {
+    "exit_code": 1,
+    "checks_identical": true,
+    "comparison_identical": true,
+    "provider_calls": 0
+  },
+  "credential_scan": {
+    "matches": 0,
+    "credential_values_printed": false
+  },
+  "snapshot_archive_checksums_verified": true,
+  "final_decision": "No default promotion; both proposals fail quality gates. Aggregate policy removed; scope_review remains opt-in experimental, default decomposed.",
+  "current_source_matches_candidate_snapshot": true,
+  "current_config_scope": "decomposed",
+  "reviewer": "Agent code/trace review; no human handoff or labels",
+  "code_review": {
+    "correctness": "IDs, exact excerpts, remapping and fallback tested; semantic scope remains model-dependent",
+    "readability": "One bounded module at the existing initial-plan boundary",
+    "architecture": "Shared by three strategies, existing evidence/authorization boundaries retained",
+    "security": "No tools in review, no source/budget/constraint mutation; credential scan clean",
+    "performance": "One optional shared-budget call; observed overhead is retained and default is off"
+  }
+}

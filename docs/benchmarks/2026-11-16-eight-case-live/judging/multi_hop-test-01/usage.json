@@ -1,0 +1,77 @@
+{
+  "provider_attempts": 1,
+  "measured_usage_attempts": 1,
+  "missing_usage_attempts": 0,
+  "usage_complete": true,
+  "input_tokens": 4280,
+  "output_tokens": 1779,
+  "total_tokens": 6059,
+  "observed_usage": {
+    "input_tokens": 4280,
+    "output_tokens": 1779,
+    "total_tokens": 6059
+  },
+  "role_usage": {
+    "planner": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "executor": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "replanner": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "supervisor": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "researcher": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "evaluator": {
+      "input_tokens": 4280,
+      "output_tokens": 1779,
+      "total_tokens": 6059
+    },
+    "summarizer": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "memory_consolidator": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "other": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "writer": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    }
+  },
+  "observed_role_usage": {
+    "evaluator": {
+      "input_tokens": 4280,
+      "output_tokens": 1779,
+      "total_tokens": 6059
+    }
+  },
+  "stage_seconds": {
+    "evaluator": 23.859000000025844
+  },
+  "budget_state_available": true
+}

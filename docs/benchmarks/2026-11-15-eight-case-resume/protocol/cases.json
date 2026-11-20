@@ -1,0 +1,523 @@
+[
+  {
+    "inputs": {
+      "question": "Using only the frozen documentation, where does create_agent return validated structured output, and how does passing a schema type select a strategy?"
+    },
+    "outputs": {
+      "answer": "Validated structured output is in the agent state's structured_response key. Passing a schema type selects ProviderStrategy if native structured output is supported, otherwise ToolStrategy. Plain JSON Schema dictionaries are an exception and require an explicit strategy wrapper.",
+      "requirements": [
+        "Name structured_response",
+        "Capability-based selection",
+        "Mention dictionary exception"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 13,
+          "end_line": 13,
+          "quote": "LangChain's @[`create_agent`] handles structured output automatically. The user sets their desired structured output schema, and when the model generates the structured data, it's captured, validated, and returned in the `'structured_response'` key of the agent's state.",
+          "claim": "Validated structured output is returned in structured_response.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 29,
+          "end_line": 43,
+          "quote": "Use `response_format` to control how the agent returns structured data:\n\n- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n- `ProviderStrategy` if the model and provider chosen supports native structured output (e.g. [OpenAI](/oss/integrations/providers/openai), [Anthropic (Claude)](/oss/integrations/providers/anthropic), or [xAI (Grok)](/oss/integrations/providers/xai)).\n- `ToolStrategy` for all other models.\n\n<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>",
+          "claim": "Schema types select by capability, while dictionary schemas require wrapping.",
+          "kind": "fact"
+        }
+      ]
+    },
+    "metadata": {
+      "id": "single_hop-test-01",
+      "split": "test",
+      "category": "single_hop",
+      "scope": "frozen_docs_live_retrieval",
+      "sources": [
+        {
+          "id": "langchain-structured-output",
+          "path": "upstream/langchain-structured-output.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+          "title": "Structured output",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/structured-output.mdx",
+          "sha256": "2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        },
+        {
+          "id": "langchain-structured-output",
+          "path": "upstream/langchain-structured-output.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+          "title": "Structured output",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/structured-output.mdx",
+          "sha256": "2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        }
+      ]
+    }
+  },
+  {
+    "inputs": {
+      "question": "Using only the frozen documentation, an agent starts a new conversation thread but must recall a user's durable preference. Is short-term message history enough, and what should be configured?"
+    },
+    "outputs": {
+      "answer": "No. Short-term memory is state persisted by a checkpointer with separation between threads. Long-term memory persists across threads and sessions using a Store of JSON documents organized by namespace and key. Pass a store to create_agent for cross-thread memory; a checkpointer can separately preserve each conversation.",
+      "requirements": [
+        "Thread separation",
+        "Cross-thread Store",
+        "Both can coexist"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-short-term-memory",
+          "start_line": 29,
+          "end_line": 39,
+          "quote": "\nTo add short-term memory (thread-level persistence) to an agent, you need to specify a `checkpointer` when creating an agent.\n\n<Info>\n    LangChain's agent manages short-term memory as a part of your agent's state.\n\n    By storing these in the graph's state, the agent can access the full context for a given conversation while maintaining separation between different threads.\n\n    State is persisted to a database (or memory) using a checkpointer so the thread can be resumed at any time.\n\n    Short-term memory updates when the agent is invoked or a step (like a tool call) is completed, and the state is read at the start of each step.",
+          "claim": "Checkpointer memory is thread-scoped.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-long-term-memory",
+          "start_line": 23,
+          "end_line": 26,
+          "quote": "Long-term memory lets your agent store and recall information across different conversations and sessions.\nUnlike [short-term memory](/oss/langchain/short-term-memory), which is scoped to a single thread, long-term memory persists across threads and can be recalled at any time.\n\nLong-term memory is built on [LangGraph stores](/oss/langgraph/stores), which save data as JSON documents organized by namespace and key.",
+          "claim": "Long-term memory spans threads and uses namespaced Store documents.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-long-term-memory",
+          "start_line": 25,
+          "end_line": 32,
+          "quote": "\nLong-term memory is built on [LangGraph stores](/oss/langgraph/stores), which save data as JSON documents organized by namespace and key.\n\n## Usage\n\nTo add long-term memory to an agent, create a store and pass it to @[`create_agent`]:\n\n<Tabs>",
+          "claim": "Pass a store to create_agent.",
+          "kind": "fact"
+        }
+      ]
+    },
+    "metadata": {
+      "id": "multi_hop-test-01",
+      "split": "test",
+      "category": "multi_hop",
+      "scope": "frozen_docs_live_retrieval",
+      "sources": [
+        {
+          "id": "langchain-short-term-memory",
+          "path": "upstream/langchain-short-term-memory.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "title": "Short-term memory",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/short-term-memory.mdx",
+          "sha256": "e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        },
+        {
+          "id": "langchain-long-term-memory",
+          "path": "upstream/langchain-long-term-memory.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/long-term-memory.mdx",
+          "title": "Long-term memory",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/long-term-memory.mdx",
+          "sha256": "ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        },
+        {
+          "id": "langchain-long-term-memory",
+          "path": "upstream/langchain-long-term-memory.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/long-term-memory.mdx",
+          "title": "Long-term memory",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/long-term-memory.mdx",
+          "sha256": "ab3f1549699cd6de49972949f8a075effb1e90aefa54cadd67b379875e0c12c4",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        }
+      ]
+    }
+  },
+  {
+    "inputs": {
+      "question": "Using only the frozen documentation, combine human-reviewed tool calls with provider-native structured output. Does adding HITL remove the model-capability requirement?"
+    },
+    "outputs": {
+      "answer": "No. HITL checks proposed tool calls against policy and may pause with persisted state for a human decision. If tools and native structured output are specified together, the model must support simultaneous use of both. A review middleware is not a substitute for that capability; choose a supported configuration or a compatible alternative.",
+      "requirements": [
+        "Explain policy pause",
+        "Simultaneous capability requirement",
+        "Do not claim HITL changes model support"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-human-in-the-loop",
+          "start_line": 7,
+          "end_line": 37,
+          "quote": "The Human-in-the-Loop (HITL) [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) lets you add human oversight to agent tool calls.\nWhen a model proposes an action that might require review—for example, writing to a file or executing SQL—the middleware can pause execution and wait for a decision.\n\nIt does this by checking each tool call against a configurable policy. If intervention is needed, the middleware issues an @[interrupt] that halts execution. The graph state is saved using LangGraph's [persistence layer](/oss/langgraph/persistence), so execution can pause safely and resume later.\n\n:::python\nA human decision then determines what happens next: the action can be approved as-is (`approve`), modified before running (`edit`), rejected with feedback (`reject`), or responded to directly (`respond`) for \"ask user\" style tools.\n:::\n\n:::js\nA human decision then determines what happens next: the action can be approved as-is (`approve`), modified before running (`edit`), or rejected with feedback (`reject`).\n:::\n\n## Interrupt decision types\n\n:::python\nThe [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines four built-in ways a human can respond to an interrupt:\n:::\n\n:::js\nThe [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines three built-in ways a human can respond to an interrupt:\n:::\n\n<HitlDecisionTypesTable />\n\nThe available decision types for each tool depend on the policy you configure in `interrupt_on`.\nWhen multiple tool calls are paused at the same time, each action requires a separate decision.\nDecisions must be provided in the same order as the actions appear in the interrupt request.\n\n:::python\nUse `reject` when the human is denying the requested action. Use `respond` only when the human is acting as the tool, such as answering an `ask_user` prompt. Do not use `respond` to deny side-effecting tools, because its message is treated as a successful tool result.",
+          "claim": "HITL reviews tool calls and persists interrupted state.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 46,
+          "end_line": 54,
+          "quote": "    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```python\n    custom_profile = {\n        \"structured_output\": True,\n        # ...\n    }\n    model = init_chat_model(\"...\", profile=custom_profile)\n    ```\n    If tools are specified, the model must support simultaneous use of tools and structured output.",
+          "claim": "Tools plus structured output require simultaneous model support.",
+          "kind": "fact"
+        }
+      ]
+    },
+    "metadata": {
+      "id": "multi_hop-test-03",
+      "split": "test",
+      "category": "multi_hop",
+      "scope": "frozen_docs_live_retrieval",
+      "sources": [
+        {
+          "id": "langchain-human-in-the-loop",
+          "path": "upstream/langchain-human-in-the-loop.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/human-in-the-loop.mdx",
+          "title": "Human-in-the-loop",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/human-in-the-loop.mdx",
+          "sha256": "21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        },
+        {
+          "id": "langchain-structured-output",
+          "path": "upstream/langchain-structured-output.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+          "title": "Structured output",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/structured-output.mdx",
+          "sha256": "2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        }
+      ]
+    }
+  },
+  {
+    "inputs": {
+      "question": "Using only the frozen documentation, compare trimming, deleting and summarizing messages for long conversations."
+    },
+    "outputs": {
+      "answer": "Trimming removes selected first/last messages before an LLM call. Deletion permanently removes messages from graph state and can clear history. Summarization replaces earlier messages with a summary. They address context growth but have different state semantics; any resulting history must still satisfy provider message/tool-call constraints.",
+      "requirements": [
+        "Before-call trim",
+        "Permanent delete",
+        "Summary replacement",
+        "Protocol validity"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-short-term-memory",
+          "start_line": 173,
+          "end_line": 185,
+          "quote": "## Common patterns\n\nWith [short-term memory](#usage) enabled, long conversations can exceed the LLM's context window. Common solutions are:\n\n<CardGroup cols={2}>\n    <Card title=\"Trim messages\" icon=\"scissors\" href=\"#trim-messages\" arrow>\n        Remove first or last N messages (before calling LLM)\n    </Card>\n    <Card title=\"Delete messages\" icon=\"trash\" href=\"#delete-messages\" arrow>\n        Delete messages from LangGraph state permanently\n    </Card>\n    <Card title=\"Summarize messages\" icon=\"stack-2\" href=\"#summarize-messages\" arrow>\n        Summarize earlier messages in the history and replace them with a summary",
+          "claim": "The guide distinguishes trim, permanent delete and summarization.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-short-term-memory",
+          "start_line": 361,
+          "end_line": 364,
+          "quote": "    When deleting messages, **make sure** that the resulting message history is valid. Check the limitations of the LLM provider you're using. For example:\n\n    * Some providers expect message history to start with a `user` message\n    * Most providers require `assistant` messages with tool calls to be followed by corresponding `tool` result messages.",
+          "claim": "History must remain valid for the provider.",
+          "kind": "fact"
+        }
+      ]
+    },
+    "metadata": {
+      "id": "comparison-test-02",
+      "split": "test",
+      "category": "comparison",
+      "scope": "frozen_docs_live_retrieval",
+      "sources": [
+        {
+          "id": "langchain-short-term-memory",
+          "path": "upstream/langchain-short-term-memory.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "title": "Short-term memory",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/short-term-memory.mdx",
+          "sha256": "e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        },
+        {
+          "id": "langchain-short-term-memory",
+          "path": "upstream/langchain-short-term-memory.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "title": "Short-term memory",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/short-term-memory.mdx",
+          "sha256": "e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        }
+      ]
+    }
+  },
+  {
+    "inputs": {
+      "question": "Using only the frozen documentation, what is the version and provider-support boundary for ProviderStrategy strict?"
+    },
+    "outputs": {
+      "answer": "The strict parameter requires langchain>=1.2. It is an optional boolean supported by some providers, not universally by all models/providers, and defaults to None (disabled). A package meeting the version minimum does not prove that a particular provider supports strict mode.",
+      "requirements": [
+        ">=1.2",
+        "Some providers only",
+        "Default None"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 126,
+          "end_line": 140,
+          "quote": "    The `strict` param requires `langchain>=1.2`.\n</Info>\n\n<ParamField path=\"schema\" required>\n    The schema defining the structured output format. Supports:\n    - **Pydantic models**: `BaseModel` subclasses with field validation. Returns validated Pydantic instance.\n    - **Dataclasses**: Python dataclasses with type annotations. Returns dict.\n    - **TypedDict**: Typed dictionary classes. Returns dict.\n    - **JSON Schema**: Dictionary with JSON schema specification. Must include top-level `title` and `description` keys. Returns dict.\n</ParamField>\n\n<ParamField path=\"strict\">\n    Optional boolean parameter to enable strict schema adherence. Supported by some providers (e.g., [OpenAI](/oss/integrations/chat/openai) and [xAI](/oss/integrations/chat/xai)). Defaults to `None` (disabled).\n</ParamField>\n",
+          "claim": "strict is version-gated and supported only by some providers.",
+          "kind": "fact"
+        }
+      ]
+    },
+    "metadata": {
+      "id": "version_boundary-test-02",
+      "split": "test",
+      "category": "version_boundary",
+      "scope": "frozen_docs_live_retrieval",
+      "sources": [
+        {
+          "id": "langchain-structured-output",
+          "path": "upstream/langchain-structured-output.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+          "title": "Structured output",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/structured-output.mdx",
+          "sha256": "2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        }
+      ]
+    }
+  },
+  {
+    "inputs": {
+      "question": "Using only the frozen documentation, reconcile automatic strategy choice for a schema type with the warning that JSON Schema dictionaries are not automatically detected."
+    },
+    "outputs": {
+      "answer": "The general rule concerns passing a schema type: native ProviderStrategy when supported, otherwise ToolStrategy. A plain JSON Schema dictionary is a documented exception and must be wrapped in an explicit ProviderStrategy or ToolStrategy. These inputs are different; the warning limits the general statement rather than contradicting it.",
+      "requirements": [
+        "Schema type general case",
+        "Dictionary explicit wrapper",
+        "No unsupported automatic inference"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 29,
+          "end_line": 43,
+          "quote": "Use `response_format` to control how the agent returns structured data:\n\n- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n- `ProviderStrategy` if the model and provider chosen supports native structured output (e.g. [OpenAI](/oss/integrations/providers/openai), [Anthropic (Claude)](/oss/integrations/providers/anthropic), or [xAI (Grok)](/oss/integrations/providers/xai)).\n- `ToolStrategy` for all other models.\n\n<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>",
+          "claim": "The automatic schema-type rule has an explicit dictionary exception.",
+          "kind": "fact"
+        }
+      ]
+    },
+    "metadata": {
+      "id": "conflicting_evidence-test-02",
+      "split": "test",
+      "category": "conflicting_evidence",
+      "scope": "frozen_docs_live_retrieval",
+      "sources": [
+        {
+          "id": "langchain-structured-output",
+          "path": "upstream/langchain-structured-output.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+          "title": "Structured output",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/structured-output.mdx",
+          "sha256": "2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        }
+      ]
+    }
+  },
+  {
+    "inputs": {
+      "question": "Using only the frozen documentation, reconcile removing stale history with the requirement to retain valid tool-call/tool-result message structure."
+    },
+    "outputs": {
+      "answer": "Removing stale information is a context-management technique, not permission to create malformed history. When deleting, respect provider requirements: some require a leading user message, and most require assistant tool calls to be followed by corresponding tool results. Remove coherent units or otherwise maintain valid ordering rather than leaving orphan calls/results.",
+      "requirements": [
+        "Context reduction permitted",
+        "Provider validity required",
+        "No orphan tool exchanges"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-short-term-memory",
+          "start_line": 18,
+          "end_line": 22,
+          "quote": "Conversation history is the most common form of short-term memory. Long conversations pose a challenge to today's LLMs; a full history may not fit inside an LLM's context window, resulting in a context loss or errors.\n\nEven if your model supports the full context length, most LLMs still perform poorly over long contexts. They get \"distracted\" by stale or off-topic content, all while suffering from slower response times and higher costs.\n\nChat models accept context using [messages](/oss/langchain/messages), which include instructions (a system message) and inputs (human messages). In chat applications, messages alternate between human inputs and model responses, resulting in a list of messages that grows longer over time. Because context windows are limited, many applications can benefit from using techniques to remove or \"forget\" stale information.",
+          "claim": "Stale history may be removed to manage limited context.",
+          "kind": "fact"
+        },
+        {
+          "source_id": "langchain-short-term-memory",
+          "start_line": 361,
+          "end_line": 364,
+          "quote": "    When deleting messages, **make sure** that the resulting message history is valid. Check the limitations of the LLM provider you're using. For example:\n\n    * Some providers expect message history to start with a `user` message\n    * Most providers require `assistant` messages with tool calls to be followed by corresponding `tool` result messages.",
+          "claim": "Deleted history must still satisfy provider message constraints.",
+          "kind": "fact"
+        }
+      ]
+    },
+    "metadata": {
+      "id": "conflicting_evidence-test-03",
+      "split": "test",
+      "category": "conflicting_evidence",
+      "scope": "frozen_docs_live_retrieval",
+      "sources": [
+        {
+          "id": "langchain-short-term-memory",
+          "path": "upstream/langchain-short-term-memory.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "title": "Short-term memory",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/short-term-memory.mdx",
+          "sha256": "e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        },
+        {
+          "id": "langchain-short-term-memory",
+          "path": "upstream/langchain-short-term-memory.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx",
+          "title": "Short-term memory",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/short-term-memory.mdx",
+          "sha256": "e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        }
+      ]
+    }
+  },
+  {
+    "inputs": {
+      "question": "Using only the frozen documentation, using only the structured-output guide, name the universally cheapest and lowest-latency strategy and give its cost savings."
+    },
+    "outputs": {
+      "answer": "The guide explains native versus tool-calling strategies and capability-based selection. It does not establish a universally cheapest or fastest strategy or measured savings. Model/provider prices, schema size, retries, output length and latency measurements are required; abstain from a numeric or universal ranking.",
+      "requirements": [
+        "No universal cost/latency ranking",
+        "Identify missing workload/pricing data",
+        "No fabricated savings"
+      ],
+      "references": [
+        {
+          "source_id": "langchain-structured-output",
+          "start_line": 29,
+          "end_line": 43,
+          "quote": "Use `response_format` to control how the agent returns structured data:\n\n- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n- `ProviderStrategy` if the model and provider chosen supports native structured output (e.g. [OpenAI](/oss/integrations/providers/openai), [Anthropic (Claude)](/oss/integrations/providers/anthropic), or [xAI (Grok)](/oss/integrations/providers/xai)).\n- `ToolStrategy` for all other models.\n\n<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>",
+          "claim": "The cited strategy-selection rules concern capabilities, not measured costs.",
+          "kind": "scope_boundary"
+        }
+      ]
+    },
+    "metadata": {
+      "id": "insufficient_evidence-test-01",
+      "split": "test",
+      "category": "insufficient_evidence",
+      "scope": "frozen_docs_live_retrieval",
+      "sources": [
+        {
+          "id": "langchain-structured-output",
+          "path": "upstream/langchain-structured-output.mdx",
+          "url": "https://github.com/langchain-ai/docs/blob/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+          "title": "Structured output",
+          "publisher": "LangChain",
+          "repo": "langchain-ai/docs",
+          "commit": "99dd9a9e38d59b9bff54354f6c3ef790c1be946d",
+          "upstream_path": "src/oss/langchain/structured-output.mdx",
+          "sha256": "2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+          "source_group": "langchain-agent",
+          "license": "MIT",
+          "license_path": "LICENSE.txt",
+          "license_sha256": "98af1351ea856e008c835bc89a312905960a318072f950732bf346c741027c7d",
+          "retrieved_at": "2026-10-02T04:21:23Z"
+        }
+      ]
+    }
+  }
+]

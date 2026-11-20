@@ -1,0 +1,89 @@
+{
+  "provider_attempts": 8,
+  "measured_usage_attempts": 8,
+  "missing_usage_attempts": 0,
+  "usage_complete": true,
+  "input_tokens": 33193,
+  "output_tokens": 4921,
+  "total_tokens": 38114,
+  "observed_usage": {
+    "input_tokens": 33193,
+    "output_tokens": 4921,
+    "total_tokens": 38114
+  },
+  "role_usage": {
+    "planner": {
+      "input_tokens": 1429,
+      "output_tokens": 1169,
+      "total_tokens": 2598
+    },
+    "executor": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "replanner": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "supervisor": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "researcher": {
+      "input_tokens": 14570,
+      "output_tokens": 402,
+      "total_tokens": 14972
+    },
+    "evaluator": {
+      "input_tokens": 17194,
+      "output_tokens": 3350,
+      "total_tokens": 20544
+    },
+    "summarizer": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "memory_consolidator": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "other": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "writer": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    }
+  },
+  "observed_role_usage": {
+    "planner": {
+      "input_tokens": 1429,
+      "output_tokens": 1169,
+      "total_tokens": 2598
+    },
+    "researcher": {
+      "input_tokens": 14570,
+      "output_tokens": 402,
+      "total_tokens": 14972
+    },
+    "evaluator": {
+      "input_tokens": 17194,
+      "output_tokens": 3350,
+      "total_tokens": 20544
+    }
+  },
+  "stage_seconds": {
+    "planner": 8.578999999997905,
+    "researcher": 6.656000000046333,
+    "evaluator": 17.623999999981606
+  },
+  "budget_state_available": true
+}

@@ -1,0 +1,8 @@
+{
+  "agent_trials": 44,
+  "provider_attempts": 919,
+  "input_tokens": 5339895,
+  "output_tokens": 277043,
+  "cost": null,
+  "baseline_reused_without_duplicate_calls": true
+}

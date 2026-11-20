@@ -1,0 +1,5 @@
+{
+  "accepted_as_full_agent_gate_pass": false,
+  "exit_code": 2,
+  "output": "usage: publish_results.py [-h] --baseline BASELINE --candidate CANDIDATE\n                          --baseline-scores BASELINE_SCORES --candidate-scores\n                          CANDIDATE_SCORES --metadata METADATA --baseline-mode\n                          BASELINE_MODE --candidate-mode CANDIDATE_MODE\n                          --policy POLICY --out OUT [--seed SEED]\n                          [--resamples RESAMPLES]\npublish_results.py: error: invalid regression input or output: experiment control mismatch: limits\n"
+}

@@ -1,0 +1,101 @@
+{
+  "provider_attempts": 14,
+  "measured_usage_attempts": 14,
+  "missing_usage_attempts": 0,
+  "usage_complete": true,
+  "input_tokens": 91578,
+  "output_tokens": 11374,
+  "total_tokens": 102952,
+  "observed_usage": {
+    "input_tokens": 91578,
+    "output_tokens": 11374,
+    "total_tokens": 102952
+  },
+  "role_usage": {
+    "planner": {
+      "input_tokens": 1750,
+      "output_tokens": 1578,
+      "total_tokens": 3328
+    },
+    "executor": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "replanner": {
+      "input_tokens": 9113,
+      "output_tokens": 124,
+      "total_tokens": 9237
+    },
+    "supervisor": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "researcher": {
+      "input_tokens": 22106,
+      "output_tokens": 432,
+      "total_tokens": 22538
+    },
+    "evaluator": {
+      "input_tokens": 47032,
+      "output_tokens": 6491,
+      "total_tokens": 53523
+    },
+    "summarizer": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "memory_consolidator": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "other": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "writer": {
+      "input_tokens": 11577,
+      "output_tokens": 2749,
+      "total_tokens": 14326
+    }
+  },
+  "observed_role_usage": {
+    "planner": {
+      "input_tokens": 1750,
+      "output_tokens": 1578,
+      "total_tokens": 3328
+    },
+    "researcher": {
+      "input_tokens": 22106,
+      "output_tokens": 432,
+      "total_tokens": 22538
+    },
+    "evaluator": {
+      "input_tokens": 47032,
+      "output_tokens": 6491,
+      "total_tokens": 53523
+    },
+    "replanner": {
+      "input_tokens": 9113,
+      "output_tokens": 124,
+      "total_tokens": 9237
+    },
+    "writer": {
+      "input_tokens": 11577,
+      "output_tokens": 2749,
+      "total_tokens": 14326
+    }
+  },
+  "stage_seconds": {
+    "planner": 10.25,
+    "researcher": 10.984000000025844,
+    "evaluator": 35.42300000000978,
+    "replanner": 2.375,
+    "writer": 17.376000000018394
+  },
+  "budget_state_available": true
+}

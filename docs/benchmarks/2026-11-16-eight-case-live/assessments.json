@@ -1,0 +1,538 @@
+[
+  {
+    "case_id": "single_hop-test-01",
+    "group": "optimized",
+    "grade_source": "judging",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "回答明确指出校验后的结构化输出位于 agent 状态的 structured_response 键（并补充 JS 为 structuredResponse），与 P1/P2 原文一致。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "回答说明直接传 schema 类型时按模型/提供商能力自动选择：支持原生结构化输出用 ProviderStrategy，否则用 ToolStrategy，与 P1 的选择规则一致。"
+      },
+      {
+        "id": "R3",
+        "status": "missing",
+        "reason": "回答未提及 JSON Schema 字典属于例外、需要显式策略包装；可见原文 P1/P2 也未包含该例外内容。"
+      }
+    ],
+    "covered": 2,
+    "total": 3,
+    "rubric_accepted": false,
+    "has_substantive_answer": true,
+    "execution_status": "completed",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 6,
+      "total": 7
+    }
+  },
+  {
+    "case_id": "single_hop-test-01",
+    "group": "baseline",
+    "grade_source": "judging",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "回答明确指出校验后的结构化输出位于 agent 最终状态的 structured_response 键，与 P1/P2 一致。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "回答说明直接传 schema 类型时按模型能力自动选择 ProviderStrategy 或 ToolStrategy，与 P1/P3 一致。"
+      },
+      {
+        "id": "R3",
+        "status": "missing",
+        "reason": "回答未提及 JSON Schema 字典例外需显式策略包装；可见原文 P1-P3 也未包含该例外内容。"
+      }
+    ],
+    "covered": 2,
+    "total": 3,
+    "rubric_accepted": false,
+    "has_substantive_answer": true,
+    "execution_status": "completed",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 7,
+      "total": 7
+    }
+  },
+  {
+    "case_id": "multi_hop-test-01",
+    "group": "baseline",
+    "grade_source": "judging",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "missing",
+        "reason": "Answer A contains no substantive content about thread separation; it only states that research failed to generate complete content with citation support."
+      },
+      {
+        "id": "R2",
+        "status": "missing",
+        "reason": "Answer A provides no information about cross-thread Store or long-term memory configuration."
+      },
+      {
+        "id": "R3",
+        "status": "missing",
+        "reason": "Answer A does not address whether short-term and long-term memory can coexist."
+      }
+    ],
+    "covered": 0,
+    "total": 3,
+    "rubric_accepted": false,
+    "has_substantive_answer": false,
+    "execution_status": "partial",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 0,
+      "total": 0
+    }
+  },
+  {
+    "case_id": "multi_hop-test-01",
+    "group": "optimized",
+    "grade_source": "judging",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "Answer B explicitly states that short-term memory maintains separation between different threads via checkpointer, and that new conversation threads cannot recall durable preferences from it."
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "Answer B clearly explains that long-term memory uses a Store based on LangGraph stores, organized by namespace and key as JSON documents, and must be passed to create_agent for cross-thread memory."
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "Answer B distinguishes between checkpointer (saves single thread state) and store (accessible from any thread), and explains both can be configured together, with checkpointer preserving each conversation separately."
+      }
+    ],
+    "covered": 3,
+    "total": 3,
+    "rubric_accepted": true,
+    "has_substantive_answer": true,
+    "execution_status": "completed",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 10,
+      "total": 11
+    }
+  },
+  {
+    "case_id": "multi_hop-test-03",
+    "group": "optimized",
+    "grade_source": "judging-retry-v2",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "明确说明 middleware 按策略检查 tool call，需要时通过 interrupt 暂停执行、等待人工决定，并借助 checkpointer 持久化状态以便恢复，覆盖 policy pause 与持久化。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "指出若同时指定 tools，模型必须支持 tools 与 structured output 的同时使用，并在组合使用部分重申 HITL 场景存在 tools 时须支持并用。"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "结论明确为不能，HITL 不免除 provider-native structured output 的模型能力要求，且文档无豁免条款，未声称 HITL 改变模型支持。"
+      }
+    ],
+    "covered": 3,
+    "total": 3,
+    "rubric_accepted": true,
+    "has_substantive_answer": true,
+    "execution_status": "completed",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 5,
+      "total": 5
+    }
+  },
+  {
+    "case_id": "multi_hop-test-03",
+    "group": "baseline",
+    "grade_source": "judging-retry-v2",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "说明 middleware 按 interrupt_on 策略检查 tool calls，需要时 interrupt 暂停执行，状态由 LangGraph 持久层保存，覆盖 policy pause。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "明确若同时指定 tools，模型必须支持 tools 与 structured output 的同时使用。"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "结论明确不能，HITL 是生成后编排层审查，与模型层能力门槛互不替代，未声称 HITL 改变模型支持。"
+      }
+    ],
+    "covered": 3,
+    "total": 3,
+    "rubric_accepted": true,
+    "has_substantive_answer": true,
+    "execution_status": "completed",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 6,
+      "total": 6
+    }
+  },
+  {
+    "case_id": "comparison-test-02",
+    "group": "baseline",
+    "grade_source": "judging-retry-v2",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "明确说明trimming是调用LLM前临时裁剪发送给模型的消息，不改已保存状态，并引用[1][2]支持"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "明确说明deleting是从LangGraph状态中永久移除消息，适合删除特定消息或清空整个历史，并引用[1]支持"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "明确说明summarizing是把较早消息总结成摘要并永久替换进状态，供后续所有轮次使用，同时保留最近消息，并引用[2]支持"
+      },
+      {
+        "id": "R4",
+        "status": "missing",
+        "reason": "未提及任何关于provider消息/tool-call约束或协议有效性的内容"
+      }
+    ],
+    "covered": 3,
+    "total": 4,
+    "rubric_accepted": false,
+    "has_substantive_answer": true,
+    "execution_status": "completed",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 17,
+      "total": 17
+    }
+  },
+  {
+    "case_id": "comparison-test-02",
+    "group": "optimized",
+    "grade_source": "judging-retry-v2",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "明确说明Trimming是临时性的，仅在调用LLM前处理，不永久改变状态，并引用[1][2]支持"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "明确说明Deleting是永久性删除，从图状态中彻底移除特定消息，并引用[1]支持"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "明确说明Summarizing是永久性替换，用摘要替换旧消息，保留核心信息，并引用[2]支持"
+      },
+      {
+        "id": "R4",
+        "status": "missing",
+        "reason": "未提及任何关于provider消息/tool-call约束或协议有效性的内容"
+      }
+    ],
+    "covered": 3,
+    "total": 4,
+    "rubric_accepted": false,
+    "has_substantive_answer": true,
+    "execution_status": "completed",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 12,
+      "total": 12
+    }
+  },
+  {
+    "case_id": "version_boundary-test-02",
+    "group": "optimized",
+    "grade_source": "judging",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "明确说明 strict 参数要求 langchain>=1.2，并补充低于 1.2 不可用、文档未说明 1.2 之后是否有进一步限制。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "明确说明 strict 仅被部分提供商支持，文档以 e.g. 举例 OpenAI 和 xAI，并指出不能据此推断其他提供商支持或不支持，语义与“some providers only”一致。"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "明确说明 strict 默认值为 None（即禁用）。"
+      }
+    ],
+    "covered": 3,
+    "total": 3,
+    "rubric_accepted": true,
+    "has_substantive_answer": true,
+    "execution_status": "completed",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 6,
+      "total": 6
+    }
+  },
+  {
+    "case_id": "version_boundary-test-02",
+    "group": "baseline",
+    "grade_source": "judging",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "明确说明 strict 参数要求 langchain>=1.2。"
+      },
+      {
+        "id": "R2",
+        "status": "incorrect",
+        "reason": "B 将 provider 支持边界描述为“模型与 provider 支持原生结构化输出”，并列举 OpenAI、Anthropic (Claude)、xAI (Grok)、Gemini，这是 ProviderStrategy 整体/原生结构化输出的支持范围，而非 strict 参数本身“仅部分提供商支持（e.g. OpenAI 和 xAI）”的边界；且其可见材料 P1、P2 均未包含 strict 的 ParamField 描述，未传达 strict 仅部分提供商支持这一核心语义。"
+      },
+      {
+        "id": "R3",
+        "status": "missing",
+        "reason": "B 未提及 strict 默认值为 None（disabled）。"
+      }
+    ],
+    "covered": 1,
+    "total": 3,
+    "rubric_accepted": false,
+    "has_substantive_answer": true,
+    "execution_status": "completed",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 5,
+      "total": 5
+    }
+  },
+  {
+    "case_id": "conflicting_evidence-test-02",
+    "group": "baseline",
+    "grade_source": "judging",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "回答明确说明自动选择策略只适用于直接传入 schema 类型（type[StructuredResponseT]）的情形，并给出具体规则：支持原生结构化输出时用 ProviderStrategy，其余用 ToolStrategy。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "回答明确指出 JSON Schema 字典是显式例外，必须用 ProviderStrategy 或 ToolStrategy 包装，否则不会被自动识别。"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "回答通过'通用规则 + 显式例外'的框架调和两者，说明自动机制针对可识别的 schema 类型，字典不在自动检测范围内，未暗示字典可自动推断。"
+      }
+    ],
+    "covered": 3,
+    "total": 3,
+    "rubric_accepted": true,
+    "has_substantive_answer": true,
+    "execution_status": "completed",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 7,
+      "total": 7
+    }
+  },
+  {
+    "case_id": "conflicting_evidence-test-02",
+    "group": "optimized",
+    "grade_source": "judging",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "回答明确说明自动选择只适用于直接传入的 schema 类型对象（type[StructuredResponseT]），并给出具体规则：支持原生结构化输出选 ProviderStrategy，其他选 ToolStrategy。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "回答明确指出 JSON Schema 字典不在自动检测范围内，必须手动包一层策略，并给出代码示例。"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "回答通过'自动分派的触发条件是 schema 类型对象这一表示形式；裸字典不属于该类型'来调和，未暗示字典可自动推断。"
+      }
+    ],
+    "covered": 3,
+    "total": 3,
+    "rubric_accepted": true,
+    "has_substantive_answer": true,
+    "execution_status": "completed",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 8,
+      "total": 8
+    }
+  },
+  {
+    "case_id": "conflicting_evidence-test-03",
+    "group": "baseline",
+    "grade_source": "judging",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "missing",
+        "reason": "回答仅说明未能生成有引用支持的完整内容，未涉及任何关于允许删除或裁剪历史以缩减上下文的实质内容。"
+      },
+      {
+        "id": "R2",
+        "status": "missing",
+        "reason": "回答未提及删除后消息历史必须满足 LLM 提供商的结构约束。"
+      },
+      {
+        "id": "R3",
+        "status": "missing",
+        "reason": "回答未提及工具调用与工具结果必须配对、不得留下孤立的调用或结果。"
+      }
+    ],
+    "covered": 0,
+    "total": 3,
+    "rubric_accepted": false,
+    "has_substantive_answer": false,
+    "execution_status": "partial",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 0,
+      "total": 0
+    }
+  },
+  {
+    "case_id": "conflicting_evidence-test-03",
+    "group": "optimized",
+    "grade_source": "judging",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "回答明确说明可以用 RemoveMessage 删除指定消息、用 REMOVE_ALL_MESSAGES 清空全部历史，并可用 before_model/beforeModel 中间件裁剪历史以控制上下文大小，与 P1 中删除与裁剪章节一致。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "回答指出删除后的消息历史必须仍然满足 LLM 提供商的结构约束，并列举某些提供商要求以 user 消息开头，与 P2 的 Warning 内容一致。"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "回答指出大多数提供商要求带工具调用的 assistant 消息后必须跟随对应 tool 结果，并进一步要求整对删除或整对保留以避免孤立调用/结果，与 P2 的 Warning 一致且为合理推论。"
+      }
+    ],
+    "covered": 3,
+    "total": 3,
+    "rubric_accepted": true,
+    "has_substantive_answer": true,
+    "execution_status": "partial",
+    "adjustments": [],
+    "raw_citation_relations": {
+      "supported": 6,
+      "total": 8
+    }
+  },
+  {
+    "case_id": "insufficient_evidence-test-01",
+    "group": "baseline",
+    "grade_source": "judging",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "missing",
+        "reason": "The answer is only a generic source-list fallback; silence is not an explicit answer about inferability."
+      },
+      {
+        "id": "R2",
+        "status": "missing",
+        "reason": "The answer does not identify or mention any missing workload or pricing data."
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "The answer does not fabricate any savings figures."
+      }
+    ],
+    "covered": 1,
+    "total": 3,
+    "rubric_accepted": false,
+    "has_substantive_answer": false,
+    "execution_status": "partial",
+    "adjustments": [
+      {
+        "criterion": "R1",
+        "before": "covered",
+        "after": "missing",
+        "reason": "The answer is only a generic source-list fallback; silence is not an explicit answer about inferability."
+      }
+    ],
+    "raw_citation_relations": {
+      "supported": 0,
+      "total": 0
+    }
+  },
+  {
+    "case_id": "insufficient_evidence-test-01",
+    "group": "optimized",
+    "grade_source": "judging",
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "missing",
+        "reason": "The answer is only a generic source-list fallback; silence is not an explicit answer about inferability."
+      },
+      {
+        "id": "R2",
+        "status": "missing",
+        "reason": "The answer does not identify or mention any missing workload or pricing data."
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "The answer does not fabricate any savings figures."
+      }
+    ],
+    "covered": 1,
+    "total": 3,
+    "rubric_accepted": false,
+    "has_substantive_answer": false,
+    "execution_status": "partial",
+    "adjustments": [
+      {
+        "criterion": "R1",
+        "before": "covered",
+        "after": "missing",
+        "reason": "The answer is only a generic source-list fallback; silence is not an explicit answer about inferability."
+      }
+    ],
+    "raw_citation_relations": {
+      "supported": 0,
+      "total": 0
+    }
+  }
+]

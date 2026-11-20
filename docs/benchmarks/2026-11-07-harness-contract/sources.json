@@ -1,0 +1,47 @@
+[
+  {
+    "repo": "langchain-ai/open_deep_research",
+    "commit": "1b7d2e80db9faa586165c60e09096dbbfd483a64",
+    "commit_date": "2026-08-10T18:13:29Z",
+    "files": [
+      {
+        "path": "src/open_deep_research/deep_researcher.py",
+        "url": "https://github.com/langchain-ai/open_deep_research/blob/1b7d2e80db9faa586165c60e09096dbbfd483a64/src/open_deep_research/deep_researcher.py",
+        "sha256": "af128d5d8773008d021b6ef7562e9fb90a45f7eb5e886483d1e6e835223275e0",
+        "bytes": 30117
+      },
+      {
+        "path": "src/open_deep_research/prompts.py",
+        "url": "https://github.com/langchain-ai/open_deep_research/blob/1b7d2e80db9faa586165c60e09096dbbfd483a64/src/open_deep_research/prompts.py",
+        "sha256": "239774f8444860deab0ac0d86067002ef360068ad4c1f0b698373335e6b59579",
+        "bytes": 21213
+      }
+    ]
+  },
+  {
+    "repo": "langchain-ai/deepagents",
+    "commit": "9c5d330893e0580ece0422511248d1048373cd7f",
+    "commit_date": "2026-11-07T08:14:15Z",
+    "files": [
+      {
+        "path": "README.md",
+        "url": "https://github.com/langchain-ai/deepagents/blob/9c5d330893e0580ece0422511248d1048373cd7f/README.md",
+        "sha256": "738b16b9e3451b3e51f2818baa8e5c752960495b938c2b3ed4011c816fe9718d",
+        "bytes": 7393
+      }
+    ]
+  },
+  {
+    "repo": "bytedance/deer-flow",
+    "commit": "f68abbb8314f833929df88cde05d81310da27783",
+    "commit_date": "2026-11-07T13:44:05Z",
+    "files": [
+      {
+        "path": "README.md",
+        "url": "https://github.com/bytedance/deer-flow/blob/f68abbb8314f833929df88cde05d81310da27783/README.md",
+        "sha256": "f31a0a10be0f7fe6e7910110c627b7a8a8f17b6fec739313590f0065ef9e7f92",
+        "bytes": 383805
+      }
+    ]
+  }
+]

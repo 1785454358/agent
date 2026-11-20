@@ -1,0 +1,157 @@
+{
+  "client_date": "2026-11-07",
+  "verified_at_utc": "2026-11-07T12:51:16.597410+00:00",
+  "formal_research": {
+    "frozen_questions": 12,
+    "strategies": 4,
+    "frozen_trials": 48,
+    "live_trials": 2,
+    "repeat_count": 1
+  },
+  "automated_tests": {
+    "backend_offline": {
+      "passed": 1606,
+      "deselected": 2,
+      "warnings": 2,
+      "seconds": 79.59
+    },
+    "isolated_scorer": {
+      "passed": 70,
+      "seconds": 4.97
+    }
+  },
+  "scoring_usage": {
+    "ragas": {
+      "cost": null,
+      "input_tokens": 626433,
+      "max_provider_attempts": 480,
+      "measured_usage_attempts": 330,
+      "missing_usage_attempts": 0,
+      "observed_input_tokens": 626433,
+      "observed_output_tokens": 150376,
+      "output_tokens": 150376,
+      "provider_attempts": 330
+    },
+    "claims": {
+      "cost": null,
+      "input_tokens": 5336385,
+      "max_provider_attempts": 800,
+      "measured_usage_attempts": 438,
+      "missing_usage_attempts": 0,
+      "observed_input_tokens": 5336385,
+      "observed_output_tokens": 11943,
+      "output_tokens": 11943,
+      "provider_attempts": 438
+    },
+    "live-ragas-v2": {
+      "cost": null,
+      "input_tokens": 52751,
+      "max_provider_attempts": 25,
+      "measured_usage_attempts": 14,
+      "missing_usage_attempts": 0,
+      "observed_input_tokens": 52751,
+      "observed_output_tokens": 11115,
+      "output_tokens": 11115,
+      "provider_attempts": 14
+    },
+    "live-claims-v2": {
+      "cost": null,
+      "input_tokens": 135663,
+      "max_provider_attempts": 48,
+      "measured_usage_attempts": 26,
+      "missing_usage_attempts": 0,
+      "observed_input_tokens": 135663,
+      "observed_output_tokens": 1649,
+      "output_tokens": 1649,
+      "provider_attempts": 26
+    }
+  },
+  "interrupted_pilots": {
+    "research": {
+      "ambiguous_inflight_runs": [
+        "real-dev-20261107-multi_hop-dev-02-workflow",
+        "real-dev-20261107-multi_hop-dev-01-workflow",
+        "real-dev-20261107-single_hop-dev-02-workflow"
+      ],
+      "completed_records": 4,
+      "conservative_provider_reservation": 148,
+      "exact_total_usage": null,
+      "new_research_provider_ceiling": 752,
+      "reason": "Evaluation selected tool-loop while production defaults to batch; stop remaining wrong-path trials.",
+      "records": [
+        {
+          "id": "real-dev-20261107-single_hop-dev-01-baseline",
+          "model_calls": 1,
+          "provider_attempts": 1,
+          "status": "completed"
+        },
+        {
+          "id": "real-dev-20261107-single_hop-dev-01-multi_agent",
+          "model_calls": 20,
+          "provider_attempts": 20,
+          "status": "failed"
+        },
+        {
+          "id": "real-dev-20261107-single_hop-dev-01-workflow",
+          "model_calls": 20,
+          "provider_attempts": 20,
+          "status": "failed"
+        },
+        {
+          "id": "real-dev-20261107-single_hop-dev-01-plan_execute",
+          "model_calls": 17,
+          "provider_attempts": 17,
+          "status": "completed"
+        }
+      ],
+      "rerun_policy": "Do not delete stale claims or resume this identity; preserve all pilot records.",
+      "saved_provider_attempts": 58
+    },
+    "live-ragas": {
+      "reason": "Scorer compatibility pilot: reasoning/default transport produced empty or truncated JSON; preserve original results before changing scorer identity.",
+      "provider_attempts": 7,
+      "new_limit": 25,
+      "inflight": 1,
+      "observed_input_tokens": 24622,
+      "observed_output_tokens": 9012,
+      "total_tokens_known": false
+    },
+    "live-claims": {
+      "reason": "Scorer compatibility pilot: reasoning/default transport produced empty or truncated JSON; preserve original results before changing scorer identity.",
+      "provider_attempts": 16,
+      "new_limit": 48,
+      "inflight": 1,
+      "observed_input_tokens": 100058,
+      "observed_output_tokens": 8263,
+      "total_tokens_known": false
+    }
+  },
+  "limits": {
+    "research_original_provider_ceiling": 900,
+    "reserved_for_legacy": 148,
+    "formal_research_provider_ceiling": 752,
+    "ragas": 480,
+    "claims": 800,
+    "live_ragas_original": 32,
+    "live_claims_original": 64
+  },
+  "limitations": [
+    "Same configured model for generation and automated judging.",
+    "No human gold calibration; no held-out test-set score.",
+    "No claim of statistical significance or general population improvement.",
+    "Exact total tokens for interrupted pilots are unknown.",
+    "Price estimates remain unavailable without a reliable rate table."
+  ],
+  "final_source_sha256": {
+    "src\\deeptrace\\eval\\runner.py": "29ce137809264c3a12a15bf0ab992d813531282e0f5e14ce4749657262dabc52",
+    "src\\deeptrace\\eval\\env.py": "68c5ff17e07daac33bd52ea396cbda13264f6212e6d20494896cc2910c8077bd",
+    "src\\deeptrace\\eval\\experiment.py": "fa09d36f16c990b607a1aead2f9bfc472f9f4f26f942445d456b5d0e994532bd",
+    "src\\deeptrace\\eval\\__main__.py": "21a5b8ceaf249f40beebdeffbf384c090ed9925899c3242b230b2a4bd3e373dd",
+    "src\\deeptrace\\eval\\regression.py": "85483f74ffe2a05b2687ac5cecb1b0caee7d265bfe7be692863926c9f8d9db42",
+    "evaluation\\ragas_quality.py": "d77f1ed60e4d479cc68565c01f4c5c7401ac465c1566366a63cacb32f252dc62",
+    "evaluation\\claims_quality.py": "b60af6d9dd1356c2021ec9d33191c68458ff27c53d698226ed05372cdeefb79c",
+    "evaluation\\eval_common.py": "f364b7533d35326c936255dad1bfd8719d06be54c39f80b1de7733a0e3df3e2e",
+    "tests\\eval\\test_runtime_profile.py": "468b630ab60e0661e07ac50ffd88c37f854f1d3dee750be5f4a8d1f79b3aa1b8",
+    "evaluation\\tests\\test_judge_transport.py": "f87b66e3d5383e9dc99be1d3113b07520dc6ff7600126634f6668def44ee3540"
+  }
+}

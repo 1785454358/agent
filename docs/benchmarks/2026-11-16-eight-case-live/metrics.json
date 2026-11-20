@@ -1,0 +1,79 @@
+{
+  "sample_questions": 8,
+  "runs": 16,
+  "mode": "workflow",
+  "model": "kimi-k3",
+  "scope": "Eight previously used frozen-document development cases, once per configuration; no causal ablation or significance claim.",
+  "groups": {
+    "baseline": {
+      "accepted": 2,
+      "questions": 8,
+      "rubric_acceptance_rate": 0.25,
+      "criteria_covered": 13,
+      "criteria_total": 25,
+      "criteria_pass_rate": 0.52,
+      "completed": 5,
+      "partial": 3,
+      "failed": 0,
+      "input_tokens": 128846,
+      "output_tokens": 15223,
+      "mean_input_tokens": 16105.75,
+      "input_tokens_per_accepted_result": 64423.0,
+      "mean_total_tokens": 18008.625,
+      "mean_model_calls": 5.75,
+      "mean_tool_calls": 2.875,
+      "mean_seconds": 36.62716338750397,
+      "raw_model_citation_supports": 42,
+      "raw_model_citation_relations": 42
+    },
+    "optimized": {
+      "accepted": 5,
+      "questions": 8,
+      "rubric_acceptance_rate": 0.625,
+      "criteria_covered": 21,
+      "criteria_total": 25,
+      "criteria_pass_rate": 0.84,
+      "completed": 6,
+      "partial": 2,
+      "failed": 0,
+      "input_tokens": 144825,
+      "output_tokens": 19491,
+      "mean_input_tokens": 18103.125,
+      "input_tokens_per_accepted_result": 28965.0,
+      "mean_total_tokens": 20539.5,
+      "mean_model_calls": 6.5,
+      "mean_tool_calls": 5,
+      "mean_seconds": 45.060867125004734,
+      "raw_model_citation_supports": 53,
+      "raw_model_citation_relations": 57
+    }
+  },
+  "semantic_method": "Blinded same-model paired judging, plus root-assistant review; no independent human annotation.",
+  "unsupported_fact_rate": null,
+  "citation_support_rate": null,
+  "unpublished_metric_reason": "Review inconsistency: a strict-provider boundary criterion was incorrect while its related extracted claim was called supported; duplicate/compound claim units and overly literal citation judgments remain. Raw model grades retained, not promoted to reliable hallucination statistics.",
+  "web_search_duplicate_rate": null,
+  "web_search_note": "Frozen corpus; no live web-search task.",
+  "changes": {
+    "acceptance_percentage_points": 37.5,
+    "criteria_percentage_points": 31.999999999999996,
+    "mean_input_tokens_relative_increase": 0.12401626748211036,
+    "mean_total_tokens_relative_increase": 0.1405368261041584,
+    "mean_model_calls_relative_increase": 0.13043478260869557,
+    "mean_tool_calls_relative_increase": 0.7391304347826086,
+    "mean_seconds_relative_increase": 0.2302581733746294
+  },
+  "exploratory_metric": {
+    "definition": "All system input tokens, including nonpassing tasks, divided by number of reference-rubric passing results.",
+    "post_hoc": true,
+    "input_tokens_per_accepted_result_reduction": 0.5503934930071559,
+    "warning": "Not average per-task token reduction; highly sensitive to two vs five passing tasks in this small sample."
+  },
+  "judge_overhead": {
+    "provider_attempts": 16,
+    "input_tokens": 86838,
+    "output_tokens": 45974,
+    "included_in_system_per_task_cost": false,
+    "includes_failed_formatting_attempts": true
+  }
+}

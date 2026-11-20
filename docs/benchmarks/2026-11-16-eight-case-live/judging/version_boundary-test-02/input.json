@@ -1,0 +1,60 @@
+{
+  "question": "Using only the frozen documentation, what is the version and provider-support boundary for ProviderStrategy strict?",
+  "reference_answer": "The strict parameter requires langchain>=1.2. It is an optional boolean supported by some providers, not universally by all models/providers, and defaults to None (disabled). A package meeting the version minimum does not prove that a particular provider supports strict mode.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text": ">=1.2"
+    },
+    {
+      "id": "R2",
+      "text": "Some providers only"
+    },
+    {
+      "id": "R3",
+      "text": "Default None"
+    }
+  ],
+  "candidates": {
+    "A": {
+      "answer": "**结论**：按冻结文档，`ProviderStrategy` 的 `strict` 参数要求 `langchain>=1.2`；它仅被部分提供商支持，文档明确举例为 OpenAI 和 xAI，且默认值为 `None`（即禁用）[1]。\n\n**依据与边界**：\n\n- **版本边界**：`ProviderStrategy` 类定义（`strict: bool | None = None`）旁的 Info 注释明确写明：\"The `strict` param requires `langchain>=1.2`\" [1]。这意味着在低于 1.2 的 langchain 版本中该参数不可用；文档未说明 1.2 之后是否有进一步版本限制。\n- **提供商支持边界**：`strict` 是可选布尔参数，用于启用严格的 schema 遵循（strict schema adherence），\"Supported by some providers (e.g., OpenAI and xAI)\"，默认 `None`（disabled）[1]。文档以 e.g. 方式举例，因此 OpenAI 与 xAI 是明确列出的支持者，但文档未给出完整支持清单，也未逐一说明 Gemini、Anthropic 等其他原生结构化输出提供商是否支持 `strict`——不能据此推断它们支持或不支持。\n\n**适用范围说明**：以上结论仅基于所给冻结文档摘录；文档未覆盖的内容（完整提供商清单、各提供商对 strict 的具体行为差异）无法从本材料确认。",
+      "citation_map": {
+        "[1]": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+      },
+      "visible_passages": [
+        {
+          "ref": "P1",
+          "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+          "start": 4610,
+          "end": 7409,
+          "text": "<Tip>\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```typescript\n    const customProfile: ModelProfile = {\n        structuredOutput: true,\n        // ...\n    }\n    const model = await initChatModel(\"...\", { profile: customProfile });\n    ```\n    If tools are specified, the model must support simultaneous use of tools and structured output.\n</Tip>\n:::\n\n## Provider strategy\n\nSome model providers support structured output natively through their APIs (e.g. OpenAI, xAI (Grok), Gemini, Anthropic (Claude)). This is the most reliable method when available.\n\nTo use this strategy, configure a `ProviderStrategy`:\n\n:::python\n```python\nclass ProviderStrategy(Generic[SchemaT]):\n    schema: type[SchemaT]\n    strict: bool | None = None\n```\n<Info>\n    The `strict` param requires `langchain>=1.2`.\n</Info>\n\n<ParamField path=\"schema\" required>\n    The schema defining the structured output format. Supports:\n    - **Pydantic models**: `BaseModel` subclasses with field validation. Returns validated Pydantic instance.\n    - **Dataclasses**: Python dataclasses with type annotations. Returns dict.\n    - **TypedDict**: Typed dictionary classes. Returns dict.\n    - **JSON Schema**: Dictionary with JSON schema specification. Must include top-level `title` and `description` keys. Returns dict.\n</ParamField>\n\n<ParamField path=\"strict\">\n    Optional boolean parameter to enable strict schema adherence. Supported by some providers (e.g., [OpenAI](/oss/integrations/chat/openai) and [xAI](/oss/integrations/chat/xai)). Defaults to `None` (disabled).\n</ParamField>\n\nLangChain automatically uses `ProviderStrategy` when you pass a schema type directly to @[`create_agent.response_format`][create_agent(response_format)] and the model supports native structured output:\n\n<CodeGroup>\n    ```python Pydantic Model\n    from pydantic import BaseModel, Field\n    from langchain.agents import create_agent\n\n\n    class ContactInfo(BaseModel):\n        \"\"\"Contact information for a person.\"\"\"\n        name: str = Field(description=\"The name of the person\")\n        email: str = Field(description=\"The email address of the person\")\n        phone: str = Field(description=\"The phone number of the person\")\n\n    agent = create_agent(\n        model=\"gpt-5.5\",\n        response_format=ContactInfo  # Auto-selects ProviderStrategy\n    )\n\n    result = agent.invoke({\n        \"messages\": [{\"role\": \"user\", \"content\": \"Extract contact info from: John Doe, john@example.com, (555) 123-4567\"}]\n    })\n\n    print(result[\"structured_response\"])\n    # ContactInfo(name='John Doe', email='john@example.com', phone='(555) 123-4567')\n    ```\n\n"
+        }
+      ]
+    },
+    "B": {
+      "answer": "**结论**：`ProviderStrategy` 的 `strict` 参数要求 `langchain>=1.2`；其 provider 支持边界是：仅当所选模型与 provider 支持原生结构化输出时适用，文档列举 OpenAI、Anthropic (Claude)、xAI (Grok) 为例，其他模型使用 `ToolStrategy` [1]。\n\n**版本边界**：`strict: bool | None = None` 参数明确要求 `langchain>=1.2` [1]。\n\n**Provider 支持边界**：当直接提供 schema 类型时，LangChain 自动选择策略——若模型和 provider 支持原生结构化输出（例如 OpenAI、Anthropic (Claude)、xAI (Grok)）则使用 `ProviderStrategy`，所有其他模型使用 `ToolStrategy` [1]。文档另在 Provider strategy 章节提及 Gemini 也支持原生结构化输出 [1]。\n\n**补充条件**：原生结构化输出支持从模型的 profile 数据动态读取（需 `langchain>=1.1`）；若数据不可用，需手动指定 profile 或使用其他条件；若同时指定 tools，模型必须支持 tools 与结构化输出的同时使用 [1]。",
+      "citation_map": {
+        "[1]": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+      },
+      "visible_passages": [
+        {
+          "ref": "P1",
+          "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+          "start": 1176,
+          "end": 2601,
+          "text": "- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n- `ProviderStrategy` if the model and provider chosen supports native structured output (e.g. [OpenAI](/oss/integrations/providers/openai), [Anthropic (Claude)](/oss/integrations/providers/anthropic), or [xAI (Grok)](/oss/integrations/providers/xai)).\n- `ToolStrategy` for all other models.\n\n<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>\n\n<Note>\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```python\n    custom_profile = {\n        \"structured_output\": True,\n        # ...\n    }\n    model = init_chat_model(\"...\", profile=custom_profile)\n    ```\n    If tools are specified, the model must support simultaneous use of tools and structured output.\n</Note>\n\n"
+        },
+        {
+          "ref": "P2",
+          "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+          "url": "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+          "start": 4610,
+          "end": 6106,
+          "text": "<Tip>\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```typescript\n    const customProfile: ModelProfile = {\n        structuredOutput: true,\n        // ...\n    }\n    const model = await initChatModel(\"...\", { profile: customProfile });\n    ```\n    If tools are specified, the model must support simultaneous use of tools and structured output.\n</Tip>\n:::\n\n## Provider strategy\n\nSome model providers support structured output natively through their APIs (e.g. OpenAI, xAI (Grok), Gemini, Anthropic (Claude)). This is the most reliable method when available.\n\nTo use this strategy, configure a `ProviderStrategy`:\n\n:::python\n```python\nclass ProviderStrategy(Generic[SchemaT]):\n    schema: type[SchemaT]\n    strict: bool | None = None\n```\n<Info>\n    The `strict` param requires `langchain>=1.2`.\n</Info>\n\n<ParamField path=\"schema\" required>\n    The schema defining the structured output format. Supports:\n    - **Pydantic models**: `BaseModel` subclasses with field validation. Returns validated Pydantic instance.\n    - **Dataclasses**: Python dataclasses with type annotations. Returns dict.\n    - **TypedDict**: Typed dictionary classes. Returns dict.\n    - **JSON Schema**: Dictionary with JSON schema specification. Must include top-level `title` and `description` keys. Returns dict.\n</ParamField>\n\n"
+        }
+      ]
+    }
+  }
+}

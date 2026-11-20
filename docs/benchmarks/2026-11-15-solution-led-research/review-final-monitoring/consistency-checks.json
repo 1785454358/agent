@@ -1,0 +1,82 @@
+{
+  "issues_count": 8,
+  "unanswered_points": [
+    "20项×60秒的请求量方向可控[7]，但单机CPU/内存/磁盘占用未量化，无法确认在免费额度或资源内。",
+    "按监控项保留未实现[1]，全局清理的默认天数与可配置性未在材料中明确，不能确认30天由自身配置实现。",
+    "服务器与软件按0元增量，但SMTP账户可用性未确认、域名/证书未计价，不能确认合计不超过300元/月。",
+    "5人小团队、20个HTTPS站点、每月增量费用未计价：公网域名与TLS证书（可选）",
+    "Uptime Kuma 全局历史保留期是否可显式配置为 30 天、默认值是多少，现有材料未确认。",
+    "20 个 HTTPS 站点每 60 秒检查在闲置 Linux 服务器上的具体 CPU/内存/磁盘占用未量化。"
+  ],
+  "consistency_checks": [
+    {
+      "check_id": "c1",
+      "status": "unresolved",
+      "reason": "20项×60秒的请求量方向可控[7]，但单机CPU/内存/磁盘占用未量化，无法确认在免费额度或资源内。"
+    },
+    {
+      "check_id": "c2",
+      "status": "unresolved",
+      "reason": "按监控项保留未实现[1]，全局清理的默认天数与可配置性未在材料中明确，不能确认30天由自身配置实现。"
+    },
+    {
+      "check_id": "c3",
+      "status": "passed",
+      "reason": "SMTP通知可勾选Apply on all existing monitors覆盖全部监控项[5]，无额外付费依赖；Gmail限额约500封/日[6]。"
+    },
+    {
+      "check_id": "c4",
+      "status": "unresolved",
+      "reason": "服务器与软件按0元增量，但SMTP账户可用性未确认、域名/证书未计价，不能确认合计不超过300元/月。"
+    },
+    {
+      "check_id": "c5",
+      "status": "passed",
+      "reason": "步骤按Docker安装→建目录→Compose→启动→建管理员→配SMTP→加监控→验证排列，依赖Docker、本地存储、SMTP凭据齐全[3][4][5][7]。"
+    }
+  ],
+  "budgets": [
+    {
+      "scope": "5人小团队、20个HTTPS站点、每月增量费用",
+      "unit": "人民币/月",
+      "items": [
+        {
+          "label": "现有闲置Linux服务器增量成本",
+          "low": "0",
+          "high": "0",
+          "quantity": "1",
+          "divisor": "1",
+          "kind": "estimate",
+          "note": "假设电费/带宽为已有沉没成本，不计增量；来源为原始约束，非商户实价"
+        },
+        {
+          "label": "Uptime Kuma 开源自托管软件",
+          "low": "0",
+          "high": "0",
+          "quantity": "1",
+          "divisor": "1",
+          "kind": "verified",
+          "note": "开源自托管，无按监控项费用[2][8]"
+        },
+        {
+          "label": "SMTP邮件通知（现有邮箱）",
+          "low": "0",
+          "high": "0",
+          "quantity": "1",
+          "divisor": "1",
+          "kind": "estimate",
+          "note": "假设团队已有可用SMTP邮箱；Gmail个人版每日约500封[6]，未确认账户可用性"
+        },
+        {
+          "label": "公网域名与TLS证书（可选）",
+          "low": null,
+          "high": null,
+          "quantity": "1",
+          "divisor": "1",
+          "kind": "unpriced",
+          "note": "仅当需公网HTTPS面板时发生，实价未核实；内网访问可省"
+        }
+      ]
+    }
+  ]
+}

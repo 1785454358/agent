@@ -1,0 +1,1 @@
+{"input_sha256": "d10d83a159c31ec379c03066d22bcdfc621c9f0dc33087d7f05e46eed1788a72", "judge": {"model": "controlled-fixture", "adapter": "fixture-v1", "scorer_sha256": "fixed"}, "max_provider_attempts": 20, "max_claims": 30}

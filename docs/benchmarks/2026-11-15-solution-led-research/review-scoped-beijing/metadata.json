@@ -1,0 +1,13 @@
+{
+  "run_id": "beijing-response-replay-3f6eb246ae1f",
+  "source_run": "beijing-live-c0d45b2dbe4a",
+  "question": "请为第一次去北京的游客制定3天2晚自由行规划，预算每人2000元（不含往返北京的大交通），兼顾经典景点和当地美食。请给出每天的游览顺序、住宿建议、每人分项预算及需要提前预约的事项。出行日期和同行人数未定，请明确必要假设，住宿预算说明单人入住还是多人分摊；核实可获取的票价和预约规则，估算费用与已核实价格分开说明，并给出来源引用。",
+  "type": "Frozen research; live writer and reviewer only, no new search",
+  "model": "deepseek-v4.1-flash",
+  "research_calls": 9,
+  "research_input_tokens": 64053,
+  "remaining_calls": 11,
+  "remaining_input_tokens": 35947,
+  "original_max_calls": 20,
+  "original_max_input_tokens": 100000
+}

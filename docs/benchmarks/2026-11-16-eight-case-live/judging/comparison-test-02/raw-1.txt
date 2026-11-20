@@ -1,0 +1,430 @@
+{
+  "A": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "明确说明 trimming 是调用 LLM 前临时裁剪发送给模型的消息（transient，不改已保存状态），并引用 [1][2]。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "明确说明 deleting 是从 LangGraph 状态中永久移除消息，适合删除特定消息或清空整个历史，并引用 [1]。"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "明确说明 summarizing 是把较早消息总结成摘要并永久替换进状态，供后续所有轮次使用，同时保留最近消息，并引用 [2]。"
+      },
+      {
+        "id": "R4",
+        "status": "missing",
+        "reason": "未提及任何关于 provider message/tool-call constraints 或协议有效性的内容。"
+      }
+    ],
+    "claims": [
+      {
+        "quote": "trimming 是调用 LLM 前临时裁剪发送给模型的消息（transient，不改已保存状态）[1][2]",
+        "status": "supported",
+        "evidence_refs": ["P2", "P4"],
+        "reason": "P2 明确说明 'Remove first or last N messages (before calling LLM)'，P4 明确说明 transient updates 是 'modifying what messages are sent to the model for a single call without changing what's saved in state'。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P2 支持 before calling LLM 的语义。"
+          },
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P4 支持 transient 不改状态的语义。"
+          }
+        ]
+      },
+      {
+        "quote": "deleting 是从 LangGraph 状态中永久移除消息，适合删除特定消息或清空整个历史 [1]",
+        "status": "supported",
+        "evidence_refs": ["P2", "P3"],
+        "reason": "P2 明确说明 'Delete messages from LangGraph state permanently'，P3 明确说明 'remove specific messages or clear the entire message history'。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P2 和 P3 共同支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "summarizing 是把较早消息总结成摘要并**永久**替换进状态，供后续所有轮次使用，同时保留最近消息 [2]",
+        "status": "supported",
+        "evidence_refs": ["P5"],
+        "reason": "P5 明确说明 'permanently replacing old messages with a summary that's saved for all future turns' 和 'Keeps recent messages intact for context'。",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P5 完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "文档没有给出三者之间的显式排序或组合使用指引，只明确对比了 transient trimming 与 persistent summarization [2]",
+        "status": "supported",
+        "evidence_refs": ["P5"],
+        "reason": "P5 明确对比 'Unlike the transient message trimming... summarization persistently updates state'，且可见材料中确实无三者排序或组合指引。",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P5 支持 transient 与 persistent 的对比。"
+          }
+        ]
+      },
+      {
+        "quote": "可按 token 计数在接近上限时截断，用 trim messages 工具指定保留 token 数与 strategy（如保留最后 max_tokens）[1]",
+        "status": "supported",
+        "evidence_refs": ["P2"],
+        "reason": "P2 明确说明 'count the tokens in the message history and truncate whenever it approaches that limit' 和 'specify the number of tokens to keep... as well as the strategy (e.g., keep the last max_tokens)'。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P2 完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "用 `RemoveMessage` 从图状态删除；要求状态键使用 `add_messages` reducer（默认 `AgentState` 已提供）[1]",
+        "status": "supported",
+        "evidence_refs": ["P3"],
+        "reason": "P3 明确说明 'use the RemoveMessage'、'need to use a state key with add_messages reducer' 和 'The default AgentState provides this'。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P3 完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "`SummarizationMiddleware` 在超过 token 上限时自动：用一次独立 LLM 调用总结旧消息、在状态中永久替换为摘要、保留最近消息 [2]",
+        "status": "supported",
+        "evidence_refs": ["P5"],
+        "reason": "P5 明确说明 'When the conversation exceeds the token limit, SummarizationMiddleware automatically: 1. Summarizes older messages using a separate LLM call 2. Replaces them with a summary message in State (permanently) 3. Keeps recent messages intact'。",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P5 完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "中间件：Python 用 `@before_model` 装饰器，JS 用 `createMiddleware` 的 `beforeModel` 钩子 [1]",
+        "status": "supported",
+        "evidence_refs": ["P2", "P3"],
+        "reason": "P2 明确说明 'use the @before_model middleware decorator'，P3 明确说明 'use createMiddleware with a beforeModel hook'。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P2 和 P3 共同支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "内置中间件，可配置 `trigger`（如 tokens: 4000）与 `keep`（如保留 20 条）[2]",
+        "status": "supported",
+        "evidence_refs": ["P5"],
+        "reason": "P5 明确展示 'trigger={\"tokens\": 4000}, keep=(\"messages\", 20)' 的配置示例。",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P5 完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "Transient：只改单次调用发给模型的内容，不改已保存状态 [2]",
+        "status": "supported",
+        "evidence_refs": ["P4"],
+        "reason": "P4 明确说明 'transient updates - modifying what messages are sent to the model for a single call without changing what's saved in state'。",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P4 完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "永久：状态被持久更新，未来轮次看到摘要而非原始消息 [2]",
+        "status": "supported",
+        "evidence_refs": ["P5"],
+        "reason": "P5 明确说明 'The summarized conversation history is permanently updated - future turns will see the summary instead of the original messages'。",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P5 完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "长对话可能放不进上下文窗口，导致上下文丢失或报错；即使模型支持完整上下文长度，多数 LLM 在长上下文上表现仍差——被陈旧/离题内容分散注意力，响应更慢、成本更高 [1]",
+        "status": "supported",
+        "evidence_refs": ["P1"],
+        "reason": "P1 明确说明 'a full history may not fit inside an LLM's context window, resulting in a context loss or errors' 和 'most LLMs still perform poorly over long contexts. They get \"distracted\" by stale or off-topic content, all while suffering from slower response times and higher costs'。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P1 完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "summarizing 以摘要形式保留旧信息的要点，而 trimming/deleting 直接丢弃被移除的内容（文档只描述摘要\"替换旧消息\"，未承诺信息无损）[2]",
+        "status": "supported",
+        "evidence_refs": ["P5"],
+        "reason": "P5 说明摘要替换旧消息，且确实未承诺信息无损；trimming/deleting 的丢弃语义可从 P2/P3 推断。",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P5 支持摘要替换的语义。"
+          }
+        ]
+      },
+      {
+        "quote": "summarizing 需要一次独立的 LLM 调用 [2]；trimming/deleting 的文档描述中没有此类额外调用",
+        "status": "supported",
+        "evidence_refs": ["P5"],
+        "reason": "P5 明确说明 'Summarizes older messages using a separate LLM call'，且 P2/P3 中 trimming/deleting 的描述确实未提及额外 LLM 调用。",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P5 支持独立 LLM 调用的断言。"
+          }
+        ]
+      },
+      {
+        "quote": "trimming 不动已保存状态，被裁掉的消息仍在状态中 [2]；deleting 与 summarizing 都是永久修改状态 [1][2]",
+        "status": "supported",
+        "evidence_refs": ["P4", "P5"],
+        "reason": "P4 支持 trimming 不改状态，P5 支持 summarizing 永久修改状态，P2 支持 deleting 永久删除。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P2 支持 deleting 永久删除。"
+          },
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P4 和 P5 支持 trimming transient 和 summarizing persistent。"
+          }
+        ]
+      }
+    ]
+  },
+  "B": {
+    "criteria": [
+      {
+        "id": "R1",
+        "status": "covered",
+        "reason": "明确说明 Trimming 是临时性的（Transient，仅在调用 LLM 前处理，不永久改变状态），并引用 [1][2]。"
+      },
+      {
+        "id": "R2",
+        "status": "covered",
+        "reason": "明确说明 Deleting 是永久性删除（从图状态中彻底移除特定消息），并引用 [1]。"
+      },
+      {
+        "id": "R3",
+        "status": "covered",
+        "reason": "明确说明 Summarizing 是永久性替换（用摘要替换旧消息，保留核心信息），并引用 [2]。"
+      },
+      {
+        "id": "R4",
+        "status": "missing",
+        "reason": "未提及任何关于 provider message/tool-call constraints 或协议有效性的内容。"
+      }
+    ],
+    "claims": [
+      {
+        "quote": "Trimming 是**临时性**的（Transient，仅在调用 LLM 前处理，不永久改变状态）",
+        "status": "supported",
+        "evidence_refs": ["P4", "P11"],
+        "reason": "P4 明确说明 'Remove first or last N messages (before calling LLM)'，P11 明确说明 'transient message trimming'。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P4 支持 before calling LLM。"
+          },
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P11 支持 transient 语义。"
+          }
+        ]
+      },
+      {
+        "quote": "Deleting 是**永久性删除**（从图状态中彻底移除特定消息）",
+        "status": "supported",
+        "evidence_refs": ["P4", "P6"],
+        "reason": "P4 明确说明 'Delete messages from LangGraph state permanently'，P6 明确说明 'remove specific messages'。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P4 和 P6 共同支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "Summarizing 是**永久性替换**（用摘要替换旧消息，保留核心信息）",
+        "status": "supported",
+        "evidence_refs": ["P11"],
+        "reason": "P11 明确说明 'permanently replacing old messages with a summary'。",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P11 完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "在调用 LLM 前，根据 token 计数移除消息列表的开头或结尾 N 条消息。使用 `trim_messages` 工具并指定 `strategy`（如保留最后 `max_tokens`），或通过 `@before_model` 中间件（Python）/ `createMiddleware` 的 `beforeModel` 钩子（JS）实现 [1]",
+        "status": "supported",
+        "evidence_refs": ["P4", "P5"],
+        "reason": "P4 支持 'Remove first or last N messages (before calling LLM)'，P5 支持 token 计数、strategy、max_tokens 和 @before_model。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P4 和 P5 共同支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "使用 `RemoveMessage` 从图状态中永久移除特定消息或清空全部历史。要求状态键必须配置 `add_messages` reducer 才能生效 [1]",
+        "status": "supported",
+        "evidence_refs": ["P6"],
+        "reason": "P6 明确说明 'use the RemoveMessage'、'remove specific messages or clear the entire message history' 和 'need to use a state key with add_messages reducer'。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P6 完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "当对话超过 token 限制时，`SummarizationMiddleware` 自动触发，使用单独的 LLM 调用将旧消息压缩为摘要，并用该摘要**永久替换**状态中的原始消息，同时保留最近的消息不变 [2]",
+        "status": "supported",
+        "evidence_refs": ["P11"],
+        "reason": "P11 明确说明 'When the conversation exceeds the token limit, SummarizationMiddleware automatically: 1. Summarizes older messages using a separate LLM call 2. Replaces them with a summary message in State (permanently) 3. Keeps recent messages intact'。",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P11 完整支持该断言。"
+          }
+        ]
+      },
+      {
+        "quote": "Trimming 不改变持久化状态，状态保持完整；Deleting 和 Summarizing 会永久改变状态，影响所有后续轮次 [1][2]",
+        "status": "supported",
+        "evidence_refs": ["P4", "P11"],
+        "reason": "P4 支持 deleting 永久改变状态，P11 支持 trimming transient 和 summarizing 永久改变状态且影响后续轮次。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "supported",
+            "reason": "P4 支持 deleting 永久删除。"
+          },
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P11 支持 transient 与 persistent 的对比及影响后续轮次。"
+          }
+        ]
+      },
+      {
+        "quote": "Trimming 和 Deleting 都会丢失被移除消息的详细内容；Summarizing 保留核心信息但丢失细节 [2]",
+        "status": "partial",
+        "evidence_refs": ["P11"],
+        "reason": "P11 支持 summarizing 替换旧消息，但 '保留核心信息但丢失细节' 的表述是对摘要性质的推断，文档未明确说明信息保留程度；trimming/deleting 丢失内容可从 P4/P6 推断。",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "partial",
+            "reason": "P11 支持摘要替换，但 '保留核心信息' 的表述超出原文。"
+          }
+        ]
+      },
+      {
+        "quote": "Trimming 相对简单（客户端截断）；Deleting 需要正确配置 reducer；Summarizing 需要额外 LLM 调用生成摘要 [1][2]",
+        "status": "partial",
+        "evidence_refs": ["P6", "P11"],
+        "reason": "P6 支持 deleting 需要 reducer，P11 支持 summarizing 需要额外 LLM 调用，但 'Trimming 相对简单（客户端截断）' 的复杂度比较在原文中无明确依据。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "partial",
+            "reason": "P6 支持 reducer 配置，但 trimming 复杂度比较无依据。"
+          },
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P11 支持额外 LLM 调用。"
+          }
+        ]
+      },
+      {
+        "quote": "适合**临时性**控制上下文长度，保留完整历史在状态中以供后续使用",
+        "status": "supported",
+        "evidence_refs": ["P11"],
+        "reason": "P11 说明 trimming 是 transient，不改状态，因此状态保持完整。",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "supported",
+            "reason": "P11 支持 transient 语义。"
+          }
+        ]
+      },
+      {
+        "quote": "适合**精确控制**状态内容，如移除敏感信息、错误消息或完全重置对话 [1]",
+        "status": "partial",
+        "evidence_refs": ["P6"],
+        "reason": "P6 支持 'remove specific messages or clear the entire message history'，但 '移除敏感信息、错误消息' 是具体应用场景的推断，原文未明确列举。",
+        "citations": [
+          {
+            "marker": "[1]",
+            "status": "partial",
+            "reason": "P6 支持移除特定消息和清空历史，但具体场景为推断。"
+          }
+        ]
+      },
+      {
+        "quote": "适合**长期对话**需要保留历史上下文但受限于 token 的情况。通过牺牲细节保留核心信息，平衡上下文长度与信息完整性 [2]",
+        "status": "partial",
+        "evidence_refs": ["P11"],
+        "reason": "P11 支持 summarizing 用于长对话和保留最近消息，但 '牺牲细节保留核心信息' 的表述是对摘要性质的推断，原文未明确说明。",
+        "citations": [
+          {
+            "marker": "[2]",
+            "status": "partial",
+            "reason": "P11 支持自动压缩历史，但信息保留程度的表述超出原文。"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,3823 @@
+{
+  "baseline_workflow": {
+    "answered": 9,
+    "input_tokens": 278084,
+    "mean_answer_chars": 801.25,
+    "mean_wall_ms": 31613.60557503455,
+    "model_calls": 78,
+    "output_tokens": 33359,
+    "provider_attempts": 78,
+    "runs": 12,
+    "status_counts": {
+      "completed": 11,
+      "partial": 1
+    },
+    "tool_calls": 201
+  },
+  "candidate_workflow": {
+    "answered": 10,
+    "input_tokens": 292493,
+    "mean_answer_chars": 876.1666666666666,
+    "mean_wall_ms": 29920.51664167472,
+    "model_calls": 79,
+    "output_tokens": 31530,
+    "provider_attempts": 79,
+    "runs": 12,
+    "status_counts": {
+      "completed": 11,
+      "partial": 1
+    },
+    "tool_calls": 193
+  },
+  "gate_exit_code": 1,
+  "gate_verdict": "fail",
+  "paired_comparison": {
+    "comparisons": {
+      "candidate": {
+        "agent_goal_accuracy": {
+          "all_output": {
+            "difference": -0.08333333333333333,
+            "excluded_tasks": [],
+            "interval_95": [
+              -0.3333333333333333,
+              0.16666666666666666
+            ],
+            "paired_tasks": 12,
+            "task_differences": {
+              "comparison-dev-01": 1.0,
+              "comparison-dev-02": -1.0,
+              "conflicting_evidence-dev-01": 0.0,
+              "conflicting_evidence-dev-02": 0.0,
+              "insufficient_evidence-dev-01": 0.0,
+              "insufficient_evidence-dev-02": 0.0,
+              "multi_hop-dev-01": -1.0,
+              "multi_hop-dev-02": 0.0,
+              "single_hop-dev-01": 0.0,
+              "single_hop-dev-02": 0.0,
+              "version_boundary-dev-01": 0.0,
+              "version_boundary-dev-02": 0.0
+            }
+          },
+          "completed_only": {
+            "difference": 0.0,
+            "excluded_tasks": [
+              "multi_hop-dev-01",
+              "version_boundary-dev-02"
+            ],
+            "interval_95": [
+              -0.3,
+              0.3
+            ],
+            "paired_tasks": 10,
+            "task_differences": {
+              "comparison-dev-01": 1.0,
+              "comparison-dev-02": -1.0,
+              "conflicting_evidence-dev-01": 0.0,
+              "conflicting_evidence-dev-02": 0.0,
+              "insufficient_evidence-dev-01": 0.0,
+              "insufficient_evidence-dev-02": 0.0,
+              "multi_hop-dev-02": 0.0,
+              "single_hop-dev-01": 0.0,
+              "single_hop-dev-02": 0.0,
+              "version_boundary-dev-01": 0.0
+            }
+          }
+        },
+        "citation_accuracy": {
+          "all_output": {
+            "difference": -0.06320018365472911,
+            "excluded_tasks": [
+              "comparison-dev-01"
+            ],
+            "interval_95": [
+              -0.14654269972451792,
+              0.013442378328741914
+            ],
+            "paired_tasks": 11,
+            "task_differences": {
+              "comparison-dev-02": -0.125,
+              "conflicting_evidence-dev-01": 0.09090909090909094,
+              "conflicting_evidence-dev-02": 0.0,
+              "insufficient_evidence-dev-01": -0.33333333333333337,
+              "insufficient_evidence-dev-02": 0.0,
+              "multi_hop-dev-01": 0.08333333333333337,
+              "multi_hop-dev-02": -0.09090909090909094,
+              "single_hop-dev-01": 0.0,
+              "single_hop-dev-02": -0.16666666666666663,
+              "version_boundary-dev-01": -0.24444444444444446,
+              "version_boundary-dev-02": 0.09090909090909094
+            }
+          },
+          "completed_only": {
+            "difference": -0.09660493827160493,
+            "excluded_tasks": [
+              "comparison-dev-01",
+              "multi_hop-dev-01",
+              "version_boundary-dev-02"
+            ],
+            "interval_95": [
+              -0.18395622895622896,
+              -0.013888888888888888
+            ],
+            "paired_tasks": 9,
+            "task_differences": {
+              "comparison-dev-02": -0.125,
+              "conflicting_evidence-dev-01": 0.09090909090909094,
+              "conflicting_evidence-dev-02": 0.0,
+              "insufficient_evidence-dev-01": -0.33333333333333337,
+              "insufficient_evidence-dev-02": 0.0,
+              "multi_hop-dev-02": -0.09090909090909094,
+              "single_hop-dev-01": 0.0,
+              "single_hop-dev-02": -0.16666666666666663,
+              "version_boundary-dev-01": -0.24444444444444446
+            }
+          }
+        },
+        "claim_groundedness": {
+          "all_output": {
+            "difference": -0.020815295815295825,
+            "excluded_tasks": [
+              "comparison-dev-02",
+              "conflicting_evidence-dev-01",
+              "conflicting_evidence-dev-02",
+              "multi_hop-dev-02",
+              "single_hop-dev-02"
+            ],
+            "interval_95": [
+              -0.06861471861471864,
+              0.0374098124098124
+            ],
+            "paired_tasks": 7,
+            "task_differences": {
+              "comparison-dev-01": -0.050000000000000044,
+              "insufficient_evidence-dev-01": 0.125,
+              "insufficient_evidence-dev-02": 0.02777777777777779,
+              "multi_hop-dev-01": -0.06666666666666665,
+              "single_hop-dev-01": 0.0,
+              "version_boundary-dev-01": -0.09090909090909094,
+              "version_boundary-dev-02": -0.09090909090909094
+            }
+          },
+          "completed_only": {
+            "difference": 0.0023737373737373613,
+            "excluded_tasks": [
+              "comparison-dev-02",
+              "conflicting_evidence-dev-01",
+              "conflicting_evidence-dev-02",
+              "multi_hop-dev-01",
+              "multi_hop-dev-02",
+              "single_hop-dev-02",
+              "version_boundary-dev-02"
+            ],
+            "interval_95": [
+              -0.056429292929292954,
+              0.07055555555555555
+            ],
+            "paired_tasks": 5,
+            "task_differences": {
+              "comparison-dev-01": -0.050000000000000044,
+              "insufficient_evidence-dev-01": 0.125,
+              "insufficient_evidence-dev-02": 0.02777777777777779,
+              "single_hop-dev-01": 0.0,
+              "version_boundary-dev-01": -0.09090909090909094
+            }
+          }
+        },
+        "factual_correctness": {
+          "all_output": {
+            "difference": 0.07666666666666667,
+            "excluded_tasks": [],
+            "interval_95": [
+              -0.08004166666666666,
+              0.24583333333333335
+            ],
+            "paired_tasks": 12,
+            "task_differences": {
+              "comparison-dev-01": 0.81,
+              "comparison-dev-02": 0.16000000000000003,
+              "conflicting_evidence-dev-01": 0.04999999999999993,
+              "conflicting_evidence-dev-02": 0.12,
+              "insufficient_evidence-dev-01": -0.19,
+              "insufficient_evidence-dev-02": 0.27999999999999997,
+              "multi_hop-dev-01": 0.21000000000000002,
+              "multi_hop-dev-02": -0.10999999999999999,
+              "single_hop-dev-01": 0.09000000000000008,
+              "single_hop-dev-02": 0.030000000000000027,
+              "version_boundary-dev-01": -0.49000000000000005,
+              "version_boundary-dev-02": -0.039999999999999925
+            }
+          },
+          "completed_only": {
+            "difference": 0.07500000000000001,
+            "excluded_tasks": [
+              "multi_hop-dev-01",
+              "version_boundary-dev-02"
+            ],
+            "interval_95": [
+              -0.11805000000000002,
+              0.2780249999999999
+            ],
+            "paired_tasks": 10,
+            "task_differences": {
+              "comparison-dev-01": 0.81,
+              "comparison-dev-02": 0.16000000000000003,
+              "conflicting_evidence-dev-01": 0.04999999999999993,
+              "conflicting_evidence-dev-02": 0.12,
+              "insufficient_evidence-dev-01": -0.19,
+              "insufficient_evidence-dev-02": 0.27999999999999997,
+              "multi_hop-dev-02": -0.10999999999999999,
+              "single_hop-dev-01": 0.09000000000000008,
+              "single_hop-dev-02": 0.030000000000000027,
+              "version_boundary-dev-01": -0.49000000000000005
+            }
+          }
+        },
+        "faithfulness": {
+          "all_output": {
+            "difference": 0.09239218338597223,
+            "excluded_tasks": [
+              "comparison-dev-02",
+              "conflicting_evidence-dev-01",
+              "conflicting_evidence-dev-02",
+              "multi_hop-dev-02",
+              "single_hop-dev-02"
+            ],
+            "interval_95": [
+              -0.04194774428470078,
+              0.30268710844021407
+            ],
+            "paired_tasks": 7,
+            "task_differences": {
+              "comparison-dev-01": 0.7,
+              "insufficient_evidence-dev-01": 0.07307692307692315,
+              "insufficient_evidence-dev-02": 0.07905138339920958,
+              "multi_hop-dev-01": -0.06666666666666665,
+              "single_hop-dev-01": 0.0,
+              "version_boundary-dev-01": -0.09523809523809523,
+              "version_boundary-dev-02": -0.04347826086956519
+            }
+          },
+          "completed_only": {
+            "difference": 0.15137804224760748,
+            "excluded_tasks": [
+              "comparison-dev-02",
+              "conflicting_evidence-dev-01",
+              "conflicting_evidence-dev-02",
+              "multi_hop-dev-01",
+              "multi_hop-dev-02",
+              "single_hop-dev-02",
+              "version_boundary-dev-02"
+            ],
+            "interval_95": [
+              -0.026747068149242024,
+              0.4358102766798419
+            ],
+            "paired_tasks": 5,
+            "task_differences": {
+              "comparison-dev-01": 0.7,
+              "insufficient_evidence-dev-01": 0.07307692307692315,
+              "insufficient_evidence-dev-02": 0.07905138339920958,
+              "single_hop-dev-01": 0.0,
+              "version_boundary-dev-01": -0.09523809523809523
+            }
+          }
+        }
+      }
+    },
+    "data_kind": "real_source",
+    "dataset": "research-v1",
+    "split": "dev",
+    "systems": {
+      "baseline": {
+        "answered_runs": 9,
+        "attempted_runs": 12,
+        "attempted_tasks": 12,
+        "completed_runs": 11,
+        "latency_ms": {
+          "p50": 30219.65435007587,
+          "p95": 38754.97286496683
+        },
+        "quality": {
+          "agent_goal_accuracy": {
+            "available_question_mean": 0.9166666666666666,
+            "category_means": {
+              "comparison": 0.5,
+              "conflicting_evidence": 1.0,
+              "insufficient_evidence": 1.0,
+              "multi_hop": 1.0,
+              "single_hop": 1.0,
+              "version_boundary": 1.0
+            },
+            "coverage": 1.0,
+            "error_runs": 0,
+            "missing_runs": 0,
+            "not_applicable_runs": 0,
+            "question_means": {
+              "comparison-dev-01": 0.0,
+              "comparison-dev-02": 1.0,
+              "conflicting_evidence-dev-01": 1.0,
+              "conflicting_evidence-dev-02": 1.0,
+              "insufficient_evidence-dev-01": 1.0,
+              "insufficient_evidence-dev-02": 1.0,
+              "multi_hop-dev-01": 1.0,
+              "multi_hop-dev-02": 1.0,
+              "single_hop-dev-01": 1.0,
+              "single_hop-dev-02": 1.0,
+              "version_boundary-dev-01": 1.0,
+              "version_boundary-dev-02": 1.0
+            },
+            "scored_runs": 12
+          },
+          "citation_accuracy": {
+            "available_question_mean": 0.9501377410468319,
+            "category_means": {
+              "comparison": 1.0,
+              "conflicting_evidence": 0.9545454545454546,
+              "insufficient_evidence": 1.0,
+              "multi_hop": 0.9583333333333333,
+              "single_hop": 0.9583333333333333,
+              "version_boundary": 0.8545454545454545
+            },
+            "coverage": 0.9166666666666666,
+            "error_runs": 0,
+            "missing_runs": 0,
+            "not_applicable_runs": 1,
+            "question_means": {
+              "comparison-dev-02": 1.0,
+              "conflicting_evidence-dev-01": 0.9090909090909091,
+              "conflicting_evidence-dev-02": 1.0,
+              "insufficient_evidence-dev-01": 1.0,
+              "insufficient_evidence-dev-02": 1.0,
+              "multi_hop-dev-01": 0.9166666666666666,
+              "multi_hop-dev-02": 1.0,
+              "single_hop-dev-01": 1.0,
+              "single_hop-dev-02": 0.9166666666666666,
+              "version_boundary-dev-01": 0.8,
+              "version_boundary-dev-02": 0.9090909090909091
+            },
+            "scored_runs": 11
+          },
+          "claim_groundedness": {
+            "available_question_mean": 0.9464285714285714,
+            "category_means": {
+              "comparison": 1.0,
+              "insufficient_evidence": 0.8125,
+              "multi_hop": 1.0,
+              "single_hop": 1.0,
+              "version_boundary": 1.0
+            },
+            "coverage": 0.5833333333333334,
+            "error_runs": 0,
+            "missing_runs": 0,
+            "not_applicable_runs": 5,
+            "question_means": {
+              "comparison-dev-01": 1.0,
+              "insufficient_evidence-dev-01": 0.875,
+              "insufficient_evidence-dev-02": 0.75,
+              "multi_hop-dev-01": 1.0,
+              "single_hop-dev-01": 1.0,
+              "version_boundary-dev-01": 1.0,
+              "version_boundary-dev-02": 1.0
+            },
+            "scored_runs": 7
+          },
+          "factual_correctness": {
+            "available_question_mean": 0.5658333333333333,
+            "category_means": {
+              "comparison": 0.385,
+              "conflicting_evidence": 0.6799999999999999,
+              "insufficient_evidence": 0.475,
+              "multi_hop": 0.535,
+              "single_hop": 0.505,
+              "version_boundary": 0.815
+            },
+            "coverage": 1.0,
+            "error_runs": 0,
+            "missing_runs": 0,
+            "not_applicable_runs": 0,
+            "question_means": {
+              "comparison-dev-01": 0.0,
+              "comparison-dev-02": 0.77,
+              "conflicting_evidence-dev-01": 0.64,
+              "conflicting_evidence-dev-02": 0.72,
+              "insufficient_evidence-dev-01": 0.64,
+              "insufficient_evidence-dev-02": 0.31,
+              "multi_hop-dev-01": 0.34,
+              "multi_hop-dev-02": 0.73,
+              "single_hop-dev-01": 0.58,
+              "single_hop-dev-02": 0.43,
+              "version_boundary-dev-01": 0.92,
+              "version_boundary-dev-02": 0.71
+            },
+            "scored_runs": 12
+          },
+          "faithfulness": {
+            "available_question_mean": 0.7848417627920733,
+            "category_means": {
+              "comparison": 0.0,
+              "insufficient_evidence": 0.7945652173913043,
+              "multi_hop": 1.0,
+              "single_hop": 1.0,
+              "version_boundary": 0.9523809523809523
+            },
+            "coverage": 0.5833333333333334,
+            "error_runs": 0,
+            "missing_runs": 0,
+            "not_applicable_runs": 5,
+            "question_means": {
+              "comparison-dev-01": 0.0,
+              "insufficient_evidence-dev-01": 0.85,
+              "insufficient_evidence-dev-02": 0.7391304347826086,
+              "multi_hop-dev-01": 1.0,
+              "single_hop-dev-01": 1.0,
+              "version_boundary-dev-01": 0.9047619047619048,
+              "version_boundary-dev-02": 1.0
+            },
+            "scored_runs": 7
+          }
+        },
+        "status_counts": {
+          "completed": 11,
+          "partial": 1
+        },
+        "termination_counts": {
+          "answer_review_incomplete": 1,
+          "workflow_completed": 11
+        },
+        "usage": {
+          "input_tokens": {
+            "missing_runs": 0,
+            "observed_subtotal": 278084,
+            "total": 278084
+          },
+          "output_tokens": {
+            "missing_runs": 0,
+            "observed_subtotal": 33359,
+            "total": 33359
+          },
+          "provider_attempts": {
+            "missing_runs": 0,
+            "observed_subtotal": 78,
+            "total": 78
+          }
+        }
+      },
+      "candidate": {
+        "answered_runs": 10,
+        "attempted_runs": 12,
+        "attempted_tasks": 12,
+        "completed_runs": 11,
+        "latency_ms": {
+          "p50": 29539.435450104065,
+          "p95": 37685.46733991242
+        },
+        "quality": {
+          "agent_goal_accuracy": {
+            "available_question_mean": 0.8333333333333334,
+            "category_means": {
+              "comparison": 0.5,
+              "conflicting_evidence": 1.0,
+              "insufficient_evidence": 1.0,
+              "multi_hop": 0.5,
+              "single_hop": 1.0,
+              "version_boundary": 1.0
+            },
+            "coverage": 1.0,
+            "error_runs": 0,
+            "missing_runs": 0,
+            "not_applicable_runs": 0,
+            "question_means": {
+              "comparison-dev-01": 1.0,
+              "comparison-dev-02": 0.0,
+              "conflicting_evidence-dev-01": 1.0,
+              "conflicting_evidence-dev-02": 1.0,
+              "insufficient_evidence-dev-01": 1.0,
+              "insufficient_evidence-dev-02": 1.0,
+              "multi_hop-dev-01": 0.0,
+              "multi_hop-dev-02": 1.0,
+              "single_hop-dev-01": 1.0,
+              "single_hop-dev-02": 1.0,
+              "version_boundary-dev-01": 1.0,
+              "version_boundary-dev-02": 1.0
+            },
+            "scored_runs": 12
+          },
+          "citation_accuracy": {
+            "available_question_mean": 0.8963594276094276,
+            "category_means": {
+              "comparison": 0.9375,
+              "conflicting_evidence": 1.0,
+              "insufficient_evidence": 0.8333333333333333,
+              "multi_hop": 0.9545454545454546,
+              "single_hop": 0.875,
+              "version_boundary": 0.7777777777777778
+            },
+            "coverage": 1.0,
+            "error_runs": 0,
+            "missing_runs": 0,
+            "not_applicable_runs": 0,
+            "question_means": {
+              "comparison-dev-01": 1.0,
+              "comparison-dev-02": 0.875,
+              "conflicting_evidence-dev-01": 1.0,
+              "conflicting_evidence-dev-02": 1.0,
+              "insufficient_evidence-dev-01": 0.6666666666666666,
+              "insufficient_evidence-dev-02": 1.0,
+              "multi_hop-dev-01": 1.0,
+              "multi_hop-dev-02": 0.9090909090909091,
+              "single_hop-dev-01": 1.0,
+              "single_hop-dev-02": 0.75,
+              "version_boundary-dev-01": 0.5555555555555556,
+              "version_boundary-dev-02": 1.0
+            },
+            "scored_runs": 12
+          },
+          "claim_groundedness": {
+            "available_question_mean": 0.9256132756132756,
+            "category_means": {
+              "comparison": 0.95,
+              "insufficient_evidence": 0.8888888888888888,
+              "multi_hop": 0.9333333333333333,
+              "single_hop": 1.0,
+              "version_boundary": 0.9090909090909091
+            },
+            "coverage": 0.5833333333333334,
+            "error_runs": 0,
+            "missing_runs": 0,
+            "not_applicable_runs": 5,
+            "question_means": {
+              "comparison-dev-01": 0.95,
+              "insufficient_evidence-dev-01": 1.0,
+              "insufficient_evidence-dev-02": 0.7777777777777778,
+              "multi_hop-dev-01": 0.9333333333333333,
+              "single_hop-dev-01": 1.0,
+              "version_boundary-dev-01": 0.9090909090909091,
+              "version_boundary-dev-02": 0.9090909090909091
+            },
+            "scored_runs": 7
+          },
+          "factual_correctness": {
+            "available_question_mean": 0.6425,
+            "category_means": {
+              "comparison": 0.8700000000000001,
+              "conflicting_evidence": 0.7649999999999999,
+              "insufficient_evidence": 0.52,
+              "multi_hop": 0.585,
+              "single_hop": 0.5650000000000001,
+              "version_boundary": 0.55
+            },
+            "coverage": 1.0,
+            "error_runs": 0,
+            "missing_runs": 0,
+            "not_applicable_runs": 0,
+            "question_means": {
+              "comparison-dev-01": 0.81,
+              "comparison-dev-02": 0.93,
+              "conflicting_evidence-dev-01": 0.69,
+              "conflicting_evidence-dev-02": 0.84,
+              "insufficient_evidence-dev-01": 0.45,
+              "insufficient_evidence-dev-02": 0.59,
+              "multi_hop-dev-01": 0.55,
+              "multi_hop-dev-02": 0.62,
+              "single_hop-dev-01": 0.67,
+              "single_hop-dev-02": 0.46,
+              "version_boundary-dev-01": 0.43,
+              "version_boundary-dev-02": 0.67
+            },
+            "scored_runs": 12
+          },
+          "faithfulness": {
+            "available_question_mean": 0.8772339461780456,
+            "category_means": {
+              "comparison": 0.7,
+              "insufficient_evidence": 0.8706293706293706,
+              "multi_hop": 0.9333333333333333,
+              "single_hop": 1.0,
+              "version_boundary": 0.8830227743271222
+            },
+            "coverage": 0.5833333333333334,
+            "error_runs": 0,
+            "missing_runs": 0,
+            "not_applicable_runs": 5,
+            "question_means": {
+              "comparison-dev-01": 0.7,
+              "insufficient_evidence-dev-01": 0.9230769230769231,
+              "insufficient_evidence-dev-02": 0.8181818181818182,
+              "multi_hop-dev-01": 0.9333333333333333,
+              "single_hop-dev-01": 1.0,
+              "version_boundary-dev-01": 0.8095238095238095,
+              "version_boundary-dev-02": 0.9565217391304348
+            },
+            "scored_runs": 7
+          }
+        },
+        "status_counts": {
+          "completed": 11,
+          "partial": 1
+        },
+        "termination_counts": {
+          "answer_review_incomplete": 1,
+          "workflow_completed": 11
+        },
+        "usage": {
+          "input_tokens": {
+            "missing_runs": 0,
+            "observed_subtotal": 292493,
+            "total": 292493
+          },
+          "output_tokens": {
+            "missing_runs": 0,
+            "observed_subtotal": 31530,
+            "total": 31530
+          },
+          "provider_attempts": {
+            "missing_runs": 0,
+            "observed_subtotal": 79,
+            "total": 79
+          }
+        }
+      }
+    }
+  },
+  "per_task": [
+    {
+      "after": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 10,
+              "citation_use_count": 10,
+              "citations": [
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "**结论：** 完整状态快照在**每个 super-step 边界**创建；`thread_id` 必须提供，因为它是 checkpointer 存取检查点的**主键**，缺失时无法保存状态，也无法在 interrupt 后恢复执行 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- super-step 是图的一次“tick”，该步调度的所有节点（可并行）执行完毕 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 顺序图 `START -> A -> B -> END` 在输入、节点 A、节点 B 各产生一个检查点 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 节点级写入只是 `checkpoint_writes` 中的任务条目，用于同一 super-step 内其他节点失败时的恢复，**不是**完整 `StateSnapshot`；完整快照在 super-step 完成时提交 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 因此 time travel 只能从 super-step 边界的完整检查点恢复 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 检查点按 thread 组织，thread 是分配给每个检查点的唯一标识，承载一串 run 的累积状态 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 调用带 checkpointer 的图时，必须在 config 的 `configurable` 中给出 `thread_id`，例如 `{\"configurable\": {\"thread_id\": \"1\"}}` 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 文档明确：checkpointer 以 `thread_id` 作为存储和检索检查点的主键；没有它就无法保存状态，也无法在 interrupt 后恢复，因为恢复依赖 `thread_id` 加载已保存状态 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 上述粒度是默认行为；文档另提到 `DeltaChannel` 可只存增量以减小检查点体积，这是存储优化，不改变 super-step 提交边界 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 本次可见材料未给出缺失 `thread_id` 时的具体报错文本，只说明功能上无法保存与恢复 ；该细节属当前材料缺口。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 10,
+              "unique_citation_count": 1
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 13,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "完整状态快照在每个 super-step 边界创建。"
+                },
+                {
+                  "grounded": true,
+                  "text": "thread_id 必须提供，因为它是 checkpointer 存取检查点的主键。"
+                },
+                {
+                  "grounded": true,
+                  "text": "缺失 thread_id 时无法保存状态，也无法在 interrupt 后恢复执行。"
+                },
+                {
+                  "grounded": true,
+                  "text": "super-step 是图的一次 tick，该步调度的所有节点（可并行）执行完毕。"
+                },
+                {
+                  "grounded": true,
+                  "text": "顺序图 START -> A -> B -> END 在输入、节点 A、节点 B 各产生一个检查点。"
+                },
+                {
+                  "grounded": true,
+                  "text": "节点级写入只是 checkpoint_writes 中的任务条目，不是完整 StateSnapshot。"
+                },
+                {
+                  "grounded": true,
+                  "text": "节点级写入用于同一 super-step 内其他节点失败时的恢复。"
+                },
+                {
+                  "grounded": true,
+                  "text": "完整快照在 super-step 完成时提交。"
+                },
+                {
+                  "grounded": true,
+                  "text": "time travel 只能从 super-step 边界的完整检查点恢复。"
+                },
+                {
+                  "grounded": true,
+                  "text": "检查点按 thread 组织，thread 是分配给每个检查点的唯一标识，承载一串 run 的累积状态。"
+                },
+                {
+                  "grounded": true,
+                  "text": "调用带 checkpointer 的图时，必须在 config 的 configurable 中给出 thread_id。"
+                },
+                {
+                  "grounded": true,
+                  "text": "DeltaChannel 可只存增量以减小检查点体积，这是存储优化，不改变 super-step 提交边界。"
+                },
+                {
+                  "grounded": true,
+                  "text": "本次可见材料未给出缺失 thread_id 时的具体报错文本。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 13,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.67
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          }
+        },
+        "status": "completed"
+      },
+      "before": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 7,
+              "citation_use_count": 7,
+              "citations": [
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "**结论：** 完整状态快照在 **super-step 边界**创建；`thread_id` 是 checkpointer 存取检查点的主键，缺失则无法保存状态、也无法在中断后恢复。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "super-step 是图的一次“tick”，该步调度的所有节点在其中执行（可并行）；顺序图 `START -> A -> B -> END` 会在输入、节点 A、节点 B 之后各产生一个检查点。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "因此时间旅行只能从 super-step 边界的完整检查点恢复。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "checkpointer 以 `thread_id` 作为存储和检索检查点的主键；没有它，checkpointer 无法保存状态，也无法在中断后恢复执行，因为它用 `thread_id` 加载已保存状态。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "使用 checkpointer 调用图时，必须在 config 的 `configurable` 部分指定 `thread_id`，例如 `{\"configurable\": {\"thread_id\": \"1\"}}`。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "上述“完整快照”指默认行为：默认在每个 super-step 为每个状态通道写入完整值；`DeltaChannel` 可改为只存增量，以降低存储增长，但这是另一配置下的取舍。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 2,
+                  "sentence": "另外，`thread_id` 过长会触发 `PostgresSaver` 的列长度错误，文档建议保持在 255 字符以内。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 7,
+              "unique_citation_count": 2
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 12,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "LangGraph 在每个 super-step 边界创建检查点。"
+                },
+                {
+                  "grounded": true,
+                  "text": "super-step 是图的一次“tick”，该步调度的所有节点在其中执行（可并行）。"
+                },
+                {
+                  "grounded": true,
+                  "text": "顺序图 START -> A -> B -> END 会在输入、节点 A、节点 B 之后各产生一个检查点。"
+                },
+                {
+                  "grounded": true,
+                  "text": "每个节点完成时，其输出作为任务条目写入 checkpoint_writes 表，关联到进行中的检查点。"
+                },
+                {
+                  "grounded": true,
+                  "text": "完整状态快照在 super-step 完成时才提交。"
+                },
+                {
+                  "grounded": true,
+                  "text": "时间旅行只能从 super-step 边界的完整检查点恢复。"
+                },
+                {
+                  "grounded": true,
+                  "text": "checkpointer 以 thread_id 作为存储和检索检查点的主键。"
+                },
+                {
+                  "grounded": true,
+                  "text": "没有 thread_id，checkpointer 无法保存状态，也无法在中断后恢复执行。"
+                },
+                {
+                  "grounded": true,
+                  "text": "使用 checkpointer 调用图时，必须在 config 的 configurable 部分指定 thread_id。"
+                },
+                {
+                  "grounded": true,
+                  "text": "默认在每个 super-step 为每个状态通道写入完整值。"
+                },
+                {
+                  "grounded": true,
+                  "text": "DeltaChannel 可改为只存增量，以降低存储增长。"
+                },
+                {
+                  "grounded": true,
+                  "text": "thread_id 过长会触发 PostgresSaver 的列长度错误，文档建议保持在 255 字符以内。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 12,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.58
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          }
+        },
+        "status": "completed"
+      },
+      "question_id": "single_hop-dev-01"
+    },
+    {
+      "after": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 12,
+              "citation_use_count": 15,
+              "citations": [
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "types` 导入 `interrupt`，JS 从 `@langchain/langgraph` 导入 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 2,
+                  "sentence": "types` 导入 `interrupt`，JS 从 `@langchain/langgraph` 导入 。",
+                  "supported": false
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 3,
+                  "sentence": "types` 导入 `interrupt`，JS 从 `@langchain/langgraph` 导入 。",
+                  "supported": false
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "**调用位置与参数**：`interrupt()` 应在节点函数内、需要暂停的位置调用，payload 须为 JSON 可序列化值 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "**持久化（checkpointer）**：文档明确列出“需要 checkpointer 来持久化图状态”，产品环境建议用持久化 checkpointer ；human-in-the-loop 工作流需要 checkpointer，以便查看状态并在更新后恢复执行 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 3,
+                  "sentence": "**持久化（checkpointer）**：文档明确列出“需要 checkpointer 来持久化图状态”，产品环境建议用持久化 checkpointer ；human-in-the-loop 工作流需要 checkpointer，以便查看状态并在更新后恢复执行 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 2,
+                  "sentence": "图需在编译时配置 checkpointer（或 store，或两者）。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 2,
+                  "sentence": "例外：使用 Agent Server 时无需手动配置 checkpointer/store，服务器在后台处理持久化 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 3,
+                  "sentence": "**thread_id**：checkpointer 以 `thread_id` 为主键存取检查点；没有它，checkpointer 无法保存状态，也无法在 interrupt 后恢复执行 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "**暂停与恢复的机制关系**：触发中断时，LangGraph 通过持久化层保存图状态并等待恢复 ；恢复方式是重新调用图并传入 `Command(resume=.",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": ")`，该值成为节点内 `interrupt()` 的返回值 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": ")` 是唯一适合作为 `invoke()`/`stream()` 输入的 Command 模式，其他参数（`update`、`goto`、`graph`）用于节点返回 。",
+                  "supported": false
+                }
+              ],
+              "citations_truncated": true,
+              "score_scope": "sampled_citation_uses",
+              "supported_citation_count": 9,
+              "unique_citation_count": 3
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.75
+          },
+          "claim_groundedness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.46
+          },
+          "faithfulness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          }
+        },
+        "status": "completed"
+      },
+      "before": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 12,
+              "citation_use_count": 12,
+              "citations": [
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "**结论：** 冻结文档列出使用 `interrupt()` 暂停工作流的三项前置条件：配置 checkpointer 持久化图状态（生产环境用持久型）、在 config 中提供 `thread_id`、在希望暂停的位置调用 `interrupt()` 且 payload 可 JSON 序列化 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "**Checkpointer**：`interrupt()` 触发时，LangGraph 通过持久化层保存图状态并无限期等待恢复 ；checkpointer 正是用于 human-in-the-loop 这类需查看状态并在更新后恢复执行的场景 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 2,
+                  "sentence": "**Checkpointer**：`interrupt()` 触发时，LangGraph 通过持久化层保存图状态并无限期等待恢复 ；checkpointer 正是用于 human-in-the-loop 这类需查看状态并在更新后恢复执行的场景 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 3,
+                  "sentence": "生产环境应使用持久型 checkpointer，`MemorySaver`/`InMemorySaver` 存于内存，进程重启即丢失 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "**thread_id**：运行时靠它知道从哪个状态恢复 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 2,
+                  "sentence": "checkpointer 以 `thread_id` 为主键存取检查点；没有它，checkpointer 无法保存状态，也无法在 interrupt 后恢复执行 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "`thread_id` 相当于持久游标：复用同一值恢复同一检查点，用新值则开启空状态的新线程 ；恢复时必须使用中断发生时相同的 thread ID 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "**调用位置与 payload**：`interrupt()` 须写在希望暂停的节点位置，payload 必须可 JSON 序列化 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": ")` 把值返回给 `interrupt()`，且这是唯一适合作为 `invoke()`/`stream()` 输入的 Command 模式 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "16 及以上（JS）；这只是可选类型化恢复值的版本下限，不是暂停本身的前提。",
+                  "supported": false
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 3,
+                  "sentence": "- 使用 Agent Server 时无需手动配置 checkpointer 或 store，服务器自动处理持久化 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- 中断后节点恢复会重跑该节点，若 `interrupt()` 之前已有副作用（如写记录），可能重复执行 。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 11,
+              "unique_citation_count": 3
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.9166666666666666
+          },
+          "claim_groundedness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.43
+          },
+          "faithfulness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          }
+        },
+        "status": "completed"
+      },
+      "question_id": "single_hop-dev-02"
+    },
+    {
+      "after": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 11,
+              "citation_use_count": 11,
+              "citations": [
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "多数应用同时使用两者 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 2,
+                  "sentence": "| 暂停后恢复活跃对话 | checkpointer（检查点存储） | `thread_id`；可选 `checkpoint_id` | `thread_id` 是检查点存取主键，必须在 `config` 的 `configurable` 中传入，否则无法保存状态或在中断后恢复 ；`checkpoint_id` 只在给定 `thread_id` 下检索特定快照  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "| 新线程可用偏好 | store（长期记忆） | `user_id`（命名空间元组如 `(user_id, \"memories\")`） | 从节点或应用代码读写 ；新线程只要 `user_id` 相同仍可访问同一记忆  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-8003a051bf6ace037b480207dea6a4eb4453eb747a6e1c31dcf996d983ddb7e3",
+                  "number": 3,
+                  "sentence": "| 新线程可用偏好 | store（长期记忆） | `user_id`（命名空间元组如 `(user_id, \"memories\")`） | 从节点或应用代码读写 ；新线程只要 `user_id` 相同仍可访问同一记忆  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "- checkpointer 持久化图状态快照，作用域为单个线程，属短期线程记忆，用于对话连续性、human-in-the-loop、time travel 和容错 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "- store 持久化图状态之外的应用自定义键值数据，跨线程，属长期记忆，用于用户偏好、事实和共享知识 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-8003a051bf6ace037b480207dea6a4eb4453eb747a6e1c31dcf996d983ddb7e3",
+                  "number": 3,
+                  "sentence": "命名空间可为任意长度、不必与用户绑定，示例用 `(user_id, \"memories\")` 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "- 两者分离：`thread_id` 管当前线程，`user_id` 管跨线程持久信息；`user_id` 不是检查点主键，`thread_id` 也不用于偏好命名空间 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-8003a051bf6ace037b480207dea6a4eb4453eb747a6e1c31dcf996d983ddb7e3",
+                  "number": 3,
+                  "sentence": "- 两者分离：`thread_id` 管当前线程，`user_id` 管跨线程持久信息；`user_id` 不是检查点主键，`thread_id` 也不用于偏好命名空间 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 2,
+                  "sentence": "- 两者分离：`thread_id` 管当前线程，`user_id` 管跨线程持久信息；`user_id` 不是检查点主键，`thread_id` 也不用于偏好命名空间 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-8003a051bf6ace037b480207dea6a4eb4453eb747a6e1c31dcf996d983ddb7e3",
+                  "number": 3,
+                  "sentence": "恢复时沿用同一 `thread_id`；开新线程时改 `thread_id`（如 `\"2\"`）但保持同一 `user_id`，即可在新线程读取偏好 。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 11,
+              "unique_citation_count": 3
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 15,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "暂停后恢复活跃对话用 checkpointer，以 thread_id 定位。"
+                },
+                {
+                  "grounded": true,
+                  "text": "新线程中可用的用户偏好用 store，以 user_id 命名空间定位。"
+                },
+                {
+                  "grounded": true,
+                  "text": "多数应用同时使用 checkpointer 和 store 两者。"
+                },
+                {
+                  "grounded": true,
+                  "text": "thread_id 是检查点存取主键，必须在 config 的 configurable 中传入，否则无法保存状态或在中断后恢复。"
+                },
+                {
+                  "grounded": true,
+                  "text": "checkpoint_id 只在给定 thread_id 下检索特定快照。"
+                },
+                {
+                  "grounded": true,
+                  "text": "store 可从节点或应用代码读写。"
+                },
+                {
+                  "grounded": true,
+                  "text": "新线程只要 user_id 相同仍可访问同一记忆。"
+                },
+                {
+                  "grounded": true,
+                  "text": "checkpointer 持久化图状态快照，作用域为单个线程，属短期线程记忆，用于对话连续性、human-in-the-loop、time travel 和容错。"
+                },
+                {
+                  "grounded": true,
+                  "text": "恢复同一对话必须复用原 thread_id；换新 thread_id 即新线程，不会加载原线程状态。"
+                },
+                {
+                  "grounded": true,
+                  "text": "store 持久化图状态之外的应用自定义键值数据，跨线程，属长期记忆，用于用户偏好、事实和共享知识。"
+                },
+                {
+                  "grounded": true,
+                  "text": "store 命名空间可为任意长度、不必与用户绑定，示例用 (user_id, \"memories\")。"
+                },
+                {
+                  "grounded": true,
+                  "text": "thread_id 管当前线程，user_id 管跨线程持久信息；user_id 不是检查点主键，thread_id 也不用于偏好命名空间。"
+                },
+                {
+                  "grounded": true,
+                  "text": "编译图时同时传入 checkpointer 和 store，调用时 config 中指定 thread_id，并通过 context 传入 user_id。"
+                },
+                {
+                  "grounded": true,
+                  "text": "恢复时沿用同一 thread_id；开新线程时改 thread_id 但保持同一 user_id，即可在新线程读取偏好。"
+                },
+                {
+                  "grounded": false,
+                  "text": "文档未涉及具体存储后端选型与并发/清理策略。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 14,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.9333333333333333
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.55
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.9333333333333333
+          }
+        },
+        "status": "completed"
+      },
+      "before": {
+        "answered": false,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 12,
+              "citation_use_count": 17,
+              "citations": [
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "两者可编译进同一图，但职责与标识符不同 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-8003a051bf6ace037b480207dea6a4eb4453eb747a6e1c31dcf996d983ddb7e3",
+                  "number": 2,
+                  "sentence": "两者可编译进同一图，但职责与标识符不同 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 3,
+                  "sentence": "两者可编译进同一图，但职责与标识符不同 。",
+                  "supported": false
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "- checkpointer 持久化图状态快照，作用域为单个线程，属短期、线程级记忆，用于对话连续性、human-in-the-loop、时间旅行与容错 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 3,
+                  "sentence": "- 调用图时必须在 `configurable` 中传 `thread_id`；checkpointer 以它为主键存取检查点，没有它无法保存状态或在中断后恢复 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "invoke(input, {\"configurable\": {\"thread_id\": \"thread-1\"}})`，图需 `compile(checkpointer=checkpointer)` 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 3,
+                  "sentence": "invoke(input, {\"configurable\": {\"thread_id\": \"thread-1\"}})`，图需 `compile(checkpointer=checkpointer)` 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "- 限制：`PostgresSaver` 的 `thread_id` 列长度有限，应保持在 255 字符以下，可用 UUID 或哈希 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "`MemorySaver`/`InMemorySaver` 存于 RAM，重启不保留 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "- Store 持久化应用定义的键值数据，作用域跨线程，属长期记忆，用于用户偏好、事实与共享知识 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-8003a051bf6ace037b480207dea6a4eb4453eb747a6e1c31dcf996d983ddb7e3",
+                  "number": 2,
+                  "sentence": "- 记忆按元组命名空间组织，示例为 `(user_id, \"memories\")`；命名空间可任意长度，不必须用户专属 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-8003a051bf6ace037b480207dea6a4eb4453eb747a6e1c31dcf996d983ddb7e3",
+                  "number": 2,
+                  "sentence": "- 调用图时同时传 `thread_id` 与作为该用户命名空间的 `user_id`；新线程（如 `thread_id` 改为 `\"2\"`）只要 `user_id` 相同，仍可读取此前记忆 。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": true,
+              "score_scope": "sampled_citation_uses",
+              "supported_citation_count": 11,
+              "unique_citation_count": 3
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.9166666666666666
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 23,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "会话恢复应使用 checkpointer，并以 thread_id 定位。"
+                },
+                {
+                  "grounded": true,
+                  "text": "偏好跨线程复用应使用 Store，并以 user_id 命名空间关联。"
+                },
+                {
+                  "grounded": true,
+                  "text": "checkpointer 和 Store 可以编译进同一图，但职责与标识符不同。"
+                },
+                {
+                  "grounded": true,
+                  "text": "checkpointer 持久化图状态快照，作用域为单个线程，属于短期、线程级记忆。"
+                },
+                {
+                  "grounded": true,
+                  "text": "checkpointer 用于对话连续性、human-in-the-loop、时间旅行与容错。"
+                },
+                {
+                  "grounded": true,
+                  "text": "调用图时必须在 configurable 中传 thread_id。"
+                },
+                {
+                  "grounded": true,
+                  "text": "checkpointer 以 thread_id 为主键存取检查点，没有它无法保存状态或在中断后恢复。"
+                },
+                {
+                  "grounded": true,
+                  "text": "最小调用形式为 graph.invoke(input, {\"configurable\": {\"thread_id\": \"thread-1\"}})，且图需 compile(checkpointer=checkpointer)。"
+                },
+                {
+                  "grounded": true,
+                  "text": "PostgresSaver 的 thread_id 列长度有限，应保持在 255 字符以下，可用 UUID 或哈希。"
+                },
+                {
+                  "grounded": true,
+                  "text": "MemorySaver/InMemorySaver 存于 RAM，重启不保留。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Store 持久化应用定义的键值数据，作用域跨线程，属于长期记忆。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Store 用于用户偏好、事实与共享知识。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Store 的记忆按元组命名空间组织，示例为 (user_id, \"memories\")。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Store 的命名空间可任意长度，不必须用户专属。"
+                },
+                {
+                  "grounded": true,
+                  "text": "调用图时同时传 thread_id 与作为该用户命名空间的 user_id。"
+                },
+                {
+                  "grounded": true,
+                  "text": "新线程只要 user_id 相同，仍可读取此前记忆。"
+                },
+                {
+                  "grounded": true,
+                  "text": "节点内通过 Runtime 取 user_id，用 store.put(namespace, memory_id, {...}) 写入，memory_id 可用 UUID。"
+                },
+                {
+                  "grounded": true,
+                  "text": "恢复依赖同一 thread_id 且检查点存储可跨进程存活。"
+                },
+                {
+                  "grounded": true,
+                  "text": "偏好依赖同一 user_id 且 Store 持久化。"
+                },
+                {
+                  "grounded": true,
+                  "text": "thread_id 不能承载跨线程偏好，user_id 也不能定位线程状态。"
+                },
+                {
+                  "grounded": true,
+                  "text": "若用 Agent Server，文档称其自动处理持久化，无需手动配置。"
+                },
+                {
+                  "grounded": true,
+                  "text": "本次可见材料未给出 Store 后端在重启后的持久化细节。"
+                },
+                {
+                  "grounded": true,
+                  "text": "本次可见材料未给出暂停/恢复的具体中断 API 流程。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 23,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.34
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          }
+        },
+        "status": "partial"
+      },
+      "question_id": "multi_hop-dev-01"
+    },
+    {
+      "after": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 11,
+              "citation_use_count": 11,
+              "citations": [
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- `interrupt()` 通过重跑调用它的节点来实现；恢复时节点从头重新执行，而不是从 `interrupt` 点继续 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- 恢复方式是再次调用图并传入含 resume 值的 `Command`，该值成为节点内 `interrupt()` 的返回值，节点继续执行；但节点本身仍从头重跑 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- 因此 `interrupt()` 之前对外部服务的写入，在恢复时会被再次执行 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- 文档明确：`interrupt` 之前调用的副作用应当（理想情况下）是幂等的；幂等指同一操作可多次应用而不改变初始执行之外的结果 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- 文档举例：节点内先调用 API 更新记录、再 `interrupt()`，恢复时该调用会重跑多次，可能覆盖初始更新或产生重复记录 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- 文档给出的做法：在 `interrupt()` 前使用幂等操作、把副作用放到 `interrupt()` 之后、尽量把副作用拆到独立节点 ；并明确不要执行非幂等操作、不要在不检查记录是否已存在的情况下新建记录 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- 文档警告：不要在单个节点内用 `while True` + `interrupt()` 循环，因为每次恢复都从头重跑，循环中多次 `interrupt()` 会导致每次恢复重放此前所有迭代，产生指数级重复执行 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- 上述幂等要求是文档对调用方/节点代码的建议，文档没有说明框架层会自动去重或提供事务性保证 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 2,
+                  "sentence": "- 检查点机制（`thread_id`、super-step 边界检查点）用于保存状态和恢复执行 ，但本次可见材料未说明它能消除 `interrupt` 前外部写入的重复执行。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 3,
+                  "sentence": "- 故障容错文档中的重试会清除超时尝试的写入 ，但那是超时/重试路径，不是 `interrupt` 恢复路径，不能据此推断 `interrupt` 场景已有去重。",
+                  "supported": false
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "**实践取舍**：若外部写入无法幂等，应把它移到 `interrupt()` 之后或拆到独立节点 ；若必须放在之前，则需在节点代码内做存在性检查或去重键 。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 10,
+              "unique_citation_count": 3
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.9090909090909091
+          },
+          "claim_groundedness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.62
+          },
+          "faithfulness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          }
+        },
+        "status": "completed"
+      },
+      "before": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 8,
+              "citation_use_count": 8,
+              "citations": [
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "文档未承诺框架会自动去重或保证外部写入只执行一次 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "`interrupt()` 在节点内抛出异常使运行时暂停并保存状态；恢复时用 `Command` 重新调用图，恢复值成为 `interrupt()` 的返回值，节点继续执行 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "关键后果是：节点不是从 `interrupt()` 处“续跑”，而是整个节点重跑，`interrupt()` 之前的代码会再次执行 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "文档明确警告：若在外部 API 调用之后才调用 `interrupt()`，恢复时该调用会被多次重跑，可能覆盖初始更新或产生重复记录 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "给出的处理方式有三条 ：",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "文档同时列出反例：不要在 `interrupt()` 前执行非幂等操作，不要不检查记录是否存在就新建记录 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "文档以建议性措辞（“should (ideally) be idempotent”）把 `interrupt()` 前副作用的幂等性交由调用方负责，并给出放置位置与拆分节点的实践建议；文档未声明框架会自动去重或保证外部写入只执行一次 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "**缺口说明：** 本次可见材料未给出框架层面的去重机制、事务性外部写入保证或补偿接口的具体调用方式；上述结论仅基于当前可见的 Interrupts 文档 ，不能推出全部文档均无相关说明。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 8,
+              "unique_citation_count": 1
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "claim_groundedness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.73
+          },
+          "faithfulness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          }
+        },
+        "status": "completed"
+      },
+      "question_id": "multi_hop-dev-02"
+    },
+    {
+      "after": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 6,
+              "citation_use_count": 6,
+              "citations": [
+                {
+                  "evidence_id": "evidence-63cbb71ed29ec2b170362179f9564165604520cefbd3c71b72a780a73c255353",
+                  "number": 1,
+                  "sentence": "冻结文档分别列出两者适用场景，但未就这两个场景给出直接对比或选型结论 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-63cbb71ed29ec2b170362179f9564165604520cefbd3c71b72a780a73c255353",
+                  "number": 1,
+                  "sentence": "| 分支/并行可视化 | 采用声明式方法，定义节点、边与共享状态以形成可视化图结构；多决策点分支显式且易可视化；并行运行后合并结果可自然处理；可视化便于团队理解、记录与维护  | 采用命令式方法，将 LangGraph 功能集成到标准过程式代码；文档未提及专门的分支/并行可视化能力，仅列为“带简单分支逻辑的线性工作流”  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-63cbb71ed29ec2b170362179f9564165604520cefbd3c71b72a780a73c255353",
+                  "number": 1,
+                  "sentence": "| 迁移过程式代码 | 文档未直接说明其与现有过程式代码的对应关系或迁移方式  | 明确适合对现有过程式代码做最小改动，使用 if/else、循环、函数调用等标准控制流，函数作用域状态  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-63cbb71ed29ec2b170362179f9564165604520cefbd3c71b72a780a73c255353",
+                  "number": 1,
+                  "sentence": "**取舍条件：** 分支多、并行路径需汇合、可视化用于调试或文档协作时，Graph API 的显式结构更合适 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-63cbb71ed29ec2b170362179f9564165604520cefbd3c71b72a780a73c255353",
+                  "number": 1,
+                  "sentence": "已有过程式代码、希望少重构、工作流偏线性且分支简单时，Functional API 更合适 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-63cbb71ed29ec2b170362179f9564165604520cefbd3c71b72a780a73c255353",
+                  "number": 1,
+                  "sentence": "**缺口：** 文档未给出两场景的直接对比或选型指引 ；也未说明 Graph API 迁移过程式代码的具体对应关系与迁移步骤 。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 6,
+              "unique_citation_count": 1
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 20,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "若团队首要需求是分支/并行可视化，应选 Graph API。"
+                },
+                {
+                  "grounded": true,
+                  "text": "若团队首要需求是以最小改动迁移现有过程式代码，应选 Functional API。"
+                },
+                {
+                  "grounded": true,
+                  "text": "冻结文档分别列出 Graph API 和 Functional API 的适用场景。"
+                },
+                {
+                  "grounded": true,
+                  "text": "冻结文档未就分支/并行可视化与迁移过程式代码这两个场景给出直接对比或选型结论。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 采用声明式方法，通过定义节点、边与共享状态形成可视化图结构。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 使多决策点分支显式且易于可视化。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 能自然处理并行运行后合并结果。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 的可视化便于团队理解、记录与维护工作流。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 采用命令式方法，将 LangGraph 功能集成到标准过程式代码。"
+                },
+                {
+                  "grounded": true,
+                  "text": "文档未提及 Functional API 专门的分支/并行可视化能力。"
+                },
+                {
+                  "grounded": true,
+                  "text": "文档将 Functional API 列为适用于带简单分支逻辑的线性工作流。"
+                },
+                {
+                  "grounded": true,
+                  "text": "文档未直接说明 Graph API 与现有过程式代码的对应关系或迁移方式。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 明确适合对现有过程式代码做最小改动。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 使用 if/else、循环、函数调用等标准控制流。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 使用函数作用域状态。"
+                },
+                {
+                  "grounded": true,
+                  "text": "分支多、并行路径需汇合、可视化用于调试或文档协作时，Graph API 的显式结构更合适。"
+                },
+                {
+                  "grounded": true,
+                  "text": "已有过程式代码、希望少重构、工作流偏线性且分支简单时，Functional API 更合适。"
+                },
+                {
+                  "grounded": true,
+                  "text": "文档未给出两场景的直接对比或选型指引。"
+                },
+                {
+                  "grounded": true,
+                  "text": "文档未说明 Graph API 迁移过程式代码的具体对应关系与迁移步骤。"
+                },
+                {
+                  "grounded": false,
+                  "text": "上述结论仅为本次可见材料范围，不能推出全部文档无答案。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 19,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.95
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.81
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.7
+          }
+        },
+        "status": "completed"
+      },
+      "before": {
+        "answered": false,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.0
+          },
+          "citation_accuracy": {
+            "reason": "no_citations",
+            "status": "not_applicable",
+            "value": null
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 26,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "Graph API 适合需要复杂工作流可视化以便调试和文档化的场景。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 适合需要跨多个节点共享数据的显式状态管理。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 适合需要多个决策点的条件分支。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 适合需要稍后合并的并行执行路径。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 适合视觉化表示有助于理解的团队协作。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 适合希望对现有过程式代码做最小改动的场景。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 适合使用标准控制流（if/else、循环、函数调用）的场景。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 适合无需显式状态管理的函数作用域状态。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 适合样板代码更少的快速原型开发。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 适合具有简单分支逻辑的线性工作流。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 使用声明式方法，通过定义节点、边和共享状态来创建可视化图结构。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 使多个决策点的分支显式且易于可视化。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 能自然处理并行运行多个操作并合并结果。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 的视觉特性使团队更容易理解、记录和维护复杂工作流。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 使用命令式方法，将 LangGraph 功能集成到标准过程式代码中。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 允许对现有代码做最小重构即可添加 LangGraph 功能。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 适合主要顺序且条件逻辑简单的工作流。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 适合无需定义状态模式和图结构的快速测试想法。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 适合状态自然限定在单个函数内且无需广泛共享的场景。"
+                },
+                {
+                  "grounded": true,
+                  "text": "两个 API 可以在同一应用中一起使用。"
+                },
+                {
+                  "grounded": true,
+                  "text": "两个 API 共享相同的底层运行时。"
+                },
+                {
+                  "grounded": true,
+                  "text": "两个 API 都提供持久化、流式传输、人在回路和记忆等核心 LangGraph 功能。"
+                },
+                {
+                  "grounded": true,
+                  "text": "当功能式工作流变得复杂时，可以迁移到 Graph API。"
+                },
+                {
+                  "grounded": true,
+                  "text": "当图对于简单线性流程过于复杂时，可以从 Graph API 迁移到 Functional API。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 适合需要显式控制工作流结构的场景。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 适合需要快速原型开发能力的场景。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 26,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.0
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.0
+          }
+        },
+        "status": "completed"
+      },
+      "question_id": "comparison-dev-01"
+    },
+    {
+      "after": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 8,
+              "citation_use_count": 8,
+              "citations": [
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "**结论：** 对暴露于进程崩溃的长运行工作流，持久性从低到高为 `exit` < `async` < `sync` 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "`exit` 在崩溃中途无法恢复；`async` 有“可能未写入 checkpoint”的小风险；`sync` 在继续执行前确保每个 checkpoint 已写入 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "| `exit` | 仅在图执行退出时（成功、出错或 human-in-the-loop 中断） | 中间状态不保存，执行中途崩溃无法恢复  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "| `async` | 在下一步执行期间异步写入 | 性能与持久性较好，但进程执行期间崩溃时可能未写入 checkpoint  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "| `sync` | 在下一步开始前同步写入 | 确保继续执行前每个 checkpoint 都已写入，持久性高，但有性能开销  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "**取舍：** 长运行图若最看重性能，`exit` 最好，但代价是崩溃后丢失全部中间进度 ；`async` 在性能与持久性间折中，但崩溃窗口内仍可能丢 checkpoint ；`sync` 持久性最高，适合不能接受崩溃丢失已写 checkpoint 的场景，代价是性能开销 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "**边界：** 文档只给出上述定性保证与排序，未量化崩溃窗口、丢失步数或性能开销 ；也未说明不同 checkpointer 后端（如内存型在进程重启后全部丢失 ）与三种模式的组合差异。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 2,
+                  "sentence": "**边界：** 文档只给出上述定性保证与排序，未量化崩溃窗口、丢失步数或性能开销 ；也未说明不同 checkpointer 后端（如内存型在进程重启后全部丢失 ）与三种模式的组合差异。",
+                  "supported": false
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 7,
+              "unique_citation_count": 2
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.875
+          },
+          "claim_groundedness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.93
+          },
+          "faithfulness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          }
+        },
+        "status": "completed"
+      },
+      "before": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 10,
+              "citation_use_count": 10,
+              "citations": [
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "**结论：** 按冻结文档，崩溃持久性从弱到强为 `exit` < `async` < `sync` 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "长时间工作流若必须能从中途进程崩溃恢复，应选 `sync`；可接受崩溃时丢失尚未落盘检查点的小风险，选 `async`；`exit` 性能最好，但中途崩溃不可恢复 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "| `exit` | 仅图执行退出时：成功、出错或 human-in-the-loop 中断  | 执行中途的中间状态全部未保存  | 文档明确说无法从进程崩溃中恢复  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "| `async` | 下一步执行期间异步持久化  | 进程执行期间崩溃时，可能尚未写入的检查点  | 从最近已成功写入的检查点恢复；文档未给出更细的丢失步数  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "| `sync` | 下一步开始前同步写入每个检查点  | 文档称“确保继续执行前检查点已写入”，未承诺零丢失  | 从已写入的最近检查点恢复；文档未给出更细的恢复位置  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- `exit`：文档称其为长时间运行图提供最佳性能，但明确不保存中间状态，因此不能用于需要崩溃恢复的长时间工作流 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- `async`：文档称性能与持久性兼顾，但存在“进程崩溃时未写检查点”的小风险 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- `sync`：文档称持久性高，代价是性能开销 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "**限定：** 上述比较仅来自冻结文档的 durability modes 段落 ；文档没有给出各模式在崩溃时精确丢失的步数、恢复点编号或实测指标，不能据此量化“丢失多少已完成工作”。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 2,
+                  "sentence": "另外，检查点能否跨进程重启保留还取决于所选 checkpointer：`MemorySaver`/`InMemorySaver` 存于 RAM，进程重启后检查点全部丢失 ，此时讨论三种 durability 模式的崩溃持久性没有实际意义。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 10,
+              "unique_citation_count": 2
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "claim_groundedness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.77
+          },
+          "faithfulness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          }
+        },
+        "status": "completed"
+      },
+      "question_id": "comparison-dev-02"
+    },
+    {
+      "after": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 9,
+              "citation_use_count": 9,
+              "citations": [
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": "2` 。",
+                  "supported": false
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": "0`，属于另一个包，不能套用到 Python 。",
+                  "supported": false
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": "2`” [1]；Timeouts 一节再次标注“Requires `langgraph>=1.",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": "types` 导入 `TimeoutPolicy` 。",
+                  "supported": false
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": "2`” [1]；示例从 `langgraph.",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": "errors` 导入 `NodeError` 作为处理器参数 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": "0` 。",
+                  "supported": false
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": ", { errorHandler })` ；该限制明确限定于 JS/TS，不应据此推断 Python 的用法或版本。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": "上述版本边界仅来自冻结文档的注释与示例 ；文档未给出更细的补丁版本或向后兼容说明，无法据此确认其他版本行为。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 5,
+              "unique_citation_count": 1
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.5555555555555556
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 11,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "在冻结文档中，Python 的 per-node timeout 与 node-level error handler 同属 Python 包 langgraph，版本下限均为 1.2，即要求 langgraph>=1.2。"
+                },
+                {
+                  "grounded": true,
+                  "text": "JavaScript/TypeScript 的对应要求是 @langchain/langgraph>=1.4.0，属于另一个包，不能套用到 Python。"
+                },
+                {
+                  "grounded": true,
+                  "text": "per-node timeout 的 Python 注释写明“Per-node timeouts and node-level error handlers require langgraph>=1.2”。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Timeouts 一节再次标注“Requires langgraph>=1.2”，示例从 langgraph.types 导入 TimeoutPolicy。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Error handling 一节的 Python 注释同样标注“Requires langgraph>=1.2”。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Error handling 示例从 langgraph.errors 导入 NodeError 作为处理器参数。"
+                },
+                {
+                  "grounded": true,
+                  "text": "文档用 :::python 与 :::js 两个独立注释块分别给出要求：Python 为 langgraph>=1.2，JS 为 @langchain/langgraph>=1.4.0。"
+                },
+                {
+                  "grounded": true,
+                  "text": "文档说明在 JavaScript/TypeScript SDK 中，task/entrypoint 上不可用错误处理器，应改用 StateGraph.addNode(..., { errorHandler })。"
+                },
+                {
+                  "grounded": false,
+                  "text": "该限制明确限定于 JS/TS，不应据此推断 Python 的用法或版本。"
+                },
+                {
+                  "grounded": true,
+                  "text": "上述版本边界仅来自冻结文档的注释与示例。"
+                },
+                {
+                  "grounded": true,
+                  "text": "文档未给出更细的补丁版本或向后兼容说明，无法据此确认其他版本行为。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 10,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.9090909090909091
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.43
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.8095238095238095
+          }
+        },
+        "status": "completed"
+      },
+      "before": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 5,
+              "citation_use_count": 5,
+              "citations": [
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": "2`”。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": "TimeoutPolicy` 在 `add_node` 传入 `timeout`。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": "- **Python node-level error handlers**：同样属于 `langgraph`，同一句版本说明覆盖它；处理器通过 `langgraph.",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": "NodeError` 类型注解注入。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 1,
+                  "sentence": "0`”[1]，包名与版本号均不同于 Python 的 `langgraph>=1.",
+                  "supported": false
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 4,
+              "unique_citation_count": 1
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.8
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 11,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "Python 侧 per-node timeouts 属于 langgraph 包，版本边界为 langgraph>=1.2。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Python 侧 node-level error handlers 属于 langgraph 包，版本边界为 langgraph>=1.2。"
+                },
+                {
+                  "grounded": true,
+                  "text": "文档明确写“Per-node timeouts and node-level error handlers require langgraph>=1.2”。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Python 用法上通过 langgraph.types.TimeoutPolicy 在 add_node 传入 timeout。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Python 错误处理器通过 langgraph.errors.NodeError 类型注解注入。"
+                },
+                {
+                  "grounded": true,
+                  "text": "JavaScript 对应要求为 @langchain/langgraph>=1.4.0。"
+                },
+                {
+                  "grounded": true,
+                  "text": "JavaScript 的包名与版本号均不同于 Python 的 langgraph>=1.2。"
+                },
+                {
+                  "grounded": true,
+                  "text": "两项功能在 Python 侧共享同一条版本门槛，文档未给出更细的逐功能版本差异。"
+                },
+                {
+                  "grounded": true,
+                  "text": "JS 侧 >=1.4.0 仅约束 @langchain/langgraph，不适用于 Python 安装。"
+                },
+                {
+                  "grounded": true,
+                  "text": "本次可见材料只给出下限，未说明上限或具体发布版本号。"
+                },
+                {
+                  "grounded": true,
+                  "text": "无法据此确认更早版本是否部分可用。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 11,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.92
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.9047619047619048
+          }
+        },
+        "status": "completed"
+      },
+      "question_id": "version_boundary-dev-01"
+    },
+    {
+      "after": {
+        "answered": false,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 11,
+              "citation_use_count": 11,
+              "citations": [
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "11+ 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "（2）异步代码中 `get_stream_writer` 不可用，自定义流写入需改为给节点或工具加 `writer` 参数并手动传入 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "11 且使用异步代码 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "- 限制：必须显式传 `RunnableConfig` 给 `ainvoke()` 才能启用正确流式输出 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "11 之前缺少 context var 支持，需显式传递以确保 context vars 正确传播 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "11+ 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "11 的异步代码 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "- 限制：`get_stream_writer` 不工作；应给节点或工具增加 `writer` 参数并手动传入 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "astream()` 时设 `stream_mode=\"custom\"`；可组合多个模式，但至少一个须为 `\"custom\"` 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "- 用途边界：`custom` 模式可用于流式输出任意 LLM API 的数据，包括未实现 LangChain chat model 接口的 API 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "10 下回调传播的事件类型清单、嵌套调用约束，也未给出 `writer` 参数的具体签名或完整示例；这些不能由现有摘录确认 。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 11,
+              "unique_citation_count": 1
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 11,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "在 Python 3.10 上，异步 LLM 流式输出必须显式把 RunnableConfig 传给 ainvoke()，否则无法正确流式输出。"
+                },
+                {
+                  "grounded": true,
+                  "text": "文档建议在 Python < 3.11 的异步场景下升级到 Python 3.11+。"
+                },
+                {
+                  "grounded": true,
+                  "text": "在 Python < 3.11 的异步代码中，get_stream_writer 不可用。"
+                },
+                {
+                  "grounded": true,
+                  "text": "在 Python < 3.11 的异步代码中，自定义流写入需改为给节点或工具加 writer 参数并手动传入。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Python 3.11 之前缺少 context var 支持，因此需要显式传递 config 以确保 context vars 正确传播。"
+                },
+                {
+                  "grounded": true,
+                  "text": "调用 .stream() 或 .astream() 时设置 stream_mode=\"custom\" 才能接收自定义数据。"
+                },
+                {
+                  "grounded": true,
+                  "text": "可以组合多个 stream 模式，但至少一个必须为 \"custom\"。"
+                },
+                {
+                  "grounded": true,
+                  "text": "custom 模式可用于流式输出任意 LLM API 的数据，包括未实现 LangChain chat model 接口的 API。"
+                },
+                {
+                  "grounded": true,
+                  "text": "本次可见材料未给出 Python 3.10 下回调传播的事件类型清单。"
+                },
+                {
+                  "grounded": true,
+                  "text": "本次可见材料未给出 Python 3.10 下回调传播的嵌套调用约束。"
+                },
+                {
+                  "grounded": false,
+                  "text": "本次可见材料未给出 writer 参数的具体签名或完整示例。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 10,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.9090909090909091
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.67
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.9565217391304348
+          }
+        },
+        "status": "partial"
+      },
+      "before": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 11,
+              "citation_use_count": 11,
+              "citations": [
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "11”条件）上，异步 LLM 调用不会自动传播回调，必须显式传入 `RunnableConfig`；异步节点/工具中 `get_stream_writer` 不可用，必须手动传入 `writer` 参数 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "11”为条件覆盖该版本 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "- 限制：异步 LLM 调用（如 `ainvoke()`）中回调不会自动传播，必须显式把 `RunnableConfig` 传入调用，才能启用正确的流式输出 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "11” 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "10 则需在每个异步 LLM 调用处手动传配置，漏传会导致流式输出不正确 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "11 的异步代码中，`get_stream_writer` 不工作 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "- 替代做法：给节点或工具添加 `writer` 参数并手动传入，用该参数发出自定义数据 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "stream()` 时需设置 `streamMode: \"custom\"`，可与其他模式组合（如 `[\"updates\", \"custom\"]`），但至少一个须为 `\"custom\"` 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "- 边界：`custom` 模式可用于任意 LLM API，包括未实现 LangChain chat model 接口的 API ；但上述 writer 限制针对 Python < 3.",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "11 的异步场景 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-ae33c84c5354f98b8549829ced367387af03088a5bc92b5b9ccefea08c99e664",
+                  "number": 1,
+                  "sentence": "10 在范围内 。",
+                  "supported": false
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 10,
+              "unique_citation_count": 1
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.9090909090909091
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 14,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "在 Python 3.10（属于文档所述“Python < 3.11”条件）上，异步 LLM 调用不会自动传播回调，必须显式传入 RunnableConfig。"
+                },
+                {
+                  "grounded": true,
+                  "text": "在 Python 3.10 的异步节点/工具中 get_stream_writer 不可用，必须手动传入 writer 参数。"
+                },
+                {
+                  "grounded": true,
+                  "text": "文档未单列 Python 3.10，而是以“Python < 3.11”为条件覆盖该版本。"
+                },
+                {
+                  "grounded": true,
+                  "text": "异步 LLM 调用（如 ainvoke()）中回调不会自动传播，必须显式把 RunnableConfig 传入调用，才能启用正确的流式输出。"
+                },
+                {
+                  "grounded": true,
+                  "text": "该限制适用于 Python < 3.11 且使用异步代码的场景。"
+                },
+                {
+                  "grounded": true,
+                  "text": "文档建议升级到 Python 3.11+ 或参考“Async with Python < 3.11”。"
+                },
+                {
+                  "grounded": true,
+                  "text": "升级到 Python 3.11+ 可避开该限制。"
+                },
+                {
+                  "grounded": true,
+                  "text": "留在 Python 3.10 则需在每个异步 LLM 调用处手动传配置，漏传会导致流式输出不正确。"
+                },
+                {
+                  "grounded": true,
+                  "text": "在 Python < 3.11 的异步代码中，get_stream_writer 不工作。"
+                },
+                {
+                  "grounded": true,
+                  "text": "替代做法是给节点或工具添加 writer 参数并手动传入，用该参数发出自定义数据。"
+                },
+                {
+                  "grounded": true,
+                  "text": "要接收自定义数据，调用 .stream() 时需设置 streamMode: \"custom\"，可与其他模式组合（如 [\"updates\", \"custom\"]），但至少一个须为 \"custom\"。"
+                },
+                {
+                  "grounded": true,
+                  "text": "custom 模式可用于任意 LLM API，包括未实现 LangChain chat model 接口的 API。"
+                },
+                {
+                  "grounded": true,
+                  "text": "文档没有单独点名 Python 3.10；其限制以“Python < 3.11”表述，因此 3.10 在范围内。"
+                },
+                {
+                  "grounded": true,
+                  "text": "本次可见材料未给出 Python 3.10 的其他专门前提或例外。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 14,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.71
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          }
+        },
+        "status": "completed"
+      },
+      "question_id": "version_boundary-dev-02"
+    },
+    {
+      "after": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 9,
+              "citation_use_count": 9,
+              "citations": [
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "** 冻结文档中的“checkpointing keeps your place”指保存并恢复图状态，而不是保存 Python 栈帧或代码行位置 ；中断恢复时运行时从节点开头重跑整个节点，`interrupt()` 之前的代码会再次执行 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- “keeps your place”的“位置”是**图状态与 thread 游标**：检查点保存图状态快照，`thread_id` 是持久游标，复用它即恢复同一检查点 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 2,
+                  "sentence": "检查点按 super-step 边界创建，另以节点（任务）级写入持久化已完成节点的输出，完整快照在 super-step 完成时提交 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- “restarts the entire node”的“重启”是**节点执行起点**：恢复后从节点开头执行，不从中断行继续 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 3,
+                  "sentence": "- 中断（`interrupt()`）走 `GraphBubbleUp`，绕过重试与错误处理器，图正常暂停 ；恢复时整节点重跑 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- 中断（`interrupt()`）走 `GraphBubbleUp`，绕过重试与错误处理器，图正常暂停 ；恢复时整节点重跑 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 2,
+                  "sentence": "- 故障恢复是另一机制：同一 super-step 中已成功节点的 pending writes 不会重跑 ，这与中断恢复的整节点重跑不同。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- 文档警告：单节点内 `while True` + `interrupt()` 会因每次恢复从头重跑而指数级重复执行 ；多中断按索引匹配恢复值，顺序须稳定 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "**实践含义**：`interrupt()` 前的操作应幂等，副作用放在 `interrupt()` 之后或独立节点 。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 9,
+              "unique_citation_count": 3
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "claim_groundedness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.69
+          },
+          "faithfulness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          }
+        },
+        "status": "completed"
+      },
+      "before": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 11,
+              "citation_use_count": 11,
+              "citations": [
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- **“Checkpointing keeps your place”** 的原文是“the checkpointer writes the exact graph state so you can resume later, even when in an error state”。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 2,
+                  "sentence": "checkpoint 在每个 super-step 边界创建，并以 `thread_id` 作为持久游标加载状态。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "checkpoint 在每个 super-step 边界创建，并以 `thread_id` 作为持久游标加载状态。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "- **“Interrupt resumption restarts the entire node”** 的原文是：恢复时“The node restarts from the beginning of the node where the `interrupt()` was called when resumed, so any code before the `interrupt()` runs again”；另一处更直接：“it does not resume from the exact line where `interrupt` was called”。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": ")` 恢复。",
+                  "supported": false
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 2,
+                  "sentence": "| 保留层级 | super-step / 任务级图状态 | 节点级执行 |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "| 保留层级 | super-step / 任务级图状态 | 节点级执行 |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 2,
+                  "sentence": "| 恢复粒度 | 从 checkpoint（super-step 边界）恢复 | 从节点开头重启 |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "| 恢复粒度 | 从 checkpoint（super-step 边界）恢复 | 从节点开头重启 |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "| 指令指针 | 未提及 | 明确不回到 `interrupt` 所在行 |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-fe3321414d78dc0e417956c45f444350c5f282ae6a7c3221fdea84908da23bea",
+                  "number": 1,
+                  "sentence": "实际含义：`interrupt()` 之前的代码必须可安全重跑（文档建议把副作用放在 `interrupt()` 之后、使用幂等操作）。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 10,
+              "unique_citation_count": 2
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.9090909090909091
+          },
+          "claim_groundedness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.64
+          },
+          "faithfulness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          }
+        },
+        "status": "completed"
+      },
+      "question_id": "conflicting_evidence-dev-01"
+    },
+    {
+      "after": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 10,
+              "citation_use_count": 10,
+              "citations": [
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "失败恢复时，从该 super-step 的完整检查点出发，叠加已持久化的 pending writes，已成功的兄弟节点不重跑 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "顺序图 `START -> A -> B -> END` 在输入、A、B 各产生一个检查点 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 因此完整快照的粒度是“一个 super-step 完成后”，不是“每个节点完成后” 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 除 super-step 检查点外，LangGraph 在节点（任务）级持久化：super-step 内每个节点完成时，其输出作为任务条目写入 checkpointer 的 `checkpoint_writes` 表，并关联到进行中的检查点 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 完整状态快照在 super-step 完成后才提交 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 2,
+                  "sentence": "- 存储位置是 checkpointer（thread 作用域），不是 Store；Store 存应用定义的跨 thread 键值数据 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 若同一 super-step 中某节点失败，其他已成功节点的写入已持久化；从该 super-step 恢复时不重跑成功节点 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 恢复起点是该 super-step 的完整检查点，再叠加 pending writes；不是从任务写入单独恢复 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 明确限制：任务写入不是完整 `StateSnapshot` 检查点，time travel 仍从 super-step 边界的完整检查点恢复 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 若只保留 super-step 快照而丢弃任务写入，则同一 super-step 内失败会丢失已完成节点的成果；若只保留任务写入，则无法从完整快照做 time travel 。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 10,
+              "unique_citation_count": 2
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "claim_groundedness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.84
+          },
+          "faithfulness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          }
+        },
+        "status": "completed"
+      },
+      "before": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 11,
+              "citation_use_count": 11,
+              "citations": [
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "失败恢复正是靠这些已持久化的任务写入跳过已成功的兄弟节点，只重跑失败或未完成的任务 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "因此二者不是矛盾，而是“边界快照 + 边界内逐任务写入”的分工：快照用于时间旅行，任务写入用于容错恢复 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 检查点在每个 super-step 边界创建；super-step 是图中所有被调度节点执行（可能并行）的一个“tick”，同一 super-step 内的并行任务共享该边界 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 检查点保存的是 super-step 完成时提交的完整图状态快照（`StateSnapshot`）。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 每个节点在 super-step 内完成时，其输出先作为任务条目写入 `checkpoint_writes` 表，链接到进行中的检查点；完整状态快照在 super-step 完成后才提交 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 这些任务写入不是完整 `StateSnapshot` 检查点，所以时间旅行只能从 super-step 边界的完整检查点恢复 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 若同一 super-step 中某节点失败，其他已成功完成节点的 pending writes 已被持久化；从该 super-step 恢复时不会重跑已成功的节点，只重跑失败或未完成的任务 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 该跳过行为的条件：成功节点的写入已落盘到 `checkpoint_writes`，且恢复从该 super-step 的检查点开始 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-9cbd6a44b864a66edcea36179d5f29e805ed3ae389acec2b0c5b2637a2eff70d",
+                  "number": 1,
+                  "sentence": "- 文档区分任务写入与完整检查点：任务写入用于容错恢复，完整检查点用于时间旅行 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 2,
+                  "sentence": "- 超时或重试时会清除失败尝试的写入（clears any writes from the failed attempt），再决定是否重试 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-eff7b33e4ed8cfc87fe7e71ecf97426adb77e702da7470d5543d2d283cc34577",
+                  "number": 2,
+                  "sentence": "- 文档未明确说明“部分任务已写入但检查点未提交”时的重复写入或幂等性要求；本次可见材料只支持上述清除失败尝试写入的处理 ，其余属未说明之处。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 11,
+              "unique_citation_count": 2
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "claim_groundedness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.72
+          },
+          "faithfulness": {
+            "reason": "quality_input_size_limit",
+            "status": "not_applicable",
+            "value": null
+          }
+        },
+        "status": "completed"
+      },
+      "question_id": "conflicting_evidence-dev-02"
+    },
+    {
+      "after": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 9,
+              "citation_use_count": 9,
+              "citations": [
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "** 该页没有生产检查点数据库的吞吐量数值或定性性能说明，没有单请求成本（费用、延迟、资源开销）的数值或计量口径，也没有恢复时间 SLA/RTO 承诺 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "能得出的只是：该页属于概念与用途说明，量化指标不在其记载范围内，需查阅 checkpointers 指南或具体 provider 文档 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "| 生产吞吐量 | 只说明 checkpointer 用于短期、线程范围内的记忆（对话连续性、human-in-the-loop、时间旅行、容错），并建议生产使用持久化 checkpointer 如 `PostgresSaver`  | 否，无任何数值或性能描述 |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "| 单请求成本 | 仅提示长对话下检查点累积会“增加延迟和存储成本”，建议定期清理或设保留策略，示例提到用 cron 删除超过 N 天的检查点  | 否，这是存储清理建议，不是单请求成本口径 |",
+                  "supported": false
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "| 恢复时间 SLA | 只把 fault tolerance 列为用途，提到中断后恢复、故障恢复  | 否，未量化任何恢复时限 |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "- 上述“无”仅指本次可见的 persistence overview 文本，不能推出全部文档没有答案 。",
+                  "supported": false
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "- 该页确实提到延迟与存储成本会随检查点累积上升，但未给基线、量级或测量方法，不能据此估算生产吞吐或单请求开销 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "- 要得到这三项，需转向 checkpointers 指南、具体数据库/provider 文档或实测；这属于建议，不是原文结论 。",
+                  "supported": false
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "**因此可实际结论**：该页只能支持“生产应使用持久化 checkpointer、并应管理检查点保留”这类定性建议，不能支持任何吞吐量、单请求成本或恢复时间 SLA 的陈述 。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 6,
+              "unique_citation_count": 1
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.6666666666666666
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 14,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "仅凭 persistence overview，无法给出生产检查点数据库的吞吐量数值或定性性能说明。"
+                },
+                {
+                  "grounded": true,
+                  "text": "仅凭 persistence overview，无法给出单请求成本（费用、延迟、资源开销）的数值或计量口径。"
+                },
+                {
+                  "grounded": true,
+                  "text": "仅凭 persistence overview，无法给出恢复时间 SLA/RTO 承诺。"
+                },
+                {
+                  "grounded": true,
+                  "text": "persistence overview 属于概念与用途说明，量化指标不在其记载范围内。"
+                },
+                {
+                  "grounded": true,
+                  "text": "要得到吞吐量、单请求成本或恢复时间 SLA，需查阅 checkpointers 指南或具体 provider 文档。"
+                },
+                {
+                  "grounded": true,
+                  "text": "persistence overview 说明 checkpointer 用于短期、线程范围内的记忆，包括对话连续性、human-in-the-loop、时间旅行和容错。"
+                },
+                {
+                  "grounded": true,
+                  "text": "persistence overview 建议生产使用持久化 checkpointer 如 PostgresSaver。"
+                },
+                {
+                  "grounded": true,
+                  "text": "persistence overview 提示长对话下检查点累积会增加延迟和存储成本。"
+                },
+                {
+                  "grounded": true,
+                  "text": "persistence overview 建议定期清理检查点或设置保留策略，示例提到用 cron 删除超过 N 天的检查点。"
+                },
+                {
+                  "grounded": true,
+                  "text": "persistence overview 把 fault tolerance 列为 checkpointer 的用途之一，提到中断后恢复和故障恢复。"
+                },
+                {
+                  "grounded": true,
+                  "text": "persistence overview 未量化任何恢复时限。"
+                },
+                {
+                  "grounded": true,
+                  "text": "上述“无”仅指本次可见的 persistence overview 文本，不能推出全部文档没有答案。"
+                },
+                {
+                  "grounded": true,
+                  "text": "persistence overview 提到延迟与存储成本会随检查点累积上升，但未给基线、量级或测量方法，不能据此估算生产吞吐或单请求开销。"
+                },
+                {
+                  "grounded": true,
+                  "text": "persistence overview 只能支持“生产应使用持久化 checkpointer、并应管理检查点保留”这类定性建议，不能支持任何吞吐量、单请求成本或恢复时间 SLA 的陈述。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 14,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.45
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.9230769230769231
+          }
+        },
+        "status": "completed"
+      },
+      "before": {
+        "answered": true,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 7,
+              "citation_use_count": 7,
+              "citations": [
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "它只提供定性用途描述和操作性建议 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "| 生产吞吐量 | 未提供 | 仅说明检查点器用于线程内短期记忆，含容错  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "| 每请求成本 | 未提供 | 无成本、计费单位或成本模型表述  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "| 恢复时间 SLA | 未提供 | 仅提“从失败中恢复”“容错”，无时限承诺  |",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "- 检查点器持久化线程内图状态，用途包括对话连续性、human-in-the-loop、时间旅行和容错；Store 用于跨线程长期记忆 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "- 生产建议仅为操作性提示：内存型检查点在进程重启后丢失，生产应使用持久化检查点器（如 `PostgresSaver`）；长对话下检查点累积可能增加延迟和存储成本，建议定期清理或设保留策略 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-69cc7a996e0871087d84167399c54bb3f5aad04850c79c493e3a09922107cff4",
+                  "number": 1,
+                  "sentence": "- “可能增加延迟和存储成本”是定性风险提示，不是吞吐量、单价或 SLA 数据 。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 7,
+              "unique_citation_count": 1
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 16,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "概览没有给出生产检查点数据库的吞吐量数值或量级。"
+                },
+                {
+                  "grounded": true,
+                  "text": "概览没有给出每请求成本或计费口径。"
+                },
+                {
+                  "grounded": true,
+                  "text": "概览没有给出恢复时间 SLA/RTO。"
+                },
+                {
+                  "grounded": true,
+                  "text": "概览只提供定性用途描述和操作性建议。"
+                },
+                {
+                  "grounded": true,
+                  "text": "检查点器用于线程内短期记忆，含容错。"
+                },
+                {
+                  "grounded": true,
+                  "text": "概览仅提“从失败中恢复”“容错”，无时限承诺。"
+                },
+                {
+                  "grounded": true,
+                  "text": "检查点器持久化线程内图状态，用途包括对话连续性、human-in-the-loop、时间旅行和容错。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Store 用于跨线程长期记忆。"
+                },
+                {
+                  "grounded": true,
+                  "text": "这些是定性描述，不是性能承诺。"
+                },
+                {
+                  "grounded": true,
+                  "text": "内存型检查点在进程重启后丢失。"
+                },
+                {
+                  "grounded": true,
+                  "text": "生产应使用持久化检查点器（如 PostgresSaver）。"
+                },
+                {
+                  "grounded": true,
+                  "text": "长对话下检查点累积可能增加延迟和存储成本。"
+                },
+                {
+                  "grounded": true,
+                  "text": "建议定期清理或设保留策略。"
+                },
+                {
+                  "grounded": true,
+                  "text": "“可能增加延迟和存储成本”是定性风险提示，不是吞吐量、单价或 SLA 数据。"
+                },
+                {
+                  "grounded": false,
+                  "text": "本次可见材料只覆盖该概览，无法据此推断其他文档是否含基准测试、成本表或恢复承诺。"
+                },
+                {
+                  "grounded": false,
+                  "text": "要获得这些指标，需查阅检查点器专门文档、部署/运维文档或供应商计费与 SLA 条款。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 14,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.875
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.64
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.85
+          }
+        },
+        "status": "completed"
+      },
+      "question_id": "insufficient_evidence-dev-01"
+    },
+    {
+      "after": {
+        "answered": false,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 3,
+              "citation_use_count": 3,
+              "citations": [
+                {
+                  "evidence_id": "evidence-63cbb71ed29ec2b170362179f9564165604520cefbd3c71b72a780a73c255353",
+                  "number": 1,
+                  "sentence": "** 仅依据 API-choice guide ，原文没有给出 Graph API 相对 Functional API 的延迟改进百分比，也没有给出任何延迟数值或基准测试结果。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-63cbb71ed29ec2b170362179f9564165604520cefbd3c71b72a780a73c255353",
+                  "number": 1,
+                  "sentence": "原文只按使用场景比较两者：Graph API 适合复杂工作流可视化、显式状态管理、条件分支、并行执行后合并、团队协作 ；Functional API 适合对现有过程式代码做最小改动、标准控制流、函数作用域状态、快速原型、简单线性工作流 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-63cbb71ed29ec2b170362179f9564165604520cefbd3c71b72a780a73c255353",
+                  "number": 1,
+                  "sentence": "两者共享同一底层运行时 ，但指南未据此给出性能差异数据。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 3,
+              "unique_citation_count": 1
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 9,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "仅依据 API-choice guide，原文没有给出 Graph API 相对 Functional API 的延迟改进百分比。"
+                },
+                {
+                  "grounded": true,
+                  "text": "API-choice guide 没有给出任何延迟数值或基准测试结果。"
+                },
+                {
+                  "grounded": true,
+                  "text": "该延迟改进百分比指标在本次可见材料中缺失，不能计算，也不能用常识补全。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 适合复杂工作流可视化、显式状态管理、条件分支、并行执行后合并、团队协作。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 适合对现有过程式代码做最小改动、标准控制流、函数作用域状态、快速原型、简单线性工作流。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 与 Functional API 共享同一底层运行时。"
+                },
+                {
+                  "grounded": true,
+                  "text": "API-choice guide 未根据两者共享同一底层运行时给出性能差异数据。"
+                },
+                {
+                  "grounded": false,
+                  "text": "若要得到该百分比，需要补充包含两种 API 在同一任务、同一硬件与负载下的延迟测量（如均值或分位数）及测量方法的资料。"
+                },
+                {
+                  "grounded": false,
+                  "text": "补充延迟测量资料属于验证建议，不是原文结论。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 7,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.7777777777777778
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.59
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.8181818181818182
+          }
+        },
+        "status": "completed"
+      },
+      "before": {
+        "answered": false,
+        "metrics": {
+          "agent_goal_accuracy": {
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "citation_accuracy": {
+            "details": {
+              "checked_citation_count": 2,
+              "citation_use_count": 2,
+              "citations": [
+                {
+                  "evidence_id": "evidence-63cbb71ed29ec2b170362179f9564165604520cefbd3c71b72a780a73c255353",
+                  "number": 1,
+                  "sentence": "无法给出该百分比：在本次可见的 API-choice guide 原文中，没有出现 Graph API 相对 Functional API 的延迟改进百分比，也没有任何延迟数值或延迟差异的定性表述 。",
+                  "supported": true
+                },
+                {
+                  "evidence_id": "evidence-63cbb71ed29ec2b170362179f9564165604520cefbd3c71b72a780a73c255353",
+                  "number": 1,
+                  "sentence": "该指南只按使用场景比较两套 API，例如 Graph API 适合复杂工作流可视化、显式状态管理、条件分支、并行执行与团队协作，Functional API 适合少量改动现有过程式代码、标准控制流、函数作用域状态、快速原型与线性工作流 。",
+                  "supported": true
+                }
+              ],
+              "citations_truncated": false,
+              "score_scope": "all_citation_uses",
+              "supported_citation_count": 2,
+              "unique_citation_count": 1
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 1.0
+          },
+          "claim_groundedness": {
+            "details": {
+              "claim_count": 8,
+              "claims": [
+                {
+                  "grounded": true,
+                  "text": "在本次可见的 API-choice guide 原文中，没有出现 Graph API 相对 Functional API 的延迟改进百分比。"
+                },
+                {
+                  "grounded": true,
+                  "text": "在本次可见的 API-choice guide 原文中，没有任何延迟数值或延迟差异的定性表述。"
+                },
+                {
+                  "grounded": true,
+                  "text": "该指南只按使用场景比较两套 API。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Graph API 适合复杂工作流可视化、显式状态管理、条件分支、并行执行与团队协作。"
+                },
+                {
+                  "grounded": true,
+                  "text": "Functional API 适合少量改动现有过程式代码、标准控制流、函数作用域状态、快速原型与线性工作流。"
+                },
+                {
+                  "grounded": true,
+                  "text": "问题所问的“百分比延迟改进”属于本次材料缺口，不能由现有原文推出。"
+                },
+                {
+                  "grounded": false,
+                  "text": "不应借用常识补全该百分比。"
+                },
+                {
+                  "grounded": false,
+                  "text": "若要得到该指标，需要补充明确给出测量口径（如端到端或单节点延迟、负载与硬件条件）及对比数据的文档页面。"
+                }
+              ],
+              "claims_truncated": false,
+              "grounded_count": 6,
+              "malformed_claims": 0
+            },
+            "reason": null,
+            "status": "ok",
+            "value": 0.75
+          },
+          "factual_correctness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.31
+          },
+          "faithfulness": {
+            "reason": null,
+            "status": "ok",
+            "value": 0.7391304347826086
+          }
+        },
+        "status": "completed"
+      },
+      "question_id": "insufficient_evidence-dev-02"
+    }
+  ],
+  "supplemental_probes": {
+    "answered": 3,
+    "input_tokens": 147692,
+    "mean_answer_chars": 850.3333333333334,
+    "mean_wall_ms": 37684.45051674886,
+    "model_calls": 48,
+    "output_tokens": 19387,
+    "provider_attempts": 48,
+    "runs": 6,
+    "status_counts": {
+      "completed": 3,
+      "partial": 3
+    },
+    "tool_calls": 91
+  }
+}

@@ -1,0 +1,476 @@
+{
+  "after_valid": 49,
+  "before_valid": 43,
+  "by_mode": {
+    "multi_agent": 19,
+    "plan_execute": 15,
+    "workflow": 16
+  },
+  "responses": [
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "single_hop-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "single_hop-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "single_hop-dev-01",
+      "role": "evaluator",
+      "sequence": 2
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "single_hop-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "single_hop-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "single_hop-dev-02",
+      "role": "evaluator",
+      "sequence": 2
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "multi_hop-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "multi_hop-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [
+        {
+          "location": [
+            "type"
+          ],
+          "type": "extra_forbidden"
+        }
+      ],
+      "mode": "multi_agent",
+      "question_id": "multi_hop-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [
+        {
+          "location": [
+            "type"
+          ],
+          "type": "extra_forbidden"
+        }
+      ],
+      "mode": "multi_agent",
+      "question_id": "multi_hop-dev-01",
+      "role": "evaluator",
+      "sequence": 4
+    },
+    {
+      "after_errors": [
+        {
+          "location": [
+            "coverage",
+            "items",
+            3,
+            "finding_ids"
+          ],
+          "type": "list_type"
+        }
+      ],
+      "before_errors": [
+        {
+          "location": [
+            "coverage",
+            "items",
+            3,
+            "finding_ids"
+          ],
+          "type": "list_type"
+        }
+      ],
+      "mode": "multi_agent",
+      "question_id": "multi_hop-dev-01",
+      "role": "evaluator",
+      "sequence": 8
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "multi_hop-dev-01",
+      "role": "evaluator",
+      "sequence": 9
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "multi_hop-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "multi_hop-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "multi_hop-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "comparison-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [
+        {
+          "location": [
+            "type"
+          ],
+          "type": "extra_forbidden"
+        }
+      ],
+      "mode": "workflow",
+      "question_id": "comparison-dev-01",
+      "role": "evaluator",
+      "sequence": 5
+    },
+    {
+      "after_errors": [],
+      "before_errors": [
+        {
+          "location": [
+            "type"
+          ],
+          "type": "extra_forbidden"
+        }
+      ],
+      "mode": "workflow",
+      "question_id": "comparison-dev-01",
+      "role": "evaluator",
+      "sequence": 6
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "comparison-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "comparison-dev-01",
+      "role": "evaluator",
+      "sequence": 6
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "comparison-dev-01",
+      "role": "evaluator",
+      "sequence": 9
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "comparison-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [
+        {
+          "location": [
+            "type"
+          ],
+          "type": "extra_forbidden"
+        }
+      ],
+      "mode": "multi_agent",
+      "question_id": "comparison-dev-01",
+      "role": "evaluator",
+      "sequence": 7
+    },
+    {
+      "after_errors": [],
+      "before_errors": [
+        {
+          "location": [
+            "type"
+          ],
+          "type": "extra_forbidden"
+        }
+      ],
+      "mode": "multi_agent",
+      "question_id": "comparison-dev-01",
+      "role": "evaluator",
+      "sequence": 8
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "comparison-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "comparison-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "comparison-dev-02",
+      "role": "evaluator",
+      "sequence": 2
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "version_boundary-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "version_boundary-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "version_boundary-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "version_boundary-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "version_boundary-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "version_boundary-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "version_boundary-dev-02",
+      "role": "evaluator",
+      "sequence": 6
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "conflicting_evidence-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "conflicting_evidence-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "conflicting_evidence-dev-01",
+      "role": "evaluator",
+      "sequence": 4
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "conflicting_evidence-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "conflicting_evidence-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "conflicting_evidence-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "insufficient_evidence-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "insufficient_evidence-dev-01",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "insufficient_evidence-dev-01",
+      "role": "evaluator",
+      "sequence": 2
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "insufficient_evidence-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "insufficient_evidence-dev-02",
+      "role": "evaluator",
+      "sequence": 5
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "workflow",
+      "question_id": "insufficient_evidence-dev-02",
+      "role": "evaluator",
+      "sequence": 8
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "insufficient_evidence-dev-02",
+      "role": "evaluator",
+      "sequence": 3
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "plan_execute",
+      "question_id": "insufficient_evidence-dev-02",
+      "role": "evaluator",
+      "sequence": 7
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "insufficient_evidence-dev-02",
+      "role": "evaluator",
+      "sequence": 2
+    },
+    {
+      "after_errors": [],
+      "before_errors": [],
+      "mode": "multi_agent",
+      "question_id": "insufficient_evidence-dev-02",
+      "role": "evaluator",
+      "sequence": 6
+    }
+  ],
+  "reviewer": "Agent structural replay; no semantic regrading",
+  "source": "D:\\Dev\\Projects\\agent_new\\tmp\\real-evaluation-20261107\\research-batch\\records.json",
+  "total": 50
+}

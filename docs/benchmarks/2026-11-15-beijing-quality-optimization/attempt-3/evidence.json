@@ -1,0 +1,182 @@
+[
+  {
+    "id": "evidence-1933fc51f3c0142fa314ae03dc1b35aaa2de39cf031138a37acf57a30c722092",
+    "canonical_url": "https://www.chnmuseum.cn/cg",
+    "title": "服务_中国国家博物馆官方网站",
+    "media_type": "text/html",
+    "content_hash": "sha256:1c34190e6e068c61c0634a160dbee591d9ffd94adf0ba8a7f1585b5454ec4fb1",
+    "fetched_at": "2026-11-15T10:14:34.685081Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.chnmuseum.cn/cg",
+      "final_url": "https://www.chnmuseum.cn/cg",
+      "publisher_canonical_url": null,
+      "scraper_used": "playwright_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-63c98788dbc2b8abc12a22ca89903e03f4727782550657db42a455a141975614",
+    "canonical_url": "https://ticket.dpm.org.cn/",
+    "title": "在线订票 - 故宫博物院",
+    "media_type": "text/html",
+    "content_hash": "sha256:5ee786777020ccd4d7f1a53f9df4a8c19ac39a811f5b4d2b6bc87d4e020c2041",
+    "fetched_at": "2026-11-15T10:14:16.812180Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://ticket.dpm.org.cn/",
+      "final_url": "https://ticket.dpm.org.cn/",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-416fd292242d99ea18b05786769ebd382acdd86562c2cc83e7e5e02776ac73c0",
+    "canonical_url": "https://tournews.tw/beijing-wangfujing-tiananmen-accommodation",
+    "title": "2026北京王府井天安門住宿推薦｜10間高CP值飯店精選 | Tournews",
+    "media_type": "text/html",
+    "content_hash": "sha256:2d94259e1304d06723c3a49a59e2ec7113c5f27981eda1ca7ff0f1f64e1fddbc",
+    "fetched_at": "2026-11-15T10:14:19.117500Z",
+    "published_at": "2026-06-09T00:27:18Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://tournews.tw/beijing-wangfujing-tiananmen-accommodation",
+      "final_url": "https://tournews.tw/beijing-wangfujing-tiananmen-accommodation",
+      "publisher_canonical_url": "https://tournews.tw/beijing-wangfujing-tiananmen-accommodation",
+      "scraper_used": "playwright_trafilatura",
+      "publisher": "Tournews"
+    }
+  },
+  {
+    "id": "evidence-e45dfd81f2cac646cec1b029c25502e17dd1b3d4bea775a2c6df985300c4e5c0",
+    "canonical_url": "https://travel.sina.cn/domestic/pages/2009-05-22/detail-ifyixcaw4032849.d.html?vt=4",
+    "title": "北京美食攻略：全聚德烤鸭 老北京炸酱面(图)_手机新浪网",
+    "media_type": "text/html",
+    "content_hash": "sha256:b93461598e01de5a5260c5fd93bb9454cc5cbb63d65b2973ec5be3d8ed41ec68",
+    "fetched_at": "2026-11-15T10:14:19.486212Z",
+    "published_at": "2009-05-22T15:56:24Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://travel.sina.cn/domestic/pages/2009-05-22/detail-ifyixcaw4032849.d.html?vt=4",
+      "final_url": "https://travel.sina.cn/domestic/pages/2009-05-22/detail-ifyixcaw4032849.d.html?vt=4",
+      "publisher_canonical_url": "https://travel.sina.cn/domestic/pages/2009-05-22/detail-ifyixcaw4032849.d.html?vt=4",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": "手机新浪网"
+    }
+  },
+  {
+    "id": "evidence-77305595ee533a02d00fbc5caa9df116d152f1e78dc995cd3b521fd016599d5b",
+    "canonical_url": "https://www-uat.mtr.bj.cn/page/instructions.html",
+    "title": "北京市城市轨道交通车票使用规则 （2021年修订版） - 北京京港地铁有限公司",
+    "media_type": "text/html",
+    "content_hash": "sha256:21c69b16f0e2e5051b22640b167d5864cb7c7aa9f85420994caa470cc726168c",
+    "fetched_at": "2026-11-15T10:14:15.648124Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www-uat.mtr.bj.cn/page/instructions.html",
+      "final_url": "https://www-uat.mtr.bj.cn/page/instructions.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-da5f81e4965e01c951ec6e766c165aa5d1cb2f6257d9edbbed9a62261bba7391",
+    "canonical_url": "https://www.bjbus.com/home/fun_news_detail.php?uNewsCode=00007783&uNewsType=4",
+    "title": "北京公交集团",
+    "media_type": "text/html",
+    "content_hash": "sha256:fe1010e5a80d2921b06a64116b7d730dacdec6bafdb434d511b60d0ed3798d47",
+    "fetched_at": "2026-11-15T10:14:15.816717Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://www.bjbus.com/home/fun_news_detail.php?uNewsCode=00007783&uNewsType=4",
+      "final_url": "https://www.bjbus.com/home/fun_news_detail.php?uNewsCode=00007783&uNewsType=4",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-e2d90e2f73044a2705ce0f92eeb2c7c82d243abad843fc0aaf891b84da043b9a",
+    "canonical_url": "https://jtw.beijing.gov.cn/xxgk/dtxx/202005/t20200515_1898493.html",
+    "title": "北京市交通委员会",
+    "media_type": "text/html",
+    "content_hash": "sha256:0bdf3fb5239e7002b4e2a6723b4826dc944962cb6afcf18a7b13be7711fca159",
+    "fetched_at": "2026-11-15T10:14:16.021956Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "http://jtw.beijing.gov.cn/xxgk/dtxx/202005/t20200515_1898493.html",
+      "final_url": "https://jtw.beijing.gov.cn/xxgk/dtxx/202005/t20200515_1898493.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_trafilatura",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-23168c95f5dd9e1d01d744e9eb95f04fb116adb4c18bdd33046fdee02d79d057",
+    "canonical_url": "https://gs.ctrip.com/html5/you/foods/fooddetail/1/130969727.html",
+    "title": "北京方砖厂69号炸酱面·烤鸭(前门大街店)攻略,方砖厂69号炸酱面·烤鸭(前门大街店)套餐/特色菜品推荐_菜单/人均消费/电话/地址/菜系/点评/营业时间_餐厅介绍_哪个菜好吃【携程美食】",
+    "media_type": "text/html",
+    "content_hash": "sha256:a40ca983ca56a0ad8e6c62d9a8b5cc5b98cb03d0041d1b82d7cb0039ff53f979",
+    "fetched_at": "2026-11-15T10:15:26.424140Z",
+    "published_at": null,
+    "source_quality": 0.8,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://gs.ctrip.com/html5/you/foods/fooddetail/1/130969727.html",
+      "final_url": "https://gs.ctrip.com/html5/you/foods/fooddetail/1/130969727.html",
+      "publisher_canonical_url": null,
+      "scraper_used": "httpx_bs4",
+      "publisher": null
+    }
+  },
+  {
+    "id": "evidence-8dd42a8a120f87c912d2f54a9f93353d7714c3700b0d6589a7bd50c0c0c54c57",
+    "canonical_url": "https://tw.trip.com/moments/detail/beijing-1-147552043",
+    "title": "北京炸酱面｜Trip.com 北京",
+    "media_type": "text/html",
+    "content_hash": "sha256:4717cba8de56cda288f2cf1dda05decf539815e057fa33ba93bb68a7f1ef4005",
+    "fetched_at": "2026-11-15T10:15:28.221248Z",
+    "published_at": "2026-06-29T16:07:05Z",
+    "source_quality": 0.9,
+    "status": "active",
+    "version": 1,
+    "supersedes": null,
+    "metadata": {
+      "requested_url": "https://tw.trip.com/moments/detail/beijing-1-147552043",
+      "final_url": "https://tw.trip.com/moments/detail/beijing-1-147552043",
+      "publisher_canonical_url": "https://tw.trip.com/moments/detail/beijing-1-147552043",
+      "scraper_used": "httpx_trafilatura",
+      "publisher": "Trip.com"
+    }
+  }
+]

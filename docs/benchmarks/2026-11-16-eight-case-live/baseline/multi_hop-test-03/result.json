@@ -1,0 +1,260 @@
+{
+  "run_id": "cf2a6e9dec09451f844dc1d9e7ac18be",
+  "thread_id": "cf2a6e9dec09451f844dc1d9e7ac18be",
+  "status": "completed",
+  "response_outcome": {
+    "response_mode": "answer",
+    "content": "**结论：不能。** 加入 HITL 不会移除模型能力要求。Provider-native structured output 的能力门槛在模型层，HITL 是生成后的编排层审查，两者作用于不同阶段，互不替代。\n\n**原因**\n\n- Provider-native structured output 的支持是**从模型 profile 数据动态读取**的；若同时指定 tools，模型必须支持 tools 与 structured output 的同时使用 [1]。这是模型级能力要求，与是否加编排层无关。\n- 当直接传入 schema 类型时，LangChain 自动选择策略：模型与 provider 支持原生结构化输出（如 OpenAI、Anthropic、xAI）时用 `ProviderStrategy`，其余模型用 `ToolStrategy` [1]。即能力不满足时框架回退到 ToolStrategy，而非由 HITL 补足。\n- HITL middleware 通过 `after_model` hook 工作：模型生成响应**之后**、工具调用执行之前，检查响应中的 tool calls，对需要人工介入的调用构建 `HITLRequest` 并发出 `interrupt` 暂停执行，状态由 LangGraph 持久层保存 [2]。它是对已生成 tool calls 的审查/放行机制，不参与结构化输出的生成方式。\n\n**组合方式（文档支持的最小路径）**\n\n1. 用 `create_agent` 并设置 `response_format`：直接传 schema 类型让框架按模型能力自动选 `ProviderStrategy`/`ToolStrategy`；若要用 provider-native，需模型 profile 支持且（有 tools 时）支持 tools+structured output 并用 [1]。\n2. 加 HITL middleware，在 `interrupt_on` 中配置每个工具的策略；middleware 在模型响应后按策略检查 tool calls，需要时 `interrupt` 暂停，人工以 `approve`/`edit`/`reject`（Python 另有 `respond`）决策后恢复执行 [2]。\n\n**取舍与边界**\n\n- 若模型不支持原生结构化输出，文档路径是回退到 `ToolStrategy`（用 tool calling 实现结构化输出）[1]；这与 HITL 审查 tool calls 可共存，但不等于“用 HITL 替代原生能力”。\n- 可见材料未说明 HITL 与 `ProviderStrategy` 同时启用时的额外限制或冲突细节；以上组合仅依据两者各自文档所述机制，实际联调行为需以运行验证为准。",
+    "citations": [
+      {
+        "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+        "marker": "[1]"
+      },
+      {
+        "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+        "marker": "[2]"
+      }
+    ],
+    "cited_evidence_ids": [
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+      "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563"
+    ],
+    "partial_reason": null
+  },
+  "research_outcome": {
+    "delivery_plan": null,
+    "source_eligibility": {
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375": "eligible",
+      "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563": "eligible",
+      "evidence-8d15bb9caba341ecd08b922f445cf1248f5c2c70537ecdff735dfcadc66ed589": "eligible"
+    },
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "Documentation evidence on whether provider-native structured output requires specific model capabilities (e.g., JSON mode, function calling support) independent of orchestration layer"
+      },
+      {
+        "id": "r2",
+        "description": "Documentation evidence on whether HITL review of tool calls can be implemented without the model natively supporting structured output, or if structured output is a prerequisite for the tool call schema definition"
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "covered",
+          "reason": "Documentation explicitly states that provider-native structured output support is read from the model's profile data and requires the model to support simultaneous use of tools and structured output when tools are specified. This is a model-level capability requirement independent of orchestration.",
+          "finding_ids": [
+            "finding-1",
+            "finding-2"
+          ],
+          "unanswered_parts": []
+        },
+        {
+          "requirement_id": "r2",
+          "status": "covered",
+          "reason": "HITL middleware inspects tool calls in the model's response after generation, operating as a post-generation review layer. The documentation shows HITL works by intercepting tool calls via middleware policy checks, not by requiring structured output capabilities. Tool calls can be defined and reviewed through the middleware layer regardless of whether the model natively supports structured output, as LangChain falls back to ToolStrategy for models without native support.",
+          "finding_ids": [
+            "finding-2",
+            "finding-3",
+            "finding-4"
+          ],
+          "unanswered_parts": []
+        }
+      ]
+    },
+    "decomposition_degraded": false,
+    "mode": "workflow",
+    "evidence_ids": [
+      "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+      "evidence-8d15bb9caba341ecd08b922f445cf1248f5c2c70537ecdff735dfcadc66ed589",
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+    ],
+    "findings": [
+      {
+        "id": "finding-1",
+        "claim": "Provider-native structured output requires specific model capabilities. Support for native structured output features is read dynamically from the model's profile data, and if tools are specified, the model must support simultaneous use of tools and structured output.",
+        "evidence_ids": [
+          "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 2089,
+            "end": 2492,
+            "quote": "<Note>\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```python\n    custom_profile = {\n        \"structured_output\": True,\n        # ...\n    }\n    model = init_chat_model(\"...\", profile=custom_profile)\n    ```\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 2492,
+            "end": 2601,
+            "quote": "    If tools are specified, the model must support simultaneous use of tools and structured output.\n</Note>\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-2",
+        "claim": "When a schema type is provided directly, LangChain automatically chooses ProviderStrategy if the model and provider support native structured output (e.g., OpenAI, Anthropic, xAI), and ToolStrategy for all other models.",
+        "evidence_ids": [
+          "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 866,
+            "end": 867,
+            "quote": "\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 867,
+            "end": 1176,
+            "quote": "```python\ndef create_agent(\n    ...\n    response_format: Union[\n        ToolStrategy[StructuredResponseT],\n        ProviderStrategy[StructuredResponseT],\n        type[StructuredResponseT],\n        None,\n    ]\n)\n```\n\n## Response format\n\nUse `response_format` to control how the agent returns structured data:\n\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 1176,
+            "end": 1591,
+            "quote": "- **`ToolStrategy[StructuredResponseT]`**: Uses tool calling for structured output\n- **`ProviderStrategy[StructuredResponseT]`**: Uses provider-native structured output\n- **`type[StructuredResponseT]`**: Schema type - automatically selects best strategy based on model capabilities\n- **`None`**: Structured output not explicitly requested\n\nWhen a schema type is provided directly, LangChain automatically chooses:\n\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 1591,
+            "end": 1883,
+            "quote": "- `ProviderStrategy` if the model and provider chosen supports native structured output (e.g. [OpenAI](/oss/integrations/providers/openai), [Anthropic (Claude)](/oss/integrations/providers/anthropic), or [xAI (Grok)](/oss/integrations/providers/xai)).\n- `ToolStrategy` for all other models.\n\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 1883,
+            "end": 2089,
+            "quote": "<Warning>\nJSON Schema dictionaries must be wrapped in an explicit strategy (`ProviderStrategy` or `ToolStrategy`). They are not automatically detected when passed directly to `response_format`.\n</Warning>\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-3",
+        "claim": "HITL middleware operates by inspecting the model's response for tool calls after the model generates a response, then building an HITLRequest and calling interrupt if any calls require human input.",
+        "evidence_ids": [
+          "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563"
+        ],
+        "confidence": 0.9,
+        "supports": [
+          {
+            "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+            "version": 1,
+            "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+            "start": 25658,
+            "end": 25966,
+            "quote": "1. The agent invokes the model to generate a response.\n2. The middleware inspects the response for tool calls.\n3. If any calls require human input, the middleware builds a @[HITLRequest] with `action_requests` and `review_configs` and calls @[interrupt].\n4. The agent waits for human decisions.\n:::python\n5. "
+          },
+          {
+            "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+            "version": 1,
+            "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+            "start": 25966,
+            "end": 26208,
+            "quote": "Based on the `HITLResponse` decisions, the middleware executes approved or edited calls, synthesizes @[ToolMessage]'s for rejected calls, returns human replies directly as @[ToolMessage]'s for `respond` decisions, and resumes execution.\n:::\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-4",
+        "claim": "The HITL middleware pauses execution by checking each tool call against a configurable policy and issuing an interrupt that halts execution, with graph state saved using LangGraph's persistence layer.",
+        "evidence_ids": [
+          "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563"
+        ],
+        "confidence": 0.9,
+        "supports": [
+          {
+            "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+            "version": 1,
+            "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+            "start": 0,
+            "end": 117,
+            "quote": "---\ntitle: Human-in-the-loop\n---\n\nimport HitlDecisionTypesTable from '/snippets/oss/hitl-decision-types-table.mdx';\n\n"
+          },
+          {
+            "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+            "version": 1,
+            "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+            "start": 117,
+            "end": 430,
+            "quote": "The Human-in-the-Loop (HITL) [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) lets you add human oversight to agent tool calls.\nWhen a model proposes an action that might require review—for example, writing to a file or executing SQL—the middleware can pause execution and wait for a decision.\n\n"
+          },
+          {
+            "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+            "version": 1,
+            "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+            "start": 430,
+            "end": 729,
+            "quote": "It does this by checking each tool call against a configurable policy. If intervention is needed, the middleware issues an @[interrupt] that halts execution. The graph state is saved using LangGraph's [persistence layer](/oss/langgraph/persistence), so execution can pause safely and resume later.\n\n"
+          },
+          {
+            "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+            "version": 1,
+            "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+            "start": 729,
+            "end": 1196,
+            "quote": ":::python\nA human decision then determines what happens next: the action can be approved as-is (`approve`), modified before running (`edit`), rejected with feedback (`reject`), or responded to directly (`respond`) for \"ask user\" style tools.\n:::\n\n:::js\nA human decision then determines what happens next: the action can be approved as-is (`approve`), modified before running (`edit`), or rejected with feedback (`reject`).\n:::\n\n## Interrupt decision types\n\n:::python\n"
+          },
+          {
+            "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+            "version": 1,
+            "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+            "start": 1196,
+            "end": 1483,
+            "quote": "The [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines four built-in ways a human can respond to an interrupt:\n:::\n\n:::js\nThe [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) defines three built-in ways a human can respond to an interrupt:\n:::\n\n"
+          },
+          {
+            "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+            "version": 1,
+            "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+            "start": 1483,
+            "end": 1798,
+            "quote": "<HitlDecisionTypesTable />\n\nThe available decision types for each tool depend on the policy you configure in `interrupt_on`.\nWhen multiple tool calls are paused at the same time, each action requires a separate decision.\nDecisions must be provided in the same order as the actions appear in the interrupt request.\n\n"
+          },
+          {
+            "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+            "version": 1,
+            "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+            "start": 1798,
+            "end": 1900,
+            "quote": ":::python\nUse `reject` when the human is denying the requested action. Use `respond` only when the hum"
+          }
+        ]
+      }
+    ],
+    "unresolved_gaps": [
+      "diagnostic:read_anchor_omitted:evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+    ],
+    "executed_steps": 13,
+    "termination_reason": "completed"
+  },
+  "termination_reason": "workflow_completed",
+  "executed_steps": 13,
+  "unresolved_gaps": [
+    "diagnostic:read_anchor_omitted:evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+  ],
+  "sources": [
+    "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx",
+    "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/human-in-the-loop.mdx"
+  ],
+  "research_sufficiency": "sufficient"
+}

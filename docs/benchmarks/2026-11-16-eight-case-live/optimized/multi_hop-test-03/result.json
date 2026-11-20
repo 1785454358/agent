@@ -1,0 +1,188 @@
+{
+  "run_id": "4b869bd52f5448afbe4b282dce44eed3",
+  "thread_id": "4b869bd52f5448afbe4b282dce44eed3",
+  "status": "completed",
+  "response_outcome": {
+    "response_mode": "answer",
+    "content": "**结论：不能。** 在可见的冻结文档中，加入 HITL 人工审核工具调用，并不免除 provider-native structured output 对模型能力的要求；两者是独立机制，文档未给出任何 HITL 相关的豁免条款。\n\n**依据**\n\n- HITL 的作用范围仅限于工具调用：当模型提出可能需要审查的操作时，middleware 暂停执行、等待人工决定（approve/edit/reject/respond），通过 interrupt 中断并借助 checkpointer 持久化状态以便恢复 [1]。文档描述的是对 tool call 的审批流程，不涉及结构化输出的生成策略。\n- Provider-native structured output 有明确的模型能力门槛：是否支持从模型的 profile 数据动态读取；若同时指定了 tools，模型必须支持 tools 与 structured output 的同时使用 [2]。默认情况下 agent 使用 tool calling 策略生成结构化输出，只有特定模型支持 native 策略 [2]。\n\n**组合使用时的实际含义**\n\n两者可以叠加在同一 agent 上：HITL 审核工具调用，structured output 控制最终响应格式。但若选择 `ProviderStrategy`：\n\n1. 模型 profile 必须声明支持 native structured output；\n2. 由于 HITL 场景必然存在 tools，模型还须支持 tools 与 structured output 并用 [2]。\n\n若模型不满足条件，文档提供的路径是改用 `ToolStrategy`（默认策略，无 native 能力要求），而不是用 HITL 绕过 [2]。\n\n**边界说明**：以上结论基于当前可见材料；冻结文档中没有任何段落声明 HITL 会移除该能力要求，但这仅表示本次可见资料未提供此类豁免，不能推出全部文档均无相关说明。",
+    "citations": [
+      {
+        "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+        "marker": "[1]"
+      },
+      {
+        "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+        "marker": "[2]"
+      }
+    ],
+    "cited_evidence_ids": [
+      "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+    ],
+    "partial_reason": null
+  },
+  "research_outcome": {
+    "delivery_plan": null,
+    "source_eligibility": {
+      "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563": "eligible",
+      "evidence-8d15bb9caba341ecd08b922f445cf1248f5c2c70537ecdff735dfcadc66ed589": "eligible",
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375": "eligible"
+    },
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "Evidence from frozen documentation on whether HITL review of tool calls removes the model-capability requirement for provider-native structured output."
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "covered",
+          "reason": "Visible frozen docs establish that HITL only pauses tool calls for human review (g4, g16) and that native structured output requires model capability including simultaneous tools+structured output support (g6, g9); no passage states HITL removes this requirement, so the answer is no based on available evidence.",
+          "finding_ids": [
+            "finding-1",
+            "finding-2",
+            "finding-3",
+            "finding-4"
+          ],
+          "unanswered_parts": []
+        }
+      ]
+    },
+    "decomposition_degraded": false,
+    "mode": "workflow",
+    "evidence_ids": [
+      "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+      "evidence-8d15bb9caba341ecd08b922f445cf1248f5c2c70537ecdff735dfcadc66ed589",
+      "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+    ],
+    "findings": [
+      {
+        "id": "finding-1",
+        "claim": "HITL middleware adds human oversight to agent tool calls by pausing execution when a model proposes an action that might require review, waiting for a human decision before proceeding.",
+        "evidence_ids": [
+          "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+            "version": 1,
+            "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+            "start": 117,
+            "end": 430,
+            "quote": "The Human-in-the-Loop (HITL) [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) lets you add human oversight to agent tool calls.\nWhen a model proposes an action that might require review—for example, writing to a file or executing SQL—the middleware can pause execution and wait for a decision.\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-2",
+        "claim": "Provider-native structured output requires model capability: support is read dynamically from the model's profile data, and if tools are specified, the model must support simultaneous use of tools and structured output.",
+        "evidence_ids": [
+          "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+        ],
+        "confidence": 0.95,
+        "supports": [
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 2089,
+            "end": 2492,
+            "quote": "<Note>\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```python\n    custom_profile = {\n        \"structured_output\": True,\n        # ...\n    }\n    model = init_chat_model(\"...\", profile=custom_profile)\n    ```\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 2492,
+            "end": 2601,
+            "quote": "    If tools are specified, the model must support simultaneous use of tools and structured output.\n</Note>\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-3",
+        "claim": "Native structured output is only used when the model supports it; by default, agents use a tool calling strategy for structured output, and only certain models support the native strategy.",
+        "evidence_ids": [
+          "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+        ],
+        "confidence": 0.9,
+        "supports": [
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 3705,
+            "end": 4095,
+            "quote": "Controls how the agent returns structured data. You can provide a Zod schema, any [Standard Schema](https://standardschema.dev/)-compatible schema, or a JSON Schema object. By default, the agent uses a tool calling strategy, in which the output is created by an additional tool call. Certain models support native structured output, in which case the agent will use that strategy instead.\n\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 4095,
+            "end": 4211,
+            "quote": "You can control the behavior by wrapping `ResponseFormat` in a `toolStrategy` or `providerStrategy` function call:\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-4",
+        "claim": "The frozen documentation contains no statement that adding HITL review of tool calls removes or waives the model-capability requirement for provider-native structured output; the HITL documentation describes only approval/rejection/editing of tool calls, while the structured output documentation states the capability requirement without any HITL-related exception.",
+        "evidence_ids": [
+          "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+          "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375"
+        ],
+        "confidence": 0.85,
+        "supports": [
+          {
+            "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+            "version": 1,
+            "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+            "start": 117,
+            "end": 430,
+            "quote": "The Human-in-the-Loop (HITL) [middleware](/oss/langchain/middleware/built-in#human-in-the-loop) lets you add human oversight to agent tool calls.\nWhen a model proposes an action that might require review—for example, writing to a file or executing SQL—the middleware can pause execution and wait for a decision.\n\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 2089,
+            "end": 2492,
+            "quote": "<Note>\n    Support for native structured output features is read dynamically from the model's [profile data](/oss/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:\n    ```python\n    custom_profile = {\n        \"structured_output\": True,\n        # ...\n    }\n    model = init_chat_model(\"...\", profile=custom_profile)\n    ```\n"
+          },
+          {
+            "evidence_id": "evidence-dcc8785967cf133ac2051340b1a30df69946049886673e385707e40db67e0375",
+            "version": 1,
+            "content_hash": "sha256:2d5a4cc574db24e11629ccc5a268ef55b6a2e4bf752a1c0495dd10f05ce87703",
+            "start": 2492,
+            "end": 2601,
+            "quote": "    If tools are specified, the model must support simultaneous use of tools and structured output.\n</Note>\n\n"
+          },
+          {
+            "evidence_id": "evidence-55a3dbb8705fa5d63e48f52e7be4db73b931bc7b642dc37315c28a1885c17563",
+            "version": 1,
+            "content_hash": "sha256:21125a36f7efbb355047103d074402668866d10b9e8090d201a872f91b86a5e8",
+            "start": 6247,
+            "end": 6639,
+            "quote": ":::python\n<ParamField body=\"interrupt_on\" type=\"dict\" required>\n    Mapping of tool names to approval configs. Values can be `True` (interrupt with default config), `False` (auto-approve), or an `InterruptOnConfig` object.\n</ParamField>\n\n<ParamField body=\"description_prefix\" type=\"string\" default=\"Tool execution requires approval\">\n    Prefix for action request descriptions\n</ParamField>\n\n"
+          }
+        ]
+      }
+    ],
+    "unresolved_gaps": [],
+    "executed_steps": 8,
+    "termination_reason": "completed"
+  },
+  "termination_reason": "workflow_completed",
+  "executed_steps": 8,
+  "unresolved_gaps": [],
+  "sources": [
+    "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/human-in-the-loop.mdx",
+    "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/structured-output.mdx"
+  ],
+  "research_sufficiency": "sufficient"
+}

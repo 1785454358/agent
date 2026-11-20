@@ -1,0 +1,188 @@
+{
+  "run_id": "8871d922f013486b8a5dc79454ca983d",
+  "thread_id": "8871d922f013486b8a5dc79454ca983d",
+  "status": "partial",
+  "response_outcome": {
+    "response_mode": "answer",
+    "content": "结论：删除陈旧历史与保留合法工具调用结构并不冲突——文档的做法是允许用 RemoveMessage 删除或裁剪消息，但明确要求删除后的消息历史必须仍然满足 LLM 提供商的结构约束，尤其是工具调用配对与消息顺序 [1]。\n\n具体调和方式：\n\n- 删除是允许的：可以用 RemoveMessage 从图状态中删除指定消息，或用 REMOVE_ALL_MESSAGES 清空全部历史；前提是状态键使用 add_messages（Python）或 messagesStateReducer（JS）reducer，默认 AgentState 已提供 [1]。\n- 删除有硬性条件：文档以 Warning 形式要求，删除消息时必须确保结果历史仍然有效，需核对所用 LLM 提供商的限制，例如：\n  - 某些提供商要求历史以 user 消息开头；\n  - 大多数提供商要求带工具调用的 assistant 消息后面必须跟随对应的 tool 结果消息 [1]。\n- 裁剪是更安全的替代：可以用 @before_model 中间件（Python）或 createMiddleware 的 beforeModel 钩子（JS）裁剪历史，例如保留首条消息加最近几条，以控制上下文大小 [1]。\n\n取舍与适用条件：\n\n- 若删除会切断一对工具调用（删掉 assistant 的工具调用却留下 tool 结果，或反之），则该删除不合法；应整对删除或整对保留。文档只给出配对约束本身，未提供自动配对校验工具，因此配对完整性需调用方自行保证 [1]。\n- 文档示例的裁剪逻辑按消息条数（保留首条 + 最近 3~4 条）实现，并未演示按工具调用边界对齐；在含工具调用的历史中直接套用该示例可能破坏配对，需自行调整裁剪边界（此为基于约束的推断，非原文事实）。\n- 若无法确定安全边界，REMOVE_ALL_MESSAGES 全量清空是文档列出的合法选项，但会丢失全部上下文 [1]。\n\n缺口说明：可见材料未给出各提供商具体的结构限制清单，也未提供自动保证工具调用配对的删除工具；上述配对处理是基于文档警告的合规推断。",
+    "citations": [
+      {
+        "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+        "marker": "[1]"
+      }
+    ],
+    "cited_evidence_ids": [
+      "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+    ],
+    "partial_reason": "incomplete_plan"
+  },
+  "research_outcome": {
+    "delivery_plan": null,
+    "source_eligibility": {
+      "evidence-7b54f7d34c3077c6949c46501548ea1f5257c252b1210c76778407c6603ba7a5": "eligible",
+      "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518": "eligible",
+      "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f": "eligible"
+    },
+    "evidence_contract_version": 3,
+    "requirements": [
+      {
+        "id": "r1",
+        "description": "Specific rules from frozen documentation defining valid tool-call/tool-result message structure, including pairing requirements and dependencies."
+      },
+      {
+        "id": "r2",
+        "description": "Documentation guidance on removing stale history while maintaining message structure integrity, including any exceptions or conditions."
+      }
+    ],
+    "coverage": {
+      "items": [
+        {
+          "requirement_id": "r1",
+          "status": "covered",
+          "reason": "Frozen documentation explicitly defines valid tool-call/tool-result structure requiring assistant messages with tool calls to be followed by corresponding tool result messages, and notes some providers require history to start with a user message.",
+          "finding_ids": [
+            "finding-1",
+            "finding-2"
+          ],
+          "unanswered_parts": []
+        },
+        {
+          "requirement_id": "r2",
+          "status": "covered",
+          "reason": "Documentation provides specific guidance on removing stale history via RemoveMessage or trimming middleware, with the explicit condition that resulting history must remain valid per provider constraints (tool-call pairing and message ordering).",
+          "finding_ids": [
+            "finding-3",
+            "finding-4",
+            "finding-5"
+          ],
+          "unanswered_parts": []
+        }
+      ]
+    },
+    "decomposition_degraded": false,
+    "mode": "workflow",
+    "evidence_ids": [
+      "evidence-7b54f7d34c3077c6949c46501548ea1f5257c252b1210c76778407c6603ba7a5",
+      "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+      "evidence-b24d78b4ac373231d754f6599daa7e1c8410915f1ca0ae591bf093fea832965f"
+    ],
+    "findings": [
+      {
+        "id": "finding-1",
+        "claim": "Most LLM providers require that assistant messages containing tool calls be followed by corresponding tool result messages, establishing a pairing dependency in valid message history structure.",
+        "evidence_ids": [
+          "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+        ],
+        "confidence": 1.0,
+        "supports": [
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 12721,
+            "end": 13097,
+            "quote": "<Warning>\n    When deleting messages, **make sure** that the resulting message history is valid. Check the limitations of the LLM provider you're using. For example:\n\n    * Some providers expect message history to start with a `user` message\n    * Most providers require `assistant` messages with tool calls to be followed by corresponding `tool` result messages.\n</Warning>\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-2",
+        "claim": "Some LLM providers expect message history to start with a user message, imposing an additional structural constraint on valid message sequences.",
+        "evidence_ids": [
+          "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+        ],
+        "confidence": 1.0,
+        "supports": [
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 12721,
+            "end": 13097,
+            "quote": "<Warning>\n    When deleting messages, **make sure** that the resulting message history is valid. Check the limitations of the LLM provider you're using. For example:\n\n    * Some providers expect message history to start with a `user` message\n    * Most providers require `assistant` messages with tool calls to be followed by corresponding `tool` result messages.\n</Warning>\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-3",
+        "claim": "When deleting messages to remove stale history, you must ensure the resulting message history remains valid according to the LLM provider's limitations, specifically checking that tool-call pairing and message ordering constraints are preserved.",
+        "evidence_ids": [
+          "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+        ],
+        "confidence": 1.0,
+        "supports": [
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 12721,
+            "end": 13097,
+            "quote": "<Warning>\n    When deleting messages, **make sure** that the resulting message history is valid. Check the limitations of the LLM provider you're using. For example:\n\n    * Some providers expect message history to start with a `user` message\n    * Most providers require `assistant` messages with tool calls to be followed by corresponding `tool` result messages.\n</Warning>\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-4",
+        "claim": "Messages can be deleted from graph state using RemoveMessage with a state key that has an add_messages reducer, or by using REMOVE_ALL_MESSAGES to clear the entire history.",
+        "evidence_ids": [
+          "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+        ],
+        "confidence": 1.0,
+        "supports": [
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 11048,
+            "end": 11432,
+            "quote": "You can delete messages from the graph state to manage the message history.\n\nThis is useful when you want to remove specific messages or clear the entire message history.\n\n:::python\nTo delete messages from the graph state, you can use the `RemoveMessage`.\n\nFor `RemoveMessage` to work, you need to use a state key with @[`add_messages`] [reducer](/oss/langgraph/graph-api#reducers).\n\n"
+          },
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 11844,
+            "end": 12055,
+            "quote": "```python\nfrom langgraph.graph.message import REMOVE_ALL_MESSAGES  # [!code highlight]\n\ndef delete_messages(state):\n    return {\"messages\": [RemoveMessage(id=REMOVE_ALL_MESSAGES)]}  # [!code highlight]\n```\n:::\n\n"
+          }
+        ]
+      },
+      {
+        "id": "finding-5",
+        "claim": "Message history can be trimmed using the @before_model middleware decorator (Python) or createMiddleware with a beforeModel hook (JavaScript) to manage context size while preserving structure.",
+        "evidence_ids": [
+          "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518"
+        ],
+        "confidence": 1.0,
+        "supports": [
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 8271,
+            "end": 8368,
+            "quote": ":::python\nTo trim message history in an agent, use the @[`@before_model`] middleware decorator:\n\n"
+          },
+          {
+            "evidence_id": "evidence-aa656efa42b47a38ecf01f58ddabae168a3987c4f5161295e168442d52a73518",
+            "version": 1,
+            "content_hash": "sha256:e9cbb60ddca804b5c6b13189893fdf15c6d31b2f11147c6e4588e0879b4b3118",
+            "start": 10029,
+            "end": 10126,
+            "quote": ":::js\nTo trim message history in an agent, use @[`createMiddleware`] with a `beforeModel` hook:\n\n"
+          }
+        ]
+      }
+    ],
+    "unresolved_gaps": [],
+    "executed_steps": 5,
+    "termination_reason": "incomplete_plan"
+  },
+  "termination_reason": "incomplete_plan",
+  "executed_steps": 5,
+  "unresolved_gaps": [],
+  "sources": [
+    "https://raw.githubusercontent.com/langchain-ai/docs/99dd9a9e38d59b9bff54354f6c3ef790c1be946d/src/oss/langchain/short-term-memory.mdx"
+  ],
+  "research_sufficiency": "sufficient"
+}

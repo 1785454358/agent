@@ -1,0 +1,49 @@
+{
+  "response_mode": "answer",
+  "content": "**结论：主线选 Uptime Kuma 开源自托管，部署在现有闲置 Linux 服务器上，用 Docker 运行，监控 20 个 HTTPS 站点，默认每 60 秒检查一次，SMTP 邮件通知，目标保留 30 天历史。增量月费按 0 元计（服务器已有，电费/带宽视为沉没成本），但“30 天历史”的可配置性、20 站点单机容量与公网域名实价尚未完整确认，故不能据此承诺整个方案已完全核实且低于预算。**\n\n## 主线与依据\n\n- **HTTPS 监控**：Monitor Type 选 HTTP(s)，填含 `https://` 的完整 URL；默认 2xx 成功，默认跟随最多 10 次重定向并评估最终状态码，可设心跳间隔、重试、超时、接受状态码 [1]。\n- **检查频率**：默认 60 秒 [1]；材料另提到每 20 秒检查的服务描述 [2]，但未给出可配置下限的官方说明，故本方案按 60 秒执行，不把 20 秒当作已核实下限。20 个站点每 60 秒约 28,800 次检查/天，单机可承受属**明确假设**，可见材料未给 20 站点的量化容量数据。\n- **通知**：Settings → Notifications → Add New Notification 选 SMTP，填主机、端口、加密、用户名密码、发件地址；Gmail 需 2FA 后生成 16 位应用密码，个人 Gmail 每日约 500 封、Workspace 约 2,000 封上限 [3][4]。保存时勾选 Default Enabled 或 Apply on all existing monitors 可覆盖全部监控项 [3]。端口/加密按邮箱商实际：Gmail 可用 587/STARTTLS [3] 或 465/SSL [4]，二者并列，以实测为准。\n- **历史**：全部数据存于 `/app/data` 的 SQLite，必须挂载本地持久目录，NFS 等文件锁不可靠会导致数据库损坏 [5][6]。按监控项自定义保留期是未实现且被关闭为“不计划”的特性请求；v2 只存聚合结果，保留更多数据仍影响性能 [7]。**30 天保留**：可见材料只以“夜间清理删除超过 30 天数据”的讨论形式出现 [7]，未给出可核对的设置项名称或默认值，属**未核实**，部署后需实测确认；若实测无此配置，需自行加定时清理脚本，这属建议而非原文功能。\n\n## 费用分项（5 人、按月、增量口径）\n\n| 项目 | 金额 | 说明 |\n|---|---|---|\n| 服务器 | 0 元 | 已有闲置 Linux，电费/带宽按沉没成本不计 |\n| Uptime Kuma | 0 元 | 开源自托管，无按监控项费用 [5][2] |\n| 通知 | 0 元 | 用现有邮箱 SMTP；Gmail 个人约 500 封/天、Workspace 约 2,000 封/天为发送上限 [4] |\n| 域名/证书 | 未核实 | 仅内网或 IP 访问可不买；公网 HTTPS 面板需域名，实价**未核实**，不计入 0 元主线 |\n| 已知小计 | **0 元/月** | 仅含已计价项；域名/证书未计价，故不能据此承诺整个方案低于预算 |\n\n余量全部留作可选域名或邮件服务，不占预算；若购域名，仍应在 300 元内，但实价未核实。\n\n## 部署步骤\n\n1. 确认主机为常见 Linux 发行版，装 Docker Engine 与 Compose v2；`/app/data` 放本地磁盘，不用 NFS [6][8]。\n2. 建目录并固定镜像版本：按 [8] 钉到 `louislam/uptime-kuma:2.5.8`（当前稳定 v2 并含管理员 RCE 修复）；生产建议钉到具体小版本 [6][8]。\n3. 启动容器，端口仅绑 `127.0.0.1:3001`，由 Caddy 等反代对外提供 HTTPS [8]：\n\n```bash\ndocker run -d --restart=unless-stopped \\\n  -p 127.0.0.1:3001:3001 \\\n  -v /opt/uptime-kuma/data:/app/data \\\n  --name uptime-kuma louislam/uptime-kuma:2.5.8\n```\n\n4. 浏览器打开面板，**立即**创建管理员账号，否则任何拿到 URL 的人可抢占实例 [5]。\n5. 配 SMTP 通知并点 Test，确认收件后勾选应用到全部监控项 [3][4]。\n6. 逐个添加 20 个 HTTP(s) 监控：完整 HTTPS URL、间隔 60 秒、重试 1–2 次、超时 15–30 秒、接受码 200–299 [1][2]。\n7. 验证：手动停一个站点看是否收到邮件；查 `/app/data` 数据库增长与清理任务是否删除 30 天前数据。\n\n## 仍存在的缺口与取舍\n\n- **30 天保留**：可见材料只支持“全局清理删除超过 30 天数据”的讨论 [7]，未给出设置项名称或默认值，标为未核实；若实测无此配置，需自行加定时清理脚本，这属建议而非原文功能。\n- **20 站点单机容量**：无量化数据，按 60 秒间隔的负载方向已知 [1]，实际需观察 CPU 与数据库大小。\n- **公网访问与域名实价**：未核实，不计入 0 元主线；如需公网 HTTPS 面板，另购域名会突破 0 元但仍在 300 元内。\n- 步骤、依赖与费用一致：Docker、持久卷、SMTP 凭据三项依赖齐全，已计价增量费用为 0，未依赖任何付费功能；未计价项已单列，不据此承诺总额。",
+  "citations": [
+    {
+      "evidence_id": "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+      "marker": "[1]"
+    },
+    {
+      "evidence_id": "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a",
+      "marker": "[2]"
+    },
+    {
+      "evidence_id": "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+      "marker": "[3]"
+    },
+    {
+      "evidence_id": "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+      "marker": "[4]"
+    },
+    {
+      "evidence_id": "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+      "marker": "[5]"
+    },
+    {
+      "evidence_id": "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+      "marker": "[6]"
+    },
+    {
+      "evidence_id": "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+      "marker": "[7]"
+    },
+    {
+      "evidence_id": "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a",
+      "marker": "[8]"
+    }
+  ],
+  "cited_evidence_ids": [
+    "evidence-4f364952a2314b5aa0ad4a69fa5c7314ab341a8be890f69bb4b2eb3f987b5e7c",
+    "evidence-7be3a56982ffa7bf741daac15ffb7bff8e4d0b1b5141ae214dab0e674fd4823a",
+    "evidence-85eac9ef69feefde83305680266d0150f00e33e11c957d9b8e98cdfe9c270ef3",
+    "evidence-a92f300bbbbb0855a9f93af72d57bfbade1ed1258d9800c8857df3be9b62c25d",
+    "evidence-a19304d32107a27b1a0e67ae4507069df6ecd79e301200d4e600ff76a0f031b2",
+    "evidence-b6f01b952bea123757195f96863d0053f2c60f7ad480b133391ea05343a1773e",
+    "evidence-68e04faea192815f4fe7077d8cb4a34750ad6e000f5e7c10fd6ac3f7704d3459",
+    "evidence-a4cba0277a33945218d7afabf30f54ee6dd623e62758e6e6895ddf106d7cfe3a"
+  ],
+  "partial_reason": "insufficient_evidence"
+}

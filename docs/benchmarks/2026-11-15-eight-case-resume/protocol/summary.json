@@ -1,0 +1,33 @@
+{
+  "expected_cases": 8,
+  "paired_cases": 0,
+  "groups": {
+    "baseline": {
+      "runs": 0,
+      "failed_runs": 0,
+      "mean_tool_calls": null,
+      "mean_model_calls": null,
+      "mean_elapsed_seconds": null,
+      "mean_input_tokens": null,
+      "task_acceptance_rate": null,
+      "unsupported_fact_rate": null,
+      "citation_support_rate": null,
+      "semantic_metrics_status": "requires claim-level review; execution status is not acceptance"
+    },
+    "optimized": {
+      "runs": 0,
+      "failed_runs": 0,
+      "mean_tool_calls": null,
+      "mean_model_calls": null,
+      "mean_elapsed_seconds": null,
+      "mean_input_tokens": null,
+      "task_acceptance_rate": null,
+      "unsupported_fact_rate": null,
+      "citation_support_rate": null,
+      "semantic_metrics_status": "requires claim-level review; execution status is not acceptance"
+    }
+  },
+  "input_token_reduction": null,
+  "retrieval_duplicate_rate": null,
+  "retrieval_note": "Frozen corpus evaluation does not measure web-search duplication."
+}

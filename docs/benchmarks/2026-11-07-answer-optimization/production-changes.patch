@@ -1,0 +1,71 @@
+--- before/backend/src/deeptrace/strategies/evidence_references.py
++++ after/backend/src/deeptrace/strategies/evidence_references.py
+@@ -69,11 +69,19 @@
+ 
+ 
+ def parse_reference_evaluation(schema: type[BaseModel], text: str) -> BaseModel:
+-    """Repair known root fields misplaced under coverage, then validate strictly."""
++    """Normalize known transport/placement mistakes, then validate strictly."""
+     try:
+         payload = json.loads(text)
+     except (ValueError, TypeError):
+         return schema.model_validate_json(text)
++    # Some providers echo response_format inside an otherwise valid assessment.
++    # This exact transport marker carries no evidence or admission authority.
++    if (
++        isinstance(payload, dict)
++        and "type" not in schema.model_fields
++        and payload.get("type") == "json_object"
++    ):
++        payload.pop("type")
+     coverage = payload.get("coverage") if isinstance(payload, dict) else None
+     if isinstance(coverage, dict):
+         for key in ("unresolved_gaps", "source_checks", "action", "reason", "sufficient"):
+--- before/backend/evaluation/claims_quality.py
++++ after/backend/evaluation/claims_quality.py
+@@ -37,7 +37,7 @@
+ )
+ 
+ METRICS = ("claim_groundedness", "citation_accuracy")
+-ADAPTER_VERSION = "claims-v2"
++ADAPTER_VERSION = "claims-v3-prose-sentence-boundaries"
+ 
+ # Same marker contract as responses/citations.py final compacted answers.
+ _MARKER_PATTERN = re.compile(r"\[(\d{1,3})\]")
+@@ -121,8 +121,13 @@
+     spans = []
+     start = index = 0
+     length = len(text)
++    prose = _prose_mask(text)
+     while index < length:
+-        if text[index] in _SENTENCE_ENDINGS:
++        decimal_point = (
++            text[index] == "." and 0 < index < length - 1
++            and text[index - 1].isdigit() and text[index + 1].isdigit()
++        )
++        if prose[index] in _SENTENCE_ENDINGS and not decimal_point:
+             end = index + 1
+             while True:
+                 match = _MARKER_PATTERN.match(text, end)
+@@ -149,7 +154,7 @@
+     ]
+ 
+ 
+-def _citation_matches(answer):
++def _prose_mask(answer):
+     """Independent stdlib-only masking: the scorer image excludes production.
+ 
+     Keep offsets and newlines so citation spans still address the raw answer.
+@@ -175,7 +180,11 @@
+         for index in range(match.start(), match.end()):
+             if masked[index] != "\n":
+                 masked[index] = " "
+-    return list(_MARKER_PATTERN.finditer("".join(masked)))
++    return "".join(masked)
++
++
++def _citation_matches(answer):
++    return list(_MARKER_PATTERN.finditer(_prose_mask(answer)))
+ 
+ 
+ def _citation_items(record, *, max_citations):

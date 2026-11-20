@@ -1,0 +1,172 @@
+{
+  "method": "Manual inspection against predeclared criteria and official RFC sections; pseudocode not executed.",
+  "engine_completion_and_manual_quality_are_separate": true,
+  "scope": "One question and one run per mode; no overall ranking.",
+  "results": [
+    {
+      "mode": "workflow",
+      "checks": [
+        {
+          "id": "C1",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C2",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C3",
+          "status": "partial",
+          "note": "把已经过去的日期与格式无效并列，未清楚区分语法有效性和等待策略。"
+        },
+        {
+          "id": "C4",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C5",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C6",
+          "status": "missing",
+          "note": "send(request)没有剩余时间超时。"
+        },
+        {
+          "id": "C7",
+          "status": "partial",
+          "note": "连接断开分支直接sleep(backoff(attempt))，未检查该等待是否超出预算。"
+        },
+        {
+          "id": "C8",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C9",
+          "status": "partial",
+          "note": "仅一个RFC6585来源；RFC9110内容明确标为未核实。"
+        },
+        {
+          "id": "C10",
+          "status": "partial",
+          "note": "说明不保证成功，但未处理自动重试再次失败的边界。"
+        }
+      ]
+    },
+    {
+      "mode": "plan_execute",
+      "checks": [
+        {
+          "id": "C1",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C2",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C3",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C4",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C5",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C6",
+          "status": "satisfied",
+          "note": "每轮计算remaining，send(timeout=remaining)，等待前再计算预算。"
+        },
+        {
+          "id": "C7",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C8",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C9",
+          "status": "partial",
+          "note": "Retry-After两种格式的陈述引用了只有RFC6585内容的[1]，其余RFC9110仅是未核实定位。"
+        },
+        {
+          "id": "C10",
+          "status": "partial",
+          "note": "第三次自动尝试未结合RFC9110 9.2.2的再次重试建议解释；三次上限被说明为设计参数。"
+        }
+      ]
+    },
+    {
+      "mode": "multi_agent",
+      "checks": [
+        {
+          "id": "C1",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C2",
+          "status": "partial",
+          "note": "POST 429/503以有效Retry-After和业务接受重复风险为重试条件；并非已知幂等或已知未执行。"
+        },
+        {
+          "id": "C3",
+          "status": "partial",
+          "note": "整数秒从接收响应后起算的说明不够精确。"
+        },
+        {
+          "id": "C4",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C5",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C6",
+          "status": "satisfied",
+          "note": "使用单调时钟、请求剩余超时，等待前重新计算。"
+        },
+        {
+          "id": "C7",
+          "status": "satisfied",
+          "note": ""
+        },
+        {
+          "id": "C8",
+          "status": "partial",
+          "note": "429/503分支没有复用连接断开分支的去重保障检查，改由接受重复风险放行；这是激进业务策略。"
+        },
+        {
+          "id": "C9",
+          "status": "partial",
+          "note": "只有RFC6585得到原文支撑，RFC9110均未核实。"
+        },
+        {
+          "id": "C10",
+          "status": "partial",
+          "note": "不保证成功，但没有解释失败的自动重试再次执行与RFC建议的关系。"
+        }
+      ]
+    }
+  ]
+}

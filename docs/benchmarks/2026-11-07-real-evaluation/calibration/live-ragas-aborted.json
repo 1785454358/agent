@@ -1,0 +1,9 @@
+{
+  "reason": "Scorer compatibility pilot: reasoning/default transport produced empty or truncated JSON; preserve original results before changing scorer identity.",
+  "provider_attempts": 7,
+  "new_limit": 25,
+  "inflight": 1,
+  "observed_input_tokens": 24622,
+  "observed_output_tokens": 9012,
+  "total_tokens_known": false
+}
